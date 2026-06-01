@@ -39,13 +39,20 @@ universe w v v₁ v₂ u₁ u₂
 variable {C : Type u₁} [Category.{v₁} C]
 
 /-- The Yoneda embedding, as a functor from `C` into presheaves on `C`. -/
-@[simps obj_obj obj_map map_app, stacks 001O]
+@[simps obj_obj obj_map map_app, stacks 001O, implicit_reducible]
 def yoneda : C ⥤ Cᵒᵖ ⥤ Type v₁ where
   obj X :=
     { obj Y := (unop Y) ⟶ X
       map f := ↾fun g ↦ f.unop ≫ g }
   map f :=
     { app _ := ↾fun g ↦ g ≫ f }
+
+
+theorem obj_map_id {X Y : C} (f : op X ⟶ op Y) :
+    (yoneda.obj X).map f (𝟙 X) = (yoneda.map f.unop).app (op Y) (𝟙 Y) := by
+  simp
+
+#exit
 
 /-- Unification hint for `(yoneda.obj X).obj (op Y) = Y ⟶ X`. -/
 unif_hint yoneda_obj_obj_eq_hom (X X' Y Y' : C) where
