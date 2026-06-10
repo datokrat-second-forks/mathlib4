@@ -28,7 +28,7 @@ variable (R : Type u) {A : Type v} {B : Type w}
 variable [CommSemiring R] [Semiring A] [Algebra R A] [Semiring B] [Algebra R B]
 
 /-- The minimal subalgebra that includes `s`. -/
-@[simps -isSimp toSubsemiring]
+@[simps -isSimp toSubsemiring, implicit_reducible]
 def adjoin (s : Set A) : Subalgebra R A :=
   { Subsemiring.closure (Set.range (algebraMap R A) ∪ s) with
     algebraMap_mem' := fun r => Subsemiring.subset_closure <| Or.inl ⟨r, rfl⟩ }
@@ -41,6 +41,7 @@ protected theorem gc : GaloisConnection (adjoin R : Set A → Subalgebra R A) (�
       Subsemiring.closure_le.2 <| Set.union_subset S.range_subset H⟩
 
 /-- Galois insertion between `adjoin` and `coe`. -/
+@[implicit_reducible]
 protected def gi : GaloisInsertion (adjoin R : Set A → Subalgebra R A) (↑) where
   choice s hs := (adjoin R s).copy s <| le_antisymm (Algebra.gc.le_u_l s) hs
   gc := Algebra.gc

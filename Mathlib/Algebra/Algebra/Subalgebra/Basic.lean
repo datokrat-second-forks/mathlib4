@@ -114,7 +114,7 @@ theorem toSubsemiring_inj {S U : Subalgebra R A} : S.toSubsemiring = U.toSubsemi
 
 /-- Copy of a subalgebra with a new `carrier` equal to the old one. Useful to fix definitional
 equalities. -/
-@[simps coe toSubsemiring]
+@[simps coe toSubsemiring, implicit_reducible]
 protected def copy (S : Subalgebra R A) (s : Set A) (hs : s = ↑S) : Subalgebra R A :=
   { S.toSubsemiring.copy s hs with
     carrier := s
@@ -544,7 +544,7 @@ variable [Semiring A] [Algebra R A] [Semiring B] [Algebra R B] [Semiring C] [Alg
 variable (φ : A →ₐ[R] B)
 
 /-- Range of an `AlgHom` as a subalgebra. -/
-@[simps! coe toSubsemiring]
+@[simps! coe toSubsemiring, implicit_reducible]
 protected def range (φ : A →ₐ[R] B) : Subalgebra R B :=
   { φ.toRingHom.rangeS with algebraMap_mem' := fun r => ⟨algebraMap R A r, φ.commutes r⟩ }
 

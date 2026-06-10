@@ -154,6 +154,7 @@ variable {ι : Sort*} {f : ι → α}
 
 This function is more flexible than `f '' univ`, as the image requires that the domain is in Type
 and not an arbitrary Sort. -/
+@[implicit_reducible]
 def range (f : ι → α) : Set α := {x | ∃ y, f y = x}
 
 @[simp, grind =, push] theorem mem_range {x : α} : x ∈ range f ↔ ∃ y, f y = x := Iff.rfl

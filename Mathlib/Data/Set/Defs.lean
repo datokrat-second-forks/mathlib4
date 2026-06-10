@@ -46,6 +46,7 @@ Although `Set` is defined as `α → Prop`, this is an implementation detail whi
 relied on. Instead, `setOf` and membership of a set (`∈`) should be used to convert between sets
 and predicates.
 -/
+@[implicit_reducible]
 def Set (α : Type u) := α → Prop
 
 /-
@@ -231,6 +232,7 @@ instance instSingletonSet : Singleton α (Set α) := ⟨Set.singleton⟩
 /-- The union of two sets `s` and `t` is the set of elements contained in either `s` or `t`.
 
 Note that you should **not** use this definition directly, but instead write `s ∪ t`. -/
+@[implicit_reducible]
 protected def union (s₁ s₂ : Set α) : Set α := {a | a ∈ s₁ ∨ a ∈ s₂}
 
 instance : Union (Set α) := ⟨Set.union⟩
@@ -238,6 +240,7 @@ instance : Union (Set α) := ⟨Set.union⟩
 /-- The intersection of two sets `s` and `t` is the set of elements contained in both `s` and `t`.
 
 Note that you should **not** use this definition directly, but instead write `s ∩ t`. -/
+@[implicit_reducible]
 protected def inter (s₁ s₂ : Set α) : Set α := {a | a ∈ s₁ ∧ a ∈ s₂}
 
 instance : Inter (Set α) := ⟨Set.inter⟩

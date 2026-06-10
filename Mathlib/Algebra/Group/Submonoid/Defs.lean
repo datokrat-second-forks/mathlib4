@@ -193,7 +193,8 @@ theorem ext {S T : Submonoid M} (h : ∀ x, x ∈ S ↔ x ∈ T) : S = T :=
   SetLike.ext h
 
 /-- Copy a submonoid replacing `carrier` with a set that is equal to it. -/
-@[to_additive /-- Copy an additive submonoid replacing `carrier` with a set that is equal to it. -/]
+@[to_additive /-- Copy an additive submonoid replacing `carrier` with a set that is equal to it. -/,
+  implicit_reducible]
 protected def copy (S : Submonoid M) (s : Set M) (hs : s = S) : Submonoid M where
   carrier := s
   one_mem' := show 1 ∈ s from hs.symm ▸ S.one_mem'

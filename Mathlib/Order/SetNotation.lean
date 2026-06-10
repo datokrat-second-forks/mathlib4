@@ -56,7 +56,7 @@ export SupSet (sSup)
 export InfSet (sInf)
 
 /-- Indexed supremum -/
-@[to_dual /-- Indexed infimum -/]
+@[to_dual /-- Indexed infimum -/, implicit_reducible]
 def iSup [SupSet α] (s : ι → α) : α :=
   sSup (range s)
 
@@ -140,6 +140,7 @@ instance : SupSet (Set α) :=
   ⟨fun s => { a | ∃ t ∈ s, a ∈ t }⟩
 
 /-- Intersection of a set of sets. -/
+@[implicit_reducible]
 def sInter (S : Set (Set α)) : Set α :=
   sInf S
 
@@ -162,10 +163,12 @@ theorem mem_sUnion {x : α} {S : Set (Set α)} : x ∈ ⋃₀ S ↔ ∃ t ∈ S,
   Iff.rfl
 
 /-- Indexed union of a family of sets -/
+@[implicit_reducible]
 def iUnion (s : ι → Set α) : Set α :=
   iSup s
 
 /-- Indexed intersection of a family of sets -/
+@[implicit_reducible]
 def iInter (s : ι → Set α) : Set α :=
   iInf s
 

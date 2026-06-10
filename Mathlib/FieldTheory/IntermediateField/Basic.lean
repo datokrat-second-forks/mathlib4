@@ -125,6 +125,7 @@ theorem toSubalgebra_strictMono :
 
 /-- Copy of an intermediate field with a new `carrier` equal to the old one. Useful to fix
 definitional equalities. -/
+@[implicit_reducible]
 protected def copy (S : IntermediateField K L) (s : Set L) (hs : s = ↑S) :
     IntermediateField K L where
   toSubalgebra := S.toSubalgebra.copy s hs
@@ -304,6 +305,7 @@ theorem toIntermediateField'_toSubalgebra (S : IntermediateField K L) :
   rfl
 
 /-- Turn a subfield of `L` containing the image of `K` into an intermediate field. -/
+@[implicit_reducible]
 def Subfield.toIntermediateField (S : Subfield L) (algebra_map_mem : ∀ x, algebraMap K L x ∈ S) :
     IntermediateField K L :=
   { S with

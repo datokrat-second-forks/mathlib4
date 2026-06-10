@@ -206,7 +206,7 @@ theorem ext {S T : Subsemiring R} (h : ∀ x, x ∈ S ↔ x ∈ T) : S = T :=
 
 /-- Copy of a subsemiring with a new `carrier` equal to the old one. Useful to fix definitional
 equalities. -/
-@[simps coe toSubmonoid]
+@[simps coe toSubmonoid, implicit_reducible]
 protected def copy (S : Subsemiring R) (s : Set R) (hs : s = ↑S) : Subsemiring R :=
   { S.toAddSubmonoid.copy s hs, S.toSubmonoid.copy s hs with carrier := s }
 
@@ -234,7 +234,7 @@ lemma one_mem_toNonUnitalSubsemiring (S : Subsemiring R) : (1 : R) ∈ S.toNonUn
 
 /-- Construct a `Subsemiring R` from a set `s`, a submonoid `sm`, and an additive
 submonoid `sa` such that `x ∈ s ↔ x ∈ sm ↔ x ∈ sa`. -/
-@[simps coe]
+@[simps coe, implicit_reducible]
 protected def mk' (s : Set R) (sm : Submonoid R) (hm : ↑sm = s) (sa : AddSubmonoid R)
     (ha : ↑sa = s) : Subsemiring R where
   carrier := s

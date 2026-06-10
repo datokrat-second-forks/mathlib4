@@ -261,7 +261,7 @@ theorem copy_eq (S : Subring R) (s : Set R) (hs : s = ↑S) : S.copy s hs = S :=
 
 /-- Construct a `Subring R` from a set `s`, a submonoid `sm`, and an additive
 subgroup `sa` such that `x ∈ s ↔ x ∈ sm ↔ x ∈ sa`. -/
-@[simps! coe]
+@[simps! coe, implicit_reducible]
 protected def mk' (s : Set R) (sm : Submonoid R) (sa : AddSubgroup R) (hm : ↑sm = s)
     (ha : ↑sa = s) : Subring R :=
   { sm.copy s hm.symm, sa.copy s ha.symm with }

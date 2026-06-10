@@ -140,7 +140,8 @@ theorem ext {S T : Subsemigroup M} (h : ∀ x, x ∈ S ↔ x ∈ T) : S = T :=
 
 /-- Copy a subsemigroup replacing `carrier` with a set that is equal to it. -/
 @[to_additive
-/-- Copy an additive subsemigroup replacing `carrier` with a set that is equal to it. -/]
+/-- Copy an additive subsemigroup replacing `carrier` with a set that is equal to it. -/,
+  implicit_reducible]
 protected def copy (S : Subsemigroup M) (s : Set M) (hs : s = S) :
     Subsemigroup M where
   carrier := s
