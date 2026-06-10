@@ -1,0 +1,407 @@
+[Elab.command] [0.540609] ✅️ instance (K₁ K₂ : IntermediateField F E) : Algebra (↥(K₁ ⊓ K₂)) K₁ :=
+      inferInstanceAs <| Algebra (↑(K₁.toSubalgebra ⊓ K₂.toSubalgebra)) K₁.toSubalgebra
+  [Elab.definition.value] [0.525449] ✅️ IntermediateField.instAlgebraSubtypeMemMin
+    [Elab.step] [0.525381] ✅️ expected type: Algebra ↥(K₁ ⊓ K₂) ↥K₁, term
+        inferInstanceAs <| Algebra (↑(K₁.toSubalgebra ⊓ K₂.toSubalgebra)) K₁.toSubalgebra
+      [Meta.isDefEq] [0.011992] ✅️ Algebra ↥(K₁.toSubalgebra ⊓ K₂.toSubalgebra)
+            ↥K₁.toSubalgebra =?= Algebra ↥(K₁ ⊓ K₂) ↥K₁
+      [Meta.wrapInstance] [0.502262] ✅️ type: Algebra ↥(K₁ ⊓ K₂) ↥K₁
+        [Meta.synthInstance] [0.469627] ❌️ SMul ↥(K₁ ⊓ K₂) ↥K₁
+          [Meta.synthInstance.apply] [0.023695] ✅️ apply @SubalgebraClass.toAlgebra to Algebra E ↥K₁
+            [Meta.synthInstance.tryResolve] [0.023677] ✅️ Algebra E ↥K₁ ≟ Algebra E ↥K₁
+              [Meta.isDefEq] [0.012424] ✅️ Algebra E ↥K₁ =?= Algebra ?m.80 ↥?m.88
+                [Meta.isDefEq] [0.012358] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                      K₁
+                  [Meta.isDefEq] [0.012312] ✅️ SubsemiringClass.toSemiring
+                        K₁.toSubfield =?= SubsemiringClass.toSemiring K₁
+                    [Meta.isDefEq] [0.012238] ✅️ {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid K₁.toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast :=
+                            (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯,
+                          natCast_succ :=
+                            ⋯ } =?= { toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid K₁, zero_mul := ⋯, mul_zero := ⋯, left_distrib := ⋯,
+                          right_distrib := ⋯,
+                          toNatCast := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.011221] ✅️ ?m.78 =?= SubalgebraClass.toAlgebra K₁
+                [Meta.isDefEq.assign] [0.011220] ✅️ ?m.78 := SubalgebraClass.toAlgebra K₁
+                  [Meta.isDefEq.assign.checkTypes] [0.011209] ✅️ (?m.78 : Algebra E
+                        ↥K₁) := (SubalgebraClass.toAlgebra K₁ : Algebra E ↥K₁)
+                    [Meta.isDefEq] [0.011206] ✅️ Algebra E ↥K₁ =?= Algebra E ↥K₁
+                      [Meta.isDefEq] [0.011197] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                            K₁
+                        [Meta.isDefEq] [0.011153] ✅️ SubsemiringClass.toSemiring
+                              K₁.toSubfield =?= SubsemiringClass.toSemiring K₁
+                          [Meta.isDefEq] [0.011121] ✅️ {
+                                toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid K₁.toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯,
+                                natCast_succ :=
+                                  ⋯ } =?= { toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid K₁, zero_mul := ⋯, mul_zero := ⋯, left_distrib := ⋯,
+                                right_distrib := ⋯,
+                                toNatCast := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.012937] ✅️ apply @Algebra.toModule to Module (↥(K₁ ⊓ K₂)) F
+            [Meta.synthInstance.tryResolve] [0.012897] ✅️ Module (↥(K₁ ⊓ K₂)) F ≟ Module (↥(K₁ ⊓ K₂)) F
+          [Meta.synthInstance.apply] [0.030294] ✅️ apply @Subsemiring.instModuleSubtypeMem to Module (↥(K₁ ⊓ K₂)) F
+            [Meta.synthInstance.tryResolve] [0.030273] ✅️ Module (↥(K₁ ⊓ K₂)) F ≟ Module (↥(K₁ ⊓ K₂)) F
+              [Meta.isDefEq] [0.015401] ✅️ Module (↥(K₁ ⊓ K₂)) F =?= Module ↥?m.90 ?m.83
+                [Meta.isDefEq] [0.015328] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                      (K₁ ⊓ K₂)
+                  [Meta.isDefEq] [0.015278] ✅️ SubsemiringClass.toSemiring
+                        (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                    [Meta.isDefEq] [0.015124] ✅️ {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast :=
+                            (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯,
+                          natCast_succ :=
+                            ⋯ } =?= {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.014824] ✅️ ?m.81 =?= Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                [Meta.isDefEq.assign] [0.014823] ✅️ ?m.81 := Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                  [Meta.isDefEq.assign.checkTypes] [0.014808] ✅️ (?m.81 : Module (↥(K₁ ⊓ K₂))
+                        F) := (Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂) : Module (↥(K₁ ⊓ K₂)) F)
+                    [Meta.isDefEq] [0.014805] ✅️ Module (↥(K₁ ⊓ K₂)) F =?= Module (↥(K₁ ⊓ K₂)) F
+                      [Meta.isDefEq] [0.014795] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                            (K₁ ⊓ K₂)
+                        [Meta.isDefEq] [0.014749] ✅️ SubsemiringClass.toSemiring
+                              (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                          [Meta.isDefEq] [0.014612] ✅️ {
+                                toAddCommMonoid :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring
+                                        (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯,
+                                natCast_succ :=
+                                  ⋯ } =?= {
+                                toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.030169] ✅️ apply @Subsemiring.instModuleSubtypeMem to Module (↥(K₁ ⊓ K₂)) F
+            [Meta.synthInstance.tryResolve] [0.030153] ✅️ Module (↥(K₁ ⊓ K₂)) F ≟ Module (↥(K₁ ⊓ K₂)) F
+              [Meta.isDefEq] [0.015375] ✅️ Module (↥(K₁ ⊓ K₂)) F =?= Module ↥?m.91 ?m.84
+                [Meta.isDefEq] [0.015294] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                      (K₁ ⊓ K₂)
+                  [Meta.isDefEq] [0.015248] ✅️ SubsemiringClass.toSemiring
+                        (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                    [Meta.isDefEq] [0.015107] ✅️ {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast :=
+                            (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯,
+                          natCast_succ :=
+                            ⋯ } =?= {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.014738] ✅️ ?m.82 =?= Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                [Meta.isDefEq.assign] [0.014737] ✅️ ?m.82 := Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                  [Meta.isDefEq.assign.checkTypes] [0.014722] ✅️ (?m.82 : Module (↥(K₁ ⊓ K₂))
+                        F) := (Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂) : Module (↥(K₁ ⊓ K₂)) F)
+                    [Meta.isDefEq] [0.014720] ✅️ Module (↥(K₁ ⊓ K₂)) F =?= Module (↥(K₁ ⊓ K₂)) F
+                      [Meta.isDefEq] [0.014707] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                            (K₁ ⊓ K₂)
+                        [Meta.isDefEq] [0.014653] ✅️ SubsemiringClass.toSemiring
+                              (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                          [Meta.isDefEq] [0.014524] ✅️ {
+                                toAddCommMonoid :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring
+                                        (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯,
+                                natCast_succ :=
+                                  ⋯ } =?= {
+                                toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.036858] ✅️ apply @Subsemiring.instMulActionWithZeroSubtypeMem to MulActionWithZero
+                (↥(K₁ ⊓ K₂)) F
+            [Meta.synthInstance.tryResolve] [0.036837] ✅️ MulActionWithZero (↥(K₁ ⊓ K₂))
+                  F ≟ MulActionWithZero (↥(K₁ ⊓ K₂)) F
+              [Meta.isDefEq] [0.018018] ✅️ MulActionWithZero (↥(K₁ ⊓ K₂)) F =?= MulActionWithZero ↥?m.83 ?m.78
+                [Meta.isDefEq] [0.017938] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                        (K₁ ⊓ K₂)).toMonoidWithZero
+                  [Meta.isDefEq.delta] [0.017933] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                          (K₁ ⊓ K₂)).toMonoidWithZero
+                    [Meta.isDefEq] [0.017908] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                          (K₁ ⊓ K₂)
+                      [Meta.isDefEq] [0.017822] ✅️ SubsemiringClass.toSemiring
+                            (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                        [Meta.isDefEq] [0.017683] ✅️ {
+                              toAddCommMonoid :=
+                                (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                              toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                              left_distrib := ⋯, right_distrib := ⋯,
+                              toNatCast :=
+                                (SubsemiringClass.toNonAssocSemiring
+                                      (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                              natCast_zero := ⋯,
+                              natCast_succ :=
+                                ⋯ } =?= {
+                              toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                              toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                              left_distrib := ⋯, right_distrib := ⋯,
+                              toNatCast :=
+                                (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                              natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.018720] ✅️ ?m.76 =?= Subsemiring.instMulActionWithZeroSubtypeMem (K₁ ⊓ K₂)
+                [Meta.isDefEq.assign] [0.018718] ✅️ ?m.76 := Subsemiring.instMulActionWithZeroSubtypeMem (K₁ ⊓ K₂)
+                  [Meta.isDefEq.assign.checkTypes] [0.018705] ✅️ (?m.76 : MulActionWithZero (↥(K₁ ⊓ K₂))
+                        F) := (Subsemiring.instMulActionWithZeroSubtypeMem (K₁ ⊓ K₂) : MulActionWithZero (↥(K₁ ⊓ K₂)) F)
+                    [Meta.isDefEq] [0.018699] ✅️ MulActionWithZero (↥(K₁ ⊓ K₂)) F =?= MulActionWithZero (↥(K₁ ⊓ K₂)) F
+                      [Meta.isDefEq] [0.018673] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                              (K₁ ⊓ K₂)).toMonoidWithZero
+                        [Meta.isDefEq.delta] [0.018668] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                                (K₁ ⊓ K₂)).toMonoidWithZero
+                          [Meta.isDefEq] [0.018665] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                                (K₁ ⊓ K₂)
+                            [Meta.isDefEq] [0.018606] ✅️ SubsemiringClass.toSemiring
+                                  (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                              [Meta.isDefEq] [0.018445] ✅️ {
+                                    toAddCommMonoid :=
+                                      (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                                    toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯,
+                                    mul_zero := ⋯, left_distrib := ⋯, right_distrib := ⋯,
+                                    toNatCast :=
+                                      (SubsemiringClass.toNonAssocSemiring
+                                            (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                    natCast_zero := ⋯,
+                                    natCast_succ :=
+                                      ⋯ } =?= {
+                                    toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                                    toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                                    left_distrib := ⋯, right_distrib := ⋯,
+                                    toNatCast :=
+                                      (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                                    natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.010674] ✅️ apply @Algebra.toModule to Module ↥(K₁ ⊓ K₂) ↥K₁
+            [Meta.synthInstance.tryResolve] [0.010631] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ ≟ Module ↥(K₁ ⊓ K₂) ↥K₁
+          [Meta.synthInstance.apply] [0.024399] ✅️ apply @SubalgebraClass.toAlgebra to Algebra ↥(K₁ ⊓ K₂) ↥K₁
+            [Meta.synthInstance.tryResolve] [0.024380] ✅️ Algebra ↥(K₁ ⊓ K₂) ↥K₁ ≟ Algebra ↥(K₁ ⊓ K₂) ↥K₁
+              [Meta.isDefEq] [0.012445] ✅️ Algebra ↥(K₁ ⊓ K₂) ↥K₁ =?= Algebra ?m.72 ↥?m.80
+                [Meta.isDefEq] [0.012363] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                      K₁
+                  [Meta.isDefEq] [0.012313] ✅️ SubsemiringClass.toSemiring
+                        K₁.toSubfield =?= SubsemiringClass.toSemiring K₁
+                    [Meta.isDefEq] [0.012278] ✅️ {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid K₁.toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast :=
+                            (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯,
+                          natCast_succ :=
+                            ⋯ } =?= { toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid K₁, zero_mul := ⋯, mul_zero := ⋯, left_distrib := ⋯,
+                          right_distrib := ⋯,
+                          toNatCast := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.011891] ✅️ ?m.70 =?= SubalgebraClass.toAlgebra K₁
+                [Meta.isDefEq.assign] [0.011890] ✅️ ?m.70 := SubalgebraClass.toAlgebra K₁
+                  [Meta.isDefEq.assign.checkTypes] [0.011872] ✅️ (?m.70 : Algebra ↥(K₁ ⊓ K₂)
+                        ↥K₁) := (SubalgebraClass.toAlgebra K₁ : Algebra ↥(K₁ ⊓ K₂) ↥K₁)
+                    [Meta.isDefEq] [0.011870] ✅️ Algebra ↥(K₁ ⊓ K₂) ↥K₁ =?= Algebra ↥(K₁ ⊓ K₂) ↥K₁
+                      [Meta.isDefEq] [0.011860] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                            K₁
+                        [Meta.isDefEq] [0.011814] ✅️ SubsemiringClass.toSemiring
+                              K₁.toSubfield =?= SubsemiringClass.toSemiring K₁
+                          [Meta.isDefEq] [0.011780] ✅️ {
+                                toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid K₁.toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring K₁.toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯,
+                                natCast_succ :=
+                                  ⋯ } =?= { toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid K₁, zero_mul := ⋯, mul_zero := ⋯, left_distrib := ⋯,
+                                right_distrib := ⋯,
+                                toNatCast := (SubsemiringClass.toNonAssocSemiring K₁).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.032112] ✅️ apply @Subsemiring.instModuleSubtypeMem to Module ↥(K₁ ⊓ K₂) ↥K₁
+            [Meta.synthInstance.tryResolve] [0.032092] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ ≟ Module ↥(K₁ ⊓ K₂) ↥K₁
+              [Meta.isDefEq] [0.016311] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ =?= Module ↥?m.74 ?m.67
+                [Meta.isDefEq] [0.016236] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                      (K₁ ⊓ K₂)
+                  [Meta.isDefEq] [0.016177] ✅️ SubsemiringClass.toSemiring
+                        (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                    [Meta.isDefEq] [0.016012] ✅️ {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast :=
+                            (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯,
+                          natCast_succ :=
+                            ⋯ } =?= {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.015730] ✅️ ?m.65 =?= Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                [Meta.isDefEq.assign] [0.015729] ✅️ ?m.65 := Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                  [Meta.isDefEq.assign.checkTypes] [0.015711] ✅️ (?m.65 : Module ↥(K₁ ⊓ K₂)
+                        ↥K₁) := (Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂) : Module ↥(K₁ ⊓ K₂) ↥K₁)
+                    [Meta.isDefEq] [0.015709] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ =?= Module ↥(K₁ ⊓ K₂) ↥K₁
+                      [Meta.isDefEq] [0.015697] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                            (K₁ ⊓ K₂)
+                        [Meta.isDefEq] [0.015644] ✅️ SubsemiringClass.toSemiring
+                              (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                          [Meta.isDefEq] [0.015502] ✅️ {
+                                toAddCommMonoid :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring
+                                        (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯,
+                                natCast_succ :=
+                                  ⋯ } =?= {
+                                toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.030695] ✅️ apply @Subsemiring.instModuleSubtypeMem to Module ↥(K₁ ⊓ K₂) ↥K₁
+            [Meta.synthInstance.tryResolve] [0.030677] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ ≟ Module ↥(K₁ ⊓ K₂) ↥K₁
+              [Meta.isDefEq] [0.015491] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ =?= Module ↥?m.75 ?m.68
+                [Meta.isDefEq] [0.015409] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                      (K₁ ⊓ K₂)
+                  [Meta.isDefEq] [0.015364] ✅️ SubsemiringClass.toSemiring
+                        (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                    [Meta.isDefEq] [0.015228] ✅️ {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast :=
+                            (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯,
+                          natCast_succ :=
+                            ⋯ } =?= {
+                          toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                          toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                          left_distrib := ⋯, right_distrib := ⋯,
+                          toNatCast := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                          natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.015139] ✅️ ?m.66 =?= Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                [Meta.isDefEq.assign] [0.015137] ✅️ ?m.66 := Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂)
+                  [Meta.isDefEq.assign.checkTypes] [0.015124] ✅️ (?m.66 : Module ↥(K₁ ⊓ K₂)
+                        ↥K₁) := (Subsemiring.instModuleSubtypeMem (K₁ ⊓ K₂) : Module ↥(K₁ ⊓ K₂) ↥K₁)
+                    [Meta.isDefEq] [0.015121] ✅️ Module ↥(K₁ ⊓ K₂) ↥K₁ =?= Module ↥(K₁ ⊓ K₂) ↥K₁
+                      [Meta.isDefEq] [0.015111] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                            (K₁ ⊓ K₂)
+                        [Meta.isDefEq] [0.015064] ✅️ SubsemiringClass.toSemiring
+                              (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                          [Meta.isDefEq] [0.014934] ✅️ {
+                                toAddCommMonoid :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring
+                                        (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯,
+                                natCast_succ :=
+                                  ⋯ } =?= {
+                                toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                                toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                                left_distrib := ⋯, right_distrib := ⋯,
+                                toNatCast :=
+                                  (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                                natCast_zero := ⋯, natCast_succ := ⋯ }
+          [Meta.synthInstance.apply] [0.031946] ✅️ apply @Subsemiring.instMulActionWithZeroSubtypeMem to MulActionWithZero
+                ↥(K₁ ⊓ K₂) ↥K₁
+            [Meta.synthInstance.tryResolve] [0.031929] ✅️ MulActionWithZero ↥(K₁ ⊓ K₂)
+                  ↥K₁ ≟ MulActionWithZero ↥(K₁ ⊓ K₂) ↥K₁
+              [Meta.isDefEq] [0.016124] ✅️ MulActionWithZero ↥(K₁ ⊓ K₂) ↥K₁ =?= MulActionWithZero ↥?m.67 ?m.62
+                [Meta.isDefEq] [0.016042] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                        (K₁ ⊓ K₂)).toMonoidWithZero
+                  [Meta.isDefEq.delta] [0.016037] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                          (K₁ ⊓ K₂)).toMonoidWithZero
+                    [Meta.isDefEq] [0.016030] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                          (K₁ ⊓ K₂)
+                      [Meta.isDefEq] [0.015942] ✅️ SubsemiringClass.toSemiring
+                            (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                        [Meta.isDefEq] [0.015787] ✅️ {
+                              toAddCommMonoid :=
+                                (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                              toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯, mul_zero := ⋯,
+                              left_distrib := ⋯, right_distrib := ⋯,
+                              toNatCast :=
+                                (SubsemiringClass.toNonAssocSemiring
+                                      (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                              natCast_zero := ⋯,
+                              natCast_succ :=
+                                ⋯ } =?= {
+                              toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                              toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                              left_distrib := ⋯, right_distrib := ⋯,
+                              toNatCast :=
+                                (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                              natCast_zero := ⋯, natCast_succ := ⋯ }
+              [Meta.isDefEq] [0.015742] ✅️ ?m.60 =?= Subsemiring.instMulActionWithZeroSubtypeMem (K₁ ⊓ K₂)
+                [Meta.isDefEq.assign] [0.015741] ✅️ ?m.60 := Subsemiring.instMulActionWithZeroSubtypeMem (K₁ ⊓ K₂)
+                  [Meta.isDefEq.assign.checkTypes] [0.015728] ✅️ (?m.60 : MulActionWithZero ↥(K₁ ⊓ K₂)
+                        ↥K₁) := (Subsemiring.instMulActionWithZeroSubtypeMem
+                        (K₁ ⊓ K₂) : MulActionWithZero ↥(K₁ ⊓ K₂) ↥K₁)
+                    [Meta.isDefEq] [0.015726] ✅️ MulActionWithZero ↥(K₁ ⊓ K₂) ↥K₁ =?= MulActionWithZero ↥(K₁ ⊓ K₂) ↥K₁
+                      [Meta.isDefEq] [0.015708] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                              (K₁ ⊓ K₂)).toMonoidWithZero
+                        [Meta.isDefEq.delta] [0.015704] ✅️ Field.toSemifield.toDivisionSemiring.toMonoidWithZero =?= (SubsemiringClass.toSemiring
+                                (K₁ ⊓ K₂)).toMonoidWithZero
+                          [Meta.isDefEq] [0.015700] ✅️ Field.toSemifield.toDivisionSemiring.toSemiring =?= SubsemiringClass.toSemiring
+                                (K₁ ⊓ K₂)
+                            [Meta.isDefEq] [0.015650] ✅️ SubsemiringClass.toSemiring
+                                  (K₁ ⊓ K₂).toSubfield =?= SubsemiringClass.toSemiring (K₁ ⊓ K₂)
+                              [Meta.isDefEq] [0.015509] ✅️ {
+                                    toAddCommMonoid :=
+                                      (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂).toSubfield).toAddCommMonoid,
+                                    toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂).toSubfield, zero_mul := ⋯,
+                                    mul_zero := ⋯, left_distrib := ⋯, right_distrib := ⋯,
+                                    toNatCast :=
+                                      (SubsemiringClass.toNonAssocSemiring
+                                            (K₁ ⊓ K₂).toSubfield).toAddCommMonoidWithOne.toNatCast,
+                                    natCast_zero := ⋯,
+                                    natCast_succ :=
+                                      ⋯ } =?= {
+                                    toAddCommMonoid := (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoid,
+                                    toMonoid := SubmonoidClass.toMonoid (K₁ ⊓ K₂), zero_mul := ⋯, mul_zero := ⋯,
+                                    left_distrib := ⋯, right_distrib := ⋯,
+                                    toNatCast :=
+                                      (SubsemiringClass.toNonAssocSemiring (K₁ ⊓ K₂)).toAddCommMonoidWithOne.toNatCast,
+                                    natCast_zero := ⋯, natCast_succ := ⋯ }
+        [Meta.isDefEq] [0.011923] ✅️ ↥(K₁ ⊓ K₂) →+* ↥K₁ =?= ↥(K₁.toSubalgebra ⊓ K₂.toSubalgebra) →+* ↥K₁.toSubalgebra
