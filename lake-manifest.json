@@ -65,7 +65,7 @@
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "202c58d7ecce49e6571cb707a4f48c28f0732adb",
+   "rev": "30e6f30baeb22b6feb277d2829a26364d0f20d00",
    "name": "batteries",
    "manifestFile": "lake-manifest.json",
    "inputRev": "lean-pr-testing-13342-nwm",
