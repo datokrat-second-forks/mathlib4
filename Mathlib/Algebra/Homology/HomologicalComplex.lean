@@ -647,7 +647,7 @@ abbrev of (X : α → V) (d : ∀ n, X (n + 1) ⟶ X n) (sq : ∀ n, d (n + 1) �
     shape := fun i j w => by simp [of.d, (Ne.symm w)]
     d_comp_d' := fun i j k hij hjk => by
       dsimp [of.d] at hij hjk ⊢
-      substs hij hjk
+      subst hij hjk
       simp only [eqToHom_refl, id_comp, dite_eq_ite, ite_true, sq] }
 
 variable (X : α → V) (d : ∀ n, X (n + 1) ⟶ X n) (sq : ∀ n, d (n + 1) ≫ d n = 0)
@@ -909,7 +909,7 @@ abbrev of (X : α → V) (d : ∀ n, X n ⟶ X (n + 1)) (sq : ∀ n, d n ≫ d (
     d_comp_d' := fun i j k => by
       dsimp [of.d]
       split_ifs with h h' h'
-      · substs h h'
+      · subst h h'
         simp [sq]
       all_goals simp }
 

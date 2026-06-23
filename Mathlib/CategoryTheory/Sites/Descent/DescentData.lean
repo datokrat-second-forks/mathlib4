@@ -162,7 +162,7 @@ def isoMk {D₁ D₂ : F.DescentData f} (e : ∀ (i : ι), D₁.obj i ≅ D₂.o
 
 end DescentData
 
-set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 /-- The functor `F.obj (.mk (op S)) ⥤ F.DescentData f`. -/
 @[simps]
 def toDescentData : F.obj (.mk (op S)) ⥤ F.DescentData f where

@@ -62,7 +62,7 @@ example : ConcreteCategory FintypeCat
     (fun X Y ↦ TypeCat.Fun X.obj Y.obj) :=
   inferInstance
 
-/- Help typeclass inference infer fullness of forgetful functor. -/
+/-- Help typeclass inference infer fullness of forgetful functor. -/
 instance : (forget FintypeCat).Full := inferInstanceAs <| FintypeCat.incl.Full
 
 @[simp]
@@ -287,7 +287,6 @@ lemma uSwitch_map_uSwitch_map {X Y : FintypeCat.{u}} (f : X ⟶ Y) :
       Y.uSwitchEquiv)).inv := rfl
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 attribute [local simp] uSwitch_map_uSwitch_map in
 /-- `uSwitch.{u, v}` is an equivalence of categories with quasi-inverse `uSwitch.{v, u}`. -/
 noncomputable def uSwitchEquivalence : FintypeCat.{u} ≌ FintypeCat.{v} where

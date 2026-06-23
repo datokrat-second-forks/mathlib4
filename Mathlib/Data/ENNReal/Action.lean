@@ -6,6 +6,7 @@ Authors: Johannes Hölzl, Yury Kudryashov
 module
 
 public import Mathlib.Algebra.Module.Torsion.Field
+public import Mathlib.Algebra.Order.AddTorsor
 public import Mathlib.Data.ENNReal.Operations
 
 /-!
@@ -104,6 +105,16 @@ instance : PosSMulStrictMono ℝ≥0 ℝ≥0∞ where
 
 instance : SMulPosMono ℝ≥0 ℝ≥0∞ where
   smul_le_smul_of_nonneg_right _r _ _a _b hab := _root_.mul_le_mul_left (coe_le_coe.2 hab) _
+
+instance : IsOrderedModule ℝ≥0 ℝ≥0∞ where
+
+example : CovariantClass ℝ≥0∞ ℝ≥0∞ (· • ·) (· ≤ ·) := inferInstance
+
+instance : IsOrderedSMul ℝ≥0 ℝ≥0∞ where
+  smul_le_smul_left a b hab c := by gcongr
+  smul_le_smul_right a b hab c := by gcongr
+
+example : CovariantClass ℝ≥0 ℝ≥0∞ (· • ·) (· ≤ ·) := inferInstance
 
 end Actions
 

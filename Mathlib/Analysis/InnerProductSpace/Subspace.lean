@@ -34,7 +34,7 @@ local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 /-- Induced inner product on a submodule. -/
 instance Submodule.innerProductSpace (W : Submodule 𝕜 E) : InnerProductSpace 𝕜 W :=
-  .induced W.subtype
+  fast_instance% .induced W.subtype
 
 /-- The inner product on submodules is the same as on the ambient space. -/
 @[simp]
@@ -166,7 +166,7 @@ theorem OrthogonalFamily.orthonormal_sigma_orthonormal {α : ι → Type*} {v_fa
     simpa only [LinearIsometry.inner_map_map] using (hv_family i).2 this
   · exact hV hij (v_family i v) (v_family j w)
 
-theorem OrthogonalFamily.norm_sq_diff_sum [DecidableEq ι] (f : ∀ i, G i) (s₁ s₂ : Finset ι) :
+theorem OrthogonalFamily.norm_sq_sdiff_sum [DecidableEq ι] (f : ∀ i, G i) (s₁ s₂ : Finset ι) :
     ‖(∑ i ∈ s₁, V i (f i)) - ∑ i ∈ s₂, V i (f i)‖ ^ 2 =
       (∑ i ∈ s₁ \ s₂, ‖f i‖ ^ 2) + ∑ i ∈ s₂ \ s₁, ‖f i‖ ^ 2 := by
   rw [← Finset.sum_sdiff_sub_sum_sdiff, sub_eq_add_neg, ← Finset.sum_neg_distrib]
@@ -190,6 +190,9 @@ theorem OrthogonalFamily.norm_sq_diff_sum [DecidableEq ι] (f : ∀ i, G i) (s�
   · simp only [hF]
   · simp only [hF]
 
+@[deprecated (since := "2026-06-03")]
+alias OrthogonalFamily.norm_sq_diff_sum := OrthogonalFamily.norm_sq_sdiff_sum
+
 /-- A family `f` of mutually-orthogonal elements of `E` is summable, if and only if
 `(fun i ↦ ‖f i‖ ^ 2)` is summable. -/
 theorem OrthogonalFamily.summable_iff_norm_sq_summable [CompleteSpace E] (f : ∀ i, G i) :
@@ -207,7 +210,7 @@ theorem OrthogonalFamily.summable_iff_norm_sq_summable [CompleteSpace E] (f : �
       have : ∀ i, 0 ≤ ‖f i‖ ^ 2 := fun i : ι => sq_nonneg _
       simp only [Finset.abs_sum_of_nonneg' this]
       have : ((∑ i ∈ s₁ \ s₂, ‖f i‖ ^ 2) + ∑ i ∈ s₂ \ s₁, ‖f i‖ ^ 2) < √ε ^ 2 := by
-        rw [← hV.norm_sq_diff_sum, sq_lt_sq, abs_of_nonneg (sqrt_nonneg _),
+        rw [← hV.norm_sq_sdiff_sum, sq_lt_sq, abs_of_nonneg (sqrt_nonneg _),
           abs_of_nonneg (norm_nonneg _)]
         exact H s₁ hs₁ s₂ hs₂
       have hη := sq_sqrt (le_of_lt hε)
@@ -219,7 +222,7 @@ theorem OrthogonalFamily.summable_iff_norm_sq_summable [CompleteSpace E] (f : �
       intro s₁ hs₁ s₂ hs₂
       refine (abs_lt_of_sq_lt_sq' ?_ (le_of_lt hε)).2
       have has : a ≤ s₁ ⊓ s₂ := le_inf hs₁ hs₂
-      rw [hV.norm_sq_diff_sum]
+      rw [hV.norm_sq_sdiff_sum]
       have Hs₁ : ∑ x ∈ s₁ \ s₂, ‖f x‖ ^ 2 < ε ^ 2 / 2 := by
         convert! H _ hs₁ _ has
         have : s₁ ⊓ s₂ ⊆ s₁ := Finset.inter_subset_left

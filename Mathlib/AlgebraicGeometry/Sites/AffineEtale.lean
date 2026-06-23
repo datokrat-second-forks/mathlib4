@@ -69,7 +69,7 @@ instance : (AffineEtale.Spec S).Full :=
 set_option backward.isDefEq.respectTransparency.types false in
 instance : (AffineEtale.Spec S).IsCoverDense S.smallEtaleTopology :=
   inferInstanceAs <| (MorphismProperty.CostructuredArrow.toOver _ _ _).IsCoverDense
-    (smallGrothendieckTopology _)
+    (S.smallGrothendieckTopology _)
 
 variable (S) in
 /-- The topology on the small affine étale site is the topology induced by `Spec` from

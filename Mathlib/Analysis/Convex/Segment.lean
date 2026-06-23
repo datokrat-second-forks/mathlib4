@@ -219,13 +219,13 @@ theorem openSegment_eq_image' (x y : E) :
 set_option backward.isDefEq.respectTransparency false in
 theorem segment_eq_image_lineMap (x y : E) : [x -[𝕜] y] =
     AffineMap.lineMap x y '' Icc (0 : 𝕜) 1 := by
-  convert! segment_eq_image 𝕜 x y using 2
+  convert segment_eq_image 𝕜 x y
   exact AffineMap.lineMap_apply_module _ _ _
 
 set_option backward.isDefEq.respectTransparency false in
 theorem openSegment_eq_image_lineMap (x y : E) :
     openSegment 𝕜 x y = AffineMap.lineMap x y '' Ioo (0 : 𝕜) 1 := by
-  convert! openSegment_eq_image 𝕜 x y using 2
+  convert openSegment_eq_image 𝕜 x y
   exact AffineMap.lineMap_apply_module _ _ _
 
 set_option backward.isDefEq.respectTransparency false in
@@ -255,7 +255,7 @@ theorem vadd_segment [AddTorsor G E] [VAddCommClass G E E] (a : G) (b c : E) :
     a +ᵥ [b -[𝕜] c] = [a +ᵥ b -[𝕜] a +ᵥ c] :=
   #adaptation_note /-- Prior to https://github.com/leanprover/lean4/pull/12286/
   we didn't need this `let` statement. -/
-  let : AddTorsor E E := addGroupIsAddTorsor E
+  let : AddTorsor E E := AddGroup.instAddTorsor E
   image_segment 𝕜 ⟨_, LinearMap.id, fun _ _ => vadd_comm _ _ _⟩ b c
 
 @[simp]
@@ -263,7 +263,7 @@ theorem vadd_openSegment [AddTorsor G E] [VAddCommClass G E E] (a : G) (b c : E)
     a +ᵥ openSegment 𝕜 b c = openSegment 𝕜 (a +ᵥ b) (a +ᵥ c) :=
   #adaptation_note /-- Prior to https://github.com/leanprover/lean4/pull/12286/
   we didn't need this `let` statement. -/
-  let : AddTorsor E E := addGroupIsAddTorsor E
+  let : AddTorsor E E := AddGroup.instAddTorsor E
   image_openSegment 𝕜 ⟨_, LinearMap.id, fun _ _ => vadd_comm _ _ _⟩ b c
 
 @[simp]

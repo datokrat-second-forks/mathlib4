@@ -132,7 +132,6 @@ end OrderedMonoid
 section OrderedGroup
 variable [LinearOrder R] [AddCommGroup R] [IsOrderedAddMonoid R]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem support_abs (x : Lex R⟦Γ⟧) : (ofLex |x|).support = (ofLex x).support := by
   obtain hle | hge := le_total x 0
@@ -140,7 +139,6 @@ theorem support_abs (x : Lex R⟦Γ⟧) : (ofLex |x|).support = (ofLex x).suppor
     simp
   · rw [abs_eq_self.mpr hge]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem orderTop_abs (x : Lex R⟦Γ⟧) : (ofLex |x|).orderTop = (ofLex x).orderTop := by
   obtain hle | hge := le_total x 0
@@ -156,7 +154,6 @@ theorem order_abs [Zero Γ] (x : Lex R⟦Γ⟧) : (ofLex |x|).order = (ofLex x).
     rw [order_eq_orderTop_of_ne_zero habs, order_eq_orderTop_of_ne_zero hne']
     apply orderTop_abs
 
-set_option backward.isDefEq.respectTransparency false in
 theorem leadingCoeff_abs (x : Lex R⟦Γ⟧) :
     (ofLex |x|).leadingCoeff = |(ofLex x).leadingCoeff| := by
   obtain hlt | rfl | hgt := lt_trichotomy x 0
@@ -249,7 +246,6 @@ theorem archimedeanClassMk_le_archimedeanClassMk_iff {x y : Lex R⟦Γ⟧} :
     simpa using orderTop_smul_not_lt n (ofLex x)
   exact abs_lt_abs_of_orderTop_ofLex hgt'
 
-set_option backward.isDefEq.respectTransparency false in
 theorem archimedeanClassMk_eq_archimedeanClassMk_iff {x y : Lex R⟦Γ⟧} :
     ArchimedeanClass.mk x = ArchimedeanClass.mk y ↔
     (ofLex x).orderTop = (ofLex y).orderTop ∧
@@ -261,7 +257,6 @@ theorem archimedeanClassMk_eq_archimedeanClassMk_iff {x y : Lex R⟦Γ⟧} :
   · intro ⟨horder, hcoeff⟩
     exact ⟨.inr ⟨horder, hcoeff.le⟩, .inr ⟨horder.symm, hcoeff.ge⟩⟩
 
-set_option backward.isDefEq.respectTransparency false in
 variable (Γ R) in
 /-- Finite archimedean classes of `Lex R⟦Γ⟧` decompose into lexicographical pairs
 of `order` and the finite archimedean class of `leadingCoeff`. -/
@@ -278,7 +273,6 @@ noncomputable def finiteArchimedeanClassOrderHomLex :
       rw [WithTop.untop_eq_iff]
       simpa using archimedeanClassMk_le_archimedeanClassMk_iff.mp h
 
-set_option backward.isDefEq.respectTransparency false in
 variable (Γ R) in
 /-- The inverse of `finiteArchimedeanClassOrderHomLex`. -/
 noncomputable def finiteArchimedeanClassOrderHomInvLex :
@@ -298,7 +292,7 @@ noncomputable def finiteArchimedeanClassOrderHomInvLex :
       exact .inl (by simpa [ha, hb] using! h)
     · exact OrderHom.monotone _ hle
 
-set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 variable (Γ R) in
 /-- The correspondence between finite archimedean classes of `Lex R⟦Γ⟧`
 and lexicographical pairs of `HahnSeries.orderTop` and the finite archimedean class of
@@ -317,14 +311,12 @@ noncomputable def finiteArchimedeanClassOrderIsoLex :
     simp [finiteArchimedeanClassOrderHomLex, finiteArchimedeanClassOrderHomInvLex,
       archimedeanClassMk_eq_archimedeanClassMk_iff, ha]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem finiteArchimedeanClassOrderIsoLex_apply_fst {x : Lex R⟦Γ⟧} (h : x ≠ 0) :
     (ofLex (finiteArchimedeanClassOrderIsoLex Γ R (FiniteArchimedeanClass.mk x h))).1 =
     (ofLex x).orderTop := by
   simp [finiteArchimedeanClassOrderIsoLex, finiteArchimedeanClassOrderHomLex]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem finiteArchimedeanClassOrderIsoLex_apply_snd {x : Lex R⟦Γ⟧} (h : x ≠ 0) :
     (ofLex (finiteArchimedeanClassOrderIsoLex Γ R (FiniteArchimedeanClass.mk x h))).2.val =
@@ -334,7 +326,6 @@ theorem finiteArchimedeanClassOrderIsoLex_apply_snd {x : Lex R⟦Γ⟧} (h : x �
 section Archimedean
 variable [Archimedean R] [Nontrivial R]
 
-set_option backward.isDefEq.respectTransparency false in
 variable (Γ R) in
 /-- For `Archimedean` coefficients, there is a correspondence between finite
 archimedean classes and `HahnSeries.orderTop` without the top element. -/
@@ -343,13 +334,11 @@ noncomputable def finiteArchimedeanClassOrderIso :
   have : Unique (FiniteArchimedeanClass R) := (nonempty_unique _).some
   (finiteArchimedeanClassOrderIsoLex Γ R).trans (Prod.Lex.prodUnique _ _)
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem finiteArchimedeanClassOrderIso_apply {x : Lex R⟦Γ⟧} (h : x ≠ 0) :
     finiteArchimedeanClassOrderIso Γ R (FiniteArchimedeanClass.mk x h) = (ofLex x).orderTop := by
   simp [finiteArchimedeanClassOrderIso]
 
-set_option backward.isDefEq.respectTransparency false in
 variable (Γ R) in
 /-- For `Archimedean` coefficients, there is a correspondence between
 archimedean classes (with top) and `HahnSeries.orderTop`. -/
@@ -358,7 +347,6 @@ noncomputable def archimedeanClassOrderIsoWithTop :
   (FiniteArchimedeanClass.withTopOrderIso _).symm.trans
   (finiteArchimedeanClassOrderIso _ _).withTopCongr
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem archimedeanClassOrderIsoWithTop_apply (x : Lex R⟦Γ⟧) :
     archimedeanClassOrderIsoWithTop Γ R (ArchimedeanClass.mk x) = (ofLex x).orderTop := by

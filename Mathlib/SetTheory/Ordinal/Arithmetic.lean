@@ -195,7 +195,6 @@ def boundedLimitRecOn {l : Ordinal} (lLim : IsSuccLimit l) {motive : Iio l → S
   | limit o ho' IH => exact limit _ ho' fun a ha ↦ IH a.1 ha (ha.trans (c := l) ho)
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option linter.deprecated false in
 @[deprecated limitRecOn_zero (since := "2025-12-26")]
 theorem boundedLimitRec_zero {l} (lLim : IsSuccLimit l) {motive} (H₁ H₂ H₃) :
     @boundedLimitRecOn l lLim motive ⟨0, lLim.bot_lt⟩ H₁ H₂ H₃ = H₁ := by
@@ -204,7 +203,6 @@ theorem boundedLimitRec_zero {l} (lLim : IsSuccLimit l) {motive} (H₁ H₂ H₃
   rw [limitRecOn_zero]
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option linter.deprecated false in
 @[deprecated limitRecOn_succ (since := "2025-12-26")]
 theorem boundedLimitRec_succ {l} (lLim : IsSuccLimit l) {motive} (o H₁ H₂ H₃) :
     @boundedLimitRecOn l lLim motive ⟨succ o.1, lLim.succ_lt o.2⟩ H₁ H₂ H₃ = H₂ o
@@ -215,7 +213,6 @@ theorem boundedLimitRec_succ {l} (lLim : IsSuccLimit l) {motive} (o H₁ H₂ H�
   rfl
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option linter.deprecated false in
 @[deprecated limitRecOn_limit (since := "2025-12-26")]
 theorem boundedLimitRec_limit {l} (lLim : IsSuccLimit l) {motive} (o H₁ H₂ H₃ oLim) :
     @boundedLimitRecOn l lLim motive o H₁ H₂ H₃ = H₃ o oLim (fun x _ ↦
@@ -241,7 +238,6 @@ theorem has_succ_of_type_succ_lt {α} {r : α → α → Prop} [wo : IsWellOrder
   · rw [enum_typein]
   · rw [Subtype.mk_lt_mk, lt_succ_iff]
 
-set_option linter.deprecated false in
 @[deprecated isSuccPrelimit_type_lt_iff (since := "2026-04-12")]
 theorem toType_noMax_of_succ_lt {o : Ordinal} (ho : ∀ a < o, succ a < o) : NoMaxOrder o.ToType :=
   ⟨has_succ_of_type_succ_lt (type_toType _ ▸ ho)⟩
@@ -330,65 +326,53 @@ theorem lift_pred (o : Ordinal.{v}) : lift.{u} (pred o) = pred (lift.{u} o) := b
 protected def IsNormal (f : Ordinal → Ordinal) : Prop :=
   Order.IsNormal f
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.le_iff_forall_le (since := "2025-12-25")]
 theorem IsNormal.limit_le {f} (H : Ordinal.IsNormal f) :
     ∀ {o}, IsSuccLimit o → ∀ {a}, f o ≤ a ↔ ∀ b < o, f b ≤ a :=
   H.le_iff_forall_le
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.lt_iff_exists_lt (since := "2025-12-25")]
 theorem IsNormal.limit_lt {f} (H : Ordinal.IsNormal f) {o} (h : IsSuccLimit o) {a} :
     a < f o ↔ ∃ b < o, a < f b :=
   H.lt_iff_exists_lt h
 
-set_option linter.deprecated false in
 @[deprecated Order.IsNormal.strictMono (since := "2025-12-25")]
 theorem IsNormal.strictMono {f} (H : Ordinal.IsNormal f) : StrictMono f :=
   Order.IsNormal.strictMono H
 
-set_option linter.deprecated false in
 @[deprecated Order.IsNormal.strictMono (since := "2025-12-25")]
 theorem IsNormal.monotone {f} (H : Ordinal.IsNormal f) : Monotone f :=
   H.strictMono.monotone
 
-set_option linter.deprecated false in
 @[deprecated isNormal_iff (since := "2025-12-25")]
 theorem isNormal_iff_strictMono_limit (f : Ordinal → Ordinal) :
     Ordinal.IsNormal f ↔ StrictMono f ∧ ∀ o, IsSuccLimit o → ∀ a, (∀ b < o, f b ≤ a) → f o ≤ a :=
   isNormal_iff
 
-set_option linter.deprecated false in
 @[deprecated StrictMono.lt_iff_lt (since := "2025-12-25")]
 theorem IsNormal.lt_iff {f} (H : Ordinal.IsNormal f) {a b} : f a < f b ↔ a < b :=
   H.strictMono.lt_iff_lt
 
-set_option linter.deprecated false in
 @[deprecated StrictMono.le_iff_le (since := "2025-12-25")]
 theorem IsNormal.le_iff {f} (H : Ordinal.IsNormal f) {a b} : f a ≤ f b ↔ a ≤ b :=
   H.strictMono.le_iff_le
 
-set_option linter.deprecated false in
 @[deprecated Injective.eq_iff (since := "2025-12-25")]
 theorem IsNormal.inj {f} (H : Ordinal.IsNormal f) {a b} : f a = f b ↔ a = b :=
   H.strictMono.injective.eq_iff
 
-set_option linter.deprecated false in
 @[deprecated StrictMono.id_le (since := "2025-12-25")]
 theorem IsNormal.id_le {f} (H : Ordinal.IsNormal f) : id ≤ f :=
   H.strictMono.id_le
 
-set_option linter.deprecated false in
 @[deprecated StrictMono.le_apply (since := "2025-12-25")]
 theorem IsNormal.le_apply {f} (H : Ordinal.IsNormal f) {a} : a ≤ f a :=
   H.strictMono.le_apply
 
-set_option linter.deprecated false in
 @[deprecated StrictMono.le_apply (since := "2025-12-25")]
 theorem IsNormal.le_iff_eq {f} (H : Ordinal.IsNormal f) {a} : f a ≤ a ↔ f a = a :=
   H.le_apply.ge_iff_eq'
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.map_isLUB (since := "2025-12-25")]
 theorem IsNormal.le_set {f o} (H : Ordinal.IsNormal f) (p : Set Ordinal) (p0 : p.Nonempty) (b)
     (H₂ : ∀ o, b ≤ o ↔ ∀ a ∈ p, a ≤ o) : f b ≤ o ↔ ∀ a ∈ p, f a ≤ o := by
@@ -396,25 +380,21 @@ theorem IsNormal.le_set {f o} (H : Ordinal.IsNormal f) (p : Set Ordinal) (p0 : p
   refine ⟨fun hb a ha ↦ (hp.1 (mem_image_of_mem _ ha)).trans hb, fun H ↦ hp.2 ?_⟩
   simpa [mem_upperBounds]
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.map_isLUB (since := "2025-12-25")]
 theorem IsNormal.le_set' {f o} (H : Ordinal.IsNormal f) (p : Set α) (p0 : p.Nonempty)
     (g : α → Ordinal) (b) (H₂ : ∀ o, b ≤ o ↔ ∀ a ∈ p, g a ≤ o) :
     f b ≤ o ↔ ∀ a ∈ p, f (g a) ≤ o := by
   simpa [H₂] using H.le_set (g '' p) (p0.image g) b
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.id (since := "2025-12-25")]
 theorem IsNormal.refl : Ordinal.IsNormal id :=
   .id
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.comp (since := "2025-12-25")]
 theorem IsNormal.trans {f g} (H₁ : Ordinal.IsNormal f) (H₂ : Ordinal.IsNormal g) :
     IsNormal (f ∘ g) :=
   H₁.comp H₂
 
-set_option linter.deprecated false in
 @[deprecated IsNormal.map_isSuccLimit (since := "2025-12-25")]
 theorem IsNormal.isSuccLimit {f} (H : Ordinal.IsNormal f) {o} (ho : IsSuccLimit o) :
     IsSuccLimit (f o) :=
@@ -977,15 +957,14 @@ instance instCharZero : CharZero Ordinal := by
   refine ⟨fun a b h ↦ ?_⟩
   rwa [← Cardinal.ord_natCast, ← Cardinal.ord_natCast, Cardinal.ord_inj, Nat.cast_inj] at h
 
-@[simp]
-theorem one_add_natCast (m : ℕ) : 1 + (m : Ordinal) = succ m := by
-  rw [← Nat.cast_one, ← Nat.cast_add, add_comm]
-  rfl
+@[deprecated Nat.cast_add_one_comm (since := "2026-05-10")]
+theorem one_add_natCast (m : ℕ) : 1 + (m : Ordinal) = succ m :=
+  m.cast_add_one_comm.symm
 
-@[simp]
+@[deprecated Nat.cast_add_one_comm (since := "2026-05-10")]
 theorem one_add_ofNat (m : ℕ) [m.AtLeastTwo] :
     1 + (ofNat(m) : Ordinal) = Order.succ (OfNat.ofNat m : Ordinal) :=
-  one_add_natCast m
+  m.cast_add_one_comm.symm
 
 @[simp, norm_cast]
 theorem natCast_mul (m : ℕ) : ∀ n : ℕ, ((m * n : ℕ) : Ordinal) = m * n

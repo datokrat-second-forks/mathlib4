@@ -910,7 +910,6 @@ section LaxMonoidal
 variable [F.OplaxMonoidal]
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- The right adjoint of an oplax monoidal functor is lax monoidal. -/
 @[simps -isSimp, instance_reducible]
 def rightAdjointLaxMonoidal : G.LaxMonoidal where
@@ -1028,7 +1027,6 @@ section OplaxMonoidal
 variable [G.LaxMonoidal]
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- The left adjoint of a lax monoidal functor is oplax monoidal. -/
 @[simps -isSimp, instance_reducible]
 def leftAdjointOplaxMonoidal : F.OplaxMonoidal where
@@ -1087,7 +1085,6 @@ instance :
 end OplaxMonoidal
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 attribute [local simp] leftAdjointOplaxMonoidal_η leftAdjointOplaxMonoidal_δ
   rightAdjointLaxMonoidal_ε rightAdjointLaxMonoidal_μ in
 /-- If `F ⊣ G` is an adjunction, the `G` is lax monoidal iff `F` is oplax monoidal.
@@ -1129,7 +1126,6 @@ variable (e : C ≌ D)
 instance [e.inverse.Monoidal] : e.symm.functor.Monoidal := inferInstanceAs (e.inverse.Monoidal)
 instance [e.functor.Monoidal] : e.symm.inverse.Monoidal := inferInstanceAs (e.functor.Monoidal)
 
-set_option backward.isDefEq.respectTransparency false in
 /-- If a monoidal functor `F` is an equivalence of categories then its inverse is also monoidal. -/
 @[instance_reducible]
 noncomputable def inverseMonoidal [e.functor.Monoidal] : e.inverse.Monoidal := by
@@ -1175,7 +1171,6 @@ lemma functor_map_μ_inverse_comp_counitIso_hom_app_tensor (X Y : D) :
       δ e.functor _ _ ≫ (e.counitIso.hom.app X ⊗ₘ e.counitIso.hom.app Y) :=
   e.toAdjunction.map_μ_comp_counit_app_tensor X Y
 
-set_option backward.isDefEq.respectTransparency false in
 @[reassoc]
 lemma counitIso_inv_app_comp_functor_map_η_inverse :
     e.counitIso.inv.app (𝟙_ D) ≫ e.functor.map (η e.inverse) = ε e.functor := by
@@ -1183,7 +1178,6 @@ lemma counitIso_inv_app_comp_functor_map_η_inverse :
     Category.assoc, Iso.hom_inv_id_app_assoc, Monoidal.map_ε_η]
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 @[reassoc]
 lemma counitIso_inv_app_tensor_comp_functor_map_δ_inverse (X Y : C) :
     e.counitIso.inv.app (e.functor.obj X ⊗ e.functor.obj Y) ≫
@@ -1216,7 +1210,6 @@ lemma functor_map_μ_inverse_comp_counit_app_tensor (X Y : D) :
       δ e.functor _ _ ≫ (e.counit.app X ⊗ₘ e.counit.app Y) :=
   e.toAdjunction.map_μ_comp_counit_app_tensor X Y
 
-set_option backward.isDefEq.respectTransparency false in
 @[reassoc]
 lemma counitInv_app_comp_functor_map_η_inverse :
     e.counitInv.app (𝟙_ D) ≫ e.functor.map (η e.inverse) = ε e.functor := by

@@ -334,7 +334,7 @@ variable [HasZeroObject C] [HasZeroObject D]
 
 variable {X Y : C} (f : X ⟶ Y)
 
-set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 /-- Mapping a `zeroKernelFork` of `f : X ⟶ Y` along a functor `G` that preserves zero morphisms
 is isomorphic to the `zeroKernelFork` of `G.map f`. -/
 def mapZeroKernelFork :

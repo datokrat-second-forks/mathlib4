@@ -92,7 +92,8 @@ noncomputable def isColimitOf' (t : Cocone F) (hsurj : ∀ x : t.pt, ∃ i xi, x
     IsColimit t :=
   isColimitOf _ _ hsurj (fun i j xi xj h ↦ by
     obtain ⟨k, g, hg⟩ := hinj (IsFiltered.max i j) (F.map (IsFiltered.leftToMax i j) xi)
-      (F.map (IsFiltered.rightToMax i j) xj) (by simp_all [Cocone.w_apply])
+      (F.map (IsFiltered.rightToMax i j) xj)
+      (by set_option backward.isDefEq.respectTransparency true in simp_all)
     exact ⟨k, IsFiltered.leftToMax i j ≫ g, IsFiltered.rightToMax i j ≫ g, by simpa using hg⟩)
 
 protected theorem rel_equiv : _root_.Equivalence (FilteredColimit.Rel.{v, u} F) where

@@ -60,8 +60,8 @@ instance [Faithful F] : Faithful F.mapTriangle where
     · exact congr_arg TriangleMorphism.hom₂ h
     · exact congr_arg TriangleMorphism.hom₃ h
 
-set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option backward.defeqAttrib.useBackward true in
 instance [Full F] [Faithful F] : Full F.mapTriangle where
   map_surjective {X Y} f :=
     ⟨{hom₁ := F.preimage f.hom₁
@@ -159,8 +159,8 @@ set_option backward.defeqAttrib.useBackward true in
 def mapTriangleCompIso : (F ⋙ G).mapTriangle ≅ F.mapTriangle ⋙ G.mapTriangle :=
   NatIso.ofComponents (fun T => Triangle.isoMk _ _ (Iso.refl _) (Iso.refl _) (Iso.refl _))
 
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- Two isomorphic functors `F₁` and `F₂` induce isomorphic functors
 `F₁.mapTriangle` and `F₂.mapTriangle` if the isomorphism `F₁ ≅ F₂` is compatible
 with the shifts. -/
@@ -326,7 +326,6 @@ variable {X₁ X₂ X₃ Z₁₂ Z₂₃ Z₁₃ : C}
   (F : C ⥤ D) [F.CommShift ℤ] [F.IsTriangulated]
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- The image of an octahedron by a triangulated functor. -/
 @[simps]
 def map : Octahedron (by dsimp; rw [← F.map_comp, comm])
@@ -367,7 +366,6 @@ lemma isTriangulated_of_essSurj_mapComposableArrows_two
     (H := (someOctahedron rfl h₁₂' h₂₃' h₁₃').map F) ..⟩
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 lemma IsTriangulated.of_fully_faithful_triangulated_functor
     (F : C ⥤ D) [F.CommShift ℤ]
     [F.IsTriangulated] [F.Full] [F.Faithful] [IsTriangulated D] :

@@ -73,7 +73,7 @@ theorem toNNReal_ne_zero {e : ℝ≥0} {m : ℤᵐ⁰} (he : e ≠ 0) (hm : m �
 
 /-- `toNNReal` sends nonzero elements to positive elements. -/
 theorem toNNReal_pos {e : ℝ≥0} {m : ℤᵐ⁰} (he : e ≠ 0) (hm : m ≠ 0) : 0 < toNNReal he m :=
-  lt_of_le_of_ne zero_le' (toNNReal_ne_zero he hm).symm
+  (toNNReal_ne_zero he hm).pos
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The map `toNNReal` is strictly monotone whenever `1 < e`. -/

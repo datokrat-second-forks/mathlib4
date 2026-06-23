@@ -393,12 +393,8 @@ theorem constFormalMultilinearSeries_apply_of_nonzero [NontriviallyNormedField �
 lemma constFormalMultilinearSeries_zero [NontriviallyNormedField 𝕜] [NormedAddCommGroup E]
     [NormedAddCommGroup F] [NormedSpace 𝕜 E] [NormedSpace 𝕜 F] :
     constFormalMultilinearSeries 𝕜 E (0 : F) = 0 := by
-  ext n x
-  simp only [FormalMultilinearSeries.zero_apply, ContinuousMultilinearMap.zero_apply,
-    constFormalMultilinearSeries]
-  induction n
-  · simp only [ContinuousMultilinearMap.uncurry0_apply]
-  · simp only [constFormalMultilinearSeries.match_1.eq_2, ContinuousMultilinearMap.zero_apply]
+  ext n
+  induction n <;> simp
 
 @[simp]
 lemma compContinuousLinearMap_zero [NontriviallyNormedField 𝕜]
@@ -415,7 +411,7 @@ lemma compContinuousLinearMap_zero [NontriviallyNormedField 𝕜]
     congr
     apply Subsingleton.allEq
   | succ =>
-    simp [ContinuousLinearMap.coe_zero']
+    simp [FunLike.coe_zero]
 
 end Const
 

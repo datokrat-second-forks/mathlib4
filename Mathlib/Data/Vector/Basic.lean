@@ -526,7 +526,7 @@ def casesOn₃ {motive : ∀ {n}, Vector α n → Vector β n → Vector γ n �
 
 /-- Cast a vector to an array. -/
 def toArray : Vector α n → Array α
-  | ⟨xs, _⟩ => cast (by rfl) xs.toArray
+  | ⟨xs, _⟩ => xs.toArray
 
 section InsertIdx
 

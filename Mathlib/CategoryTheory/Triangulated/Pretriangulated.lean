@@ -169,8 +169,8 @@ lemma distinguished_cocone_triangle₁ {Y Z : C} (g : Y ⟶ Z) :
   obtain ⟨X', f', g', mem⟩ := distinguished_cocone_triangle g
   exact ⟨_, _, _, inv_rot_of_distTriang _ mem⟩
 
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- Any morphism `Z ⟶ X⟦1⟧` is part of a distinguished triangle `X ⟶ Y ⟶ Z ⟶ X⟦1⟧` -/
 lemma distinguished_cocone_triangle₂ {Z X : C} (h : Z ⟶ X⟦(1 : ℤ)⟧) :
     ∃ (Y : C) (f : X ⟶ Y) (g : Y ⟶ Z), Triangle.mk f g h ∈ distTriang C := by

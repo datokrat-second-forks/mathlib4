@@ -58,7 +58,7 @@ variable [MeasurableSpace α]
 
 instance instFunLike : FunLike (α →ₛ β) α β where
   coe := toFun
-  coe_injective' | ⟨_, _, _⟩, ⟨_, _, _⟩, rfl => rfl
+  coe_injective | ⟨_, _, _⟩, ⟨_, _, _⟩, rfl => rfl
 
 theorem coe_injective ⦃f g : α →ₛ β⦄ (H : (f : α → β) = g) : f = g := DFunLike.ext' H
 
@@ -676,7 +676,7 @@ lemma mk_le_mk {f g : α → β} {hf hg hf' hg'} : mk f hf hf' ≤ mk g hg hg' �
 lemma mk_lt_mk {f g : α → β} {hf hg hf' hg'} : mk f hf hf' < mk g hg hg' ↔ f < g := Iff.rfl
 
 open scoped Classical in
-@[gcongr]
+@[gcongr only]
 lemma piecewise_mono (hf : ∀ a ∈ s, f₁ a ≤ f₂ a) (hg : ∀ a ∉ s, g₁ a ≤ g₂ a) :
     piecewise s hs f₁ g₁ ≤ piecewise s hs f₂ g₂ := Set.piecewise_mono hf hg
 
@@ -1259,7 +1259,7 @@ protected theorem induction {α γ} [MeasurableSpace α] [AddZeroClass γ]
   rw [← Finset.coe_inj, Finset.coe_sdiff, Finset.coe_singleton, SimpleFunc.coe_range] at h
   induction s using Finset.induction generalizing f with
   | empty =>
-    rw [Finset.coe_empty, diff_eq_empty, range_subset_singleton] at h
+    rw [Finset.coe_empty, sdiff_eq_empty, range_subset_singleton] at h
     convert! const 0 MeasurableSet.univ
     ext x
     simp [h]
@@ -1269,8 +1269,8 @@ protected theorem induction {α γ} [MeasurableSpace α] [AddZeroClass γ]
     have Pg : motive g := by
       apply ih
       simp only [g, SimpleFunc.coe_piecewise, range_piecewise]
-      rw [image_compl_preimage, union_diff_distrib, diff_diff_comm, h, Finset.coe_insert,
-        insert_diff_self_of_notMem, diff_eq_empty.mpr, Set.empty_union]
+      rw [image_compl_preimage, union_sdiff_distrib, sdiff_sdiff_comm, h, Finset.coe_insert,
+        insert_sdiff_self_of_notMem, sdiff_eq_empty.mpr, Set.empty_union]
       · rw [Set.image_subset_iff]
         convert! Set.subset_univ _
         exact preimage_const_of_mem (mem_singleton _)
@@ -1301,7 +1301,7 @@ protected theorem induction' {α γ} [MeasurableSpace α] [Nonempty γ] {P : Sim
   rw [← Finset.coe_inj, Finset.coe_sdiff, Finset.coe_singleton, SimpleFunc.coe_range] at h
   induction s using Finset.induction generalizing f with
   | empty =>
-    rw [Finset.coe_empty, diff_eq_empty, range_subset_singleton] at h
+    rw [Finset.coe_empty, sdiff_eq_empty, range_subset_singleton] at h
     convert! const c
     ext x
     simp [h]
@@ -1311,8 +1311,8 @@ protected theorem induction' {α γ} [MeasurableSpace α] [Nonempty γ] {P : Sim
     have Pg : P g := by
       apply ih
       simp only [g, SimpleFunc.coe_piecewise, range_piecewise]
-      rw [image_compl_preimage, union_diff_distrib, diff_diff_comm, h, Finset.coe_insert,
-        insert_diff_self_of_notMem, diff_eq_empty.mpr, Set.empty_union]
+      rw [image_compl_preimage, union_sdiff_distrib, sdiff_sdiff_comm, h, Finset.coe_insert,
+        insert_sdiff_self_of_notMem, sdiff_eq_empty.mpr, Set.empty_union]
       · rw [Set.image_subset_iff]
         convert! Set.subset_univ _
         exact preimage_const_of_mem (mem_singleton _)

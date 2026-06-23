@@ -30,6 +30,7 @@ open Set Function
 
 
 /-- Complex numbers consist of two `Real`s: a real part `re` and an imaginary part `im`. -/
+@[wikidata Q11567]
 structure Complex : Type where
   /-- The real part of a complex number. -/
   re : ℝ
@@ -286,7 +287,7 @@ theorem equivRealProdAddHom_symm_apply (p : ℝ × ℝ) :
 /-! ### Commutative ring instance and lemmas -/
 
 
-/- We use a nonstandard formula for the `ℕ` and `ℤ` actions to make sure there is no
+/-- We use a nonstandard formula for the `ℕ` and `ℤ` actions to make sure there is no
 diamond from the other actions they inherit through the `ℝ`-action on `ℂ` and action transitivity
 defined in `Data.Complex.Module`. -/
 instance : Nontrivial ℂ :=
@@ -389,19 +390,34 @@ instance commRing : CommRing ℂ :=
     mul_one := by intros; ext <;> simp
     mul_comm := by intros; ext <;> simp <;> ring }
 
+section computable_shortcuts
+
 /-- This shortcut instance ensures we do not find `Ring` via the noncomputable `Complex.field`
 instance. -/
-instance : Ring ℂ := by infer_instance
+instance : Ring ℂ :=
+  delta% inferInstance
+
+/-- This shortcut instance ensures we do not find `NonUnitalCommRing` via the noncomputable
+`instCommCStarAlgebraComplex` instance. -/
+instance : NonUnitalCommRing ℂ :=
+  delta% inferInstance
 
 /-- This shortcut instance ensures we do not find `CommSemiring` via the noncomputable
 `Complex.field` instance. -/
 instance : CommSemiring ℂ :=
-  inferInstance
+  delta% inferInstance
 
 /-- This shortcut instance ensures we do not find `Semiring` via the noncomputable
 `Complex.field` instance. -/
 instance : Semiring ℂ :=
-  inferInstance
+  delta% inferInstance
+
+/-- This shortcut instance ensures we do not find `AddCommMonoid` via the noncomputable
+`Complex.instNormedField` instance. -/
+instance : AddCommMonoid ℂ :=
+  delta% inferInstance
+
+end computable_shortcuts
 
 /-- The "real part" map, considered as an additive group homomorphism. -/
 def reAddGroupHom : ℂ →+ ℝ where

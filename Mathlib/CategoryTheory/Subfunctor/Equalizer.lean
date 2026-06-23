@@ -53,7 +53,7 @@ lemma mem_equalizer_iff {i : C} (x : A.toFunctor.obj i) :
     x.1 ∈ (Subfunctor.equalizer f g).obj i ↔ f.app i x = g.app i x := by
   simp
 
-set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency.types false in
 lemma range_le_equalizer_iff {G : C ⥤ Type w} (φ : G ⟶ A.toFunctor) :
     range (φ ≫ A.ι) ≤ Subfunctor.equalizer f g ↔ φ ≫ f = φ ≫ g := by
   rw [NatTrans.ext_iff]

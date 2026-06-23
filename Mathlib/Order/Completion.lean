@@ -24,6 +24,10 @@ lattice factors through it.
 
 - Build the order isomorphism `DedekindCut ℚ ≃o EReal`.
 
+- Make the `to_dual` tactic work so that some lemmas are created automatically, eg
+  `DedekindCut.le_principal_iff` from `DedekindCut.principal_le_iff`.
+  See [https://github.com/leanprover-community/mathlib4/pull/37939#discussion_r3328958630]
+
 ## Tags
 
 Dedekind completion, Dedekind cut
@@ -104,6 +108,16 @@ theorem principal_le_principal {a b : α} : principal a ≤ principal b ↔ a �
 @[simp]
 theorem principal_lt_principal {a b : α} : principal a < principal b ↔ a < b := by
   simp [lt_iff_le_not_ge]
+
+lemma principal_le_iff {a : α} {c : DedekindCut α} :
+    principal a ≤ c ↔ a ∈ c.left := by
+  simp only [← extent_subset_extent_iff, left_principal]
+  exact ⟨fun h ↦ h self_mem_Iic, fun h y hy ↦ mem_extent_of_rel_extent hy h⟩
+
+lemma le_principal_iff {a : α} {c : DedekindCut α} :
+    c ≤ principal a ↔ a ∈ c.right := by
+  simp only [← intent_subset_intent_iff, right_principal]
+  exact ⟨fun h ↦ h self_mem_Ici, fun h _y hy ↦ mem_intent_of_intent_rel hy h⟩
 
 /-- We can never have a computable decidable instance, for the same reason we can't on `Set α`. -/
 noncomputable instance : DecidableLE (DedekindCut α) :=
@@ -207,10 +221,47 @@ noncomputable instance : LinearOrder (DedekindCut α) where
   le_total := total_of _
   toDecidableLE := inferInstance
 
+/-- Use `DedekindCut.lt_iff_exists'` for a version with `<` and `≤` swapped -/
+theorem lt_iff_exists {a b : DedekindCut α} :
+    a < b ↔ ∃ c, a < principal c ∧ principal c ≤ b := by
+  refine ⟨fun h ↦ ?_, fun ⟨c, hca, hcb⟩ ↦ hca.trans_le hcb⟩
+  rw [← extent_ssubset_extent_iff, Set.ssubset_iff_exists] at h
+  simpa [← not_le, principal_le_iff, and_comm] using h.2
+
+/-- Variant of `DedekindCut.lt_iff_exists` with `<` and `≤` swapped -/
+theorem lt_iff_exists' {a b : DedekindCut α} :
+    a < b ↔ ∃ c, a ≤ principal c ∧ principal c < b := by
+  refine ⟨fun h ↦ ?_, fun ⟨c, hca, hcb⟩ ↦ lt_of_le_of_lt hca hcb⟩
+  rw [← intent_ssubset_intent_iff, Set.ssubset_iff_exists] at h
+  simpa [← not_le, le_principal_iff] using h.2
+
 noncomputable instance : CompleteLinearOrder (DedekindCut α) where
   __ := (inferInstance : LinearOrder _)
   __ := (inferInstance : CompleteLattice _)
   __ := LinearOrder.toBiheytingAlgebra _
+
+instance [DenselyOrdered α] : DenselyOrdered (DedekindCut α) where
+  dense a b h := by
+    obtain ⟨c, hac, hcb⟩ := lt_iff_exists.mp h
+    obtain ⟨d, had, hdc⟩ := lt_iff_exists'.mp hac
+    simp only [principal_lt_principal] at hdc
+    obtain ⟨u, _, _⟩ := DenselyOrdered.dense d c hdc
+    exact ⟨principal u, had.trans_lt (by simpa), hcb.trans_lt' (by simpa)⟩
+
+theorem principal_lt_iff {a : α} {c : DedekindCut α} :
+    principal a < c ↔ ∃ b ∈ c.left, a < b := by
+  rw [← not_le, le_principal_iff]
+  rw [not_iff_comm, not_exists, ← le_principal_iff]
+  simp_rw [← not_le, not_and, not_not]
+  rfl
+
+theorem lt_principal_iff {a : α} {c : DedekindCut α} :
+    c < principal a ↔ ∃ b ∈ c.right, b < a := by
+  rw [← not_le, principal_le_iff]
+  rw [not_iff_comm, not_exists, ← principal_le_iff]
+  rw [← intent_subset_intent_iff]
+  simp_rw [← not_le, not_and, not_not]
+  rfl
 
 end LinearOrder
 end DedekindCut

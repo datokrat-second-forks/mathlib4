@@ -47,6 +47,12 @@ variable {S : Type*} [CommSemiring S] [Algebra S R] [Module S M] [IsScalarTower 
 
 namespace PolynomialModule
 
+/-- Workaround to defeq problems: if we interpret a `PolynomialModule` as a `Finsupp`, also transfer
+the `DFunLike` instance. -/
+@[simp]
+theorem funLike_eq (x : PolynomialModule R M) :
+    DFunLike.coe (self := Finsupp.instFunLike) x = x := rfl
+
 /-- This is required to have the `IsScalarTower S R M` instance to avoid diamonds. -/
 instance : Module S (PolynomialModule R M) :=
   inferInstanceAs <| Module S (ℕ →₀ M)
