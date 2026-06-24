@@ -82,7 +82,7 @@ lemma FullSubcategory.comp_hom {X Y Z : P.FullSubcategory} (f : X ⟶ Y) (g : Y 
 
 variable {P} in
 /-- Constructor for morphisms in a full subcategory. -/
-@[simps]
+@[simps, implicit_reducible]
 def homMk {X Y : P.FullSubcategory} (f : X.obj ⟶ Y.obj) : X ⟶ Y where
   hom := f
 
