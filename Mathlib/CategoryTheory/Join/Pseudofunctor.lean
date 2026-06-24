@@ -44,6 +44,15 @@ def mapCompLeft (F : A ⥤ B) (G : B ⥤ C) :
     mapPair (F ⋙ G) (𝟭 D) ≅ mapPair F (𝟭 D) ⋙ mapPair G (𝟭 D) :=
   mapIsoWhiskerLeft _ (Functor.leftUnitor _).symm ≪≫ mapPairComp F (𝟭 D) G (𝟭 D)
 
+#adaptation_note
+/--
+`mapIsoWhiskerRight`'s `simps` theorems were formulated in simp normal form under
+`respectTransparency.types true`. We use `respectTransparency.types false` here because these
+lemmas fail to match without this annotation.
+Suggested way forward: Decide what the correct signatures of the `mapIsoWhiskerRight` lemmas
+are, then update this proof accordingly.
+-/
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 variable (A) in
 @[reassoc]
@@ -51,8 +60,28 @@ lemma mapWhiskerLeft_whiskerLeft (F : B ⥤ C) {G H : C ⥤ D} (η : G ⟶ H) :
     mapWhiskerLeft _ (whiskerLeft F η) =
     (mapCompRight A F G).hom ≫ whiskerLeft (mapPair (𝟭 A) F) (mapWhiskerLeft _ η) ≫
       (mapCompRight A F H).inv := by
-  apply natTrans_ext <;> ext <;> simp [mapCompRight]
+  apply natTrans_ext <;> ext
+  · simp only [comp_obj, inclLeft_obj, mapPair_obj_left, id_obj, whiskerLeft_app,
+    mapWhiskerLeft_app, mapCompRight, Iso.trans_hom, Iso.trans_inv, Category.assoc,
+    Functor.whiskerLeft_comp, whiskerLeft_twice, NatTrans.comp_app, mapIsoWhiskerRight_hom_app,
+    Iso.symm_hom, leftUnitor_inv_app, map_id, mapPairComp_hom_app_left, associator_inv_app,
+    associator_hom_app, mapPairComp_inv_app_left, mapIsoWhiskerRight_inv_app, Iso.symm_inv,
+    leftUnitor_hom_app, Category.comp_id]
+  · simp only [comp_obj, inclRight_obj, mapPair_obj_right, whiskerLeft_app, mapWhiskerLeft_app,
+    mapCompRight, Iso.trans_hom, Iso.trans_inv, Category.assoc, Functor.whiskerLeft_comp,
+    whiskerLeft_twice, NatTrans.comp_app, mapIsoWhiskerRight_hom_app, mapPairComp_hom_app_right,
+    associator_inv_app, associator_hom_app, mapPairComp_inv_app_right, mapIsoWhiskerRight_inv_app,
+    Category.comp_id, Category.id_comp]
 
+#adaptation_note
+/--
+`mapIsoWhiskerLeft`'s `simps` theorems were formulated in simp normal form under
+`respectTransparency.types true`. We use `respectTransparency.types false` here because these
+lemmas fail to match without this annotation.
+Suggested way forward: Decide what the correct signatures of the `mapIsoWhiskerLeft` lemmas
+are, then update this proof accordingly.
+-/
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 variable (D) in
 @[reassoc]

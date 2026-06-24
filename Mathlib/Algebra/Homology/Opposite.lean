@@ -376,8 +376,6 @@ end
 
 section
 
-set_option linter.tacticCheckInstances true
-
 variable {K L : HomologicalComplex V c} (φ : K ⟶ L) (i : ι)
   [K.HasHomology i] [L.HasHomology i]
 
@@ -401,7 +399,7 @@ lemma opcyclesOpIso_hom_naturality :
 
 #adaptation_note
 /-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
-set_option backward.isDefEq.respectTransparency.types false in
+set_option backward.isDefEq.respectTransparency false in
 @[reassoc]
 lemma opcyclesOpIso_inv_naturality :
     (cyclesMap φ i).op ≫ (K.opcyclesOpIso i).inv =
