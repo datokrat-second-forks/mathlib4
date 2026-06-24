@@ -60,18 +60,7 @@ lemma mapWhiskerLeft_whiskerLeft (F : B ⥤ C) {G H : C ⥤ D} (η : G ⟶ H) :
     mapWhiskerLeft _ (whiskerLeft F η) =
     (mapCompRight A F G).hom ≫ whiskerLeft (mapPair (𝟭 A) F) (mapWhiskerLeft _ η) ≫
       (mapCompRight A F H).inv := by
-  apply natTrans_ext <;> ext
-  · simp only [comp_obj, inclLeft_obj, mapPair_obj_left, id_obj, whiskerLeft_app,
-    mapWhiskerLeft_app, mapCompRight, Iso.trans_hom, Iso.trans_inv, Category.assoc,
-    Functor.whiskerLeft_comp, whiskerLeft_twice, NatTrans.comp_app, mapIsoWhiskerRight_hom_app,
-    Iso.symm_hom, leftUnitor_inv_app, map_id, mapPairComp_hom_app_left, associator_inv_app,
-    associator_hom_app, mapPairComp_inv_app_left, mapIsoWhiskerRight_inv_app, Iso.symm_inv,
-    leftUnitor_hom_app, Category.comp_id]
-  · simp only [comp_obj, inclRight_obj, mapPair_obj_right, whiskerLeft_app, mapWhiskerLeft_app,
-    mapCompRight, Iso.trans_hom, Iso.trans_inv, Category.assoc, Functor.whiskerLeft_comp,
-    whiskerLeft_twice, NatTrans.comp_app, mapIsoWhiskerRight_hom_app, mapPairComp_hom_app_right,
-    associator_inv_app, associator_hom_app, mapPairComp_inv_app_right, mapIsoWhiskerRight_inv_app,
-    Category.comp_id, Category.id_comp]
+  apply natTrans_ext <;> ext <;> simp [mapCompRight]
 
 #adaptation_note
 /--

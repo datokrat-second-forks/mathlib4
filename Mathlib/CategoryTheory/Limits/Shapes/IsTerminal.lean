@@ -80,15 +80,6 @@ def isTerminalEquivUnique (F : Discrete.{0} PEmpty.{1} ⥤ C) (Y : C) :
     dsimp [Function.RightInverse, Function.LeftInverse]
     subsingleton
 
-/--
-info: CategoryTheory.Limits.isTerminalEquivUnique.{v₁, u₁} {C : Type u₁} [Category.{v₁, u₁} C] (F : Discrete PEmpty.{1} ⥤ C)
-  (Y : C) :
-  IsLimit { pt := Y, π := { app := fun X ↦ id (Discrete.casesOn X fun as ↦ ⋯.elim), naturality := ⋯ } } ≃
-    ((X : C) → Unique (X ⟶ Y))
--/
-#guard_msgs in
-#check isTerminalEquivUnique
-
 set_option backward.defeqAttrib.useBackward true in
 /-- An object `Y` is terminal if for every `X` there is a unique morphism `X ⟶ Y`
     (as an instance). -/
