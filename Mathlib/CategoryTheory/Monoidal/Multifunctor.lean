@@ -172,6 +172,9 @@ def firstMap₃ (F : C ⥤ D) : curriedTensorPostPost F ⟶ curriedTensorPostPos
 /--
 The composition of the left maps in the associativity hexagon.
 -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[simps!]
 def firstMap {F : C ⥤ D} (μ : curriedTensorPre F ⟶ curriedTensorPost F) :
     curriedTensorPrePre F ⟶ curriedTensorPostPost' F :=
@@ -203,6 +206,9 @@ def secondMap₃ {F : C ⥤ D} (μ : curriedTensorPre F ⟶ curriedTensorPost F)
 /--
 The composition of the right maps in the associativity hexagon.
 -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[simps!]
 def secondMap {F : C ⥤ D} (μ : curriedTensorPre F ⟶ curriedTensorPost F) :
     curriedTensorPrePre F ⟶ curriedTensorPostPost' F :=
@@ -359,6 +365,9 @@ def firstMap₃ (F : C ⥤ D) : curriedTensorPrePre F ⟶ curriedTensorPrePre' F
 /--
 The composition of the three left maps in the oplax associativity hexagon.
 -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[simps!]
 def firstMap {F : C ⥤ D} (δ : curriedTensorPost F ⟶ curriedTensorPre F) :
     curriedTensorPostPost F ⟶ curriedTensorPrePre' F :=
@@ -390,6 +399,9 @@ def secondMap₃ {F : C ⥤ D} (δ : curriedTensorPost F ⟶ curriedTensorPre F)
 /--
 The composition of the three right maps in the oplax associativity hexagon.
 -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[simps!]
 def secondMap {F : C ⥤ D} (δ : curriedTensorPost F ⟶ curriedTensorPre F) :
     curriedTensorPostPost F ⟶ curriedTensorPrePre' F :=

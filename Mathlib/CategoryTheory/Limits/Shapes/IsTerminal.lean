@@ -37,6 +37,9 @@ namespace CategoryTheory.Limits
 
 variable {C : Type u₁} [Category.{v₁} C]
 
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 /-- Construct a cone for the empty diagram given an object. -/
 @[simps, implicit_reducible]
 def asEmptyCone (X : C) : Cone (Functor.empty.{0} C) :=
@@ -44,6 +47,9 @@ def asEmptyCone (X : C) : Cone (Functor.empty.{0} C) :=
     π :=
     { app := by cat_disch } }
 
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 /-- Construct a cocone for the empty diagram given an object. -/
 @[simps]
 def asEmptyCocone (X : C) : Cocone (Functor.empty.{0} C) :=
@@ -73,6 +79,15 @@ def isTerminalEquivUnique (F : Discrete.{0} PEmpty.{1} ⥤ C) (Y : C) :
   right_inv := by
     dsimp [Function.RightInverse, Function.LeftInverse]
     subsingleton
+
+/--
+info: CategoryTheory.Limits.isTerminalEquivUnique.{v₁, u₁} {C : Type u₁} [Category.{v₁, u₁} C] (F : Discrete PEmpty.{1} ⥤ C)
+  (Y : C) :
+  IsLimit { pt := Y, π := { app := fun X ↦ id (Discrete.casesOn X fun as ↦ ⋯.elim), naturality := ⋯ } } ≃
+    ((X : C) → Unique (X ⟶ Y))
+-/
+#guard_msgs in
+#check isTerminalEquivUnique
 
 set_option backward.defeqAttrib.useBackward true in
 /-- An object `Y` is terminal if for every `X` there is a unique morphism `X ⟶ Y`
