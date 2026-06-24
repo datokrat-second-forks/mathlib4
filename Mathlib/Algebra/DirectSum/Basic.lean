@@ -35,6 +35,7 @@ variable (ι : Type v) (β : ι → Type w)
 /-- `DirectSum ι β` is the direct sum of a family of additive commutative monoids `β i`.
 
 Note: `open DirectSum` will enable the notation `⨁ i, β i` for `DirectSum ι β`. -/
+@[implicit_reducible]
 def DirectSum [∀ i, AddCommMonoid (β i)] : Type _ :=
   Π₀ i, β i
 deriving AddCommMonoid, Inhabited, DFunLike
@@ -375,17 +376,6 @@ theorem coeAddMonoidHom_of {M S : Type*} [DecidableEq ι] [AddCommMonoid M] [Set
     DirectSum.coeAddMonoidHom A (of (fun i => A i) i x) = x :=
   toAddMonoid_of _ _ _
 
-/-
-TODO:
-`respectTransparency false` isn't actually needed for this to build, but the *statement*
-changes if we don't use it: `DirectSum` is somewhere getting unfolded to `DFinSupp`.
-This is *currently* needed in `DirectSum.Internal`, lemma `coe_mul_apply`, because it relies
-on the discrimination key involving `DFinSupp`, not `DirectSum`.
-
-Note that `coe_mul_apply` also uses `respectTransparency false`. There might be hope that,
-after removing that from `coe_mul_apply`, we can also remove the annotation from this lemma.
--/
-set_option backward.isDefEq.respectTransparency false in
 theorem coe_of_apply {M S : Type*} [DecidableEq ι] [AddCommMonoid M] [SetLike S M]
     [AddSubmonoidClass S M] {A : ι → S} (i j : ι) (x : A i) :
     (of (fun i ↦ {x // x ∈ A i}) i x j : M) = if i = j then x else 0 := by

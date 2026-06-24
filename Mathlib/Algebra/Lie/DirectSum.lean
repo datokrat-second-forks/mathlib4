@@ -44,8 +44,6 @@ variable [LieRing L] [LieAlgebra R L]
 variable [∀ i, AddCommGroup (M i)] [∀ i, Module R (M i)]
 variable [∀ i, LieRingModule L (M i)] [∀ i, LieModule R L (M i)]
 
--- Underlying problem: `DirectSum` is semireducible
-set_option backward.isDefEq.respectTransparency false in
 instance : LieRingModule L (⨁ i, M i) where
   bracket x m := m.mapRange (fun _ m' => ⁅x, m'⁆) fun _ => lie_zero x
   add_lie x y m := by

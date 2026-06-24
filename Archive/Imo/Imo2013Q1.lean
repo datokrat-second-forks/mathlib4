@@ -26,7 +26,6 @@ We prove a slightly more general version where k does not need to be strictly po
 
 
 namespace Imo2013Q1
-
 theorem arith_lemma (k n : ℕ) : 0 < 2 * n + 2 ^ k.succ := by positivity
 
 theorem prod_lemma (m : ℕ → ℕ+) (k : ℕ) (nm : ℕ+) :
