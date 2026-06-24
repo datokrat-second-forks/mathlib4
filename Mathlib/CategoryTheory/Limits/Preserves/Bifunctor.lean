@@ -149,6 +149,9 @@ variable {c₁ : Cocone K₁} (hc₁ : IsColimit c₁)
 set_option backward.isDefEq.respectTransparency.types false in
 /-- Characterize the inverse direction of the isomorphism
 `PreservesColimit₂.isoObjCoconePointsOfIsColimit` w.r.t. the canonical maps to the colimit. -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[reassoc (attr := simp)]
 lemma ι_comp_isoObjConePointsOfIsColimit_inv (j : J₁ × J₂) :
     c₃.ι.app j ≫
@@ -186,6 +189,9 @@ noncomputable def isoColimitUncurryWhiskeringLeft₂ :
 
 /-- Characterize the forward direction of the isomorphism
 `PreservesColimit₂.isoColimitUncurryWhiskeringLeft₂` w.r.t. the canonical maps to the colimit. -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[reassoc (attr := simp)]
 lemma ι_comp_isoColimitUncurryWhiskeringLeft₂_hom (j : J₁ × J₂) :
     colimit.ι (uncurry.obj (whiskeringLeft₂ C |>.obj K₁ |>.obj K₂ |>.obj G)) j ≫
@@ -319,6 +325,9 @@ noncomputable def isoLimitUncurryWhiskeringLeft₂ :
 
 /-- Characterize the inverse direction of the isomorphism
 `PreservesLimit₂.isoLimitUncurryWhiskeringLeft₂` w.r.t. the canonical maps to the limit. -/
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[reassoc (attr := simp)]
 lemma isoLimitUncurryWhiskeringLeft₂_inv_comp_π (j : J₁ × J₂) :
     (PreservesLimit₂.isoLimitUncurryWhiskeringLeft₂ K₁ K₂ G).inv ≫
