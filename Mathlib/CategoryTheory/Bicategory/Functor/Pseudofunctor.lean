@@ -90,6 +90,9 @@ initialize_simps_projections Pseudofunctor (+toPrelaxFunctor, -obj, -map, -map�
 
 namespace Pseudofunctor
 
+#adaptation_note
+/-- `respectTransparency.types true` changes the auto-generated lemmas' signature -/
+set_option backward.isDefEq.respectTransparency.types false in
 attribute [simp, to_app (attr := reassoc)]
   map₂_whisker_left map₂_whisker_right map₂_associator map₂_left_unitor map₂_right_unitor
 
