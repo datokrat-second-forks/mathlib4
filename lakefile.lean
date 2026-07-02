@@ -6,7 +6,7 @@ open Lake DSL
 ## Mathlib dependencies on upstream projects
 -/
 
-require "leanprover-community" / "batteries" @ git "nightly-testing"
+require "leanprover-community" / "batteries" @ git "lean-pr-testing-14248"
 require "leanprover-community" / "Qq" @ git "nightly-testing"
 
 require "leanprover-community" / "aesop" @ git "nightly-testing"
@@ -43,6 +43,7 @@ abbrev mathlibOnlyLinters : Array LeanOption := #[
 abbrev mathlibLeanOptions := #[
     ⟨`pp.unicode.fun, true⟩, -- pretty-prints `fun a ↦ b`
     ⟨`autoImplicit, false⟩,
+    ⟨`backward.isDefEq.instanceTypes, "markOrSynth"⟩,
     ⟨`maxSynthPendingDepth, .ofNat 3⟩,
   ] ++ -- options that are used in `lake build`
     mathlibOnlyLinters.map fun s ↦ { s with name := `weak ++ s.name }
