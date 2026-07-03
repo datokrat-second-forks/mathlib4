@@ -234,7 +234,8 @@ instance : HasFiniteCoproducts Scheme.{u} where
 
 set_option backward.isDefEq.respectTransparency.types false in
 instance : MonoCoprod Scheme.{u} :=
-  .mk' fun X Y ↦ ⟨.mk coprod.inl coprod.inr, coprodIsCoprod X Y, inferInstanceAs <| Mono coprod.inl⟩
+  .mk' fun X Y ↦
+    ⟨.mk coprod.inl coprod.inr, coprodIsCoprod X Y, inferInstanceAs <| Mono coprod.inl (X := X)⟩
 
 /-- The cover of `∐ X` by the `Xᵢ`. -/
 @[simps!]
