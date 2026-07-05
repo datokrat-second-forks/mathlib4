@@ -188,19 +188,19 @@ def universalFactorizationMapLiftEquiv (p : MonicDegreeEq S n) :
   right_inv q := by ext <;> simp
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
 lemma ker_eval₂Hom_universalFactorizationMap :
-    RingHom.ker (eval₂Hom (S₁ := MvPolynomial (Fin m) R ⊗[R] MvPolynomial (Fin k) R)
+    RingHom.ker (eval₂Hom (R := MvPolynomial (Fin n) R)
+      (S₁ := MvPolynomial (Fin m) R ⊗[R] MvPolynomial (Fin k) R)
       (universalFactorizationMap R n m k hn) (Sum.elim (.X · ⊗ₜ 1) (1 ⊗ₜ .X ·))) =
-    Ideal.span (Set.range fun i ↦ C (X i) - map C (tensorEquivSum _ _ _ _
+    Ideal.span (Set.range fun i ↦ C (X i) - map C (tensorEquivSum R (Fin m) (Fin k) R
       (universalFactorizationMap R n m k hn (X i)))) := by
   set f := eval₂Hom (R := MvPolynomial (Fin n) R)
     (S₁ := MvPolynomial (Fin m) R ⊗[R] MvPolynomial (Fin k) R)
     (universalFactorizationMap R n m k hn) (Sum.elim (.X · ⊗ₜ 1) (1 ⊗ₜ .X ·))
-  have H (i : _) : tensorEquivSum _ _ _ _ (f (.X i)) = .X i := by aesop
+  have H (i : _) : tensorEquivSum R (Fin m) (Fin k) R (f (.X i)) = .X i := by aesop
   apply le_antisymm
   · intro x hx
-    convert_to x - (tensorEquivSum _ _ _ _ (f x)).map C ∈ Ideal.span _ using 1
+    convert_to x - (tensorEquivSum R (Fin m) (Fin k) R (f x)).map C ∈ Ideal.span _ using 1
     · simp_all only [RingHom.mem_ker, map_zero, sub_zero]
     clear hx
     induction x using MvPolynomial.induction_on with
@@ -518,7 +518,6 @@ def UniversalFactorizationRing.presentation :
   (MvPolynomial.universalFactorizationMapPresentation R n m k hn).baseChange _
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
 lemma UniversalFactorizationRing.jacobian_resentation :
     (presentation m k hn p).jacobian =
       (-1) ^ n * (factor₁ m k hn p).1.resultant (factor₂ m k hn p).1 := by
@@ -531,7 +530,7 @@ lemma UniversalFactorizationRing.jacobian_resentation :
   let := (MvPolynomial.universalFactorizationMap R n m k hn).toAlgebra
   let := ((MvPolynomial.mapEquivMonic R _ n).symm p).toAlgebra
   refine (Algebra.PreSubmersivePresentation.baseChange_jacobian _ _).trans ?_
-  change fromTensor _ _ _ _ _ = _
+  change fromTensor m k hn p _ = _
   rw [MvPolynomial.universalFactorizationMapPresentation_jacobian]
   rw [map_mul, map_pow, map_neg, map_one, ← AlgHom.coe_toRingHom, ← Polynomial.resultant_map_map,
     Polynomial.map_map, Polynomial.map_map, (monic_freeMonic R k).natDegree_map,
