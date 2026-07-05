@@ -36,7 +36,6 @@ variable {p : ℕ} [Fact p.Prime]
 open NNReal WithZero UniformSpace
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
 open MonoidWithZeroHom.ValueGroup₀ in
 lemma isUniformInducing_cast_withVal : IsUniformInducing ((Rat.castHom ℚ_[p]).comp
     (WithVal.equiv (Rat.padicValuation p)).toRingHom) := by
@@ -81,11 +80,11 @@ lemma isUniformInducing_cast_withVal : IsUniformInducing ((Rat.castHom ℚ_[p]).
     change Rat.padicValuation p (x' - y') < embedding γ.1
     rw [← Nat.cast_pow, ← Rat.cast_natCast, ← Rat.cast_inv_of_ne_zero, Rat.cast_le] at h
     · change padicNorm p (x' - y') ≤ _ at h
-      simp only [Rat.padicValuation, Valuation.coe_mk, MonoidWithZeroHom.coe_mk, ZeroHom.coe_mk,
-        padicNorm, zpow_neg, Nat.cast_pow] at h ⊢
+      rw [show (Rat.padicValuation p) (x' - y') =
+          if x' - y' = 0 then 0 else exp (-padicValRat p (x' - y')) from rfl]
+      simp only [padicNorm, zpow_neg, Nat.cast_pow] at h
       split_ifs with H
-      · simp only [exp_neg]
-        exact embedding_unit_pos _
+      · exact embedding_unit_pos _
       · rw [← lt_log_iff_exp_lt (embedding_unit_ne_zero _)]
         simp_all [← zpow_natCast, zpow_pos, inv_le_inv₀, zpow_le_zpow_iff_right₀ hp1', abs_le,
           Int.lt_iff_add_one_le]
