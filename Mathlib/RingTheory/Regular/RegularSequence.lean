@@ -572,7 +572,6 @@ lemma map_first_exact_on_four_term_right_exact_of_isSMulRegular_last
 section Perm
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
 open _root_.LinearMap in
 private lemma IsWeaklyRegular.swap {a b : R} (h1 : IsWeaklyRegular M [a, b])
     (h2 : torsionBy R M b = a • torsionBy R M b → torsionBy R M b = ⊥) :
@@ -582,7 +581,7 @@ private lemma IsWeaklyRegular.swap {a b : R} (h1 : IsWeaklyRegular M [a, b])
   rw [← isSMulRegular_iff_torsionBy_eq_bot] at h2
   specialize h2 (le_antisymm ?_ (smul_le_self_of_tower a (torsionBy R M b)))
   · refine le_of_eq_of_le ?_ <| smul_top_inf_eq_smul_of_isSMulRegular_on_quot <|
-      ha.of_injective _ <| ker_eq_bot.mp <| ker_liftQ_eq_bot' _ (lsmul R M b) rfl
+      ha.of_injective _ <| ker_eq_bot.mp <| ker_liftQ_eq_bot' (torsionBy R M b) (lsmul R M b) rfl
     rw [← (isSMulRegular_on_quot_iff_lsmul_comap_eq _ _).mp hb]
     exact (inf_eq_right.mpr (ker_le_comap _)).symm
   · rwa [ha.isSMulRegular_on_quot_iff_smul_top_inf_eq_smul, inf_comm, smul_comm,
