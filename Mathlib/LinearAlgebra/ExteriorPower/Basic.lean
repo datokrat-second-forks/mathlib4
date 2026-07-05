@@ -129,8 +129,13 @@ inductive Rels (ι : Type*) (M : Type*)
   | smul (m : ι → M) (i : ι) (r : R) (x : M)
   | alt (m : ι → M) (i j : ι) (hm : m i = m j) (hij : i ≠ j)
 
-/-- The relations in the standard presentation of `⋀[R]^n M` with generators and relations. -/
-@[simps]
+/-- The relations in the standard presentation of `⋀[R]^n M` with generators and relations.
+
+Only the `relation` projection gets a `simp` lemma: `simp` lemmas rewriting the *types*
+`(relations R ι M).G` and `(relations R ι M).R` to their definitional unfoldings make terms whose
+instance arguments are typed at one form appear at the other, which the instance-typed
+metavariable check (lean4#9077) rejects. -/
+@[simps relation]
 noncomputable def relations (ι : Type*) [DecidableEq ι] (M : Type*)
     [AddCommGroup M] [Module R M] :
     Module.Relations R where
@@ -144,7 +149,6 @@ noncomputable def relations (ι : Type*) [DecidableEq ι] (M : Type*)
         r • Finsupp.single (update m i x) 1
     | .alt m _ _ _ _ => Finsupp.single m 1
 
-set_option backward.isDefEq.instanceTypes false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 variable {R} in
