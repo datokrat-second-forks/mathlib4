@@ -141,7 +141,6 @@ lemma coeffs_q_subset (i) :
   rw [MvPolynomial.mem_range_map_iff_coeffs_subset, Subalgebra.setRange_algebraMap]
   grind [subalgebra, Algebra.subset_adjoin]
 
-set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
 lemma exists_kerSquareLift_comp_eq_id :
     ∃ (σ₀ : D.P.ModelOfHasCoeffs (D.subalgebra R) →ₐ[D.subalgebra R]
@@ -151,7 +150,9 @@ lemma exists_kerSquareLift_comp_eq_id :
   choose p hp using fun i ↦ (D.h i).mem_range_map_iff_coeffs_subset.mpr (D.coeffs_h_subset R i)
   refine ⟨?_, ?_⟩
   · refine Ideal.Quotient.liftₐ _ ((Ideal.Quotient.mkₐ _ _).comp <| aeval p) ?_
-    simp_rw [← RingHom.mem_ker, ← SetLike.le_def, Ideal.span_le, Set.range_subset_iff]
+    show Ideal.span (Set.range (D.P.relationOfHasCoeffs (D.subalgebra R))) ≤
+      RingHom.ker ((Ideal.Quotient.mkₐ (D.subalgebra R) (RingHom.ker f₀ ^ 2)).comp (aeval p))
+    rw [Ideal.span_le, Set.range_subset_iff]
     intro i
     simp only [← AlgHom.comap_ker, Ideal.coe_comap, Set.mem_preimage, SetLike.mem_coe]
     rw [← RingHom.ker_coe_toRingHom, Ideal.Quotient.mkₐ_ker,
