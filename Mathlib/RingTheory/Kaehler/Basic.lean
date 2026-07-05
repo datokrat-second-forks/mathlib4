@@ -192,7 +192,6 @@ theorem KaehlerDifferential.DLinearMap_apply (s : S) :
       (KaehlerDifferential.ideal R S).toCotangent
         ⟨1 ⊗ₜ s - s ⊗ₜ 1, KaehlerDifferential.one_smul_sub_smul_one_mem_ideal R s⟩ := rfl
 
-set_option backward.isDefEq.instanceTypes false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The universal derivation into `Ω[S⁄R]`. -/
@@ -203,7 +202,8 @@ def KaehlerDifferential.D : Derivation R S Ω[S⁄R] :=
       congr
       rw [sub_self]
     leibniz' := fun a b => by
-      have : LinearMap.CompatibleSMul { x // x ∈ ideal R S } Ω[S⁄R] S (S ⊗[R] S) := inferInstance
+      have : LinearMap.CompatibleSMul { x // x ∈ ideal R S } (ideal R S).Cotangent S (S ⊗[R] S) :=
+        inferInstance
       dsimp [KaehlerDifferential.DLinearMap_apply]
       rw [← LinearMap.map_smul_of_tower (ideal R S).toCotangent,
         ← LinearMap.map_smul_of_tower (ideal R S).toCotangent,
