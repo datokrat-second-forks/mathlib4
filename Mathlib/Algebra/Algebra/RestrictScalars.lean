@@ -83,11 +83,9 @@ def RestrictScalars (_R _S M : Type*) : Type _ := M
 
 instance [I : Inhabited M] : Inhabited (RestrictScalars R S M) := I
 
-instance [AddCommMonoid M] : AddCommMonoid (RestrictScalars R S M) :=
-  inferInstanceAs (AddCommMonoid M)
+instance [I : AddCommMonoid M] : AddCommMonoid (RestrictScalars R S M) := I
 
-instance [AddCommGroup M] : AddCommGroup (RestrictScalars R S M) :=
-  inferInstanceAs (AddCommGroup M)
+instance [I : AddCommGroup M] : AddCommGroup (RestrictScalars R S M) := I
 
 section Module
 

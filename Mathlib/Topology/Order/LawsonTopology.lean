@@ -50,6 +50,8 @@ Lawson topology, preorder
 
 @[expose] public section
 
+set_option backward.isDefEq.instanceTypes false
+
 open Set TopologicalSpace
 
 variable {α : Type*}
@@ -234,11 +236,8 @@ instance (priority := 90) toT1Space : T1Space α where
       ← WithLawson.isClosed_preimage_ofLawson]
     apply IsClosed.inter
       (lawsonClosed_of_lowerClosed _ (IsLower.isClosed_upperClosure (finite_singleton a)))
-    -- `(α := α)` and `(a := WithScott.toScott a)` keep the rewrite and the `Iic` at the base
-    -- type `α`; otherwise unification re-reads the goal one `WithLawson`/`WithScott` layer up
-    -- and fills the `Preorder (WithScott _)` instance slot with the ambient `Preorder α`.
-    rw [lowerClosure_singleton, LowerSet.coe_Iic, ← WithLawson.isClosed_preimage_ofLawson (α := α)]
-    exact lawsonClosed_of_scottClosed _ (isClosed_Iic (a := WithScott.toScott a))
+    rw [lowerClosure_singleton, LowerSet.coe_Iic, ← WithLawson.isClosed_preimage_ofLawson]
+    exact lawsonClosed_of_scottClosed _ isClosed_Iic
 
 end IsLawson
 

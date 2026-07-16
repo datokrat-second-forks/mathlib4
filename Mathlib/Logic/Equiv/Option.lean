@@ -292,16 +292,8 @@ def optionIsSomeEquiv (α) : { x : Option α // x.isSome } ≃ α where
   left_inv _ := Subtype.ext <| Option.some_get _
   right_inv _ := Option.get_some _ _
 
-/-- The bijection `{ i // i ≠ i₀ } ⊕ PUnit ≃ α` for any `i₀ : α`.
-
-This is intentionally a structure literal using `Sum.casesOn` (rather than a composition of
-`Equiv`s using `Sum.elim`), so that `subtypeNeSumPUnit i₀ (.inl i)` reduces to `↑i` by
-iota/beta alone, without unfolding any semireducible definition — in particular at `.instances`
-transparency, where the types of instance-typed metavariables are compared (lean4#9077). -/
-abbrev subtypeNeSumPUnit (i₀ : α) : { i // i ≠ i₀ } ⊕ PUnit.{u + 1} ≃ α where
-  toFun x := Sum.casesOn x Subtype.val fun _ => i₀
-  invFun i := if h : i = i₀ then .inr ⟨⟩ else .inl ⟨i, h⟩
-  left_inv := by rintro (⟨i, h⟩ | ⟨⟩) <;> simp_all
-  right_inv i := by by_cases h : i = i₀ <;> simp [h]
+/-- The bijection `{ i // i ≠ i₀ } ⊕ PUnit ≃ α` for any `i₀ : α`. -/
+abbrev subtypeNeSumPUnit (i₀ : α) : { i // i ≠ i₀ } ⊕ PUnit.{u + 1} ≃ α :=
+  (Equiv.optionEquivSumPUnit.{u} _).symm.trans (Equiv.optionSubtypeNe i₀)
 
 end Equiv

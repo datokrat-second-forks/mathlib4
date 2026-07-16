@@ -123,6 +123,7 @@ lemma TensorProduct.toIntegralClosure_bijective_of_isLocalizationAway
       (φ r).toLinearMap (toIntegralClosure R S B).toLinearMap (1 ⊗ₜ x)).1)
 
 set_option backward.isDefEq.respectTransparency.types false in
+set_option backward.isDefEq.instanceTypes false in
 attribute [local instance] MvPolynomial.algebraMvPolynomial in
 /-- Base changing to `MvPolynomial σ R` preserves integral closure. -/
 lemma TensorProduct.toIntegralClosure_mvPolynomial_bijective {σ : Type*} :
@@ -277,6 +278,7 @@ lemma exists_derivative_mul_eq_and_isIntegral_coeff
 
 open TensorProduct
 
+set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
 attribute [local instance] Polynomial.algebra in
 @[stacks 03GE "without the generalization to arbitrary etale algebra"]
@@ -329,10 +331,8 @@ theorem mem_adjoin_map_integralClosure_of_isStandardEtale [Algebra.IsStandardEta
   -- And `gᵏ • a` is still `R`-integral for `k` large enough.
   obtain ⟨k, hk⟩ : ∃ k, IsIntegral R (AdjoinRoot.mk 𝓟'.f 𝓟'.g ^ k * a) := by
     have H : ∀ k, e (1 ⊗ₜ (aeval 𝓟.x 𝓟.g ^ k)) = algebraMap _ _ (AdjoinRoot.mk 𝓟'.f 𝓟'.g ^ k) := by
-      intro k
-      rw [← Algebra.TensorProduct.includeRight_apply, map_pow, map_pow,
-        Algebra.TensorProduct.includeRight_apply, heg, ← map_pow]
-      simp [𝓟', StandardEtalePresentation.baseChange]
+      intro k; convert! congr($(heg 𝓟.g) ^ k) <;>
+        simp [← map_pow, 𝓟', StandardEtalePresentation.baseChange]
     have := ((hx m).map (Algebra.TensorProduct.comm _ _ _).symm).map e
     simp only [Algebra.smul_def, Algebra.TensorProduct.algebraMap_apply, Algebra.algebraMap_self,
       RingHom.id_apply, map_mul, Algebra.TensorProduct.comm_symm_tmul, AlgEquiv.symm_apply_apply,

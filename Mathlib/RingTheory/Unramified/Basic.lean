@@ -80,6 +80,7 @@ theorem comp_injective [FormallyUnramified R A] (hI : I ^ 2 = ⊥) :
           (derivationToSquareZeroEquivLift I hI)).surjective.subsingleton
   exact Subtype.ext_iff.mp (@Subsingleton.elim _ this ⟨f₁, rfl⟩ ⟨f₂, e.symm⟩)
 
+set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem iff_comp_injective_of_small [Small.{w} A] :
     FormallyUnramified R A ↔
@@ -93,11 +94,11 @@ theorem iff_comp_injective_of_small [Small.{w} A] :
         ∀ [Algebra R B] (I : Ideal B) (_ : I ^ 2 = ⊥),
           Function.Injective ((Ideal.Quotient.mkₐ R I).comp : (A →ₐ[R] B) → A →ₐ[R] B ⧸ I) := by
       intro B _ _ _ I hI f g e
-      simpa [DFunLike.ext_iff] using H (B := Shrink B) (I.comap (equivShrink B).symm.ringEquiv)
+      simpa [DFunLike.ext_iff] using H (B := Shrink B) (I.comap (Shrink.ringEquiv _))
         (by rw [← Ideal.map_symm, ← Ideal.map_pow, hI]; simp)
         (a₁ := (Shrink.algEquiv _ _).symm.toAlgHom.comp f)
         (a₂ := (Shrink.algEquiv _ _).symm.toAlgHom.comp g)
-        (by simpa [DFunLike.ext_iff, Ideal.Quotient.mk_eq_mk_iff_sub_mem] using e)
+        (by simpa [DFunLike.ext_iff, Ideal.Quotient.mk_eq_mk_iff_sub_mem, Shrink.ringEquiv] using e)
     constructor
     by_contra! h
     obtain ⟨f₁, f₂, e⟩ := (KaehlerDifferential.endEquiv R A).injective.nontrivial

@@ -54,6 +54,8 @@ This file introduces notation in the scope `Isocrystal`.
 
 @[expose] public section
 
+set_option backward.isDefEq.instanceTypes false
+
 noncomputable section
 
 open Module
@@ -91,7 +93,7 @@ instance inv_pair₁ : RingHomInvPair φ(p, k) (FractionRing.frobenius p k).symm
   RingHomInvPair.of_ringEquiv (FractionRing.frobenius p k)
 
 instance inv_pair₂ : RingHomInvPair ((FractionRing.frobenius p k).symm : K(p, k) →+* K(p, k))
-    φ(p, k) :=
+    (FractionRing.frobenius p k) :=
   RingHomInvPair.of_ringEquiv (FractionRing.frobenius p k).symm
 
 /-- The Frobenius automorphism of `k`, as a linear map -/

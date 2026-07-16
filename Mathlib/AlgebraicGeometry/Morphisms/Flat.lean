@@ -336,7 +336,6 @@ lemma mono_pushoutSection_of_iSup_eq {ι : Type*} [Finite ι] (VX : ι → X.Ope
     ext x j
     simp [ψY, H₂, -CommRingCat.hom_comp, ← CategoryTheory.comp_apply, pushoutSection, ψ]
 
-set_option allowUnsafeReducibility true in
 attribute [local instance_reducible] Pairwise.diagram Pairwise.diagramObj Functor.op
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
