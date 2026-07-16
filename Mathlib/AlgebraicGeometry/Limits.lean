@@ -15,6 +15,9 @@ public import Mathlib.CategoryTheory.Limits.Constructions.ZeroObjects -- shake: 
 -- This import adds an instance which, despite failing to trigger,
 -- is necessary for some typeclass syntheses in this file to succeed.
 
+meta import Lean.PostprocessTraces
+open Lean.PostprocessTraces
+
 /-!
 # (Co)Limits of Schemes
 
@@ -232,7 +235,91 @@ noncomputable instance [Small.{u} σ] : CoproductsOfShapeDisjoint Scheme.{u} σ 
 instance : HasFiniteCoproducts Scheme.{u} where
   out := inferInstance
 
+-- The `inferInstanceAs unification happening at default transparency assigns the metavarible in
+-- `coprod.inl` to a term that is definitionally equal to `X`, but only at default transparency, not
+-- at instances transparency.
+/--
+error: failed to synthesize
+  Mono coprod.inl
+
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
+---
+trace: [Meta.isDefEq] ✅️ [default] Mono coprod.inl =?= Mono (BinaryCofan.mk coprod.inl coprod.inr).inl
+  [Meta.isDefEq] ✅️ [default] ?m.34 =?= (pair X Y).obj { as := WalkingPair.left }
+    [Meta.isDefEq] ?m.34 [assignable] =?= (pair X Y).obj { as := WalkingPair.left } [nonassignable]
+    [Meta.isDefEq] ✅️ [default] Scheme =?= Scheme
+-/
+#guard_msgs in
+postprocess_traces filterSubtrees (containsString "?m.34 =?= (CategoryTheory.Limits.pair X Y).obj { as := CategoryTheory.Limits.WalkingPair.left }") in
+set_option trace.Meta.isDefEq true in
+set_option trace.Meta.isDefEq.printTransparency true in
 set_option backward.isDefEq.respectTransparency.types false in
+example : MonoCoprod Scheme.{u} :=
+  .mk' fun X Y ↦
+    ⟨.mk coprod.inl coprod.inr, coprodIsCoprod X Y, inferInstanceAs <| Mono coprod.inl⟩
+
+-- The `coprod.inl`, unified as above, then fails a check at instance transparency.
+-- `Mono.inl_of_binaryCoproductDisjoint` is the instance that is chosen if (X := X) is provided
+-- explicitly, making the example succeed.
+-- Note: An alternative fix is to make `pair` implicit-reducible. In that case, this instance
+-- would still fail to synthesize, but *a different* instance would succeed.
+-- The central failure, in a check gating the assignment of an instance-typed mvar, is:
+-- `❌️ [instances] HasColimit (pair ((pair X Y).obj { as := WalkingPair.left }) Y) =?= HasColimit (pair X Y)`
+/--
+error: failed to synthesize
+  Mono coprod.inl
+
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
+---
+trace: [Meta.synthInstance] ❌️ Mono coprod.inl
+  [Meta.synthInstance.apply] ❌️ apply @Mono.inl_of_binaryCoproductDisjoint to Mono coprod.inl
+    [Meta.synthInstance.tryResolve] ❌️ Mono coprod.inl ≟ Mono coprod.inl
+      [Meta.isDefEq] ❌️ [instances] Mono coprod.inl =?= Mono coprod.inl
+        [Meta.isDefEq] ❌️ [instances] coprod.inl =?= coprod.inl
+          [Meta.isDefEq] ❌️ [instances] Scheme.IsLocallyDirected.instHasColimit (pair X Y) =?= ?m.49
+            [Meta.isDefEq] ❌️ [instances] HasBinaryCoproduct ((pair X Y).obj { as := WalkingPair.left })
+                  Y =?= HasColimit (pair X Y)
+              [Meta.isDefEq] ❌️ [instances] HasColimit
+                    (pair ((pair X Y).obj { as := WalkingPair.left }) Y) =?= HasColimit (pair X Y)
+                [Meta.isDefEq] ❌️ [instances] pair ((pair X Y).obj { as := WalkingPair.left }) Y =?= pair X Y
+                  [Meta.isDefEq] ❌️ [instances] (pair X Y).obj { as := WalkingPair.left } =?= X
+                    [Meta.isDefEq] ❌️ [instances] (pair X Y).1 { as := WalkingPair.left } =?= X
+                      [Meta.isDefEq.onFailure] ❌️ (pair X Y).1 { as := WalkingPair.left } =?= X
+-/
+#guard_msgs in
+postprocess_traces filterSubtrees (containsString "apply @CategoryTheory.Mono.inl_of_binaryCoproductDisjoint to") >=> filterSubtrees (fun x => do
+  let a ← containsString "(CategoryTheory.Limits.pair X Y).1 { as := CategoryTheory.Limits.WalkingPair.left }" x
+  let b ← failed x
+  return a && b) in
+set_option trace.Meta.isDefEq true in
+set_option trace.Meta.isDefEq.printTransparency true in
+set_option backward.isDefEq.respectTransparency.types false in
+set_option trace.Meta.synthInstance true in
+instance : MonoCoprod Scheme.{u} :=
+  .mk' fun X Y ↦
+    ⟨.mk coprod.inl coprod.inr, coprodIsCoprod X Y, inferInstanceAs <| Mono coprod.inl⟩
+
+set_option linter.style.longLine false in
+#adaptation_note
+/--
+instanceTypes-related fix:
+
+Was:
+```lean
+set_option backward.isDefEq.respectTransparency.types false in
+instance : MonoCoprod Scheme.{u} :=
+  .mk' fun X Y ↦
+    ⟨.mk coprod.inl coprod.inr, coprodIsCoprod X Y, inferInstanceAs <| Mono coprod.inl⟩
+```
+
+Why?
+The inline inferInstanceAs leads to a two-step transitive unification:
+`(BinaryCofan.mk ..).inl =?= coprod.inl (params obtained by unification from LHS) =?=
+  coprod.inl (from inl_of_binaryCoproductDisjoint's type)`.
+The first comparison happens at a higher transparency than the second. Seems fragile.
+The first unification has leeway regarding how the expression should look.
+The second comparison happens at instance transparency.
+-/
 instance : MonoCoprod Scheme.{u} :=
   .mk' fun X Y ↦
     ⟨.mk coprod.inl coprod.inr, coprodIsCoprod X Y, inferInstanceAs <| Mono coprod.inl (X := X)⟩
