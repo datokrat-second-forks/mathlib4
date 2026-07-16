@@ -145,18 +145,8 @@ lemma TensorProduct.toIntegralClosure_mvPolynomial_bijective {σ : Type*} :
     refine MvPolynomial.mem_range_map_iff_coeffs_subset.mpr ?_
     simp [Set.subset_def, mem_integralClosure_iff, MvPolynomial.mem_coeffs_iff,
       @forall_comm B, this]
-<<<<<<< HEAD
   refine ⟨e₁.symm y, Subtype.ext <| e.injective (.trans ?_ hy)⟩
   obtain ⟨y, rfl⟩ := e₁.surjective y
-||||||| parent of 445a476835 (keep instance-carrying forms aligned in Smooth/Unramified proofs, remove 4 instanceTypes options)
-  refine ⟨MvPolynomial.scalarRTensorAlgEquiv.symm y, Subtype.ext <| e.injective (.trans ?_ hy)⟩
-  obtain ⟨y, rfl⟩ := (MvPolynomial.scalarRTensorAlgEquiv (R := R)).surjective y
-=======
-  refine ⟨(MvPolynomial.scalarRTensorAlgEquiv (R := R) (σ := σ)
-      (N := integralClosure R B)).symm y,
-    Subtype.ext <| e.injective (.trans ?_ hy)⟩
-  obtain ⟨y, rfl⟩ := (MvPolynomial.scalarRTensorAlgEquiv (R := R)).surjective y
->>>>>>> 445a476835 (keep instance-carrying forms aligned in Smooth/Unramified proofs, remove 4 instanceTypes options)
   dsimp [TensorProduct.toIntegralClosure, e]
   simp only [AlgEquiv.symm_apply_apply]
   have : e₀.toAlgHom.comp
