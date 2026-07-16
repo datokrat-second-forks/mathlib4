@@ -16,7 +16,6 @@ public import Mathlib.CategoryTheory.Limits.Constructions.ZeroObjects -- shake: 
 -- is necessary for some typeclass syntheses in this file to succeed.
 
 meta import Lean.PostprocessTraces
-open Lean.PostprocessTraces
 
 /-!
 # (Co)Limits of Schemes
@@ -35,6 +34,8 @@ We construct various limits and colimits in the category of schemes.
 * Spec preserves finite coproducts.
 
 -/
+
+open Lean.PostprocessTraces
 
 @[expose] public section
 
