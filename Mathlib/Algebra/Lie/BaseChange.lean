@@ -8,6 +8,8 @@ module
 public import Mathlib.Algebra.Algebra.RestrictScalars
 public import Mathlib.Algebra.Lie.TensorProduct
 
+meta import Lean.PostprocessTraces
+
 /-!
 # Extension and restriction of scalars for Lie algebras and Lie modules
 
@@ -25,9 +27,9 @@ scalars.
 lie ring, lie algebra, extension of scalars, restriction of scalars, base change
 -/
 
-@[expose] public section
+open Lean.PostprocessTraces
 
-set_option backward.isDefEq.instanceTypes false
+@[expose] public section
 
 open scoped TensorProduct
 
@@ -151,7 +153,6 @@ end ExtendScalars
 
 namespace RestrictScalars
 
-
 variable [h : LieRing L]
 
 instance : LieRing (RestrictScalars R A L) :=
@@ -159,6 +160,155 @@ instance : LieRing (RestrictScalars R A L) :=
 
 variable [CommRing A] [LieAlgebra A L]
 
+/-
+`RestrictScalars.lieAlgebra` below is the only declaration in this file that needs
+`backward.isDefEq.instanceTypes false` (narrowed here from a file-level option). It is the
+"category-G" `RestrictScalars` pattern:
+* `RestrictScalars R A L := L` is a semireducible type synonym that reuses the raw additive
+  structure of `L` but installs a different `Module R` structure via `Module.compHom`
+  (`RestrictScalars.module`); it is deliberately opaque so that the `R`- and `A`-module
+  structures on `L` do not clash.
+* `LieAlgebra R _` extends `Module R _`, so the `where` block synthesizes
+  `Module R (RestrictScalars R A L)`. In the goal type, the `AddCommMonoid` slot of `Module` is
+  the LieRing parent's `(instLieRingRestrictScalars R A L).toAddCommMonoid`; in
+  `RestrictScalars.module`'s conclusion it is `instAddCommMonoidRestrictScalars R A L ?I` with
+  `?I : AddCommMonoid L` the candidate's instance argument. Both sides of this slot comparison
+  have type `AddCommMonoid (RestrictScalars R A L)`: the problem is well-typed as stated, and
+  `instAddCommMonoidRestrictScalars R A L ?I` would have matched as such.
+* The underlying problem: to make progress, the unifier unfolds
+  `instAddCommMonoidRestrictScalars` — a *retyping wrapper* (`:= I`), so unfolding changes the
+  type of the right-hand side from `AddCommMonoid (RestrictScalars R A L)` to `AddCommMonoid L`
+  (visible in the trace below: the RHS becomes the bare `?m.16` in the next step, with the LHS
+  eta-expanded). What remains is an assignment to `?I` that crosses the synonym — the defeq
+  abuse is introduced by this unfolding step, it was not present in the original slot
+  comparison. The new check then compares
+  `AddCommMonoid L =?= AddCommMonoid (RestrictScalars R A L)` at `.instances` transparency,
+  where the synonym does not unfold; the assignment is rejected and, with no re-synthesis
+  fallback, the structure elaborator falls back to asking for `Module`'s own fields
+  (`Fields missing: add_smul, zero_smul`).
+
+The correctly-typed instance is standalone-synthesizable even with the check on (`#synth`
+below). The unified and the synthesized instances are implicit-reducibly defeq once
+`RestrictScalars` is made implicit-reducible (example below); without that lever they are defeq
+only at default transparency. The rejected class `AddCommMonoid` is data-valued, so a
+Prop-exemption would not apply here.
+
+Possible solutions:
+* Making `RestrictScalars` instance-reducible would let the assignment through, but that defeats
+  the synonym's purpose (keeping the `R`- and `A`-actions apart).
+* If an assignment fails, try to synthesize at the mvar's own type; standalone synthesis
+  succeeds here.
+-/
+
+attribute [local implicit_reducible] RestrictScalars in
+example [CommRing R] [Algebra R A] :
+    (instLieRingRestrictScalars R A L).toAddCommMonoid = (inferInstance : AddCommMonoid L) := by
+  with_implicit apply_rfl
+
+-- Synthesizing the `Module R (RestrictScalars R A L)` parent of the `LieAlgebra` instance fails.
+-- The comparison `… .toAddCommMonoid =?= instAddCommMonoidRestrictScalars R A L` is still
+-- well-typed, but then Lean unfolds the retyping wrapper on the RHS to the
+-- `?m.16 : AddCommMonoid L`. The resulting assignment requires defeq abuse in the types.
+set_option linter.style.longLine false in
+/--
+error: Fields missing: `add_smul`, `zero_smul`
+---
+trace: [Meta.synthInstance] ❌️ Module R (RestrictScalars R A L)
+  [Meta.synthInstance.apply] ❌️ apply RestrictScalars.module to Module R (RestrictScalars R A L)
+    [Meta.synthInstance.tryResolve] ❌️ Module R
+          (RestrictScalars R A L) ≟ Module ?m.12 (RestrictScalars ?m.12 ?m.13 ?m.14)
+      [Meta.isDefEq] ❌️ [instances] Module R
+            (RestrictScalars R A L) =?= Module ?m.12 (RestrictScalars ?m.12 ?m.13 ?m.14)
+        [Meta.isDefEq] ❌️ [default] (instLieRingRestrictScalars R A
+                L).toAddCommMonoid =?= instAddCommMonoidRestrictScalars R A L
+          [Meta.isDefEq] ❌️ [default] { toAddMonoid := (instLieRingRestrictScalars R A L).toAddMonoid,
+                add_comm := ⋯ } =?= ?m.16
+            [Meta.isDefEq] ❌️ [instances] AddCommMonoid L =?= AddCommMonoid (RestrictScalars R A L)
+              [Meta.isDefEq] ❌️ [instances] L =?= RestrictScalars R A L
+                [Meta.isDefEq.onFailure] ❌️ L =?= RestrictScalars R A L
+              [Meta.isDefEq.onFailure] ❌️ AddCommMonoid L =?= AddCommMonoid (RestrictScalars R A L)
+              [Meta.isDefEq.onFailure] ❌️ AddCommMonoid L =?= AddCommMonoid (RestrictScalars R A L)
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance x) <&&>
+    (containsString "Module R (RestrictScalars R A L)" x))
+  >=> filterSubtrees (containsString "RestrictScalars.module")
+  >=> filterSubtrees (containsString "AddCommMonoid L")
+in
+set_option trace.Meta.isDefEq true in
+set_option trace.Meta.isDefEq.printTransparency true in
+set_option trace.Meta.synthInstance true in
+set_option backward.isDefEq.instanceTypes true in
+set_option backward.isDefEq.respectTransparency false in
+example [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
+  lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)
+    (RestrictScalars.addEquiv R A L y) :)
+
+section
+
+/-!
+Potential fix: `inferInstanceAs`.
+Unfolding `instAddCommMonoidRestrictScalars` no longer reduces to the metavariable.
+Instead, it reduces to a constructor call with re-wrapped fields.
+Lean runs `isDefEqArgs`, and before comparing each implicit argument, `trySynthPending`.
+-/
+
+attribute [local implicit_reducible] RestrictScalars
+
+set_option allowUnsafeReducibility true in
+attribute [local implicit_reducible] RestrictScalars in
+local instance [I : AddCommMonoid M] (S : Type _) : AddCommMonoid (RestrictScalars R S M) :=
+  inferInstanceAs <| AddCommMonoid M
+
+local instance restrictScalars_module (S : Type _) [Semiring S] [AddCommMonoid M]
+  [CommSemiring R] [Algebra R S] [Module S M] : Module R (RestrictScalars R S M) :=
+  Module.restrictScalars R S M
+
+private meta partial def maxDepth (depth : Nat) : TracePostprocessor := fun trees =>
+  let rec truncateTree (t : TraceTree) (depth : Nat) : TraceTree :=
+    match t with
+    | .leaf msg => TraceTree.leaf msg
+    | .node data msg children wrap =>
+      match depth with
+      | 0 => .node data m!"{msg} (truncated)" #[] wrap
+      | depth' + 1 => .node data msg (children.map (truncateTree · depth')) wrap
+  return trees.map (truncateTree · depth)
+
+/--
+trace: [Meta.synthInstance] ✅️ Module R (RestrictScalars R A L)
+  [Meta.synthInstance.apply] ✅️ apply restrictScalars_module to Module R (RestrictScalars R A L)
+    [Meta.synthInstance.tryResolve] ✅️ Module R (RestrictScalars R A L) ≟ Module R (RestrictScalars R A L)
+      [Meta.isDefEq] ✅️ [instances] Module R
+            (RestrictScalars R A L) =?= Module ?m.12 (RestrictScalars ?m.12 ?m.14 ?m.13)
+        [Meta.isDefEq] ✅️ [default] (instLieRingRestrictScalars R A
+                L).toAddCommMonoid =?= instAddCommMonoidRestrictScalars R L A
+          [Meta.isDefEq] ✅️ [default] { toAddMonoid := (instLieRingRestrictScalars R A L).toAddMonoid,
+                add_comm :=
+                  ⋯ } =?= { toAddMonoid := (_root_.instAddCommMonoidRestrictScalars R A L).toAddMonoid, add_comm := ⋯ }
+            [Meta.synthInstance] ✅️ AddCommMonoid L (truncated)
+-/
+#guard_msgs in
+postprocess_traces
+  maxDepth 6
+  >=> filterSubtrees (fun x => (ofClass `Meta.synthInstance x) <&&>
+    (containsString "Module R (RestrictScalars R A L)" x))
+  >=> filterSubtrees (containsString "restrictScalars_module")
+  >=> filterSubtrees (containsString "AddCommMonoid L")
+in
+set_option linter.style.setOption false in
+set_option trace.Meta.isDefEq true in
+set_option trace.Meta.isDefEq.printTransparency true in
+set_option trace.Meta.synthInstance true in
+set_option backward.isDefEq.instanceTypes true in
+set_option backward.isDefEq.respectTransparency false in
+example [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
+  lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)
+    (RestrictScalars.addEquiv R A L y) :)
+
+end
+
+set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
 instance lieAlgebra [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
   lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)
