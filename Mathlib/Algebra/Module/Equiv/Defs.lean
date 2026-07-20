@@ -7,6 +7,7 @@ Authors: Nathaniel Thomas, Jeremy Avigad, Johannes Hölzl, Mario Carneiro, Anne 
 module
 
 public import Mathlib.Algebra.Module.LinearMap.Defs
+meta import Lean.PostprocessTraces
 
 /-!
 # (Semi)linear equivalences
@@ -583,6 +584,81 @@ def _root_.RingEquiv.toSemilinearEquiv (f : R ≃+* S) :
   { f with
     toFun := f
     map_smul' := f.map_mul }
+
+/-
+`RingEquiv.symm_toSemilinearEquiv_symm_apply` needs `backward.isDefEq.instanceTypes false`.
+Two phases:
+
+1. The statement pins `(σ' := RingHomClass.toRingHom f)` on `LinearEquiv.symm`. The natural
+   spelling of that index, read off `f.symm.toSemilinearEquiv`'s type, is `↑f.symm.symm`; the
+   pin is accepted because the elaborator's unification mvar is not instance-typed and
+   `↑f =?= ↑f.symm.symm` holds at default transparency (unfold `RingEquiv.symm`, then structure
+   eta). The resulting type `R ≃ₛₗ[↑f] S` therefore pairs the `↑f` index with `RingHomInvPair`
+   instance arguments still spelled at `↑f.symm`/`↑f.symm.symm` (those baked into
+   `RingEquiv.toSemilinearEquiv`'s type by its `haveI`s).
+2. Applying the equiv to `x` coerces it: `CoeFun (R ≃ₛₗ[↑f] S) _` → `DFunLike` → `EquivLike`.
+   The only candidate `LinearEquiv.instEquivLike` matches `?σ := ↑f`, `?σ' := ↑f.symm` off the
+   type args, so its instance-typed mvar `?inst : RingHomInvPair ↑f ↑f.symm` has to swallow the
+   slot value `RingHomInvPair.symm ↑f.symm ↑f.symm.symm : RingHomInvPair ↑f.symm.symm ↑f.symm`.
+   The mvar check compares these types at `.instances`, where `RingEquiv.symm` does not unfold
+   (so `↑f =?= ↑f.symm.symm` is stuck before structure eta can fire) → rejected → no
+   `EquivLike` instance → "Function expected".
+
+* `RingHomInvPair` is a Prop class, so a Prop-exemption in the strict check would fix this
+  site — in contrast to the data-valued rejections at e.g.
+  `Mathlib/CategoryTheory/Filtered/CostructuredArrow.lean`.
+* The same `symm.symm` fragility underlies the sites in
+  `Mathlib/RingTheory/Localization/FractionRing.lean`, `Mathlib/Algebra/Module/Injective.lean`
+  and `Mathlib/Algebra/Category/ModuleCat/ProjectiveDimension.lean`.
+
+Possible solutions: Prop-exemption in the toolchain; or state the lemma at the natural
+`↑f.symm.symm` index (drop the `σ'` pin).
+-/
+
+section InstanceTypesDemos
+
+open Lean.PostprocessTraces
+
+-- `↑f.symm.symm` and `↑f` are defeq at default transparency.
+example (f : R ≃+* S) : (↑f : R →+* S) = ↑f.symm.symm := rfl
+
+-- Without the option, the coercion's `EquivLike` synthesis rejects reproducing the
+-- `↑f`-index/`↑f.symm.symm`-instance pairing in an instance-typed mvar.
+set_option linter.style.longLine false in
+/--
+error: Function expected at
+  f.symm.toSemilinearEquiv.symm
+but this term has type
+  R ≃ₛₗ[↑f] S
+
+Note: Expected a function because this term is being applied to the argument
+  x
+---
+trace: [Meta.synthInstance] ❌️ CoeFun (R ≃ₛₗ[↑f] S) ?m.35
+  [Meta.synthInstance.apply] ❌️ apply @instEquivLike to EquivLike (R ≃ₛₗ[↑f] S) ?m.43 ?m.44
+    [Meta.synthInstance.tryResolve] ❌️ EquivLike (R ≃ₛₗ[↑f] S) ?m.43
+          ?m.44 ≟ EquivLike (?m.48 ≃ₛₗ[?m.56] ?m.49) ?m.48 ?m.49
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.46 : Type ?u.43) := (R : Type u_1)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.47 : Type ?u.44) := (S : Type u_6)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.50 : Semiring R) := (inst✝¹ : Semiring R)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.51 : Semiring S) := (inst✝ : Semiring S)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.56 : R →+* S) := (↑f : R →+* S)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.57 : S →+* R) := (↑f.symm : S →+* R)
+      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.58 : RingHomInvPair ↑f
+            ↑f.symm) := (RingHomInvPair.symm ↑f.symm ↑f.symm.symm : RingHomInvPair ↑f.symm.symm ↑f.symm)
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
+    <&&> (containsString "LinearEquiv.instEquivLike" x))
+in
+set_option trace.Meta.synthInstance true in
+set_option trace.Meta.isDefEq.assign.checkTypes true in
+set_option backward.isDefEq.respectTransparency false in
+example (f : R ≃+* S) (x : R) :
+  f.symm.toSemilinearEquiv.symm (σ' := RingHomClass.toRingHom f) x = f x := rfl
+
+end InstanceTypesDemos
 
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.isDefEq.instanceTypes false in

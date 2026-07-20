@@ -9,6 +9,7 @@ public import Mathlib.RingTheory.Extension.Cotangent.Basic
 public import Mathlib.RingTheory.Extension.Generators
 public import Mathlib.Algebra.Module.SnakeLemma
 public import Mathlib.RingTheory.Flat.Basic
+meta import Lean.PostprocessTraces
 
 /-!
 
@@ -283,6 +284,99 @@ lemma δAux_toAlgHom (f : Hom Q Q') (x) :
       RingHomCompTriple.comp_eq, Function.comp_apply, ← cotangentSpaceBasis_apply]
     rw [add_left_comm]
     rfl
+
+/-
+`δAux_ofComp` needs `backward.isDefEq.instanceTypes false` for the big `simp only` in its
+`mul_X` induction step. The goal there mixes two spellings of the same ring: tensors are
+written over `(Q.comp P).Ring`, while the `Module _ T` instances inside come from the
+`Extension` API and are spelled at `(Q.comp P).toExtension.Ring` (a projection of the
+semireducible `Generators.toExtension`).
+
+To rewrite `1 ⊗ₜ (X n • D p)` with `TensorProduct.tmul_smul`, simp matches the lemma's
+pattern leniently — its pattern mvars are not instance-typed, so the match assigns
+`?inst : Module (Q.comp P).Ring T := toModule : Module (Q.comp P).toExtension.Ring T`
+without complaint. But the lemma's `[CompatibleSMul …]` hypothesis goes to instance
+synthesis with that slot baked into its goal type. The only candidate
+`CompatibleSMul.isScalarTower` has to reproduce the pairing in an instance-typed mvar
+`?m : Module (Q.comp P).Ring T`, and the mvar check compares
+`Module (Q.comp P).Ring T =?= Module (Q.comp P).toExtension.Ring T` at `.instances`, where
+`toExtension` does not unfold → rejected (demo below) → the synthesis fails, so `tmul_smul`
+and the `map_smul`s depending on it never fire, and the leftover `⊗ₜ`-smul terms make the
+`Sum.elim` branches unprovable. (In the demo below, the `unusedSimpArgs` linter — silenced
+to keep the guard readable — even reports `tmul_smul` as an unused simp argument.)
+
+* Same `Ring`/`toExtension.Ring` boundary as the remaining site in
+  `Mathlib/RingTheory/Extension/Cotangent/Basis.lean`.
+* The rejected mvar is data-valued (`Module`), so a Prop-exemption would not apply, even
+  though `CompatibleSMul` itself is a Prop.
+
+Possible solutions: spell the statement's tensors at `(Q.comp P).toExtension.Ring`, or make
+`Generators.toExtension` (and `Extension.Ring` projections of it) reducible at `.instances`.
+-/
+
+section InstanceTypesDemos
+
+open Lean.PostprocessTraces
+
+set_option linter.style.longLine false in
+/--
+trace: [Meta.synthInstance] ❌️ CompatibleSMul (Q.comp P).Ring (Q.comp P).Ring T Ω[(Q.comp P).Ring⁄R]
+  [Meta.synthInstance.apply] ❌️ apply @CompatibleSMul.isScalarTower to CompatibleSMul (Q.comp P).Ring (Q.comp P).Ring T
+        Ω[(Q.comp P).Ring⁄R]
+    [Meta.synthInstance.tryResolve] ❌️ CompatibleSMul (Q.comp P).Ring (Q.comp P).Ring T
+          Ω[(Q.comp P).Ring⁄R] ≟ CompatibleSMul ?m.270 ?m.271 ?m.274 ?m.275
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.270 : Type ?u.296) := ((Q.comp P).Ring : Type (max (max w₁ w₂) u₁))
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.271 : Type ?u.297) := ((Q.comp P).Ring : Type (max (max w₁ w₂) u₁))
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.272 : CommSemiring
+            (Q.comp P).Ring) := (AddMonoidAlgebra.commSemiring : CommSemiring (AddMonoidAlgebra R (ι ⊕ σ →₀ ℕ)))
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.273 : Monoid
+            (Q.comp P).Ring) := (CommRing.toCommSemiring.toMonoid : Monoid (Q.comp P).Ring)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.274 : Type ?u.298) := (T : Type u₃)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.275 : Type ?u.299) := (Ω[(Q.comp P).Ring⁄R] : Type (max (max u₁ w₁) w₂))
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.276 : AddCommMonoid
+            T) := (CommRing.toCommSemiring.toAddCommMonoid : AddCommMonoid T)
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.277 : AddCommMonoid
+            Ω[(Q.comp
+                  P).Ring⁄R]) := ((instAddCommGroupKaehlerDifferential R
+              (Q.comp P).Ring).toAddCommMonoid : AddCommMonoid Ω[(Q.comp P).Ring⁄R])
+      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.278 : DistribMulAction (Q.comp P).Ring
+            T) := (toModule.toDistribMulAction : DistribMulAction (Q.comp P).Ring T)
+      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.279 : Module (Q.comp P).Ring
+            T) := (toModule : Module (Q.comp P).toExtension.Ring T)
+      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.279 : Module (Q.comp P).Ring
+            T) := ({ toSMul := (Q.comp P).toExtension.algebra₂.toSMul, mul_smul := ⋯, one_smul := ⋯, smul_zero := ⋯,
+            smul_add := ⋯, add_smul := ⋯, zero_smul := ⋯ } : Module (Q.comp P).toExtension.Ring T)
+---
+warning: declaration uses `sorry`
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
+    <&&> (containsString "CompatibleSMul.isScalarTower" x))
+in
+set_option backward.isDefEq.respectTransparency false in
+set_option linter.unusedSimpArgs false in
+example (x : (Q.comp P).Ring) :
+    δAux R Q ((Q.ofComp P).toAlgHom x) =
+      P.toExtension.toKaehler.baseChange T (CotangentSpace.compEquiv Q P
+        (1 ⊗ₜ[(Q.comp P).Ring] (D R (Q.comp P).Ring) x : _)).2 := by
+  let : AddCommGroup (T ⊗[S] Ω[S⁄R]) := inferInstance
+  have : IsScalarTower (Q.comp P).Ring (Q.comp P).Ring T := IsScalarTower.left _
+  induction x using MvPolynomial.induction_on with
+  | C s => sorry
+  | add x₁ x₂ hx₁ hx₂ => sorry
+  | mul_X p n IH =>
+    set_option trace.Meta.synthInstance true in
+    set_option trace.Meta.isDefEq.assign.checkTypes true in
+    simp only [map_mul, Hom.toAlgHom_X, ofComp_val, δAux_mul,
+      ← @IsScalarTower.algebraMap_smul Q.Ring T, algebraMap_apply, Hom.algebraMap_toAlgHom,
+      algebraMap_self, map_aeval, RingHomCompTriple.comp_eq, comp_val, RingHom.id_apply,
+      IH, Derivation.leibniz, tmul_add, tmul_smul, ← cotangentSpaceBasis_apply, coe_eval₂Hom,
+      ← @IsScalarTower.algebraMap_smul (Q.comp P).Ring T, aeval_X, map_smul, Prod.snd_add,
+      Prod.smul_snd, map_add]
+    sorry
+
+end InstanceTypesDemos
 
 set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
