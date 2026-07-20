@@ -178,7 +178,7 @@ variable {G H : Type u} [Group G] [Group H] (φ : G →* H) (A : Rep k G) (B : R
 
 open Representation
 
-set_option backward.isDefEq.instanceTypes false
+set_option backward.isDefEq.instanceTypes "none"
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

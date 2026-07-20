@@ -67,6 +67,8 @@ naive expression `EuclideanSpace ℝ (Fin (finrank ℝ E - 1))` for the model sp
 Relate the stereographic projection to the inversion of the space.
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 @[expose] public section
 
 
@@ -586,7 +588,7 @@ example {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
 
 end InstanceTypesDemos
 
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 private lemma stereographic'_neg {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
@@ -668,7 +670,7 @@ example {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
 end InstanceTypesDemos
 
 -- TODO: rephrase this using `mvfderiv`, avoiding the defeq abuse
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
 /-- Consider the differential of the inclusion of the sphere in `E` at the point `v` as a continuous
 linear map from `TangentSpace (𝓡 n) v` to `E`.  The range of this map is the orthogonal complement
@@ -711,7 +713,7 @@ theorem range_mfderiv_coe_sphere {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : s
     exact Submodule.mem_span_singleton_self (v : E)
 
 -- TODO: rephrase this using `mvfderiv`, avoiding the defeq abuse
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
 /-- Consider the differential of the inclusion of the sphere in `E` at the point `v` as a continuous
 linear map from `TangentSpace (𝓡 n) v` to `E`.  This map is injective. -/

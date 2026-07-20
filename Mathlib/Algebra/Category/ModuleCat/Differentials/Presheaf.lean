@@ -39,7 +39,6 @@ to show that the two vanishing conditions `d_app` are equivalent).
 
 @[expose] public section
 
-set_option backward.isDefEq.instanceTypes false
 
 universe v u v₁ v₂ u₁ u₂
 
@@ -80,6 +79,8 @@ variable (d : M.Derivation φ)
 @[simp] lemma d_one (X : Dᵒᵖ) : d.d (X := X) 1 = 0 := by
   simpa using d.d_mul (X := X) 1 1
 
+-- TODO: This one is cursed and fails in different places depending on the strategy
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The postcomposition of a derivation by a morphism of presheaves of modules. -/

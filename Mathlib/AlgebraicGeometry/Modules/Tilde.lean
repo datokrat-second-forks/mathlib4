@@ -27,6 +27,8 @@ such that `M^~(U)` is the set of dependent functions that are locally fractions.
 
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 open Lean.PostprocessTraces
 
 @[expose] public noncomputable section
@@ -540,7 +542,7 @@ Hint: Additional diagnostic information may be available using the `set_option d
 #guard_msgs in
 #synth Category (Spec (CommRingCat.of ↑R)).Modules
 
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 -- attribute [local instance_reducible] Scheme.Modules in
 set_option backward.isDefEq.respectTransparency false in
 lemma isIso_fromTildeΓ_of_presentation (M : (Spec R).Modules) (P : M.Presentation) :

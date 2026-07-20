@@ -230,6 +230,9 @@ def structurePresheafInCommRingCat : Presheaf CommRingCat (PrimeSpectrum.Top R) 
       map_one' := rfl
       map_zero' := rfl }
 
+set_option linter.style.setOption false in
+set_option linter.style.maxHeartbeats false in
+set_option synthInstance.maxHeartbeats 30000 in
 instance (U : (Opens (PrimeSpectrum.Top R))ᵒᵖ) :
     Module ((structureSheafInType R R).obj.obj U) ((structureSheafInType R M).obj.obj U) :=
   inferInstanceAs (Module (sectionsSubalgebra R _) (sectionsSubalgebraSubmodule M _))
@@ -493,7 +496,7 @@ theorem exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const
       simp [Submonoid.smul_def, pow_succ', mul_smul]
     · simp
 
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 theorem toBasicOpenₗ_surjective (f : R) : Function.Surjective (toBasicOpenₗ R M f) := by
   intro s
@@ -796,7 +799,7 @@ instance (x : PrimeSpectrum.Top R) :
   rfl
 
 
-set_option backward.isDefEq.instanceTypes false in
+-- set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 variable (R M) in
 /-- The canonical ring homomorphism interpreting an element of `R` as an element of

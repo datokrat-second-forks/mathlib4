@@ -17,7 +17,7 @@ equivalent to the category of modules over the monoid algebra `k[G]`.
 
 @[expose] public section
 
-set_option backward.isDefEq.instanceTypes false
+-- set_option backward.isDefEq.instanceTypes "none"
 
 universe w w' u u' v v'
 

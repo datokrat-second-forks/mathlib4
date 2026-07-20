@@ -24,6 +24,8 @@ We show that this property is local, and are stable under compositions and base 
 
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 open Lean.PostprocessTraces
 
 public section
@@ -534,7 +536,7 @@ example
     infer_instance
   sorry
 
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 -- set_option allowUnsafeReducibility true in
 -- attribute [local instance_reducible] Pairwise.diagram Pairwise.diagramObj Functor.op
 set_option backward.defeqAttrib.useBackward true in

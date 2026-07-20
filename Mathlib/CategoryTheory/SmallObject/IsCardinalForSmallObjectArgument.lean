@@ -59,8 +59,6 @@ pushouts of coproducts of morphisms in `I`.
 
 @[expose] public section
 
-set_option backward.isDefEq.instanceTypes false
-
 universe w v v' u u'
 
 namespace CategoryTheory
@@ -157,6 +155,7 @@ isomorphisms on the right side. -/
 def propArrow : MorphismProperty (Arrow C) := fun _ _ f ↦
   (coproducts.{w} I).pushouts f.left ∧ (isomorphisms C) f.right
 
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 lemma succStruct_prop_le_propArrow :

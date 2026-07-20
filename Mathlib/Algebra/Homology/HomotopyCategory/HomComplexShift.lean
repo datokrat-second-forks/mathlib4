@@ -33,8 +33,6 @@ appearing in the introduction of
 
 @[expose] public section
 
-set_option backward.isDefEq.instanceTypes false
-
 assert_not_exists TwoSidedIdeal
 
 open CategoryTheory Category Limits Preadditive
@@ -294,6 +292,7 @@ lemma rightShift_smul (a n' : ℤ) (hn' : n' + a = n) (x : R) :
   dsimp
   simp only [rightShift_v _ a n' hn' p q hpq _ rfl, smul_v, Linear.smul_comp]
 
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma leftShift_smul (a n' : ℤ) (hn' : n + a = n') (x : R) :

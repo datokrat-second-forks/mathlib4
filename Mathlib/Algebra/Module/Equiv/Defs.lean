@@ -38,6 +38,8 @@ linear equiv, linear equivalences, linear isomorphism, linear isomorphic
 
 @[expose] public section
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 assert_not_exists Field Pi.module
 
 open Function
@@ -660,8 +662,9 @@ example (f : R ≃+* S) (x : R) :
 
 end InstanceTypesDemos
 
+-- TODO: this works with neither synth option
 set_option backward.isDefEq.respectTransparency false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 @[simp]
 lemma _root_.RingEquiv.symm_toSemilinearEquiv_symm_apply (f : R ≃+* S) (x : R) :
   f.symm.toSemilinearEquiv.symm (σ' := RingHomClass.toRingHom f) x = f x := rfl

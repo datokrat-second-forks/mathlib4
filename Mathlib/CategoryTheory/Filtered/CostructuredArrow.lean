@@ -23,6 +23,8 @@ meta import Lean.PostprocessTraces
 
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 open Lean.PostprocessTraces
 
 public section
@@ -139,7 +141,7 @@ warning: declaration uses `sorry`
 #guard_msgs in
 set_option linter.unusedTactic false in
 set_option linter.style.setOption false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 example (L : A ⥤ T) (R : B ⥤ T)
@@ -314,7 +316,7 @@ example (L : A ⥤ T) (R : B ⥤ T)
     exact filtered_colim_preservesFiniteLimits
   sorry
 
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 private lemma isFiltered_of_isFiltered_costructuredArrow_small (L : A ⥤ T) (R : B ⥤ T)

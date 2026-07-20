@@ -27,6 +27,8 @@ scalars.
 lie ring, lie algebra, extension of scalars, restriction of scalars, base change
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 open Lean.PostprocessTraces
 
 @[expose] public section
@@ -239,7 +241,6 @@ in
 set_option trace.Meta.isDefEq true in
 set_option trace.Meta.isDefEq.printTransparency true in
 set_option trace.Meta.synthInstance true in
-set_option backward.isDefEq.instanceTypes true in
 set_option backward.isDefEq.respectTransparency false in
 example [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
   lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)
@@ -300,7 +301,6 @@ set_option linter.style.setOption false in
 set_option trace.Meta.isDefEq true in
 set_option trace.Meta.isDefEq.printTransparency true in
 set_option trace.Meta.synthInstance true in
-set_option backward.isDefEq.instanceTypes true in
 set_option backward.isDefEq.respectTransparency false in
 example [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
   lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)
@@ -308,7 +308,7 @@ example [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
 
 end
 
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 instance lieAlgebra [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
   lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)

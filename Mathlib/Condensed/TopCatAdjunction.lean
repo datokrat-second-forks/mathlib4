@@ -20,6 +20,8 @@ The counit is an isomorphism for compactly generated spaces, and we conclude tha
 `topCatToCondensedSet` is fully faithful when restricted to compactly generated spaces.
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 @[expose] public section
 
 open Lean.PostprocessTraces
@@ -234,7 +236,7 @@ example (X : TopCat.{u + 1}) :
 end
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 /-- `simp`-normal form of the lemma that `@[simps]` would generate. -/
 @[simp] lemma topCatAdjunctionCounit_hom_apply (X : TopCat) (x) :
     -- We have to specify here to not infer the `TopologicalSpace` instance on `C(PUnit, X)`,

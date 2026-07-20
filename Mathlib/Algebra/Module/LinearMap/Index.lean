@@ -66,7 +66,7 @@ public lemma index_of_surjective (hf : Surjective f) :
   simp [finrank_eq_zero_of_subsingleton]
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 @[simp] public lemma index_id :
     (id : M →ₗ[R] M).index = 0 := by
   nontriviality R

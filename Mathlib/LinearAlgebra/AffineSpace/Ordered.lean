@@ -29,6 +29,8 @@ for an ordered module interpreted as an affine space.
 affine space, ordered module, slope
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 public section
 
 
@@ -149,8 +151,9 @@ postprocess_traces
   filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
     <&&> (containsString "Module k Eᵒᵈ) := (inst" x))
 in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
+set_option linter.style.setOption false in
 example (h : 0 < r) : lineMap a b r < a ↔ b < a := by
   set_option trace.Meta.isDefEq.assign.checkTypes true in
   exact left_lt_lineMap_iff_lt (E := Eᵒᵈ) h
@@ -223,7 +226,7 @@ example (h : 0 < r) : lineMap a b r < a ↔ b < a := by
 end InstanceTypesDemos
 
 set_option backward.isDefEq.respectTransparency false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 theorem lineMap_lt_left_iff_lt (h : 0 < r) : lineMap a b r < a ↔ b < a :=
   left_lt_lineMap_iff_lt (E := Eᵒᵈ) h
 
@@ -232,7 +235,7 @@ theorem lineMap_lt_right_iff_lt (h : r < 1) : lineMap a b r < b ↔ a < b :=
   Iff.trans (by rw [lineMap_apply_one]) (lineMap_lt_lineMap_iff_of_lt h)
 
 set_option backward.isDefEq.respectTransparency false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 theorem right_lt_lineMap_iff_lt (h : r < 1) : b < lineMap a b r ↔ b < a :=
   lineMap_lt_right_iff_lt (E := Eᵒᵈ) h
 

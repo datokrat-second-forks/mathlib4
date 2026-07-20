@@ -15,6 +15,8 @@ meta import Lean.PostprocessTraces
 
 -/
 
+set_option backward.isDefEq.instanceTypes "mark"
+
 open Lean.PostprocessTraces
 
 @[expose] public section
@@ -126,7 +128,7 @@ postprocess_traces
     (containsString "kernelOrderHom" x))
   >=> filterSubtrees (containsString "equalizer.ι_mono")
 in
--- set_option backward.isDefEq.instanceTypes false in
+-- set_option backward.isDefEq.instanceTypes "none" in
 set_option trace.Meta.synthInstance true in
 set_option trace.Meta.isDefEq true in
 set_option trace.Meta.isDefEq.assign.checkTypes true in
@@ -163,7 +165,7 @@ example [Abelian C] (X : C) : Subobject X ≃o (Subobject (op X))ᵒᵈ := by
     · simp only [monoLift_comp]
 
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.defeqAttrib.useBackward true in
 /-- In an abelian category, the subobjects and quotient objects of an object `X` are
 order-isomorphic via taking kernels and cokernels.
