@@ -48,6 +48,7 @@ boundaries.
 
 -/
 
+set_option linter.style.longFile 0
 
 universe u
 
@@ -498,6 +499,10 @@ theorem exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const
     · simp
 
 /-
+tl;dr: synthesized instance doesn't match unified instance
+
+---
+
 `toBasicOpenₗ_surjective` needs `backward.isDefEq.instanceTypes "none"` (together with
 `backward.isDefEq.respectTransparency false`) for the `simpa … using iU` that discharges the
 `have : PrimeSpectrum.zeroLocus (Set.range b) ⊆ PrimeSpectrum.zeroLocus {f}` step.
@@ -611,18 +616,182 @@ example (f : R) (s : Γ(M, basicOpen f)) : True := by
       ← PrimeSpectrum.zeroLocus_iUnion, PrimeSpectrum.Top] using iU
   trivial
 
--- Counterfactual for leg (c): the candidate `(PrimeSpectrum.Top R).str` and the instance the
--- fallback synthesises, `zariskiTopology`, are equal at `.default` (so `rfl` closes this), but
--- *not* at `.instances`: `with_reducible_and_instances rfl` fails with
--- "(PrimeSpectrum.Top R).str is not definitionally equal to PrimeSpectrum.zariskiTopology".
--- That gap is exactly why the successful fallback synthesis does not rescue the assignment.
-example : (PrimeSpectrum.Top R).str = PrimeSpectrum.zariskiTopology := rfl
+/--
+error: Tactic `rfl` failed: The left-hand side
+  (PrimeSpectrum.Top R).str
+is not definitionally equal to the right-hand side
+  PrimeSpectrum.zariskiTopology
+
+R M A : Type u
+inst✝⁴ : CommRing R
+inst✝³ : AddCommGroup M
+inst✝² : Module R M
+inst✝¹ : CommRing A
+inst✝ : Algebra R A
+⊢ (PrimeSpectrum.Top R).str = PrimeSpectrum.zariskiTopology
+-/
+#guard_msgs in
+example : (PrimeSpectrum.Top R).str = PrimeSpectrum.zariskiTopology := by with_implicit rfl
 
 end InstanceTypesDemos
 
+-- synth vs unification mismatch, see next command
 set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 theorem toBasicOpenₗ_surjective (f : R) : Function.Surjective (toBasicOpenₗ R M f) := by
+  intro s
+  obtain ⟨ι, _, a, b, ibU, iU, hab, H⟩ := exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const _
+    (PrimeSpectrum.isCompact_basicOpen _) s
+  obtain ⟨n, hn⟩ : f ∈ (Ideal.span (Set.range b)).radical := by
+    have : PrimeSpectrum.zeroLocus (Set.range b) ⊆ PrimeSpectrum.zeroLocus {f} := by
+      simpa [← SetLike.coe_subset_coe, ← Set.compl_iInter,
+        ← PrimeSpectrum.zeroLocus_iUnion, PrimeSpectrum.Top] using iU
+    rw [← PrimeSpectrum.vanishingIdeal_zeroLocus_eq_radical, PrimeSpectrum.zeroLocus_span,
+      PrimeSpectrum.mem_vanishingIdeal]
+    exact fun x hx ↦ by simpa using this hx
+  replace hn := Ideal.mul_mem_right f _ hn
+  rw [← pow_succ, Ideal.span, Finsupp.mem_span_range_iff_exists_finsupp] at hn
+  obtain ⟨c, hc⟩ := hn
+  rw [Finsupp.sum_fintype _ _ (by simp)] at hc
+  refine ⟨LocalizedModule.mk (∑ i, c i • a i) ⟨f ^ (n + 1), _, rfl⟩, ?_⟩
+  refine (structureSheafInType R M).eq_of_locally_eq' (fun i ↦ basicOpen (b i)) _
+    (fun i ↦ (ibU _).hom) iU _ _ fun i ↦ (Subtype.ext (funext fun x ↦ ?_)).trans (H _).symm
+  rw [toBasicOpenₗ_mk]
+  refine LocalizedModule.mk_eq.mpr ⟨1, ?_⟩
+  simp_rw [one_smul, Finset.smul_sum, Submonoid.smul_def, smul_comm (b i), hab _ i, ← smul_assoc,
+    ← Finset.sum_smul, hc]
+
+/--
+error: Type mismatch: After simplification, term
+  iU
+ has type
+  basicOpen f ≤ { carrier := (PrimeSpectrum.zeroLocus (Set.range b))ᶜ, is_open' := ⋯ }
+but is expected to have type
+  PrimeSpectrum.zeroLocus (Set.range b) ⊆ PrimeSpectrum.zeroLocus {f}
+---
+trace: [Meta.synthInstance] ❌️ IsConcreteLE (Opens (PrimeSpectrum R)) ?B
+  [Meta.synthInstance.apply] ❌️ apply instIsConcreteLE to IsConcreteLE (Opens (PrimeSpectrum R)) ?m.114
+    [Meta.synthInstance.tryResolve] ❌️ IsConcreteLE (Opens (PrimeSpectrum R)) ?m.114 ≟ IsConcreteLE ?m.117 ?m.118
+      [Meta.isDefEq] ❌️ [instances] IsConcreteLE (Opens (PrimeSpectrum R)) ?m.114 =?= IsConcreteLE ?m.117 ?m.118
+        [Meta.isDefEq] ❌️ [default] Opens.instPartialOrder.toLE =?= (PartialOrder.ofSetLike (Opens (PrimeSpectrum R))
+                ?m.118).toLE
+          [Meta.isDefEq] ❌️ [default] Opens.instPartialOrder.toPreorder =?= (PartialOrder.ofSetLike
+                  (Opens (PrimeSpectrum R)) ?m.118).toPreorder
+            [Meta.isDefEq] ❌️ [default] Opens.instPartialOrder =?= PartialOrder.ofSetLike (Opens (PrimeSpectrum R))
+                  ?m.118
+              [Meta.isDefEq] ❌️ [default] Opens.instPartialOrder =?= let __spread.0 :=
+                    LE.ofSetLike (Opens (PrimeSpectrum R)) ?m.118;
+                  let __spread.1 := PartialOrder.lift SetLike.coe ⋯;
+                  { toLE := __spread.0, lt := fun s t ↦ s ≤ t ∧ ¬t ≤ s, le_refl := ⋯, le_trans := ⋯,
+                    lt_iff_le_not_ge := ⋯, le_antisymm := ⋯ }
+                [Meta.isDefEq] ❌️ [default] Opens.instPartialOrder =?= {
+                      toLE := LE.ofSetLike (Opens (PrimeSpectrum R)) ?m.118, lt := fun s t ↦ s ≤ t ∧ ¬t ≤ s,
+                      le_refl := ⋯, le_trans := ⋯, lt_iff_le_not_ge := ⋯, le_antisymm := ⋯ }
+                  [Meta.isDefEq] ❌️ [default] { le := fun a a_1 ↦ ∀ ⦃x : ↑(PrimeSpectrum.Top R)⦄, x ∈ a → x ∈ a_1,
+                        lt := fun a a_1 ↦ a ≤ a_1 ∧ ¬a_1 ≤ a, le_refl := ⋯, le_trans := ⋯, lt_iff_le_not_ge := ⋯,
+                        le_antisymm :=
+                          ⋯ } =?= { toLE := LE.ofSetLike (Opens (PrimeSpectrum R)) ?m.118,
+                        lt := fun s t ↦ s ≤ t ∧ ¬t ≤ s, le_refl := ⋯, le_trans := ⋯, lt_iff_le_not_ge := ⋯,
+                        le_antisymm := ⋯ }
+                    [Meta.isDefEq] ❌️ [default] { le := fun a a_1 ↦ ∀ ⦃x : ↑(PrimeSpectrum.Top R)⦄, x ∈ a → x ∈ a_1,
+                          lt := fun a a_1 ↦ a ≤ a_1 ∧ ¬a_1 ≤ a, le_refl := ⋯, le_trans := ⋯,
+                          lt_iff_le_not_ge :=
+                            ⋯ } =?= { toLE := LE.ofSetLike (Opens (PrimeSpectrum R)) ?m.118,
+                          lt := fun s t ↦ s ≤ t ∧ ¬t ≤ s, le_refl := ⋯, le_trans := ⋯, lt_iff_le_not_ge := ⋯ }
+                      [Meta.isDefEq] ❌️ [default] {
+                            le := fun a a_1 ↦
+                              ∀ ⦃x : ↑(PrimeSpectrum.Top R)⦄,
+                                x ∈ a → x ∈ a_1 } =?= LE.ofSetLike (Opens (PrimeSpectrum R)) ?m.118
+                        [Meta.isDefEq] ❌️ [default] {
+                              le := fun a a_1 ↦
+                                ∀ ⦃x : ↑(PrimeSpectrum.Top R)⦄,
+                                  x ∈ a → x ∈ a_1 } =?= { le := fun H K ↦ ∀ ⦃x : ?m.118⦄, x ∈ H → x ∈ K }
+                          [Meta.isDefEq] ❌️ [default] fun a a_1 ↦
+                                ∀ ⦃x : ↑(PrimeSpectrum.Top R)⦄,
+                                  x ∈ a → x ∈ a_1 =?= fun H K ↦ ∀ ⦃x : ?m.118⦄, x ∈ H → x ∈ K
+                            [Meta.isDefEq] ❌️ [default] x ∈ a✝² =?= x ∈ a✝²
+                              [Meta.isDefEq] ❌️ [default] SetLike.instMembership =?= SetLike.instMembership
+                                [Meta.isDefEq] ❌️ [default] Opens.instSetLike =?= ?m.119
+                                  [Meta.synthInstance] ❌️ SetLike (Opens (PrimeSpectrum R)) ↑(PrimeSpectrum.Top R)
+                                    [Meta.synthInstance.apply] ❌️ apply @Opens.instSetLike to SetLike
+                                          (Opens (PrimeSpectrum R)) ?m.120
+                                      [Meta.synthInstance.tryResolve] ❌️ SetLike (Opens (PrimeSpectrum R))
+                                            ?m.120 ≟ SetLike (Opens ?m.122) ?m.122
+                                        [Meta.isDefEq] ❌️ [instances] SetLike (Opens (PrimeSpectrum R))
+                                              ?m.120 =?= SetLike (Opens ?m.122) ?m.122
+                                          [Meta.isDefEq] ❌️ [instances] Opens (PrimeSpectrum R) =?= Opens ?m.122
+                                            [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top R).str =?= ?m.123
+                                              [Meta.synthInstance] ✅️ TopologicalSpace (PrimeSpectrum R)
+                                                [Meta.synthInstance] result PrimeSpectrum.zariskiTopology (cached)
+                                              [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                      R).str =?= PrimeSpectrum.zariskiTopology
+                                                [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                        R).str =?= ofClosed (Set.range PrimeSpectrum.zeroLocus) ⋯ ⋯ ⋯
+                                                  [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                          R).str =?= {
+                                                        IsOpen := fun X ↦ Xᶜ ∈ Set.range PrimeSpectrum.zeroLocus,
+                                                        isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ }
+                                                    [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                            R).2 =?= {
+                                                          IsOpen := fun X ↦ Xᶜ ∈ Set.range PrimeSpectrum.zeroLocus,
+                                                          isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ }
+                                                      [Meta.isDefEq] ❌️ [instances] TopologicalSpace
+                                                            (PrimeSpectrum.Top
+                                                                R).1 =?= TopologicalSpace (PrimeSpectrum R)
+                                                        [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                                R).1 =?= PrimeSpectrum R
+                                                          [Meta.isDefEq.onFailure] ❌️ (PrimeSpectrum.Top
+                                                                  R).1 =?= PrimeSpectrum R
+                                                        [Meta.isDefEq.onFailure] ❌️ TopologicalSpace
+                                                              (PrimeSpectrum.Top
+                                                                  R).1 =?= TopologicalSpace (PrimeSpectrum R)
+                                                        [Meta.isDefEq.onFailure] ❌️ TopologicalSpace
+                                                              (PrimeSpectrum.Top
+                                                                  R).1 =?= TopologicalSpace (PrimeSpectrum R)
+                                                      [Meta.isDefEq.onFailure] ❌️ (PrimeSpectrum.Top
+                                                              R).2 =?= {
+                                                            IsOpen := fun X ↦ Xᶜ ∈ Set.range PrimeSpectrum.zeroLocus,
+                                                            isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ }
+                                              [Meta.synthInstance] ✅️ TopologicalSpace (PrimeSpectrum R)
+                                                [Meta.synthInstance] result PrimeSpectrum.zariskiTopology (cached)
+                                              [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                      R).2 =?= PrimeSpectrum.zariskiTopology
+                                                [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                        R).2 =?= ofClosed (Set.range PrimeSpectrum.zeroLocus) ⋯ ⋯ ⋯
+                                                  [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                          R).2 =?= {
+                                                        IsOpen := fun X ↦ Xᶜ ∈ Set.range PrimeSpectrum.zeroLocus,
+                                                        isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ }
+                                                    [Meta.isDefEq] ❌️ [instances] TopologicalSpace
+                                                          (PrimeSpectrum.Top R).1 =?= TopologicalSpace (PrimeSpectrum R)
+                                                      [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.Top
+                                                              R).1 =?= PrimeSpectrum R
+                                                        [Meta.isDefEq.onFailure] ❌️ (PrimeSpectrum.Top
+                                                                R).1 =?= PrimeSpectrum R
+                                                      [Meta.isDefEq.onFailure] ❌️ TopologicalSpace
+                                                            (PrimeSpectrum.Top
+                                                                R).1 =?= TopologicalSpace (PrimeSpectrum R)
+                                                      [Meta.isDefEq.onFailure] ❌️ TopologicalSpace
+                                                            (PrimeSpectrum.Top
+                                                                R).1 =?= TopologicalSpace (PrimeSpectrum R)
+                                                    [Meta.isDefEq.onFailure] ❌️ (PrimeSpectrum.Top
+                                                            R).2 =?= {
+                                                          IsOpen := fun X ↦ Xᶜ ∈ Set.range PrimeSpectrum.zeroLocus,
+                                                          isOpen_univ := ⋯, isOpen_inter := ⋯, isOpen_sUnion := ⋯ }
+-/
+#guard_msgs in
+open Lean.PostprocessTraces in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
+      <&&> (containsString "instIsConcreteLE" x) <&&> (containsString "Opens" x))
+  >=> filterSubtrees (containsString "zariskiTopology")
+in
+set_option trace.Meta.synthInstance true in
+set_option trace.Meta.isDefEq.printTransparency true in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+set_option trace.Meta.isDefEq true in
+set_option backward.isDefEq.respectTransparency false in
+example (f : R) : Function.Surjective (toBasicOpenₗ R M f) := by
   intro s
   obtain ⟨ι, _, a, b, ibU, iU, hab, H⟩ := exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const _
     (PrimeSpectrum.isCompact_basicOpen _) s
@@ -923,7 +1092,7 @@ instance (x : PrimeSpectrum.Top R) :
   rfl
 
 
--- set_option backward.isDefEq.instanceTypes "none" in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
 variable (R M) in
 /-- The canonical ring homomorphism interpreting an element of `R` as an element of

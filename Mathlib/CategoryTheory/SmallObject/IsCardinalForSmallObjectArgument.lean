@@ -157,6 +157,7 @@ isomorphisms on the right side. -/
 def propArrow : MorphismProperty (Arrow C) := fun _ _ f ↦
   (coproducts.{w} I).pushouts f.left ∧ (isomorphisms C) f.right
 
+-- works with "markOrSynth" if `Arrow` and `Arrow.Hom` are made implicit-reducible
 set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
@@ -175,6 +176,7 @@ lemma succStruct_prop_le_propArrow :
     dsimp [succStruct]
     infer_instance
 
+set_option linter.style.longLine false
 /-
 `succStruct_prop_le_propArrow` needs `backward.isDefEq.instanceTypes "none"` for its opening
 `intro _ _ _ ⟨F⟩ f`. The hypothesis being destructured is `(succStruct I κ).prop f✝`, which
@@ -231,13 +233,25 @@ section InstanceTypesDemos
 
 open Lean.PostprocessTraces
 
+private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
+  fun trees => trees.mapM go
+where
+  go (t : TraceTree) : Lean.CoreM TraceTree := do
+    match t with
+    | .leaf msg => return .leaf msg
+    | .node data msg children wrap =>
+      if ← p t then
+        return .node data m!"{msg} (truncated)" #[] wrap
+      else
+        return .node data msg (← children.mapM go) wrap
+
 /- Demo 1: the rejected assignment. `instanceTypes` is pinned to `"markOrSynth"` (the build
 default supplied by the Mathlib lakefile; the option registers as `"mark"`, so a bare
 `lake env lean` would otherwise run this demo under `"mark"`) so the demo faithfully exercises the
 mode the site is compiled in. The `⟨F⟩` destructuring re-elaborates `ofHoms.mk F`; the
 `[Category (Arrow C)]` base slot of its `Functor.category` becomes an instance metavariable spelled
 `Category (Comma (𝟭 C) (𝟭 C))`, and the `Arrow C`-spelled candidate `instCategoryArrow` is
-rejected. The trace is pruned to that one load-bearing node. -/
+rejected. -/
 /--
 error: Type mismatch
   ofHoms.mk F
@@ -248,18 +262,74 @@ but is expected to have type
 ---
 error: No goals to be solved
 ---
-trace: [Meta.isDefEq.assign.checkTypes] ❌️ (?m.75 : Category.{?u.59, max u v}
-      (Comma (𝟭 C) (𝟭 C))) := (instCategoryArrow : Category.{v, max u v} (Arrow C))
+trace: [Meta.synthInstance] ❌️ Category.{max u v, max u v} (Comma (𝟭 C) (𝟭 C) ⥤ Comma (𝟭 C) (𝟭 C))
+  [Meta.synthInstance.apply] ❌️ apply @Functor.category to Category.{max u v, max u v}
+        (Comma (𝟭 C) (𝟭 C) ⥤ Comma (𝟭 C) (𝟭 C))
+    [Meta.synthInstance.tryResolve] ❌️ Category.{max u v, max u v}
+          (Comma (𝟭 C) (𝟭 C) ⥤
+            Comma (𝟭 C) (𝟭 C)) ≟ Category.{max ?u.61 ?u.60, max (max (max ?u.62 ?u.61) ?u.60) ?u.59} (?m.74 ⥤ ?m.76)
+      [Meta.isDefEq] ❌️ [instances] Category.{max u v, max u v}
+            (Comma (𝟭 C) (𝟭 C) ⥤
+              Comma (𝟭 C) (𝟭 C)) =?= Category.{max ?u.61 ?u.60, max (max (max ?u.62 ?u.61) ?u.60) ?u.59} (?m.74 ⥤ ?m.76)
+        [Meta.isDefEq] ❌️ [instances] Comma (𝟭 C) (𝟭 C) ⥤ Comma (𝟭 C) (𝟭 C) =?= ?m.74 ⥤ ?m.76
+          [Meta.isDefEq] ❌️ [implicit] instCategoryArrow =?= ?m.75
+            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.75 : Category.{?u.59, max u v}
+                  (Comma (𝟭 C) (𝟭 C))) := (instCategoryArrow : Category.{v, max u v} (Arrow C))
+              [Meta.isDefEq] ❌️ [instances] Category.{?u.59, max u v}
+                    (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
+                [Meta.isDefEq] ❌️ [instances] Comma (𝟭 C) (𝟭 C) =?= Arrow C
+                  [Meta.isDefEq] ❌️ [instances] @Comma =?= Arrow
+                  [Meta.isDefEq.onFailure] ❌️ Comma (𝟭 C) (𝟭 C) =?= Arrow C
+                  [Meta.isDefEq.onFailure] ❌️ Comma (𝟭 C) (𝟭 C) =?= Arrow C
+                [Meta.isDefEq.onFailure] ❌️ Category.{?u.59, max u v}
+                      (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
+                [Meta.isDefEq.onFailure] ❌️ Category.{?u.59, max u v}
+                      (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
+              [Meta.synthInstance] ✅️ Category.{v, max u v} (Comma (𝟭 C) (𝟭 C)) (truncated)
+              [Meta.isDefEq] ❌️ [implicit] instCategoryArrow =?= commaCategory
+                [Meta.isDefEq] ❌️ [implicit] { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+                      comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+                      assoc := ⋯ } =?= commaCategory
+                  [Meta.isDefEq] ❌️ [implicit] { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+                        comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+                        assoc :=
+                          ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
+                        id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
+                        comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ },
+                        id_comp := ⋯, comp_id := ⋯, assoc := ⋯ }
+                    [Meta.isDefEq] ❌️ [implicit] Arrow C =?= Comma (𝟭 C) (𝟭 C)
+                      [Meta.isDefEq] ❌️ [implicit] Arrow =?= @Comma
+                      [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
+                      [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
+                    [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+                          comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+                          assoc :=
+                            ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
+                          id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
+                          comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ },
+                          id_comp := ⋯, comp_id := ⋯, assoc := ⋯ }
+                    [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+                          comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+                          assoc :=
+                            ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
+                          id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
+                          comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ },
+                          id_comp := ⋯, comp_id := ⋯, assoc := ⋯ }
 -/
 #guard_msgs in
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency.types false in
+set_option trace.Meta.synthInstance true in
+set_option trace.Meta.isDefEq true in
+set_option trace.Meta.isDefEq.printTransparency true in
 set_option backward.defeqAttrib.useBackward true in
 postprocess_traces
-  hoist (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x) <&&> (containsString "Functor.category" x))
+  >=>
+  filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
       <&&> (containsString "instCategoryArrow : Category" x) <&&> (containsString "Comma" x)
       <&&> (return !(← containsString "toQuiver" x)))
-  >=> (fun roots => return roots.map (·.withChildren #[]))
+  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> succeeded x)
 in
 example :
     (succStruct I κ).prop ≤ (propArrow.{w} I).functorCategory (Arrow C) := by
@@ -297,7 +367,56 @@ inst✝ : I.IsCardinalForSmallObjectArgument κ
 ⊢ Arrow C = Comma (𝟭 C) (𝟭 C)
 -/
 #guard_msgs in
-example : Arrow C = Comma (𝟭 C) (𝟭 C) := by with_reducible rfl
+example : Arrow C = Comma (𝟭 C) (𝟭 C) := by with_reducible_and_instances rfl
+
+/--
+error: Tactic `rfl` failed: The left-hand side
+  instCategoryArrow
+is not definitionally equal to the right-hand side
+  commaCategory
+
+C : Type u
+inst✝³ : Category.{v, u} C
+I : MorphismProperty C
+κ : Cardinal.{w}
+inst✝² : Fact κ.IsRegular
+inst✝¹ : OrderBot κ.ord.ToType
+inst✝ : I.IsCardinalForSmallObjectArgument κ
+⊢ instCategoryArrow = commaCategory
+---
+trace: [Meta.isDefEq] ❌️ instCategoryArrow =?= commaCategory
+  [Meta.isDefEq] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+        comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯, assoc := ⋯ } =?= commaCategory
+    [Meta.isDefEq] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+          comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+          assoc :=
+            ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
+          id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
+          comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ }, id_comp := ⋯,
+          comp_id := ⋯, assoc := ⋯ }
+      [Meta.isDefEq] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
+        [Meta.isDefEq] ❌️ Arrow =?= @Comma
+        [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
+        [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
+      [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+            comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+            assoc :=
+              ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
+            id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
+            comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ }, id_comp := ⋯,
+            comp_id := ⋯, assoc := ⋯ }
+      [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+            comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+            assoc :=
+              ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
+            id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
+            comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ }, id_comp := ⋯,
+            comp_id := ⋯, assoc := ⋯ }
+-/
+#guard_msgs in
+example : instCategoryArrow (T := C) = commaCategory := by
+  set_option trace.Meta.isDefEq true in
+  with_implicit apply_rfl
 
 end InstanceTypesDemos
 

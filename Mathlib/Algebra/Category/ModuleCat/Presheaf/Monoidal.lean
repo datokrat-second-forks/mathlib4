@@ -28,6 +28,7 @@ This contribution was created as part of the AIM workshop
 @[expose] public section
 
 open CategoryTheory MonoidalCategory BraidedCategory Category Limits
+open Lean.PostprocessTraces
 
 universe v u v₁ u₁
 
@@ -43,6 +44,14 @@ namespace Monoidal
 variable (M₁ M₂ M₃ M₄ : PresheafOfModules.{u} (R ⋙ forget₂ _ _))
 
 /-
+tl;dr:
+It helps to mark `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars`
+implicit-reducible. These ensure that the synthesis fallback's instances are defeq to the unified
+instances at implicit transparency.
+
+---
+AI-produced investigation:
+
 `tensorObjMap` (here) and `tensorObj_map_tmul` (below) both need
 `backward.isDefEq.instanceTypes "none"` under the project default `"markOrSynth"` (set in
 `lakefile.lean`; a bare `lake env lean` uses the toolchain register default `"mark"`, but both
@@ -139,6 +148,146 @@ noncomputable def tensorObjMap {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M�
       dsimp +instances
       rw [map_add, TensorProduct.tmul_add])
     (by intro a m₁ m₂; dsimp; erw [M₂.map_smul, TensorProduct.tmul_smul (r := R.map f a)]; rfl)
+
+-- set_option linter.tacticChec/skInstances true
+
+-- set_option allowUnsafeReducibility true
+-- attribute [implicit_reducible]
+--   -- Quiver.Hom
+--   ModuleCat.restrictScalars
+--   -- AddCon.Quotient
+--   ModuleCat.RestrictScalars.obj'
+--   -- tensorObj
+--   -- Quotient
+--   -- TensorProduct
+
+-- #print ModuleCat.instModuleCarrierObjRestrictScalars
+
+-- section
+
+-- attribute [-instance] ModuleCat.instModuleCarrierObjRestrictScalars in
+-- instance {R : Type u₁} {S : Type _} [Ring R] [Ring S] {f : R →+* S}
+--     {M : ModuleCat.{v} S} : Module S <| (ModuleCat.restrictScalars f).obj M :=
+--   inferInstanceAs <| Module S M
+-- end
+
+-- #print PresheafOfModules.Monoidal.instModuleCarrierObjModuleCatRestrictScalars
+-- #print instModuleCarrierObjModuleCatRestrictScalars._aux_1
+
+-- works if `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars` are implicit-reducible
+-- so that synthesized instances and unified instances match.
+-- However, that causes massive slowdowns!
+postprocess_traces
+  exposeSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
+in
+set_option backward.isDefEq.instanceTypes "none" in
+set_option backward.isDefEq.respectTransparency false in
+/-- Auxiliary definition for `tensorObj`. -/
+noncomputable example {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M₂.obj X ⟶
+    (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y) :=
+  ModuleCat.MonoidalCategory.tensorLift (fun m₁ m₂ ↦ M₁.map f m₁ ⊗ₜ M₂.map f m₂)
+    (by
+      intro m₁ m₁' m₂
+      dsimp +instances
+      rw [map_add, TensorProduct.add_tmul])
+    (by intro a m₁ m₂; dsimp; erw [M₁.map_smul]; rfl)
+    (by
+      intro m₁ m₂ m₂'
+      dsimp +instances
+      rw [map_add, TensorProduct.tmul_add])
+    (by
+      intro a m₁ m₂
+      dsimp
+      erw [M₂.map_smul]
+      (set_option trace.Meta.synthInstance true in
+      set_option trace.Meta.isDefEq true in
+      set_option trace.Meta.isDefEq.printTransparency true in
+      set_option trace.Meta.isDefEq.assign.checkTypes true in
+      erw [TensorProduct.tmul_smul (r := R.map f a)])
+      rfl)
+
+
+private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
+  fun trees => trees.mapM go
+where
+  go (t : TraceTree) : Lean.CoreM TraceTree := do
+    match t with
+    | .leaf msg => return .leaf msg
+    | .node data msg children wrap =>
+      if ← p t then
+        return .node data m!"{msg} (truncated)" #[] wrap
+      else
+        return .node data msg (← children.mapM go) wrap
+
+/--
+error: failed to synthesize instance of type class
+  TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
+---
+error: unsolved goals
+C : Type u_1
+inst✝ : Category.{v_1, u_1} C
+R : Cᵒᵖ ⥤ CommRingCat
+M₁ M₂ M₃ M₄ : PresheafOfModules (R ⋙ forget₂ CommRingCat RingCat)
+X Y : Cᵒᵖ
+f : X ⟶ Y
+a : ↑((R ⋙ forget₂ CommRingCat RingCat).obj X)
+m₁ : ↑(M₁.obj X)
+m₂ : ↑(M₂.obj X)
+⊢ TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
+---
+trace: [Meta.synthInstance] ❌️ TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
+  [Meta.synthInstance.apply] ❌️ apply @TensorProduct.CompatibleSMul.isScalarTower to TensorProduct.CompatibleSMul
+        ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
+    [Meta.synthInstance.tryResolve] ❌️ TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y)
+          ↑(M₂.obj Y) ≟ TensorProduct.CompatibleSMul ?m.272 ?m.273 ?m.276 ?m.277
+      [Meta.isDefEq] ❌️ [instances] TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y)
+            ↑(M₂.obj Y) =?= TensorProduct.CompatibleSMul ?m.272 ?m.273 ?m.276 ?m.277
+        [Meta.isDefEq] ❌️ [instances] ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction =?= ?m.285
+          [Meta.isDefEq.assign.checkTypes] ❌️ (?m.285 : DistribMulAction ↑(R.obj Y)
+                ↑(M₂.obj
+                    Y)) := (ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction : DistribMulAction
+                ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
+                ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
+                    (M₂.obj Y))) (truncated)
+          [Meta.isDefEq.assign.checkTypes] ❌️ (?m.285 : DistribMulAction ↑(R.obj Y)
+                ↑(M₂.obj
+                    Y)) := ({ toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1, mul_smul := ⋯,
+                one_smul := ⋯, smul_zero := ⋯,
+                smul_add :=
+                  ⋯ } : DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
+                ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
+                    (M₂.obj Y))) (truncated)
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
+  >=> elideBelow (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
+in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+set_option backward.isDefEq.respectTransparency false in
+/-- Auxiliary definition for `tensorObj`. -/
+noncomputable example {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M₂.obj X ⟶
+    (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y) :=
+  ModuleCat.MonoidalCategory.tensorLift (fun m₁ m₂ ↦ M₁.map f m₁ ⊗ₜ M₂.map f m₂)
+    (by
+      intro m₁ m₁' m₂
+      dsimp +instances
+      rw [map_add, TensorProduct.add_tmul])
+    (by intro a m₁ m₂; dsimp; erw [M₁.map_smul]; rfl)
+    (by
+      intro m₁ m₂ m₂'
+      dsimp +instances
+      rw [map_add, TensorProduct.tmul_add])
+    (by
+      intro a m₁ m₂
+      dsimp
+      erw [M₂.map_smul]
+      (set_option trace.Meta.synthInstance true in
+      set_option trace.Meta.isDefEq true in
+      set_option trace.Meta.isDefEq.printTransparency true in
+      set_option trace.Meta.isDefEq.assign.checkTypes true in
+      erw [TensorProduct.tmul_smul (r := R.map f a)])
+      rfl)
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -377,7 +526,7 @@ X : Cᵒᵖ
 example (X : Cᵒᵖ) :
     (RingCat.instRingObjForgetRingHomCarrier (R := (R ⋙ forget₂ CommRingCat RingCat).obj X)) =
       (CommRingCat.instCommRingObjForgetRingHomCarrier (R := R.obj X)).toRing := by
-  with_reducible rfl
+  with_reducible_and_instances rfl
 
 -- Demo 2 (site `tensorObj_map_tmul`, live). Under `markOrSynth` the `Module` needed to type the
 -- statement is unsynthesizable: `ModuleCat.isModule`'s `Ring ↑(R.obj Y)` slot rejects, at

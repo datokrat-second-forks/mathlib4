@@ -373,6 +373,12 @@ private meta partial def maxDepth (depth : Nat) : TracePostprocessor := fun tree
       | d' + 1 => .node data msg (children.map (go · d')) wrap
   return trees.map (go · depth)
 
+/-
+AI-produced investigation ahead. It's misleading.
+The issue is `respectTransparency false`, which disables the implicit bump.
+It's almost always suspicious if the instances are being compared at instance transparency,
+as is the case here.
+-/
 -- The rejection: synthesizing `SMulCommClass R ℤˣ (K.X (p + a) ⟶ L.X q)` for `smul_comm x`,
 -- the `SMul R _` argument of `Units.smulCommClass_right` is rejected because the goal's
 -- shift-spelled instance's type disagrees with the mvar type at `.instances`. The `…` elides the
@@ -390,6 +396,7 @@ trace: [Meta.synthInstance] ❌️ SMulCommClass R ℤˣ (K.X (p + a) ⟶ L.X q)
 warning: declaration uses `sorry`
 -/
 #guard_msgs in
+set_option linter.style.setOption false in
 set_option linter.unusedSimpArgs false in
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
@@ -425,8 +432,11 @@ example (a p q : ℤ) :
 
 end InstanceTypesDemos
 
-set_option backward.isDefEq.instanceTypes "none" in
-set_option backward.isDefEq.respectTransparency false in
+-- fixed by making `shiftFunctor` implicit-reducible, so that `respectTransparency types`
+-- can be removed
+set_option allowUnsafeReducibility true
+attribute [local implicit_reducible] shiftFunctor in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 @[simp]
 lemma leftShift_smul (a n' : ℤ) (hn' : n + a = n') (x : R) :
     (x • γ).leftShift a n' hn' = x • γ.leftShift a n' hn' := by
