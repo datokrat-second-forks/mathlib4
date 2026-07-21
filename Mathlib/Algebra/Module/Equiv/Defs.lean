@@ -626,6 +626,8 @@ example (f : R ≃+* S) : (↑f : R →+* S) = ↑f.symm.symm := rfl
 
 -- Without the option, the coercion's `EquivLike` synthesis rejects reproducing the
 -- `↑f`-index/`↑f.symm.symm`-instance pairing in an instance-typed mvar.
+-- Note: `RingHomInvPair` is never being synthesized here, Mathlib seems to expect unification
+-- with the wrongly-typed instance.
 set_option linter.style.longLine false in
 /--
 error: Function expected at
@@ -662,8 +664,8 @@ example (f : R ≃+* S) (x : R) :
 
 end InstanceTypesDemos
 
--- TODO: this works with neither synth option
 set_option backward.isDefEq.respectTransparency false in
+-- Verdict: Rightly fails if we enforce the type at instance transparency.
 set_option backward.isDefEq.instanceTypes "none" in
 @[simp]
 lemma _root_.RingEquiv.symm_toSemilinearEquiv_symm_apply (f : R ≃+* S) (x : R) :

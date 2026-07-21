@@ -316,7 +316,14 @@ example (L : A ⥤ T) (R : B ⥤ T)
     exact filtered_colim_preservesFiniteLimits
   sorry
 
-set_option backward.isDefEq.instanceTypes "none" in
+theorem Cat.of_str {C} [inst : Category C] : (Cat.of C).str = inst := rfl
+
+/-
+Overall verdict: needs `instanceTypes "none"` because `simp only` introduces a mismatch:
+The goal uses a category type that doesn't match the category instance.
+Fix: Add `Cat.of_str` (ad-hoc introduced above) to the `simp only`.
+-/
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 private lemma isFiltered_of_isFiltered_costructuredArrow_small (L : A ⥤ T) (R : B ⥤ T)
@@ -325,7 +332,7 @@ private lemma isFiltered_of_isFiltered_costructuredArrow_small (L : A ⥤ T) (R 
   let R' := Grothendieck.pre (CostructuredArrow.functor L) R
   haveI : ∀ b, PreservesLimitsOfShape J
       (colim (J := (R ⋙ CostructuredArrow.functor L).obj b) (C := Type u₁)) := fun b => by
-    simp only [comp_obj, CostructuredArrow.functor_obj, Cat.of_α]
+    simp only [comp_obj, CostructuredArrow.functor_obj, Cat.of_α, Cat.of_str] -- Added: `Cat.of_str`
     exact filtered_colim_preservesFiniteLimits
   refine lim.map ((colimitIsoColimitGrothendieck L F.flip).hom ≫
     (inv (colimit.pre (CostructuredArrow.grothendieckProj L ⋙ F.flip) R'))) ≫

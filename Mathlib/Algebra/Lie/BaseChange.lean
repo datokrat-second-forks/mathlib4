@@ -308,7 +308,7 @@ example [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
 
 end
 
-set_option backward.isDefEq.instanceTypes "none" in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
 instance lieAlgebra [CommRing R] [Algebra R A] : LieAlgebra R (RestrictScalars R A L) where
   lie_smul t x y := (lie_smul (algebraMap R A t) (RestrictScalars.addEquiv R A L x)

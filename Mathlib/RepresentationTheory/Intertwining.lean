@@ -516,11 +516,32 @@ the simp lemma never applies ("simp made no progress") → the field goal stays 
 
 Possible solutions: build `invFun`'s linear map by translating along `ρ.asModuleEquiv`
 (as `asModule`'s docstring recommends) instead of `{ f with … }`.
+
+Addendum: Even with "markOfSynth" + `asModule` implicit-reducible it fails.
+Reason: In order to unify the two instances, we'd need to unfold implicit-reducible decls,
+but (for some reason) we're at instances transparency.
+The Reason for the failure is very stupid: The RHS is a wrapped instance and the wrappers are
+implicit-reducible, lest the type of the instance could change by unfolding.
+However, that should be no problem here morally because the changed type is the type of the LHS!
+
+Hmm, why is the comparison even done at `instances`?
 -/
 
 section InstanceTypesDemos
 
 open Lean.PostprocessTraces
+
+private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
+  fun trees => trees.mapM go
+where
+  go (t : TraceTree) : Lean.CoreM TraceTree := do
+    match t with
+    | .leaf msg => return .leaf msg
+    | .node data msg children wrap =>
+      if ← p t then
+        return .node data m!"{msg} (truncated)" #[] wrap
+      else
+        return .node data msg (← children.mapM go) wrap
 
 set_option linter.style.longLine false in
 /--
@@ -570,8 +591,129 @@ example (f : ρ.asModule →ₗ[A[G]] σ.asModule) (a : A) (v : V) : f (a • v)
   set_option trace.Meta.isDefEq.assign.checkTypes true in
   simp
 
+/-
+"markOrSynth": bad interaction with `respectTransparency false`, which disables the implicit bump.
+Therefore, the synthesized and unified values are compared at ambient, instances, transparency,
+and the comparison fails. It would succeed if there was an implicit bump and `asModule` was
+implicit-reducible.
+Data point in favor for packaging all the backward compatibility flags.
+-/
+set_option linter.style.longLine false in
+/--
+error: `simp` made no progress
+
+Note: The target expression is not type-correct under the `implicit` transparency level, which may have triggered the failure. This is usually caused by unfolding of semireducible definitions in prior tactic steps. Use `set_option linter.tacticCheckInstances true` to investigate the source of the issue.
+Full error:
+  Application type mismatch: The argument
+    a • v
+  has type
+    V
+  but is expected to have type
+    ρ.asModule
+  in the application
+    f (a • v)
+---
+trace: [Meta.isDefEq] ✅️ [reducible] ?f (?c • ?x) =?= f (a • v)
+  [Meta.isDefEq] ✅️ [reducible] ?c • ?x =?= a • v
+    [Meta.isDefEq] ✅️ [default] instHSMul =?= instHSMul
+      [Meta.isDefEq] ✅️ [default] ?inst✝ =?= DistribMulAction.toDistribSMul.toSMul
+        [Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A
+              ρ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A V)
+          [Meta.isDefEq] ✅️ [default] SMul A ρ.asModule =?= SMul A V
+            [Meta.isDefEq] ✅️ [default] A =?= A
+            [Meta.isDefEq] ✅️ [default] ρ.asModule =?= V
+[Meta.synthInstance] ✅️ SMul A σ.asModule
+  [Meta.isDefEq] ✅️ [instances] ?m.83 =?= DistribMulAction.toDistribSMul
+    [Meta.isDefEq.assign.checkTypes] ✅️ (?m.83 : DistribSMul A
+          σ.asModule) := (DistribMulAction.toDistribSMul : DistribSMul A σ.asModule)
+      [Meta.isDefEq] ✅️ [instances] DistribSMul A σ.asModule =?= DistribSMul A σ.asModule
+        [Meta.isDefEq] ✅️ [instances] A =?= A
+        [Meta.isDefEq] ✅️ [instances] σ.asModule =?= σ.asModule
+        [Meta.isDefEq] ✅️ [default] σ.instAddCommMonoidAsModule.toAddZeroClass =?= σ.instAddCommMonoidAsModule.toAddZeroClass
+[Meta.isDefEq] ✅️ [instances] ?inst✝ =?= DistribMulAction.toDistribSMul.toSMul
+  [Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A
+        σ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A σ.asModule)
+    [Meta.isDefEq] ✅️ [default] SMul A σ.asModule =?= SMul A σ.asModule
+      [Meta.isDefEq] ✅️ [default] A =?= A
+      [Meta.isDefEq] ✅️ [default] σ.asModule =?= σ.asModule
+[Meta.isDefEq] ✅️ [reducible] ?fₗ (?c • ?x) =?= f (a • v)
+  [Meta.isDefEq] ✅️ [reducible] ?c • ?x =?= a • v
+    [Meta.isDefEq] ✅️ [default] instHSMul =?= instHSMul
+      [Meta.isDefEq] ✅️ [default] ?inst✝ =?= DistribMulAction.toDistribSMul.toSMul
+        [Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A
+              ρ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A V)
+          [Meta.isDefEq] ✅️ [default] SMul A ρ.asModule =?= SMul A V
+            [Meta.isDefEq] ✅️ [default] A =?= A
+            [Meta.isDefEq] ✅️ [default] ρ.asModule =?= V
+[Meta.isDefEq] ✅️ [instances] ?inst✝ =?= DistribMulAction.toDistribSMul.toSMul
+  [Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A
+        σ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A σ.asModule)
+    [Meta.isDefEq] ✅️ [default] SMul A σ.asModule =?= SMul A σ.asModule
+      [Meta.isDefEq] ✅️ [default] A =?= A
+      [Meta.isDefEq] ✅️ [default] σ.asModule =?= σ.asModule
+[Meta.synthInstance] ❌️ LinearMap.CompatibleSMul ρ.asModule σ.asModule A A[G]
+  [Meta.synthInstance.apply] ❌️ apply @LinearMap.IsScalarTower.compatibleSMul to LinearMap.CompatibleSMul ρ.asModule
+        σ.asModule A A[G]
+    [Meta.synthInstance.tryResolve] ❌️ LinearMap.CompatibleSMul ρ.asModule σ.asModule A
+          A[G] ≟ LinearMap.CompatibleSMul ?m.80 ?m.81 ?m.84 ?m.85
+      [Meta.isDefEq] ❌️ [instances] LinearMap.CompatibleSMul ρ.asModule σ.asModule A
+            A[G] =?= LinearMap.CompatibleSMul ?m.80 ?m.81 ?m.84 ?m.85
+        [Meta.isDefEq] ❌️ [instances] DistribMulAction.toDistribSMul.toSMul =?= ?m.87
+          [Meta.isDefEq.assign.checkTypes] ❌️ (?m.87 : SMul A
+                ρ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A V)
+            [Meta.isDefEq] ❌️ [instances] SMul A ρ.asModule =?= SMul A V
+              [Meta.isDefEq] ✅️ [instances] A =?= A
+              [Meta.isDefEq] ❌️ [instances] ρ.asModule =?= V
+                [Meta.isDefEq.onFailure] ❌️ ρ.asModule =?= V
+              [Meta.isDefEq.onFailure] ❌️ SMul A ρ.asModule =?= SMul A V
+              [Meta.isDefEq.onFailure] ❌️ SMul A ρ.asModule =?= SMul A V
+            [Meta.synthInstance] ✅️ SMul A ρ.asModule (truncated)
+            [Meta.isDefEq] ❌️ [instances] DistribMulAction.toDistribSMul.toSMul =?= DistribMulAction.toDistribSMul.toSMul
+              [Meta.isDefEq] ❌️ [instances] DistribMulAction.toDistribSMul.toSMulZeroClass.1 =?= DistribMulAction.toDistribSMul.toSMulZeroClass.1
+                [Meta.isDefEq] ❌️ [instances] inst✝².toSMul =?= ρ.instModuleAsModule.toSMul
+                  [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= ρ.instModuleAsModule.toSemigroupAction.1
+                    [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= instModuleAsModule._aux_1 ρ
+                      [Meta.isDefEq.onFailure] ❌️ inst✝².toSemigroupAction.1 =?= instModuleAsModule._aux_1 ρ
+          [Meta.isDefEq.assign.checkTypes] ❌️ (?m.87 : SMul A ρ.asModule) := (inst✝².toSemigroupAction.1 : SMul A V)
+            [Meta.isDefEq] ❌️ [instances] SMul A ρ.asModule =?= SMul A V
+              [Meta.isDefEq] ✅️ [instances] A =?= A
+              [Meta.isDefEq] ❌️ [instances] ρ.asModule =?= V
+                [Meta.isDefEq.onFailure] ❌️ ρ.asModule =?= V
+              [Meta.isDefEq.onFailure] ❌️ SMul A ρ.asModule =?= SMul A V
+              [Meta.isDefEq.onFailure] ❌️ SMul A ρ.asModule =?= SMul A V
+            [Meta.synthInstance] ✅️ SMul A ρ.asModule (truncated)
+            [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= DistribMulAction.toDistribSMul.toSMul
+              [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= DistribMulAction.toDistribSMul.toSMulZeroClass.1
+                [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= ρ.instModuleAsModule.toSMul
+                  [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= ρ.instModuleAsModule.toSemigroupAction.1
+                    [Meta.isDefEq] ❌️ [instances] inst✝².toSemigroupAction.1 =?= instModuleAsModule._aux_1 ρ
+                      [Meta.isDefEq.onFailure] ❌️ inst✝².toSemigroupAction.1 =?= instModuleAsModule._aux_1 ρ
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x =>
+    ((ofClass `Meta.synthInstance.apply x) <&&> (containsString "compatibleSMul" x)) <||>
+    ((ofClass `Meta.isDefEq.assign.checkTypes x)
+      <&&> (containsString "SMul A" x) <&&> (containsString "asModule" x)))
+  >=> filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
+    <&&> (containsString "SMul A" x))
+  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> (containsString "SMul A ρ.asModule" x))
+in
+set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+example (f : ρ.asModule →ₗ[A[G]] σ.asModule) (a : A) (v : V) : f (a • v) = a • f v := by
+  set_option trace.Meta.synthInstance true in
+  set_option trace.Meta.isDefEq.assign.checkTypes true in
+  set_option trace.Meta.isDefEq true in
+  set_option trace.Meta.isDefEq.printTransparency true in
+  simp
+
 end InstanceTypesDemos
 
+/-
+If `asModule` is made implicit-reducible *at its definition site*, then `respectTransparency` false
+becomes obsolete. After removing it, the lemma also works with "markOrSynth".
+-/
 set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 /-- An intertwining map is the same thing as a linear map over the group ring. -/

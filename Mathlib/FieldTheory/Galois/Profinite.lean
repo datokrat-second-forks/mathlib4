@@ -420,7 +420,7 @@ trace: [Meta.synthInstance] ❌️ EmbeddingLike (Gal(K/k) ≃* ↥(limitConePtA
             ?m.132 =?= EquivLike (?m.134 ≃* ?m.135) ?m.134 ?m.135
         [Meta.isDefEq] ❌️ [instances] Gal(K/k) ≃*
               ↥(limitConePtAux (asProfiniteGaloisGroupFunctor k K)) =?= ?m.134 ≃* ?m.135
-          [Meta.isDefEq] ❌️ [instances] (limitConePtAux (asProfiniteGaloisGroupFunctor k K)).mul =?= ?m.137
+          [Meta.isDefEq] ❌️ [implicit] (limitConePtAux (asProfiniteGaloisGroupFunctor k K)).mul =?= ?m.137
             [Meta.isDefEq.assign.checkTypes] ❌️ (?m.137 : Mul
                   ↥(limitConePtAux
                       (asProfiniteGaloisGroupFunctor k

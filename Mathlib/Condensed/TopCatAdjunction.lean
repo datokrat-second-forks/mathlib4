@@ -98,7 +98,7 @@ noncomputable def topCatAdjunctionCounit (X : TopCat.{u + 1}) : X.toCondensedSet
 
 set_option linter.style.longLine false in
 /-
-Why `topCatAdjunctionCounit_hom_apply` keeps `backward.isDefEq.instanceTypes false`:
+Why `topCatAdjunctionCounit_hom_apply` keeps `backward.isDefEq.instanceTypes "none"`:
 * What fails (traced statement copy below): elaborating the statement's
   `DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)` triggers synthesis of
   `DFunLike C(C(PUnit, X), X) ?α ?β`; the `ContinuousMap` candidate's conclusion
@@ -161,7 +161,7 @@ trace: [Meta.synthInstance] ❌️ DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) 
       [Meta.isDefEq] ❌️ [instances] DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11
             ?m.12 =?= DFunLike C(?m.14, ?m.15) ?m.14 fun x ↦ ?m.15
         [Meta.isDefEq] ❌️ [instances] C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) =?= C(?m.14, ?m.15)
-          [Meta.isDefEq] ❌️ [instances] X.toCondensedSet.toTopCat.str =?= ?m.16
+          [Meta.isDefEq] ❌️ [implicit] X.toCondensedSet.toTopCat.str =?= ?m.16
             [Meta.isDefEq] X.toCondensedSet.toTopCat.str [nonassignable] =?= ?m.16 [assignable]
             [Meta.isDefEq.assign.checkTypes] ❌️ (?m.16 : TopologicalSpace
                   C(PUnit.{?u.16 + 1},
@@ -214,9 +214,7 @@ variable (X : TopCat.{u + 1})
 #guard_msgs in
 #synth TopologicalSpace C(PUnit.{u + 1}, X)
 
--- ... which is NOT the coinduced topology carried by the hom's domain: the two instances are not
--- defeq even with all definitions unfolded — they are genuinely different topologies, so a
--- re-synthesis fallback would silently change the meaning of the lemma.
+-- ... which is NOT the topology carried by the hom's domain, no matter what is unfolded.
 /--
 error: Tactic `rfl` failed: The left-hand side
   X.toCondensedSet.toTopCat.str
@@ -235,6 +233,12 @@ example (X : TopCat.{u + 1}) :
 
 end
 
+/-
+Summary of the investigation:
+* This lemma explicitly works with non-canonical topologies on spaces of continuous maps.
+* Possible workaround: Give the instance explicitly.
+* Question: Is this lemma's signature actually useful in this form? It seems to be unused.
+-/
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.isDefEq.instanceTypes "none" in
 /-- `simp`-normal form of the lemma that `@[simps]` would generate. -/
@@ -243,7 +247,22 @@ set_option backward.isDefEq.instanceTypes "none" in
     -- which suggests type synonyms are being unfolded too far somewhere.
     DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)
         (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
-      x PUnit.unit := rfl
+      (x PUnit.unit : TopCat.carrier X) := rfl
+
+/-
+Potential fix: explicitly annotate `x`, making the synthesis succeed without the `F` annotation.
+This changes the `F` value, though, and this affects the discrimination key.
+It's a very significant change, but I can't tell which version has the correct signature.
+-/
+set_option backward.isDefEq.respectTransparency.types false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+/-- `simp`-normal form of the lemma that `@[simps]` would generate. -/
+@[simp] lemma topCatAdjunctionCounit_hom_apply_fixed? (X : TopCat) (x : C(PUnit, X)) :
+    -- We have to specify here to not infer the `TopologicalSpace` instance on `C(PUnit, X)`,
+    -- which suggests type synonyms are being unfolded too far somewhere.
+    DFunLike.coe
+        (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
+      (x PUnit.unit : TopCat.carrier X) := rfl
 
 set_option backward.isDefEq.respectTransparency.types false in
 /-- The counit of the adjunction `condensedSetToTopCat ⊣ topCatToCondensedSet` is always bijective,

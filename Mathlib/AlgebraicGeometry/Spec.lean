@@ -308,7 +308,7 @@ example {R S : CommRingCat.{u}} (f : R ⟶ S) :
     exact ((ha.of_map (stalkIso S p)).of_map _).of_map (stalkIso R (p.comap f.hom)).symm
 
 -- attribute [local instance_reducible] Ideal.comap PrimeSpectrum.comap in
-set_option backward.isDefEq.instanceTypes "none" in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
 /--
 The induced map of a ring homomorphism on the prime spectra, as a morphism of locally ringed spaces.
