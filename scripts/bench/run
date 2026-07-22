@@ -8,9 +8,6 @@ export OUTPUT_FILE="$ROOT_DIR/measurements.jsonl"
 echo "Running benchmark: build"
 "$BENCH_DIR/build/run"
 
-echo "Running benchmark: lint"
-"$BENCH_DIR/lint/run"
-
 echo "Running benchmark: open-mathlib"
 "$BENCH_DIR/open-mathlib/run"
 
