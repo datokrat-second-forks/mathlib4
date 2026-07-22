@@ -149,64 +149,6 @@ noncomputable def tensorObjMap {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M�
       rw [map_add, TensorProduct.tmul_add])
     (by intro a m₁ m₂; dsimp; erw [M₂.map_smul, TensorProduct.tmul_smul (r := R.map f a)]; rfl)
 
--- set_option linter.tacticChec/skInstances true
-
--- set_option allowUnsafeReducibility true
--- attribute [implicit_reducible]
---   -- Quiver.Hom
---   ModuleCat.restrictScalars
---   -- AddCon.Quotient
---   ModuleCat.RestrictScalars.obj'
---   -- tensorObj
---   -- Quotient
---   -- TensorProduct
-
--- #print ModuleCat.instModuleCarrierObjRestrictScalars
-
--- section
-
--- attribute [-instance] ModuleCat.instModuleCarrierObjRestrictScalars in
--- instance {R : Type u₁} {S : Type _} [Ring R] [Ring S] {f : R →+* S}
---     {M : ModuleCat.{v} S} : Module S <| (ModuleCat.restrictScalars f).obj M :=
---   inferInstanceAs <| Module S M
--- end
-
--- #print PresheafOfModules.Monoidal.instModuleCarrierObjModuleCatRestrictScalars
--- #print instModuleCarrierObjModuleCatRestrictScalars._aux_1
-
--- works if `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars` are implicit-reducible
--- so that synthesized instances and unified instances match.
--- However, that causes massive slowdowns!
-postprocess_traces
-  exposeSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
-in
-set_option backward.isDefEq.instanceTypes "none" in
-set_option backward.isDefEq.respectTransparency false in
-/-- Auxiliary definition for `tensorObj`. -/
-noncomputable example {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M₂.obj X ⟶
-    (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y) :=
-  ModuleCat.MonoidalCategory.tensorLift (fun m₁ m₂ ↦ M₁.map f m₁ ⊗ₜ M₂.map f m₂)
-    (by
-      intro m₁ m₁' m₂
-      dsimp +instances
-      rw [map_add, TensorProduct.add_tmul])
-    (by intro a m₁ m₂; dsimp; erw [M₁.map_smul]; rfl)
-    (by
-      intro m₁ m₂ m₂'
-      dsimp +instances
-      rw [map_add, TensorProduct.tmul_add])
-    (by
-      intro a m₁ m₂
-      dsimp
-      erw [M₂.map_smul]
-      (set_option trace.Meta.synthInstance true in
-      set_option trace.Meta.isDefEq true in
-      set_option trace.Meta.isDefEq.printTransparency true in
-      set_option trace.Meta.isDefEq.assign.checkTypes true in
-      erw [TensorProduct.tmul_smul (r := R.map f a)])
-      rfl)
-
-
 private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
   fun trees => trees.mapM go
 where

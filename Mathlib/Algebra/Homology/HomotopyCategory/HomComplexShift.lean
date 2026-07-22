@@ -294,6 +294,14 @@ lemma rightShift_smul (a n' : ℤ) (hn' : n' + a = n) (x : R) :
   simp only [rightShift_v _ a n' hn' p q hpq _ rfl, smul_v, Linear.smul_comp]
 
 /-
+tl;dr:
+
+The issue is `respectTransparency false`, which disables the implicit bump.
+It's almost always suspicious if the instances are being compared at instance transparency,
+as is the case here.
+
+---
+
 `leftShift_smul` needs `backward.isDefEq.instanceTypes "none"` for its closing `simp only`.
 (The build's effective mode is `markOrSynth`, set from the Mathlib lakefile's `leanOptions`, not
 the toolchain's `mark` register default; the demos below pin `markOrSynth` explicitly so they

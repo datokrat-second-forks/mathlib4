@@ -178,6 +178,8 @@ lemma succStruct_prop_le_propArrow :
 
 set_option linter.style.longLine false
 /-
+tl;dr: works with "markOrSynth" if `Arrow` and `Arrow.Hom` are made implicit-reducible
+
 `succStruct_prop_le_propArrow` needs `backward.isDefEq.instanceTypes "none"` for its opening
 `intro _ _ _ ⟨F⟩ f`. The hypothesis being destructured is `(succStruct I κ).prop f✝`, which
 unfolds to `ofHoms (fun (G : Arrow C ⥤ Arrow C) ↦ (succStruct I κ).toSucc G) f✝` — the class of

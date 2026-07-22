@@ -633,12 +633,42 @@ inst✝ : Algebra R A
 #guard_msgs in
 example : (PrimeSpectrum.Top R).str = PrimeSpectrum.zariskiTopology := by with_implicit rfl
 
+#guard_msgs in
+example : (PrimeSpectrum.Top R).str = PrimeSpectrum.zariskiTopology := by rfl
+
 end InstanceTypesDemos
 
--- synth vs unification mismatch, see next command
+-- synth vs unification mismatch, see second-next command;
+-- making `PrimeSpectrum.Top` implicit-reducible and enabling `respectTransparency` fixes it,
+-- see next command for that
 set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency false in
 theorem toBasicOpenₗ_surjective (f : R) : Function.Surjective (toBasicOpenₗ R M f) := by
+  intro s
+  obtain ⟨ι, _, a, b, ibU, iU, hab, H⟩ := exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const _
+    (PrimeSpectrum.isCompact_basicOpen _) s
+  obtain ⟨n, hn⟩ : f ∈ (Ideal.span (Set.range b)).radical := by
+    have : PrimeSpectrum.zeroLocus (Set.range b) ⊆ PrimeSpectrum.zeroLocus {f} := by
+      simpa [← SetLike.coe_subset_coe, ← Set.compl_iInter,
+        ← PrimeSpectrum.zeroLocus_iUnion, PrimeSpectrum.Top] using iU
+    rw [← PrimeSpectrum.vanishingIdeal_zeroLocus_eq_radical, PrimeSpectrum.zeroLocus_span,
+      PrimeSpectrum.mem_vanishingIdeal]
+    exact fun x hx ↦ by simpa using this hx
+  replace hn := Ideal.mul_mem_right f _ hn
+  rw [← pow_succ, Ideal.span, Finsupp.mem_span_range_iff_exists_finsupp] at hn
+  obtain ⟨c, hc⟩ := hn
+  rw [Finsupp.sum_fintype _ _ (by simp)] at hc
+  refine ⟨LocalizedModule.mk (∑ i, c i • a i) ⟨f ^ (n + 1), _, rfl⟩, ?_⟩
+  refine (structureSheafInType R M).eq_of_locally_eq' (fun i ↦ basicOpen (b i)) _
+    (fun i ↦ (ibU _).hom) iU _ _ fun i ↦ (Subtype.ext (funext fun x ↦ ?_)).trans (H _).symm
+  rw [toBasicOpenₗ_mk]
+  refine LocalizedModule.mk_eq.mpr ⟨1, ?_⟩
+  simp_rw [one_smul, Finset.smul_sum, Submonoid.smul_def, smul_comm (b i), hab _ i, ← smul_assoc,
+    ← Finset.sum_smul, hc]
+
+attribute [local implicit_reducible] PrimeSpectrum.Top in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+example (f : R) : Function.Surjective (toBasicOpenₗ R M f) := by
   intro s
   obtain ⟨ι, _, a, b, ibU, iU, hab, H⟩ := exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const _
     (PrimeSpectrum.isCompact_basicOpen _) s

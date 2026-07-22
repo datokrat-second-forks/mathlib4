@@ -67,6 +67,10 @@ public lemma index_of_surjective (hf : Surjective f) :
   simp [finrank_eq_zero_of_subsingleton]
 
 /-
+tl;dr: Making `ker` implicit-reducible helps.
+
+---
+
 `index_id` needs `backward.isDefEq.instanceTypes "none"` (kept together with
 `respectTransparency.types false`) for its closing `simp [finrank_eq_zero_of_subsingleton]`.
 The mode used by the actual build is `"markOrSynth"` (set globally in `lakefile.lean`); the
