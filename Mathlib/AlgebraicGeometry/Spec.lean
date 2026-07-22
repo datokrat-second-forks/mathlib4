@@ -12,8 +12,6 @@ public import Mathlib.Topology.Sheaves.SheafCondition.Sites
 public import Mathlib.Topology.Sheaves.Functors
 public import Mathlib.Algebra.Module.LocalizedModule.Basic
 
-meta import Lean.PostprocessTraces
-
 /-!
 # $Spec$ as a functor to locally ringed spaces.
 
@@ -36,16 +34,12 @@ The adjunction `Γ ⊣ Spec` is constructed in `Mathlib/AlgebraicGeometry/GammaS
 
 -/
 
-set_option backward.isDefEq.instanceTypes "mark"
-
 @[expose] public section
 
 
 -- Explicit universe annotations were used in this file to improve performance https://github.com/leanprover-community/mathlib4/issues/12737
 
 noncomputable section
-
-open Lean.PostprocessTraces
 
 universe u v
 
@@ -243,71 +237,6 @@ theorem localRingHom_comp_stalkIso {R S : CommRingCat.{u}} (f : R ⟶ S) (p : Pr
   simp only [AlgEquiv.commutes, RingEquiv.symm_apply_eq, AlgEquiv.coe_ringEquiv]
   exact stalkMap_toStalk_apply f p x
 
-/-
-The `IsPrime` instance's type in `Localizaton.localHom` is not instance-reducibly-equal to its
-expected type. Unification during type class search therefore produces an error.
-
-Possible solutions:
-* Make `Ideal.comap` and `PrimeSpectrum.comap` instance-reducible.
-* Don't do the type check for propositional type classes.
-* If an assignment fails, try to synthesize. -> problematic if we're assigning only an infected
-  mvar, not the original one
--/
-/--
-error: failed to synthesize instance of type class
-  IsLocalHom
-    (Localization.localRingHom (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal) p.asIdeal (CommRingCat.Hom.hom f) ⋯)
----
-trace: [Meta.synthInstance] ❌️ IsLocalHom
-      (Localization.localRingHom (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal) p.asIdeal (CommRingCat.Hom.hom f) ⋯)
-  [Meta.synthInstance.apply] ❌️ apply @Localization.isLocalHom_localRingHom to IsLocalHom
-        (Localization.localRingHom (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal) p.asIdeal (CommRingCat.Hom.hom f) ⋯)
-    [Meta.synthInstance.tryResolve] ❌️ IsLocalHom
-          (Localization.localRingHom (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal) p.asIdeal (CommRingCat.Hom.hom f)
-            ⋯) ≟ IsLocalHom (Localization.localRingHom ?m.108 ?m.110 ?m.112 ?m.113)
-      [Meta.isDefEq] ❌️ [instances] IsLocalHom
-            (Localization.localRingHom (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal) p.asIdeal (CommRingCat.Hom.hom f)
-              ⋯) =?= IsLocalHom (Localization.localRingHom ?m.108 ?m.110 ?m.112 ?m.113)
-        [Meta.isDefEq] ❌️ [instances] Localization.localRingHom (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal)
-              p.asIdeal (CommRingCat.Hom.hom f) ⋯ =?= Localization.localRingHom ?m.108 ?m.110 ?m.112 ?m.113
-          [Meta.isDefEq] ❌️ [instances] (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).isPrime =?= ?m.109
-            [Meta.isDefEq] ❌️ [instances] (Ideal.comap (CommRingCat.Hom.hom f)
-                    p.asIdeal).IsPrime =?= (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).asIdeal.IsPrime
-              [Meta.isDefEq] ❌️ [instances] Ideal.comap (CommRingCat.Hom.hom f)
-                    p.asIdeal =?= (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).asIdeal
-                [Meta.isDefEq] ❌️ [instances] Ideal.comap (CommRingCat.Hom.hom f)
-                      p.asIdeal =?= (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).1
-                  [Meta.isDefEq.onFailure] ❌️ Ideal.comap (CommRingCat.Hom.hom f)
-                        p.asIdeal =?= (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).1
-              [Meta.isDefEq.onFailure] ❌️ (Ideal.comap (CommRingCat.Hom.hom f)
-                      p.asIdeal).IsPrime =?= (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).asIdeal.IsPrime
-              [Meta.isDefEq.onFailure] ❌️ (Ideal.comap (CommRingCat.Hom.hom f)
-                      p.asIdeal).IsPrime =?= (PrimeSpectrum.comap (CommRingCat.Hom.hom f) p).asIdeal.IsPrime
--/
-#guard_msgs in
-postprocess_traces
-  (filterSubtrees (fun x => (ofClass `Meta.synthInstance x) <&&> (containsString "IsLocalHom" x)))
-  >=> (filterSubtrees (containsString "isLocalHom_localRingHom"))
-  >=> (filterSubtrees (containsString "asIdeal).IsPrime")) in
-set_option trace.Meta.isDefEq true in
-set_option trace.Meta.isDefEq.printTransparency true in
-set_option trace.Meta.synthInstance true in
-set_option backward.isDefEq.respectTransparency false in
-/--
-The induced map of a ring homomorphism on the prime spectra, as a morphism of locally ringed spaces.
--/
-example {R S : CommRingCat.{u}} (f : R ⟶ S) :
-    Spec.locallyRingedSpaceObj S ⟶ Spec.locallyRingedSpaceObj R :=
-  LocallyRingedSpace.Hom.mk (Spec.sheafedSpaceMap f).hom fun p =>
-    IsLocalHom.mk fun a ha => by
-    rw [← localRingHom_comp_stalkIso] at ha
-    dsimp at ha
-    have : IsLocalHom (stalkIso S p) := isLocalHom_equiv _
-    have : IsLocalHom (stalkIso R (p.comap f.hom)).symm := isLocalHom_equiv _
-    -- have : (Ideal.comap (CommRingCat.Hom.hom f) p.asIdeal).IsPrime := inferInstance --> theoretically syhtnesizable!
-    exact ((ha.of_map (stalkIso S p)).of_map _).of_map (stalkIso R (p.comap f.hom)).symm
-
--- attribute [local instance_reducible] Ideal.comap PrimeSpectrum.comap in
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
 /--

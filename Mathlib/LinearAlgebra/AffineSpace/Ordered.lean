@@ -9,7 +9,6 @@ public import Mathlib.Algebra.CharP.Invertible
 public import Mathlib.Algebra.Order.Module.Synonym
 public import Mathlib.LinearAlgebra.AffineSpace.Midpoint
 public import Mathlib.LinearAlgebra.AffineSpace.Slope
-meta import Lean.PostprocessTraces
 
 /-!
 # Ordered modules as affine spaces
@@ -28,8 +27,6 @@ for an ordered module interpreted as an affine space.
 
 affine space, ordered module, slope
 -/
-
-set_option backward.isDefEq.instanceTypes "mark"
 
 public section
 
@@ -98,135 +95,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem left_lt_lineMap_iff_lt (h : 0 < r) : a < lineMap a b r ↔ a < b :=
   Iff.trans (by rw [lineMap_apply_zero]) (lineMap_lt_lineMap_iff_of_lt h)
 
-/-
-`lineMap_lt_left_iff_lt` and `right_lt_lineMap_iff_lt` transport a lemma stated at `E` along the
-order dual: the proof applies the other lemma at `E := Eᵒᵈ` to a goal stated at `E`. Two phases:
-
-1. Unifying the lemma's conclusion (at `Eᵒᵈ`) with the goal (at `E`) assigns the goal's E-side
-   data to the lemma's binder mvars, in particular `?inst : Module k Eᵒᵈ := ‹Module k E›`.
-   These mvars come from the elaborator, not from instance search, so they are not marked
-   instance-typed, and the assignment is accepted at default transparency, where the type synonym
-   `OrderDual` unfolds.
-2. `[PosSMulReflectLT k Eᵒᵈ]` does not occur in the conclusion, so it is left over for synthesis
-   by type. After step 1, that type spells its `SMul k Eᵒᵈ` slot as a projection of the assigned
-   `Module k E` instance. The candidate `OrderDual.instPosSMulReflectLT : PosSMulReflectLT α βᵒᵈ`
-   forces `?β := E` by matching `βᵒᵈ` structurally; its own `SMul` slot then unfolds (at
-   synthesis transparency) to a bare mvar of type `SMul k E` — instance-typed, created by
-   `tryResolve` — which has to swallow the goal's `SMul k Eᵒᵈ`-typed slot value. The mvar check
-   compares `SMul k E =?= SMul k Eᵒᵈ` at `.instances`, where the plain def `OrderDual` does not
-   unfold, and rejects the assignment; the synthesis fails. (The hypothesis `‹PosSMulReflectLT
-   k E›` itself is no candidate: `Eᵒᵈ ≟ E` already fails in `tryResolve`, on any toolchain.)
-
-A standalone `#synth PosSMulReflectLT k Eᵒᵈ` succeeds: a freshly elaborated goal spells its
-`SMul` slot via `OrderDual.instSMul`, which the candidate matches structurally, so no
-heterogeneously-typed assignment is needed. Only the goal type baked in step 1 is poisoned.
-
-* The other leftover instance arguments (`Module k Eᵒᵈ`, `IsStrictOrderedModule k Eᵒᵈ`, …)
-  synthesize fine: their `OrderDual` candidates expose bare unassigned instance mvars that the
-  unifier solves by `trySynthPending` (synthesis at `E`), not by swallowing a mismatched value.
-* Same two-phase shape as `Mathlib/CategoryTheory/Filtered/CostructuredArrow.lean` (lenient
-  unification bakes a mismatch into a later synthesis goal); here the heterogeneity comes from
-  the deliberate `OrderDual` defeq abuse of `(E := Eᵒᵈ)` transport, not from a simp rewrite.
-* `PosSMulReflectLT` is a Prop, but the rejected mvar is its data-valued `SMul` argument, so a
-  Prop-exemption would not help here.
-
-Possible solutions:
-* State the `OrderDual` transfer instances so that their data slots match projection spellings
-  (not realistic), or prove the two lemmas directly instead of by `(E := Eᵒᵈ)` transport.
-* Making `OrderDual` reducible at `.instances` would fix the check but is off the table: the
-  synonym must stay opaque so that the order instances of `E` and `Eᵒᵈ` do not collide.
--/
-
-section InstanceTypesDemos
-
-open Lean.PostprocessTraces
-
--- Phase 1: `exact`'s unification leniently assigns the E-side `Module` instance to the
--- lemma's `Module k Eᵒᵈ` binder mvar. (Run with the workaround so the demo compiles.)
-/--
-trace: [Meta.isDefEq.assign.checkTypes] ✅️ (?m.40 : Module k Eᵒᵈ) := (inst✝² : Module k E)
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
-    <&&> (containsString "Module k Eᵒᵈ) := (inst" x))
-in
-set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
-set_option linter.style.setOption false in
-example (h : 0 < r) : lineMap a b r < a ↔ b < a := by
-  set_option trace.Meta.isDefEq.assign.checkTypes true in
-  exact left_lt_lineMap_iff_lt (E := Eᵒᵈ) h
-
--- Phase 2: synthesis of the leftover `PosSMulReflectLT k Eᵒᵈ` fails on the strict check:
--- the candidate's `SMul` mvar has type `SMul k E`, the goal's slot value has type
--- `SMul k Eᵒᵈ`, and `OrderDual` does not unfold at `.instances`.
-/--
-error: failed to synthesize instance of type class
-  PosSMulReflectLT k Eᵒᵈ
----
-trace: [Meta.synthInstance] ❌️ PosSMulReflectLT k Eᵒᵈ
-  [Meta.synthInstance.apply] ❌️ apply @OrderDual.instPosSMulReflectLT to PosSMulReflectLT k Eᵒᵈ
-    [Meta.synthInstance.tryResolve] ❌️ PosSMulReflectLT k Eᵒᵈ ≟ PosSMulReflectLT ?m.47 ?m.48ᵒᵈ
-      [Meta.isDefEq] ❌️ [instances] PosSMulReflectLT k Eᵒᵈ =?= PosSMulReflectLT ?m.47 ?m.48ᵒᵈ
-        [Meta.isDefEq] ✅️ [instances] k =?= ?m.47
-          [Meta.isDefEq] k [nonassignable] =?= ?m.47 [assignable]
-          [Meta.isDefEq.assign.checkTypes] ✅️ (?m.47 : Type ?u.50) := (k : Type u_1)
-            [Meta.isDefEq] ✅️ [default] Type ?u.50 =?= Type u_1
-        [Meta.isDefEq] ✅️ [instances] Eᵒᵈ =?= ?m.48ᵒᵈ
-          [Meta.isDefEq] ✅️ [instances] E =?= ?m.48
-            [Meta.isDefEq] E [nonassignable] =?= ?m.48 [assignable]
-            [Meta.isDefEq.assign.checkTypes] ✅️ (?m.48 : Type ?u.51) := (E : Type u_2)
-              [Meta.isDefEq] ✅️ [default] Type ?u.51 =?= Type u_2
-        [Meta.isDefEq] ✅️ [instances] inst✝⁷.toPreorder =?= ?m.49
-          [Meta.isDefEq] inst✝⁷.toPreorder [nonassignable] =?= ?m.49 [assignable]
-          [Meta.isDefEq.assign.checkTypes] ✅️ (?m.49 : Preorder k) := (inst✝⁷.toPreorder : Preorder k)
-            [Meta.isDefEq] ✅️ [instances] Preorder k =?= Preorder k
-              [Meta.isDefEq] ✅️ [instances] k =?= k
-        [Meta.isDefEq] ✅️ [instances] instMulZeroClassOfSemiring.toZero =?= ?m.52
-          [Meta.isDefEq] instMulZeroClassOfSemiring.toZero [nonassignable] =?= ?m.52 [assignable]
-          [Meta.isDefEq.assign.checkTypes] ✅️ (?m.52 : Zero k) := (instMulZeroClassOfSemiring.toZero : Zero k)
-            [Meta.isDefEq] ✅️ [instances] Zero k =?= Zero k
-              [Meta.isDefEq] ✅️ [instances] k =?= k
-        [Meta.isDefEq] ❌️ [default] DistribMulAction.toDistribSMul.toSMul =?= OrderDual.instSMul
-          [Meta.isDefEq] ❌️ [default] DistribMulAction.toDistribSMul.toSMul =?= ?m.51
-            [Meta.isDefEq] DistribMulAction.toDistribSMul.toSMul [nonassignable] =?= ?m.51 [assignable]
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.51 : SMul k
-                  E) := (DistribMulAction.toDistribSMul.toSMul : SMul k Eᵒᵈ)
-              [Meta.isDefEq] ❌️ [instances] SMul k E =?= SMul k Eᵒᵈ
-                [Meta.isDefEq] ✅️ [instances] k =?= k
-                [Meta.isDefEq] ❌️ [instances] E =?= Eᵒᵈ
-                  [Meta.isDefEq.onFailure] ❌️ E =?= Eᵒᵈ
-                [Meta.isDefEq.onFailure] ❌️ SMul k E =?= SMul k Eᵒᵈ
-                [Meta.isDefEq.onFailure] ❌️ SMul k E =?= SMul k Eᵒᵈ
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.51 : SMul k E) := (inst✝².toSemigroupAction.1 : SMul k Eᵒᵈ)
-              [Meta.isDefEq] ❌️ [instances] SMul k E =?= SMul k Eᵒᵈ
-        [Meta.isDefEq.onFailure] ❌️ PosSMulReflectLT k Eᵒᵈ =?= PosSMulReflectLT ?m.47 ?m.48ᵒᵈ
-        [Meta.isDefEq.onFailure] ❌️ PosSMulReflectLT k Eᵒᵈ =?= PosSMulReflectLT ?m.47 ?m.48ᵒᵈ
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
-    <&&> (containsString "OrderDual.instPosSMulReflectLT" x))
-  >=> filterSubtrees unsuccessful
-in
-set_option backward.isDefEq.respectTransparency false in
-example (h : 0 < r) : lineMap a b r < a ↔ b < a := by
-  set_option trace.Meta.synthInstance true in
-  set_option trace.Meta.isDefEq true in
-  set_option trace.Meta.isDefEq.printTransparency true in
-  set_option trace.Meta.isDefEq.assign.checkTypes true in
-  exact left_lt_lineMap_iff_lt (E := Eᵒᵈ) h
-
--- Contrast: with a freshly elaborated goal type, the same synthesis succeeds.
-/-- info: OrderDual.instPosSMulReflectLT -/
-#guard_msgs in
-#synth PosSMulReflectLT k Eᵒᵈ
-
-end InstanceTypesDemos
-
-set_option backward.isDefEq.respectTransparency false in
-set_option backward.isDefEq.instanceTypes "markOrSynth" in
 theorem lineMap_lt_left_iff_lt (h : 0 < r) : lineMap a b r < a ↔ b < a :=
   left_lt_lineMap_iff_lt (E := Eᵒᵈ) h
 
@@ -235,7 +104,6 @@ theorem lineMap_lt_right_iff_lt (h : r < 1) : lineMap a b r < b ↔ a < b :=
   Iff.trans (by rw [lineMap_apply_one]) (lineMap_lt_lineMap_iff_of_lt h)
 
 set_option backward.isDefEq.respectTransparency false in
-set_option backward.isDefEq.instanceTypes "markOrSynth" in
 theorem right_lt_lineMap_iff_lt (h : r < 1) : b < lineMap a b r ↔ b < a :=
   lineMap_lt_right_iff_lt (E := Eᵒᵈ) h
 

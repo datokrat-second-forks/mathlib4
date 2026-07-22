@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Condensed.TopComparison
 public import Mathlib.Topology.Category.CompactlyGenerated
-meta import Lean.PostprocessTraces
 /-!
 
 # The adjunction between condensed sets and topological spaces
@@ -20,11 +19,7 @@ The counit is an isomorphism for compactly generated spaces, and we conclude tha
 `topCatToCondensedSet` is fully faithful when restricted to compactly generated spaces.
 -/
 
-set_option backward.isDefEq.instanceTypes "mark"
-
 @[expose] public section
-
-open Lean.PostprocessTraces
 
 universe u
 
@@ -95,143 +90,6 @@ noncomputable def topCatAdjunctionCounit (X : TopCat.{u + 1}) : X.toCondensedSet
     continuous_toFun := by
       rw [continuous_coinduced_dom]
       continuity }
-
-set_option linter.style.longLine false in
-/-
-Why `topCatAdjunctionCounit_hom_apply` keeps `backward.isDefEq.instanceTypes "none"`:
-* What fails (traced statement copy below): elaborating the statement's
-  `DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)` triggers synthesis of
-  `DFunLike C(C(PUnit, X), X) ?α ?β`; the `ContinuousMap` candidate's conclusion
-  `DFunLike C(?α, ?β) ?α (fun _ => ?β)` is unified with the goal. The goal's `F`-type pairs the
-  domain index spelled as the synonym `C(PUnit, X)` (the desired `simp`-normal form, pinned in
-  the statement) with the topology instance filled by earlier unification (`(_)`) with the real
-  domain of `topCatAdjunctionCounit X` — the instance `X.toCondensedSet.toTopCat.str`, typed
-  at `TopologicalSpace ↑X.toCondensedSet.toTopCat`.
-* After `?α := C(PUnit, X)` is assigned, that instance is assigned to the corresponding
-  instance-typed mvar:
-
-  `(?inst : TopologicalSpace C(PUnit, X)) := (X.toCondensedSet.toTopCat.str : TopologicalSpace ↑X.toCondensedSet.toTopCat)`.
-
-  The assignment is rejected: identifying the two
-  types needs to unfold the semireducible `toCondensedSet`, which does not unfold at
-  `.instances` — the trace stalls at `ContinuousMap =?= X.toCondensedSet.obj.1`. (It unfolds at
-  `.default`, which is why the `rfl` proof itself is fine.) With the assignment refused, no
-  `DFunLike` instance is found and the *statement* fails to elaborate.
-* Known pattern in form (cf. `Mathlib/CategoryTheory/Filtered/CostructuredArrow.lean`): the goal
-  pairs a type index at one spelling with an instance typed at another. But this site is the
-  outlier in substance: synthesis at the mvar's type returns `ContinuousMap.compactOpen`
-  (`#synth` below), which is NOT defeq to the coinduced instance at ANY transparency (guarded
-  example below) — the point of this file is precisely that the counit is bijective but not a
-  homeomorphism. So a re-synthesis fallback would silently change the meaning of the lemma. The
-  pre-existing comment on the `(_)` pin ("type synonyms are being unfolded too far") flags the
-  same mechanism. `TopologicalSpace` is data-valued, so a Prop-exemption would not apply either.
-
-Diagnosis:
-* This is a situation where Mathlib wants an instance that is strictly different from the
-  synthesized one.
--/
--- The dual of `filterSubtrees`: drop matching subtrees (used to remove `onFailure` duplicates).
-private meta partial def dropSubtrees (p : TracePattern) : TracePostprocessor :=
-  fun trees => trees.filterMapM go
-where
-  go (t : TraceTree) : Lean.CoreM (Option TraceTree) := do
-    if ← p t then
-      return none
-    match t with
-    | .leaf msg => return some (.leaf msg)
-    | .node data msg children wrap => return some (.node data msg (← children.filterMapM go) wrap)
-
-set_option linter.style.longLine false in
-/--
-error: failed to synthesize instance of type class
-  DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.1 ?m.7
----
-error: Function expected at
-  x
-but this term has type
-  ?m.1
-
-Note: Expected a function because this term is being applied to the argument
-  PUnit.unit
----
-trace: [Meta.synthInstance] ❌️ DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.1 ?m.7
-  [Meta.synthInstance.apply] ❌️ apply @ContinuousMap.instFunLike to DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11 ?m.12
-    [Meta.synthInstance.tryResolve] ❌️ DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11
-          ?m.12 ≟ DFunLike C(?m.14, ?m.15) ?m.14 fun x ↦ ?m.15
-      [Meta.isDefEq] ❌️ [instances] DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11
-            ?m.12 =?= DFunLike C(?m.14, ?m.15) ?m.14 fun x ↦ ?m.15
-        [Meta.isDefEq] ❌️ [instances] C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) =?= C(?m.14, ?m.15)
-          [Meta.isDefEq] ❌️ [implicit] X.toCondensedSet.toTopCat.str =?= ?m.16
-            [Meta.isDefEq] X.toCondensedSet.toTopCat.str [nonassignable] =?= ?m.16 [assignable]
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.16 : TopologicalSpace
-                  C(PUnit.{?u.16 + 1},
-                    ↑X)) := (X.toCondensedSet.toTopCat.str : TopologicalSpace ↑X.toCondensedSet.toTopCat)
-              [Meta.isDefEq] ❌️ [instances] TopologicalSpace
-                    C(PUnit.{?u.16 + 1}, ↑X) =?= TopologicalSpace ↑X.toCondensedSet.toTopCat
-                [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1}, ↑X) =?= ↑X.toCondensedSet.toTopCat
-                  [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1}, ↑X) =?= X.toCondensedSet.toTopCat.1
-                    [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1},
-                          ↑X) =?= X.toCondensedSet.obj.obj (Opposite.op (of PUnit.{?u.16 + 1}))
-                      [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1},
-                            ↑X) =?= X.toCondensedSet.obj.1 (Opposite.op (of PUnit.{?u.16 + 1}))
-                        [Meta.isDefEq] ❌️ [instances] ContinuousMap =?= X.toCondensedSet.obj.1
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.16 : TopologicalSpace
-                  C(PUnit.{?u.16 + 1},
-                    ↑X)) := ({ IsOpen := fun s ↦ IsOpen (X.toCondensedSet.coinducingCoprod ⁻¹' s), isOpen_univ := ⋯,
-                  isOpen_inter := ⋯,
-                  isOpen_sUnion :=
-                    ⋯ } : TopologicalSpace (X.toCondensedSet.obj.obj (Opposite.op (of PUnit.{?u.16 + 1}))))
-              [Meta.isDefEq] ❌️ [instances] TopologicalSpace
-                    C(PUnit.{?u.16 + 1},
-                      ↑X) =?= TopologicalSpace (X.toCondensedSet.obj.obj (Opposite.op (of PUnit.{?u.16 + 1})))
-                [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1},
-                      ↑X) =?= X.toCondensedSet.obj.obj (Opposite.op (of PUnit.{?u.16 + 1}))
-                  [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1},
-                        ↑X) =?= X.toCondensedSet.obj.1 (Opposite.op (of PUnit.{?u.16 + 1}))
-                    [Meta.isDefEq] ❌️ [instances] ContinuousMap =?= X.toCondensedSet.obj.1
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance x) <&&>
-    (containsString "DFunLike" x)) >=>
-  filterSubtrees (fun x => (failed x) <&&> (containsString "toTopCat.str" x)) >=>
-  dropSubtrees (ofClass `Meta.isDefEq.onFailure) in
-set_option trace.Meta.synthInstance true in
-set_option trace.Meta.isDefEq true in
-set_option trace.Meta.isDefEq.printTransparency true in
-set_option trace.Meta.isDefEq.assign.checkTypes true in
-set_option backward.isDefEq.respectTransparency.types false in
-example (X : TopCat) (x) :
-    DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)
-        (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
-      x PUnit.unit := rfl
-
-section
-variable (X : TopCat.{u + 1})
-
--- A correct-typed instance is synthesizable, but it is the compact-open topology, ...
-/-- info: ContinuousMap.compactOpen -/
-#guard_msgs in
-#synth TopologicalSpace C(PUnit.{u + 1}, X)
-
--- ... which is NOT the topology carried by the hom's domain, no matter what is unfolded.
-/--
-error: Tactic `rfl` failed: The left-hand side
-  X.toCondensedSet.toTopCat.str
-is not definitionally equal to the right-hand side
-  ContinuousMap.compactOpen
-
-X✝¹ : CondensedSet
-X✝ X : TopCat
-⊢ X.toCondensedSet.toTopCat.str = ContinuousMap.compactOpen
--/
-#guard_msgs in
-example (X : TopCat.{u + 1}) :
-    X.toCondensedSet.toTopCat.str =
-      (ContinuousMap.compactOpen : TopologicalSpace C(PUnit, X)) := by
-  with_unfolding_all apply_rfl
-
-end
 
 /-
 Summary of the investigation:

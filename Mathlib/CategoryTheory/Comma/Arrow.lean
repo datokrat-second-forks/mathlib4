@@ -31,12 +31,13 @@ variable {T : Type u} [Category.{v} T]
 variable (T) in
 /-- The arrow category of `T` has as objects all morphisms in `T` and as morphisms commutative
 squares in `T`. -/
+@[implicit_reducible]
 def Arrow := Comma (𝟭 T) (𝟭 T)
 
 to_dual_name_hint Left Right
 
 /-- The type of morphisms in the category `Arrow T`. -/
-@[to_dual self (reorder := f g)]
+@[to_dual self (reorder := f g), implicit_reducible]
 protected def Arrow.Hom (f g : Arrow T) := CommaMorphism f g
 
 instance : Quiver (Arrow T) where
