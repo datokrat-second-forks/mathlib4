@@ -603,8 +603,8 @@ lemma _root_.RingEquiv.symm_toSemilinearEquiv_symm_apply (f : R ≃+* S) (x : R)
 
 "markOrSynth":
 
-`RingInvHomPair` instance cannot be unified because types don't match (`.symm.symm`),
-and can't be synthesized either.
+`RingInvHomPair` instance cannot be unified because types don't match at instances (`.symm.symm`),
+and it can't be synthesized either.
 -/
 
 example (f : R ≃+* S) : (↑f : R →+* S) = ↑f.symm.symm := by rfl
