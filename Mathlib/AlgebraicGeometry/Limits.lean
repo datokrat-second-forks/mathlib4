@@ -279,7 +279,7 @@ trace: [Meta.synthInstance] ❌️ Mono coprod.inl
     [Meta.synthInstance.tryResolve] ❌️ Mono coprod.inl ≟ Mono coprod.inl
       [Meta.isDefEq] ❌️ [instances] Mono coprod.inl =?= Mono coprod.inl
         [Meta.isDefEq] ❌️ [instances] coprod.inl =?= coprod.inl
-          [Meta.isDefEq] ❌️ [instances] Scheme.IsLocallyDirected.instHasColimit (pair X Y) =?= ?m.49
+          [Meta.isDefEq] ❌️ [implicit] Scheme.IsLocallyDirected.instHasColimit (pair X Y) =?= ?m.49
             [Meta.isDefEq] ❌️ [instances] HasBinaryCoproduct ((pair X Y).obj { as := WalkingPair.left })
                   Y =?= HasColimit (pair X Y)
               [Meta.isDefEq] ❌️ [instances] HasColimit
