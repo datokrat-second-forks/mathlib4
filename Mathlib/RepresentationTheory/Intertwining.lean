@@ -489,46 +489,6 @@ instance : Module A (IntertwiningMap ρ σ) :=
   fast_instance%
   Function.Injective.module A (coeFnAddMonoidHom ρ σ) DFunLike.coe_injective (coe_smul ρ σ)
 
-/-
-`equivLinearMapAsModule` is the only declaration in this file that needs
-`backward.isDefEq.instanceTypes false` (it used to be set file-wide).
-
-The failure is in `invFun`'s `map_smul'` field. Its goal `f (a • v) = a • f v` is
-heterogeneous by construction: `{ f with … }` reuses the function of
-`f : ρ.asModule →ₗ[A[G]] σ.asModule` in a `V →ₗ[A] W`, so `f` is applied to `a • v : V` —
-type-correct only because the synonym `Representation.asModule` (`:= V`) unfolds at default
-transparency. The toolchain's type-incorrectness note in the demo shows exactly this.
-
-`simp` would close the goal with `LinearMap.map_smul_of_tower`. Its pattern mvars are not
-instance-typed, so the match against the heterogeneous goal succeeds — see the demo's ✅ line
-assigning a `SMul A V`-typed instance to `?inst : SMul A ρ.asModule`. But the lemma's
-`[LinearMap.CompatibleSMul ρ.asModule σ.asModule A A[G]]` hypothesis goes to instance
-synthesis with that V-spelled slot baked into its goal type; the candidate
-`LinearMap.IsScalarTower.compatibleSMul` has to reproduce the pairing in an instance-typed
-mvar `?m : SMul A ρ.asModule`, and the mvar check compares `SMul A ρ.asModule =?=
-SMul A V` at `.instances`, where `asModule` does not unfold → rejected → synthesis fails →
-the simp lemma never applies ("simp made no progress") → the field goal stays open.
-
-* Same statement-level `asModule` defeq abuse as the sites in
-  `Mathlib/RepresentationTheory/Induced.lean` and
-  `Mathlib/RepresentationTheory/Homological/GroupHomology/Basic.lean`.
-* The rejected mvar is data-valued (`SMul`), so a Prop-exemption would not apply.
-
-Possible solutions: build `invFun`'s linear map by translating along `ρ.asModuleEquiv`
-(as `asModule`'s docstring recommends) instead of `{ f with … }`.
-
-Addendum: Even with "markOfSynth" + `asModule` implicit-reducible it fails.
-Reason: In order to unify the two instances, we'd need to unfold implicit-reducible decls,
-but (for some reason) we're at instances transparency.
-The Reason for the failure is very stupid: The RHS is a wrapped instance and the wrappers are
-implicit-reducible, lest the type of the instance could change by unfolding.
-However, that should be no problem here morally because the changed type is the type of the LHS!
-
-Hmm, why is the comparison even done at `instances`?
--/
-
-section InstanceTypesDemos
-
 open Lean.PostprocessTraces
 
 private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
@@ -543,56 +503,38 @@ where
       else
         return .node data msg (← children.mapM go) wrap
 
-set_option linter.style.longLine false in
-/--
-error: `simp` made no progress
-
-Note: The target expression is not type-correct under the `implicit` transparency level, which may have triggered the failure. This is usually caused by unfolding of semireducible definitions in prior tactic steps. Use `set_option linter.tacticCheckInstances true` to investigate the source of the issue.
-Full error:
-  Application type mismatch: The argument
-    a • v
-  has type
-    V
-  but is expected to have type
-    ρ.asModule
-  in the application
-    f (a • v)
----
-trace: [Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A ρ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A V)
-[Meta.synthInstance] ✅️ SMul A σ.asModule
-  [Meta.isDefEq.assign.checkTypes] ✅️ (?m.83 : DistribSMul A
-        σ.asModule) := (DistribMulAction.toDistribSMul : DistribSMul A σ.asModule)
-[Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A
-      σ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A σ.asModule)
-[Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A ρ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A V)
-[Meta.isDefEq.assign.checkTypes] ✅️ (?inst✝ : SMul A
-      σ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A σ.asModule)
-[Meta.synthInstance] ❌️ LinearMap.CompatibleSMul ρ.asModule σ.asModule A A[G]
-  [Meta.synthInstance.apply] ❌️ apply @LinearMap.IsScalarTower.compatibleSMul to LinearMap.CompatibleSMul ρ.asModule
-        σ.asModule A A[G]
-    [Meta.synthInstance.tryResolve] ❌️ LinearMap.CompatibleSMul ρ.asModule σ.asModule A
-          A[G] ≟ LinearMap.CompatibleSMul ?m.80 ?m.81 ?m.84 ?m.85
-      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.87 : SMul A
-            ρ.asModule) := (DistribMulAction.toDistribSMul.toSMul : SMul A V)
-      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.87 : SMul A ρ.asModule) := (inst✝².toSemigroupAction.1 : SMul A V)
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x =>
-    ((ofClass `Meta.synthInstance.apply x) <&&> (containsString "compatibleSMul" x)) <||>
-    ((ofClass `Meta.isDefEq.assign.checkTypes x)
-      <&&> (containsString "SMul A" x) <&&> (containsString "asModule" x)))
-  >=> filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
-    <&&> (containsString "SMul A" x))
-in
-set_option backward.isDefEq.respectTransparency false in
-example (f : ρ.asModule →ₗ[A[G]] σ.asModule) (a : A) (v : V) : f (a • v) = a • f v := by
-  set_option trace.Meta.synthInstance true in
-  set_option trace.Meta.isDefEq.assign.checkTypes true in
-  simp
+/-! # Issue -/
 
 /-
-"markOrSynth": bad interaction with `respectTransparency false`, which disables the implicit bump.
+If `asModule` is made implicit-reducible *at its definition site*, then `respectTransparency` false
+becomes obsolete. After removing it, the lemma also works with "markOrSynth".
+-/
+set_option backward.isDefEq.instanceTypes "none" in
+set_option backward.isDefEq.respectTransparency false in
+/-- An intertwining map is the same thing as a linear map over the group ring. -/
+def equivLinearMapAsModule :
+    IntertwiningMap ρ σ ≃ₗ[A] ρ.asModule →ₗ[A[G]] σ.asModule where
+  toFun f :=
+    { toFun := f.toLinearMap
+      map_add' := f.toLinearMap.map_add'
+      map_smul' m v := by
+        induction m using MonoidAlgebra.induction_linear with
+          | zero => simp [f.toLinearMap.map_zero]
+          | add x y hx hy => simp [add_smul, map_add, hx, hy]
+          | single g a => simp [f.isIntertwining]; rfl }
+  invFun f :=
+    { toLinearMap := { f with
+        map_smul' a v := by simp }
+      isIntertwining' g := by ext v; simpa using! f.map_smul' (MonoidAlgebra.single g 1) v }
+  map_add' g₁ g₂ := by ext; simp
+  map_smul' t g := by ext; simp
+  left_inv f := rfl
+  right_inv f := rfl
+
+/-!
+# Explanation
+
+Bad interaction with `respectTransparency false`, which disables the implicit bump.
 Therefore, the synthesized and unified values are compared at ambient, instances, transparency,
 and the comparison fails. It would succeed if there was an implicit bump and `asModule` was
 implicit-reducible.
@@ -707,34 +649,6 @@ example (f : ρ.asModule →ₗ[A[G]] σ.asModule) (a : A) (v : V) : f (a • v)
   set_option trace.Meta.isDefEq true in
   set_option trace.Meta.isDefEq.printTransparency true in
   simp
-
-end InstanceTypesDemos
-
-/-
-If `asModule` is made implicit-reducible *at its definition site*, then `respectTransparency` false
-becomes obsolete. After removing it, the lemma also works with "markOrSynth".
--/
-set_option backward.isDefEq.instanceTypes "none" in
-set_option backward.isDefEq.respectTransparency false in
-/-- An intertwining map is the same thing as a linear map over the group ring. -/
-def equivLinearMapAsModule :
-    IntertwiningMap ρ σ ≃ₗ[A] ρ.asModule →ₗ[A[G]] σ.asModule where
-  toFun f :=
-    { toFun := f.toLinearMap
-      map_add' := f.toLinearMap.map_add'
-      map_smul' m v := by
-        induction m using MonoidAlgebra.induction_linear with
-          | zero => simp [f.toLinearMap.map_zero]
-          | add x y hx hy => simp [add_smul, map_add, hx, hy]
-          | single g a => simp [f.isIntertwining]; rfl }
-  invFun f :=
-    { toLinearMap := { f with
-        map_smul' a v := by simp }
-      isIntertwining' g := by ext v; simpa using! f.map_smul' (MonoidAlgebra.single g 1) v }
-  map_add' g₁ g₂ := by ext; simp
-  map_smul' t g := by ext; simp
-  left_inv f := rfl
-  right_inv f := rfl
 
 set_option backward.isDefEq.respectTransparency false in
 /-- Composition of intertwining maps. -/
