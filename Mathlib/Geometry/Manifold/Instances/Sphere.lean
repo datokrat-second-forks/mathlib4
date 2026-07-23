@@ -475,118 +475,7 @@ theorem contMDiff_neg_sphere {m : ℕ∞ω} {n : ℕ} [Fact (finrank ℝ E = n +
   apply contDiff_neg.contMDiff.comp _
   exact contMDiff_coe_sphere
 
-/-
-The three `backward.isDefEq.instanceTypes false` sites in this file (`stereographic'_neg`,
-`range_mfderiv_coe_sphere`, `mfderiv_coe_sphere_injective`) all reduce to one spelling desync:
-`coe_neg_sphere : ↑(-v) = -↑v` is `rfl` at default transparency (the sphere's `Neg` is
-`Subtype.map Neg.neg _`, and `Subtype.map` is semireducible), but the two spellings are NOT
-defeq at `.instances`. Rewriting with it (it is a simp lemma, also pulled in via `mfld_simps`)
-desyncs type indices (rewritten to `-↑v`) from instance arguments inside the term (still typed
-at `↑(-v)`).
-
-1. In `stereographic'_neg`, `dsimp [stereographic']` produces such a target (the
-   type-incorrectness note in the first demo shows exactly where). To rewrite with
-   `EmbeddingLike.map_eq_zero_iff`, simp then synthesizes
-   `EquivLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) _ _`. The candidate
-   `LinearIsometryEquiv.instEquivLike` reads the carrier `↥(ℝ ∙ -↑v)ᗮ` off the `≃ₗᵢ` type
-   args, so its instance-typed mvar `?inst : SeminormedAddCommGroup ↥(ℝ ∙ -↑v)ᗮ` has to
-   swallow the old-spelling slot value of type `SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ`. The
-   mvar check compares these types at `.instances`, stalls at `-↑v =?= ↑(-v)`, and rejects the
-   assignment; the simp lemma never applies ("simp made no progress").
-2. In the other two proofs, the inner
-   `have … := by convert! hasFDerivAt_stereoInvFunAux_comp_coe (-v : E); simp` pairs the
-   `↑(-v)`-spelled `have` statement against the `-↑v`-spelled lemma. `convert!` bridges the
-   carriers with a cast `e_3 : ↥(ℝ ∙ ↑(-v))ᗮ = ↥(ℝ ∙ -↑v)ᗮ` and leaves a goal
-   `U.symm 0 = 0` in which the casted `U.symm`'s `≃ₗᵢ` type is spelled at `-↑v` while its
-   instance arguments stay at `↑(-v)`. The closing `simp` needs the `≃ₗᵢ`'s
-   `EquivLike`/`FunLike` chain for its `map_*` lemmas and dies on the same rejected
-   assignment (second demo), leaving the goal unsolved.
-
-* The `E ↔ TangentSpace` defeq abuse these proofs are known for is guarded by the adjacent
-  `respectTransparency false`; the `instanceTypes` site is this sphere-coercion desync.
-* Same pattern (rewritten type index paired with an instance typed at the old spelling) as
-  `Mathlib/FieldTheory/Galois/Profinite.lean` and
-  `Mathlib/CategoryTheory/Filtered/CostructuredArrow.lean`.
-* The rejected mvar is data-valued (`SeminormedAddCommGroup`), so a Prop-exemption would not
-  apply.
-
-Possible solutions: the file's own TODO (rephrase via `mvfderiv`, avoiding the defeq abuse);
-or avoid the `coe_neg_sphere` rewrite desync, e.g. by making the sphere `Neg` instance's
-`Subtype.map` spine reducible.
--/
-
-section InstanceTypesDemos
-
-open Lean.PostprocessTraces
-
--- `coe_neg_sphere` is `rfl` at default transparency.
-example (v : sphere (0 : E) 1) : (↑(-v) : E) = -↑v := rfl
-
--- Site 1: after `dsimp [stereographic']`, the target pairs `-↑v` type indices with `↑(-v)`
--- instances (see the note); the rewrite's `EquivLike` synthesis reproduces the pairing in an
--- instance-typed mvar and is rejected at `.instances`.
-set_option linter.style.longLine false in
-/--
-error: `simp` made no progress
-
-Note: The target expression is not type-correct under the `implicit` transparency level, which may have triggered the failure. This is usually caused by unfolding of semireducible definitions in prior tactic steps. Use `set_option linter.tacticCheckInstances true` to investigate the source of the issue.
-Full error:
-  Application type mismatch: The argument
-    NormedAddCommGroup.toSeminormedAddCommGroup
-  has type
-    SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ
-  but is expected to have type
-    SeminormedAddCommGroup ↥(ℝ ∙ -↑v)ᗮ
-  in the application
-    @LinearIsometryEquiv ℝ ℝ Field.toSemifield.toDivisionSemiring.toSemiring
-      Field.toSemifield.toDivisionSemiring.toSemiring (RingHom.id ℝ) (RingHom.id ℝ) ⋯ ⋯ (↥(ℝ ∙ -↑v)ᗮ)
-      (EuclideanSpace ℝ (Fin n)) NormedAddCommGroup.toSeminormedAddCommGroup
----
-trace: [Meta.synthInstance] ❌️ EmbeddingLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) (↥(ℝ ∙ -↑v)ᗮ)
-      (EuclideanSpace ℝ (Fin n))
-  [Meta.synthInstance.apply] ❌️ apply @LinearIsometryEquiv.instEquivLike to EquivLike
-        (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) ?m.64 ?m.65
-    [Meta.synthInstance.tryResolve] ❌️ EquivLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) ?m.64
-          ?m.65 ≟ EquivLike (?m.69 ≃ₛₗᵢ[?m.73] ?m.70) ?m.69 ?m.70
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.67 : Type ?u.73) := (ℝ : Type)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.68 : Type ?u.74) := (ℝ : Type)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.71 : Semiring
-            ℝ) := (Field.toSemifield.toDivisionSemiring.toSemiring : Semiring ℝ)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.72 : Semiring
-            ℝ) := (Field.toSemifield.toDivisionSemiring.toSemiring : Semiring ℝ)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.73 : ℝ →+* ℝ) := (RingHom.id ℝ : ℝ →+* ℝ)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.74 : ℝ →+* ℝ) := (RingHom.id ℝ : ℝ →+* ℝ)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.75 : RingHomInvPair (RingHom.id ℝ)
-            (RingHom.id ℝ)) := (stereographic'._proof_2 : RingHomInvPair (RingHom.id ℝ) (RingHom.id ℝ))
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.76 : RingHomInvPair (RingHom.id ℝ)
-            (RingHom.id ℝ)) := (stereographic'._proof_2 : RingHomInvPair (RingHom.id ℝ) (RingHom.id ℝ))
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.69 : Type ?u.75) := (↥(ℝ ∙ -↑v)ᗮ : Type u_1)
-      [Meta.isDefEq.assign.checkTypes] ✅️ (?m.70 : Type ?u.76) := (EuclideanSpace ℝ (Fin n) : Type)
-      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.77 : SeminormedAddCommGroup
-            ↥(ℝ ∙ -↑v)ᗮ) := (NormedAddCommGroup.toSeminormedAddCommGroup : SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ)
-      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.77 : SeminormedAddCommGroup
-            ↥(ℝ ∙
-                  -↑v)ᗮ) := ({ toNorm := (ℝ ∙ ↑(-v))ᗮ.normedAddCommGroup.toNorm,
-            toAddCommGroup := (ℝ ∙ ↑(-v))ᗮ.normedAddCommGroup.toAddCommGroup,
-            toPseudoMetricSpace := (ℝ ∙ ↑(-v))ᗮ.normedAddCommGroup.toPseudoMetricSpace,
-            dist_eq := ⋯ } : SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ)
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
-    <&&> (containsString "LinearIsometryEquiv.instEquivLike" x))
-in
-set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
-example {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
-    stereographic' n (-v) v = 0 := by
-  dsimp [stereographic']
-  set_option trace.Meta.synthInstance true in
-  set_option trace.Meta.isDefEq.assign.checkTypes true in
-  simp only [EmbeddingLike.map_eq_zero_iff]
-  apply stereographic_neg_apply
-
-end InstanceTypesDemos
+/-! # Issue -/
 
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.defeqAttrib.useBackward true in
@@ -597,78 +486,98 @@ private lemma stereographic'_neg {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : s
   simp only [EmbeddingLike.map_eq_zero_iff]
   apply stereographic_neg_apply
 
-section InstanceTypesDemos
+/-! ## Explanation -/
 
 open Lean.PostprocessTraces
 
--- Sites 2/3: `convert!` bridges the two spellings with a cast and leaves `U.symm 0 = 0`;
--- the closing `simp` hits the same rejected assignment and the goal stays unsolved.
+-- All three sites share one spelling desync: `coe_neg_sphere : ↑(-v) = -↑v` is `rfl` at default
+-- transparency (the sphere's `Neg` is `Subtype.map Neg.neg _`), but the two spellings are NOT
+-- defeq at `.instances`. Rewriting with it (a simp lemma, also in `mfld_simps`) desyncs type
+-- indices (rewritten to `-↑v`) from instance arguments inside the term (still typed at `↑(-v)`).
+-- Here, after `dsimp [stereographic']`, `simp only [EmbeddingLike.map_eq_zero_iff]` synthesizes the
+-- `≃ₗᵢ`'s `EquivLike`, whose `LinearIsometryEquiv.instEquivLike` candidate reads the carrier
+-- `↥(ℝ ∙ -↑v)ᗮ` off the type and leaves an instance-typed `SeminormedAddCommGroup ↥(ℝ ∙ -↑v)ᗮ` mvar
+-- that has to swallow the old-spelling `↥(ℝ ∙ ↑(-v))ᗮ`-typed value. The direct `.instances` check
+-- fails (`-↑v =?= ↑(-v)` stalls); `"mark"` would reject and the simp lemma would never apply
+-- ("`simp` made no progress") — `"markOrSynth"` re-synthesizes at `↥(ℝ ∙ -↑v)ᗮ` and unifies,
+-- rescuing the rewrite. The `E ↔ TangentSpace` defeq abuse these proofs are known for is guarded by
+-- the adjacent `respectTransparency false`; this `instanceTypes` site is the sphere-coercion desync.
+
+-- `coe_neg_sphere` is `rfl` at default transparency, but not at `.instances`.
+example (v : sphere (0 : E) 1) : (↑(-v) : E) = -↑v := rfl
+
+private meta partial def dropSubtrees (p : TracePattern) : TracePostprocessor :=
+  fun trees => trees.filterMapM go
+where
+  go (t : TraceTree) : Lean.CoreM (Option TraceTree) := do
+    if ← p t then
+      return none
+    match t with
+    | .leaf msg => return some (.leaf msg)
+    | .node data msg children wrap => return some (.node data msg (← children.filterMapM go) wrap)
+
+private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
+  fun trees => trees.mapM go
+where
+  go (t : TraceTree) : Lean.CoreM TraceTree := do
+    match t with
+    | .leaf msg => return .leaf msg
+    | .node data msg children wrap =>
+      if ← p t then
+        return .node data m!"{msg} (truncated)" #[] wrap
+      else
+        return .node data msg (← children.mapM go) wrap
+
 set_option linter.style.longLine false in
 /--
-error: unsolved goals
-case e'_13
-E : Type u_1
-inst✝⁸ : NormedAddCommGroup E
-inst✝⁷ : InnerProductSpace ℝ E
-m : ℕ∞ω
-F : Type u_2
-inst✝⁶ : NormedAddCommGroup F
-inst✝⁵ : NormedSpace ℝ F
-H : Type u_3
-inst✝⁴ : TopologicalSpace H
-I : ModelWithCorners ℝ F H
-M : Type u_4
-inst✝³ : TopologicalSpace M
-inst✝² : ChartedSpace H M
-inst✝¹ : IsManifold I m M
-n : ℕ
-inst✝ : Fact (finrank ℝ E = n + 1)
-v : ↑(sphere 0 1)
-U : ↥(ℝ ∙ ↑(-v))ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n) := (OrthonormalBasis.fromOrthogonalSpanSingleton n ⋯).repr
-e_3✝ : ↥(ℝ ∙ ↑(-v))ᗮ = ↥(ℝ ∙ -↑v)ᗮ
-⊢ U.symm 0 = 0
----
-trace: [Meta.synthInstance] ❌️ EmbeddingLike (EuclideanSpace ℝ (Fin n) ≃ₗᵢ[ℝ] ↥(ℝ ∙ -↑v)ᗮ) (EuclideanSpace ℝ (Fin n))
-      ↥(ℝ ∙ -↑v)ᗮ
-  [Meta.synthInstance.apply] ❌️ apply @LinearIsometryEquiv.instEquivLike to EquivLike
-        (EuclideanSpace ℝ (Fin n) ≃ₗᵢ[ℝ] ↥(ℝ ∙ -↑v)ᗮ) ?m.2002 ?m.2003
-    [Meta.synthInstance.tryResolve] ❌️ EquivLike (EuclideanSpace ℝ (Fin n) ≃ₗᵢ[ℝ] ↥(ℝ ∙ -↑v)ᗮ) ?m.2002
-          ?m.2003 ≟ EquivLike (?m.2007 ≃ₛₗᵢ[?m.2011] ?m.2008) ?m.2007 ?m.2008
-      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.2016 : SeminormedAddCommGroup
-            ↥(ℝ ∙ -↑v)ᗮ) := (NormedAddCommGroup.toSeminormedAddCommGroup : SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ)
-      [Meta.isDefEq.assign.checkTypes] ❌️ (?m.2016 : SeminormedAddCommGroup
-            ↥(ℝ ∙
-                  -↑v)ᗮ) := ({ toNorm := (ℝ ∙ ↑(-v))ᗮ.normedAddCommGroup.toNorm,
-            toAddCommGroup := (ℝ ∙ ↑(-v))ᗮ.normedAddCommGroup.toAddCommGroup,
-            toPseudoMetricSpace := (ℝ ∙ ↑(-v))ᗮ.normedAddCommGroup.toPseudoMetricSpace,
-            dist_eq := ⋯ } : SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ)
+trace: [Meta.synthInstance] ✅️ EmbeddingLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) (↥(ℝ ∙ -↑v)ᗮ)
+      (EuclideanSpace ℝ (Fin n))
+  [Meta.synthInstance.apply] ✅️ apply @LinearIsometryEquiv.instEquivLike to EquivLike
+        (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) (↥(ℝ ∙ -↑v)ᗮ) (EuclideanSpace ℝ (Fin n))
+    [Meta.synthInstance.tryResolve] ✅️ EquivLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) (↥(ℝ ∙ -↑v)ᗮ)
+          (EuclideanSpace ℝ
+            (Fin n)) ≟ EquivLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) (↥(ℝ ∙ -↑v)ᗮ) (EuclideanSpace ℝ (Fin n))
+      [Meta.isDefEq] ✅️ [instances] EquivLike (↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n)) ?m.64
+            ?m.65 =?= EquivLike (?m.69 ≃ₛₗᵢ[?m.73] ?m.70) ?m.69 ?m.70
+        [Meta.isDefEq] ✅️ [instances] ↥(ℝ ∙ -↑v)ᗮ ≃ₗᵢ[ℝ] EuclideanSpace ℝ (Fin n) =?= ?m.69 ≃ₛₗᵢ[?m.73] ?m.70
+          [Meta.isDefEq] ✅️ [instances] NormedAddCommGroup.toSeminormedAddCommGroup =?= ?m.77
+            [Meta.isDefEq.assign.checkTypes] ✅️ (?m.77 : SeminormedAddCommGroup
+                  ↥(ℝ ∙ -↑v)ᗮ) := (NormedAddCommGroup.toSeminormedAddCommGroup : SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ)
+              [Meta.isDefEq] ❌️ [instances] SeminormedAddCommGroup
+                    ↥(ℝ ∙ -↑v)ᗮ =?= SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ (truncated)
+              [Meta.synthInstance] ✅️ SeminormedAddCommGroup ↥(ℝ ∙ -↑v)ᗮ (truncated)
+              [Meta.isDefEq] ✅️ [instances] NormedAddCommGroup.toSeminormedAddCommGroup =?= (ℝ ∙
+                        -↑v)ᗮ.seminormedAddCommGroup (truncated)
 -/
 #guard_msgs in
 postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
-    <&&> (containsString "LinearIsometryEquiv.instEquivLike" x))
-  >=> filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
+  dropSubtrees (fun x => (ofClass `Meta.synthInstance x) <&&> containsString "ZeroHomClass" x)
+  >=> filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
+    <&&> containsString "SeminormedAddCommGroup ↥(ℝ ∙ ↑(-v))ᗮ)" x)
+  >=> elideBelow (fun x => (ofClass `Meta.isDefEq x) <&&> failed x
+    <&&> containsString "SeminormedAddCommGroup ↥(ℝ ∙ -↑v)ᗮ =?= SeminormedAddCommGroup" x)
+  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> succeeded x
+    <&&> containsString "SeminormedAddCommGroup ↥(ℝ ∙ -↑v)ᗮ" x)
+  >=> elideBelow (fun x => (ofClass `Meta.isDefEq x) <&&> succeeded x
+    <&&> containsString "toSeminormedAddCommGroup =?= (ℝ ∙" x)
 in
+set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
 example {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
-    (mfderiv (𝓡 n) 𝓘(ℝ, E) ((↑) : sphere (0 : E) 1 → E) v : TangentSpace (𝓡 n) v →L[ℝ] E).range =
-      (ℝ ∙ (v : E))ᗮ := by
-  rw [((contMDiff_coe_sphere v).mdifferentiableAt one_ne_zero).mfderiv]
-  dsimp [chartAt]
-  simp only [fderivWithin_univ, mfld_simps]
-  let U := (OrthonormalBasis.fromOrthogonalSpanSingleton (𝕜 := ℝ) n
-    (ne_zero_of_mem_unit_sphere (-v))).repr
-  have :
-    HasFDerivAt (stereoInvFunAux (-v : E) ∘ (Subtype.val : (ℝ ∙ (↑(-v) : E))ᗮ → E))
-      (ℝ ∙ (↑(-v) : E))ᗮ.subtypeL (U.symm 0) := by
-    convert! hasFDerivAt_stereoInvFunAux_comp_coe (-v : E)
-    set_option trace.Meta.synthInstance true in
-    set_option trace.Meta.isDefEq.assign.checkTypes true in
-    all_goals simp
-  sorry
+    stereographic' n (-v) v = 0 := by
+  dsimp [stereographic']
+  set_option trace.Meta.synthInstance true in
+  set_option trace.Meta.isDefEq true in
+  set_option trace.Meta.isDefEq.printTransparency true in
+  set_option trace.Meta.isDefEq.assign.checkTypes true in
+  simp only [EmbeddingLike.map_eq_zero_iff]
+  apply stereographic_neg_apply
 
-end InstanceTypesDemos
-
+-- Same `coe_neg_sphere` desync as `stereographic'_neg`; here the inner `convert!` bridges the two
+-- spellings with a cast and the closing `simp` hits the rejected assignment (rescued by
+-- `"markOrSynth"`). See the Explanation above. (`convert!` rolls back its own traces, so the
+-- decisive `checkTypes` shows up on the follow-up `simp`.)
 -- TODO: rephrase this using `mvfderiv`, avoiding the defeq abuse
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in
@@ -712,6 +621,8 @@ theorem range_mfderiv_coe_sphere {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : s
     rw [Submodule.neg_mem_iff]
     exact Submodule.mem_span_singleton_self (v : E)
 
+-- Same `coe_neg_sphere` desync as `stereographic'_neg`, via the inner `convert!` + closing `simp`
+-- (rescued by `"markOrSynth"`). See the Explanation above.
 -- TODO: rephrase this using `mvfderiv`, avoiding the defeq abuse
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency false in

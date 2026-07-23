@@ -474,73 +474,7 @@ instance : (tilde M).IsQuasicoherent :=
 instance : ((tilde.functor R).obj M).IsQuasicoherent :=
   inferInstanceAs <| (tilde M).IsQuasicoherent
 
--- `SheafOfModules.instCategory`, the instance obtained by unification, isn't applicable because
--- the type doesn't match at instance transparency: cannot unfold `Scheme.Modules.
--- How does that happen?
--- * The LHS of the `iso` equivalence (for example) is of `Scheme.Modules` type
--- * The RHS contains functors that are of `SheafOfModules` type
--- * It seems that unification assigns the category from the LHS, but the instance from the RHS
--- Potential language-level solution: re-synthesize the category instance?
-/--
-error: failed to synthesize instance of type class
-  HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
----
-error: failed to synthesize instance of type class
-  HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
----
-trace: [Meta.synthInstance] ❌️ HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
-  [Meta.synthInstance.apply] ❌️ apply @Preadditive.preadditiveHasZeroMorphisms to HasZeroMorphisms
-        (Spec (CommRingCat.of ↑R)).Modules
-    [Meta.synthInstance.tryResolve] ❌️ HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules ≟ HasZeroMorphisms ?m.69
-      [Meta.isDefEq] ❌️ [instances] HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules =?= HasZeroMorphisms ?m.69
-        [Meta.isDefEq] ❌️ [instances] SheafOfModules.instCategory =?= ?m.70
-          [Meta.isDefEq] SheafOfModules.instCategory [nonassignable] =?= ?m.70 [assignable]
-          [Meta.isDefEq] ❌️ [instances] Category.{?u.39, u + 1}
-                (Spec (CommRingCat.of ↑R)).Modules =?= Category.{u, u + 1} (SheafOfModules (Spec R).ringCatSheaf)
-            [Meta.isDefEq] ❌️ [instances] (Spec (CommRingCat.of ↑R)).Modules =?= SheafOfModules (Spec R).ringCatSheaf
-              [Meta.isDefEq] ❌️ [instances] Scheme.Modules =?= @SheafOfModules
-              [Meta.isDefEq.onFailure] ❌️ (Spec (CommRingCat.of ↑R)).Modules =?= SheafOfModules (Spec R).ringCatSheaf
-              [Meta.isDefEq.onFailure] ❌️ (Spec (CommRingCat.of ↑R)).Modules =?= SheafOfModules (Spec R).ringCatSheaf
-            [Meta.isDefEq.onFailure] ❌️ Category.{?u.39, u + 1}
-                  (Spec (CommRingCat.of ↑R)).Modules =?= Category.{u, u + 1} (SheafOfModules (Spec R).ringCatSheaf)
-            [Meta.isDefEq.onFailure] ❌️ Category.{?u.39, u + 1}
-                  (Spec (CommRingCat.of ↑R)).Modules =?= Category.{u, u + 1} (SheafOfModules (Spec R).ringCatSheaf)
-          [Meta.isDefEq] ❌️ [instances] Category.{?u.39, u + 1}
-                (Spec (CommRingCat.of ↑R)).Modules =?= Category.{u, u + 1} (SheafOfModules (Spec R).ringCatSheaf)
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => do (ofClass `Meta.synthInstance x) <&&> (containsString "HasZeroMorphisms" x)) >=>
-  filterSubtrees (fun x => do (failed x) <&&> (containsString "instCategory" x) <&&> (containsString "[instances]" x)) in
-set_option trace.Meta.synthInstance true in
-set_option trace.Meta.isDefEq true in
-set_option trace.Meta.isDefEq.printTransparency true in
-set_option backward.isDefEq.respectTransparency false in
-example (M : (Spec R).Modules) (P : M.Presentation) :
-    IsIso M.fromTildeΓ := by
-  rw [isIso_fromTildeΓ_iff]
-  let g := (tilde.functor _).preimage <| (tildeFinsupp _).hom ≫ P.relations.π ≫ kernel.ι _ ≫
-    (tildeFinsupp _).inv
-  let iso : cokernel ((tilde.functor R).map g) ≅ cokernel (P.relations.π ≫ kernel.ι _) := by
-    refine cokernel.mapIso _ _ (tildeFinsupp _) (tildeFinsupp _) ?_
-    simp only [g, (tilde.functor R).map_preimage]
-    simp
-  exact ⟨cokernel g, ⟨PreservesCokernel.iso (tilde.functor R) g ≪≫ iso ≪≫
-    IsColimit.coconePointUniqueUpToIso (colimit.isColimit _) P.isColimit⟩⟩
-
-/--
-error: failed to synthesize
-  HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
-
-Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
--/
-#guard_msgs in
-#synth letI : Category (Spec (CommRingCat.of ↑R)).Modules := SheafOfModules.instCategory; HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
-
--- The instance would, theoretically, be syntesizable.
-/-- info: Scheme.Modules.instCategory -/
-#guard_msgs in
-#synth Category (Spec (CommRingCat.of ↑R)).Modules
+/-! # Issue -/
 
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 -- attribute [local instance_reducible] Scheme.Modules in
@@ -556,6 +490,80 @@ lemma isIso_fromTildeΓ_of_presentation (M : (Spec R).Modules) (P : M.Presentati
     simp
   exact ⟨cokernel g, ⟨PreservesCokernel.iso (tilde.functor R) g ≪≫ iso ≪≫
     IsColimit.coconePointUniqueUpToIso (colimit.isColimit _) P.isColimit⟩⟩
+
+/-! ## Explanation
+
+The `iso` equivalence in the proof mixes the two spellings of the same category: its cokernels are
+built by `tilde.functor R` (target `Scheme.Modules`) while `P.relations` lives in `SheafOfModules`.
+Unifying them forces the instance-typed assignment
+`(?inst : Category (Spec R).Modules) := (SheafOfModules.instCategory : Category (SheafOfModules …))`.
+Under `"mark"` this check runs at `.instances`, where `Scheme.Modules` does not unfold, and it is
+rejected — synthesizing `HasZeroMorphisms`/`Preadditive`/`Category` on `(Spec R).Modules` then fails.
+Under `"markOrSynth"` the check runs at `.default`, unfolding `(Spec R).Modules` to
+`SheafOfModules (Spec R).ringCatSheaf`, so the assignment is accepted and the proof goes through.
+(The step recurs during the `rw`; the trace below shows one representative occurrence, keeping the
+enclosing `synthInstance`/`apply` ancestry so the reader sees which instance search triggers it.)
+-/
+
+private meta def keepFirst : TracePostprocessor := fun roots => return roots.extract 0 1
+
+private meta partial def maxDepth (depth : Nat) : TracePostprocessor := fun trees =>
+  let rec truncateTree (t : TraceTree) (depth : Nat) : TraceTree :=
+    match t with
+    | .leaf msg => TraceTree.leaf msg
+    | .node data msg children wrap =>
+      match depth with
+      | 0 => .node data m!"{msg} (truncated)" #[] wrap
+      | depth' + 1 => .node data msg (children.map (truncateTree · depth')) wrap
+  return trees.map (truncateTree · depth)
+
+set_option linter.style.longLine false in
+/--
+trace: [Meta.synthInstance] ✅️ HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
+  [Meta.synthInstance.apply] ✅️ apply @NonPreadditiveAbelian.toHasZeroMorphisms to HasZeroMorphisms
+        (Spec (CommRingCat.of ↑R)).Modules
+    [Meta.synthInstance.tryResolve] ✅️ HasZeroMorphisms
+          (Spec (CommRingCat.of ↑R)).Modules ≟ HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules
+      [Meta.isDefEq] ✅️ [instances] HasZeroMorphisms (Spec (CommRingCat.of ↑R)).Modules =?= HasZeroMorphisms ?m.69
+        [Meta.isDefEq] ✅️ [instances] SheafOfModules.instCategory =?= ?m.70
+          [Meta.isDefEq.assign.checkTypes] ✅️ (?m.70 : Category.{?u.41, u + 1}
+                (Spec
+                    (CommRingCat.of
+                      ↑R)).Modules) := (SheafOfModules.instCategory : Category.{u, u + 1}
+                (SheafOfModules (Spec R).ringCatSheaf))
+            [Meta.isDefEq] ✅️ [default] Category.{?u.41, u + 1}
+                  (Spec (CommRingCat.of ↑R)).Modules =?= Category.{u, u + 1} (SheafOfModules (Spec R).ringCatSheaf)
+              [Meta.isDefEq] ✅️ [default] (Spec (CommRingCat.of ↑R)).Modules =?= SheafOfModules (Spec R).ringCatSheaf
+                [Meta.isDefEq] ✅️ [default] SheafOfModules
+                      (Spec (CommRingCat.of ↑R)).ringCatSheaf =?= SheafOfModules (Spec R).ringCatSheaf (truncated)
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x) <&&>
+    (containsString "NonPreadditiveAbelian.toHasZeroMorphisms" x))
+  >=> keepFirst
+  >=> filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&>
+    (containsString "SheafOfModules.instCategory" x) <&&> (containsString ".Modules)" x))
+  >=> maxDepth 8
+in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+set_option backward.isDefEq.respectTransparency false in
+example (M : (Spec R).Modules) (P : M.Presentation) :
+    IsIso M.fromTildeΓ := by
+  set_option trace.Meta.synthInstance true in
+  set_option trace.Meta.isDefEq true in
+  set_option trace.Meta.isDefEq.printTransparency true in
+  set_option trace.Meta.isDefEq.assign.checkTypes true in
+  rw [isIso_fromTildeΓ_iff]
+  let g := (tilde.functor _).preimage <| (tildeFinsupp _).hom ≫ P.relations.π ≫ kernel.ι _ ≫
+    (tildeFinsupp _).inv
+  let iso : cokernel ((tilde.functor R).map g) ≅ cokernel (P.relations.π ≫ kernel.ι _) := by
+    refine cokernel.mapIso _ _ (tildeFinsupp _) (tildeFinsupp _) ?_
+    simp only [g, (tilde.functor R).map_preimage]
+    simp
+  exact ⟨cokernel g, ⟨PreservesCokernel.iso (tilde.functor R) g ≪≫ iso ≪≫
+    IsColimit.coconePointUniqueUpToIso (colimit.isColimit _) P.isColimit⟩⟩
+
 
 section IsLocalizing
 

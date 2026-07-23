@@ -38,34 +38,43 @@ Classify every site as one of the **two underlying issues**:
 
 A maintainer reading the file should be able to judge, without re-running anything, (a) what
 exactly fails and why, (b) whether the failure is harmless-but-strict or a genuine defeq abuse,
-and (c) what a real fix would look like. The write-up lives next to the option, as a `/- … -/`
-block plus guarded demos.
+and (c) what a real fix would look like. The write-up is **show-don't-tell**: one compact
+guarded trace demonstrates the mechanism; prose is reduced to a few pointer lines. There are no
+long comment blocks.
 
-## Structure: failure-first
+## In-file format (show-don't-tell)
 
-Write the prose in **causal order of the failure**, not in order of discovery and not
-background-first:
+Exemplars: `Mathlib/Algebra/Category/ModuleCat/Presheaf/Monoidal.lean`,
+`Mathlib/CategoryTheory/Abelian/Subobject.lean`, `Mathlib/Condensed/TopCatAdjunction.lean`.
 
-1. **Trigger chain** — which tactic/elaboration step poses the problem (e.g. "the `mul_X`
-   step's `simp only` tries `tmul_smul` on `1 ⊗ₜ (X n • D p)`"), and how the goal became
-   spelling-heterogeneous in the first place (typically: an *unmarked* elaborator or simp-pattern
-   mvar accepted a cross-spelled instance leniently at default transparency).
-2. **The rejected assignment** — quote it with *both* types, verbatim from the trace:
-   `❌ (?m.279 : Module (Q.comp P).Ring T) := (toModule : Module (Q.comp P).toExtension.Ring T)`.
-   Name the synthesis candidate whose marked mvar does the rejecting.
-3. **Why the types are unequal at `.instances`** — name the exact synonym/projection that does
-   not unfold there (`OrderDual`, `Subtype.map`, `RingEquiv.symm`, `asModule`,
-   `Generators.toExtension`, …) and its reducibility.
-4. **Consequences** — what the user-visible error is (simp no progress, "Function expected",
-   unsolved goals) and which downstream lemmas never fire.
-5. Then, briefly: cross-references to other documented sites with the same root cause; which of
-   the two underlying issues this site is (missing `implicit_reducible` vs actual instance
-   mismatch); and 1–3 possible real fixes, respecting the project's fix constraints (no dropping
-   API, no careless definition changes; prefer proof-local fixes). Do not discuss the
-   Prop-exemption.
-
-Keep the prose block short — roughly 10–25 lines. Every sentence either states a trace-backed
-fact or belongs to the verdict/fixes; cut corroborating observations and scene-setting.
+- Module-docstring headers structure the site: `/-! # Issue -/` (or `# First issue: \`decl\``),
+  then the **real declaration first** (its options unchanged), then `/-! ## Explanation -/`.
+- The Explanation is at most a few comment lines (which synonym boundary, cross-reference,
+  which of the two underlying issues) plus **one** `#guard_msgs`-guarded `postprocess_traces`
+  demo: a copy of the declaration as an `example`, pinned
+  `set_option backward.isDefEq.instanceTypes "markOrSynth"`, with
+  `trace.Meta.synthInstance`, `trace.Meta.isDefEq`, `trace.Meta.isDefEq.printTransparency`,
+  `trace.Meta.isDefEq.assign.checkTypes` scoped inside the proof at the decisive step.
+- The trace must show the decisive `isDefEq.assign.checkTypes` node **with its internals**: the
+  direct `.instances` type check, whether the fallback re-synthesis succeeds (elide its subtree:
+  `[Meta.synthInstance] ✅ … (truncated)`), and whether the following unification of the
+  unified vs synthesized instance succeeds. That trace answers the mark/markOrSynth questions
+  by itself.
+- Canonical postprocessor chain (copy the `private meta partial def elideBelow` helper, and
+  `dropSubtrees` where needed, from an exemplar):
+  `filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
+   >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> succeeded x)`
+  plus site-specific pruning disjuncts. Guards of ~60–110 lines are acceptable.
+- Sites whose real declaration compiles at `"markOrSynth"` (fallback-rescued or lever-fixed):
+  the demo reproduces the *problem form* (without the lever/proof-local fix); if the decisive
+  checkTypes node succeeds overall, filter on `ofClass checkTypes` plus a `containsString`
+  instead of `failed`.
+- Several sites sharing one cause: full trace at the primary site, few-line pointer comments at
+  the siblings.
+- An optional `/-! # Fix -/` section holds a passing variant (lever example or respelled form)
+  only when the main trace cannot show it.
+- Delete every other trace excerpt, counterfactual, and prose paragraph whose message the main
+  trace subsumes. Do not discuss the Prop-exemption.
 
 ## Debugging workflow (Paul's recipe)
 
@@ -108,14 +117,10 @@ Read the result against this decision tree:
 
 ## Demos
 
-- Trace-bearing demos run on an **actual copy of the failing declaration** (options flipped so
-  the error shows), never on a simplified stand-in. Do not hoist the failing synthesis goal into
-  a standalone `#synth`/`example` for the main demo — the context of how elaboration arrived at
-  that synthInstance is part of the evidence. Counterfactual probes (`apply_rfl` at the levels
-  above, `#synth`) are the exception, and they use the exact types/instances quoted from the
-  trace.
-- `trace.Meta.isDefEq` plus `trace.Meta.isDefEq.printTransparency` are often worth enabling —
-  the transparency annotations distinguish the direct check from the fallback comparison.
+- The single trace demo runs on an **actual copy of the failing declaration** (options flipped
+  so the behavior shows), never on a simplified stand-in. Do not hoist the failing synthesis
+  goal into a standalone `#synth`/`example` — the context of how elaboration arrived at that
+  synthInstance is part of the evidence.
 - Scope traces to the single relevant tactic with `set_option trace.… true in` *inside* the
   proof — this shrinks postprocessor filters to 1–2 disjuncts.
 - Prune with `postprocess_traces` (`filterSubtrees`, `ofClass`, `containsString`, `failed`,

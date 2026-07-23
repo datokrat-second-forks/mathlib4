@@ -342,199 +342,7 @@ lemma mono_pushoutSection_of_iSup_eq {ι : Type*} [Finite ι] (VX : ι → X.Ope
     ext x j
     simp [ψY, H₂, -CommRingCat.hom_comp, ← CategoryTheory.comp_apply, pushoutSection, ψ]
 
-private meta partial def maxDepth (depth : Nat) : TracePostprocessor := fun trees =>
-  let rec truncateTree (t : TraceTree) (depth : Nat) : TraceTree :=
-    match t with
-    | .leaf msg => TraceTree.leaf msg
-    | .node data msg children wrap =>
-      match depth with
-      | 0 => .node data m!"{msg} (truncated)" #[] wrap
-      | depth' + 1 => .node data msg (children.map (truncateTree · depth')) wrap
-  return trees.map (truncateTree · depth)
-
-/-
-We try to apply `hV'`. The unification of the expected and actual types succeeds.
-Then we assign the result to a metavariable, comparing the types again at instance transparency.
-Surprisingly, the second check fails. Why?
-`tryHeuristic` works differently in the presence or absence of metavariables.
-During instance resolution, the RHS contains metavariables, and the two sides of
-`pushoutSection H hUST ⋯ ⋯ =?= pushoutSection H hUST ⋯ ⋯` are being compared by congruence,
-the implicit arguments being compared at *implicit* transparency.
-However, the second check does not find any metavariables in the RHS anymore, so `tryHeuristic`
-does not use congruence. Lean falls back to delta reduction, unfolding `pushoutSection` on both
-sides. Now the implicit arguments have become explicit, and they are compared at ambient,
-`instances`, transparency. This stricter check fails.
--/
-/--
-error: failed to synthesize instance of type class
-  Mono (αF.app (op (Pairwise.pair i j)))
----
-trace: [Meta.synthInstance] ❌️ Mono (αF.app (op (Pairwise.pair i j)))
-  [Meta.synthInstance.apply] ✅️ apply hV' to Mono (pushoutSection H hUST ⋯ ⋯)
-    [Meta.synthInstance.tryResolve] ✅️ Mono (pushoutSection H hUST ⋯ ⋯) ≟ Mono (pushoutSection H hUST ⋯ ⋯)
-      [Meta.isDefEq] ✅️ [instances] Mono (pushoutSection H hUST ⋯ ⋯) =?= Mono (pushoutSection H hUST ⋯ ⋯)
-        [Meta.isDefEq] ✅️ [instances] pushoutSection H hUST ⋯ ⋯ =?= pushoutSection H hUST ⋯ ⋯
-          [Meta.isDefEq.delta] ✅️ pushoutSection H hUST ⋯ ⋯ =?= pushoutSection H hUST ⋯ ⋯
-            [Meta.isDefEq] ✅️ [default] X =?= X
-            [Meta.isDefEq] ✅️ [default] Y =?= Y
-            [Meta.isDefEq] ✅️ [default] S =?= S
-            [Meta.isDefEq] ✅️ [default] T =?= T
-            [Meta.isDefEq] ✅️ [default] f =?= f
-            [Meta.isDefEq] ✅️ [default] g =?= g
-            [Meta.isDefEq] ✅️ [default] iX =?= iX
-            [Meta.isDefEq] ✅️ [default] iY =?= iY
-            [Meta.isDefEq] ✅️ [default] US =?= US
-            [Meta.isDefEq] ✅️ [default] UT =?= UT
-            [Meta.isDefEq] ✅️ [default] D.obj (unop (op (Pairwise.pair i j))) =?= VX ?m.1067 ⊓ VX ?m.1068
-              [Meta.isDefEq.delta.unfoldLeft] CategoryTheory.Functor.obj (truncated)
-              [Meta.isDefEq] ✅️ [default] D.1 (unop (op (Pairwise.pair i j))) =?= VX ?m.1067 ⊓ VX ?m.1068 (truncated)
-            [Meta.isDefEq] ✅️ [default] G.obj
-                  (unop (D.op.obj (op (Pairwise.pair i j)))) =?= g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT
-              [Meta.isDefEq.delta.unfoldLeft] CategoryTheory.Functor.obj (truncated)
-              [Meta.isDefEq] ✅️ [default] G.1
-                    (unop (D.op.obj (op (Pairwise.pair i j)))) =?= g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT (truncated)
-  [Meta.isDefEq] ❌️ [instances] ?m.1066 =?= hV' i j
-    [Meta.isDefEq] ❌️ [instances] Mono (pushoutSection H hUST ⋯ ⋯) =?= Mono (pushoutSection H hUST ⋯ ⋯)
-      [Meta.isDefEq] ❌️ [instances] pushoutSection H hUST ⋯ ⋯ =?= pushoutSection H hUST ⋯ ⋯
-        [Meta.isDefEq.delta.unfoldLeftRight] AlgebraicGeometry.pushoutSection
-        [Meta.isDefEq] ❌️ [instances] pushout.desc
-              (Scheme.Hom.appLE g (D.obj (unop (op (Pairwise.pair i j))))
-                (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-              (Scheme.Hom.appLE iY UT (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-              ⋯ =?= pushout.desc (Scheme.Hom.appLE g (VX i ⊓ VX j) (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯)
-              (Scheme.Hom.appLE iY UT (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯) ⋯
-          [Meta.isDefEq.delta.unfoldLeftRight] CategoryTheory.Limits.pushout.desc
-          [Meta.isDefEq] ❌️ [instances] colimit.desc
-                (span (Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j)))) ⋯)
-                  (Scheme.Hom.appLE f US UT hUST))
-                (PushoutCocone.mk
-                  (Scheme.Hom.appLE g (D.obj (unop (op (Pairwise.pair i j))))
-                    (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-                  (Scheme.Hom.appLE iY UT (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-                  ⋯) =?= colimit.desc (span (Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯) (Scheme.Hom.appLE f US UT hUST))
-                (PushoutCocone.mk (Scheme.Hom.appLE g (VX i ⊓ VX j) (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯)
-                  (Scheme.Hom.appLE iY UT (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯) ⋯)
-            [Meta.isDefEq] ❌️ [instances] span (Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j)))) ⋯)
-                  (Scheme.Hom.appLE f US UT
-                    hUST) =?= span (Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯) (Scheme.Hom.appLE f US UT hUST)
-              [Meta.isDefEq] ❌️ [instances] Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j))))
-                    ⋯ =?= Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯ (truncated)
-              [Meta.isDefEq.onFailure] ❌️ span (Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j)))) ⋯)
-                    (Scheme.Hom.appLE f US UT
-                      hUST) =?= span (Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯)
-                    (Scheme.Hom.appLE f US UT hUST) (truncated)
-              [Meta.isDefEq.onFailure] ❌️ span (Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j)))) ⋯)
-                    (Scheme.Hom.appLE f US UT
-                      hUST) =?= span (Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯)
-                    (Scheme.Hom.appLE f US UT hUST) (truncated)
-            [Meta.isDefEq.onFailure] ❌️ colimit.desc
-                  (span (Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j)))) ⋯)
-                    (Scheme.Hom.appLE f US UT hUST))
-                  (PushoutCocone.mk
-                    (Scheme.Hom.appLE g (D.obj (unop (op (Pairwise.pair i j))))
-                      (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-                    (Scheme.Hom.appLE iY UT (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-                    ⋯) =?= colimit.desc (span (Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯) (Scheme.Hom.appLE f US UT hUST))
-                  (PushoutCocone.mk (Scheme.Hom.appLE g (VX i ⊓ VX j) (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯)
-                    (Scheme.Hom.appLE iY UT (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯) ⋯)
-            [Meta.isDefEq.onFailure] ❌️ colimit.desc
-                  (span (Scheme.Hom.appLE iX US (D.obj (unop (op (Pairwise.pair i j)))) ⋯)
-                    (Scheme.Hom.appLE f US UT hUST))
-                  (PushoutCocone.mk
-                    (Scheme.Hom.appLE g (D.obj (unop (op (Pairwise.pair i j))))
-                      (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-                    (Scheme.Hom.appLE iY UT (G.obj (unop (D.op.obj (op (Pairwise.pair i j))))) ⋯)
-                    ⋯) =?= colimit.desc (span (Scheme.Hom.appLE iX US (VX i ⊓ VX j) ⋯) (Scheme.Hom.appLE f US UT hUST))
-                  (PushoutCocone.mk (Scheme.Hom.appLE g (VX i ⊓ VX j) (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯)
-                    (Scheme.Hom.appLE iY UT (g ⁻¹ᵁ (VX i ⊓ VX j) ⊓ iY ⁻¹ᵁ UT) ⋯) ⋯)
--/
-#guard_msgs in
-postprocess_traces
-  maxDepth 7
-  >=> filterSubtrees (ofClass `Meta.synthInstance)
-  >=> filterSubtrees (containsString "hV'")
-  >=> filterSubtrees (containsString "AlgebraicGeometry.pushoutSection H hUST ⋯ ⋯ =?= AlgebraicGeometry.pushoutSection H hUST ⋯ ⋯")
-in
-set_option allowUnsafeReducibility true in
-set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
--- attribute [local instance_reducible] Pairwise.diagram Pairwise.diagramObj Functor.op in
-example
-    {ι : Type u} [Finite ι] (VX : ι → X.Opens) (hVU : iSup VX = UX)
-    (hV : ∀ i, IsIso (pushoutSection H hUST (show VX i ≤ _ by aesop) rfl))
-    (hV' : ∀ i j, Mono (pushoutSection H hUST
-      (show VX i ⊓ VX j ≤ _ from inf_le_left.trans (by clear hV; aesop)) rfl))
-    (hT : (f.appLE US UT hUST).hom.Flat) :
-    IsIso (pushoutSection H hUST hUSX hUY) := by
-  classical
-  /-
-  We shall show that `Γ(T, Uₜ) ⊗[Γ(S, Uₛ)] Γ(X, U) ⟶ Γ(X ×ₛ T, pr₁ ⁻¹ U ∩ pr₂ ⁻¹ Uₜ)` is
-  injective using the following diagram
-  ```
-  0 → Γ(T, Uₜ) ⊗ Γ(X, U) ------→ Γ(T, Uₜ) ⊗ ∏ᵢ Γ(X, Vᵢ) ---→ Γ(T, Uₜ) ⊗ ∏ᵢⱼ Γ(X, Vᵢ ∩ Vⱼ)
-           |                              |                           |
-           ↓                              ↓                           ↓
-  0 → Γ(X ×ₛ T, U ∩ Uₜ)  ------→ ∏ᵢ Γ(X ×ₛ T, Vᵢ ∩ Uₜ)  ---→ ∏ᵢ Γ(X ×ₛ T, Vᵢ ∩ Vⱼ ∩ Uₜ)
-  ```
-  The two rows are exact because of the sheaf axiom (and additionally the flatness assumption for
-  the top row). The vertical arrow in the middle is an isomorphism by assumption, and the one
-  one the right is monomorphic by assumption. Hence the left arrow is also an isomorphism.
-
-  In the actual proof we use `Pairwise`-indexed diagrams instead of nested limits because it works
-  better with the existing API.
-  -/
-  -- The diagram consisting of `Γ(X, Vᵢ) ⟶ Γ(X, Vᵢ ∩ Vⱼ)`.
-  let D := Pairwise.diagram VX
-  have h : iSup D.obj = UX := by
-    refine le_antisymm (iSup_le_iff.mpr ?_) ?_
-    · subst hVU; rintro (i | ⟨i, j⟩); exacts [le_iSup VX _, inf_le_left.trans (le_iSup VX _)]
-    · subst hVU; exact iSup_le_iff.mpr fun i ↦ le_iSup D.obj (.single i)
-  let c₀ : Cocone D := (colimit.cocone _).extend
-    (eqToIso (Y := UX) (by simpa [CompleteLattice.colimit_eq_iSup])).hom
-  -- The diagram consisting of `Γ(T, Uₜ) ⊗ Γ(X, Vᵢ) ⟶ Γ(T, Uₜ) ⊗ Γ(X, Vᵢ ∩ Vⱼ)`.
-  let F := Under.lift _ ((Functor.const _).map (iX.appLE US UX hUSX) ≫
-    ((X.presheaf.mapCone c₀.op).π)) ⋙ Under.pushout (f.appLE US UT hUST) ⋙ Under.forget _
-  let G : X.Opens ⥤ Y.Opens :=
-    { obj U := g ⁻¹ᵁ U ⊓ iY ⁻¹ᵁ UT, map h := homOfLE (by gcongr; exact h.le) }
-  -- The natural transformation between the diagrams at the top and bottom.
-  let αF : F ⟶ D.op ⋙ G.op ⋙ Y.presheaf :=
-  { app i := (pushout.congrHom (by simp) rfl).hom ≫
-      pushoutSection H hUST (by grw [← hUSX, ← h]; exact le_iSup D.obj i.unop) rfl }
-  -- `Γ(T, Uₜ) ⊗ Γ(X, U)` as a (limit) cone over the top diagram.
-  let c : Cone F := (Under.pushout (f.appLE US UT hUST) ⋙ Under.forget _).mapCone
-    (Under.liftCone (X.presheaf.mapCone c₀.op) _)
-  have := CommRingCat.Under.preservesFiniteLimits_of_flat _ hT
-  cases nonempty_fintype ι
-  let hc : IsLimit c :=
-    haveI HX := ((TopCat.Presheaf.isSheaf_iff_isSheafPreservesLimitPairwiseIntersections
-      _).mp X.IsSheaf VX).preserves (c := c₀.op)
-    haveI HX := (HX (IsColimit.extendIso _ (colimit.isColimit _)).op).some
-    isLimitOfPreserves (Under.pushout _ ⋙ Under.forget _) (Under.isLimitLiftCone _ _ HX)
-  let c'₀ : Cocone (D ⋙ G) := (colimit.cocone _).extend
-    (eqToIso (Y := UY) (by
-      simp only [colimit.cocone_x, CompleteLattice.colimit_eq_iSup]
-      eta_expand
-      dsimp [G]
-      rw [← iSup_inf_eq, ← Scheme.Hom.preimage_iSup, h, hUY])).hom
-  -- `Γ(X ×ₛ T, U ∩ Uₜ)` as a (limit) cone over the bottom diagram.
-  let c' : Cone (D.op ⋙ G.op ⋙ Y.presheaf) := Y.presheaf.mapCone c'₀.op
-  let hc' : IsLimit c' := by
-    letI e : D ⋙ G ≅ Pairwise.diagram fun i ↦ g ⁻¹ᵁ VX i ⊓ iY ⁻¹ᵁ UT :=
-      NatIso.ofComponents (fun | .single i => .refl _ | .pair i j => eqToIso (by
-        dsimp [D, G]; rw [Scheme.Hom.preimage_inf, inf_inf_distrib_right]))
-    haveI HX := ((TopCat.Presheaf.isSheaf_iff_isSheafPreservesLimitPairwiseIntersections _).mp
-      Y.IsSheaf (fun i ↦ g ⁻¹ᵁ VX i ⊓ iY ⁻¹ᵁ UT)).preserves
-        (c := ((Cocone.precompose e.inv).obj c'₀).op)
-    exact (IsLimit.postcomposeHomEquiv (Functor.isoWhiskerRight (NatIso.op e.symm) Y.presheaf) _)
-      ((HX ((IsColimit.precomposeInvEquiv e _).symm
-        (IsColimit.extendIso _ (colimit.isColimit _))).op).some.ofIsoLimit (Cone.ext (.refl _)))
-  have HαF₂ (i j : _) : Mono (αF.app (.op <| .pair i j)) := by
-    set_option trace.Meta.synthInstance true in
-    set_option trace.Meta.isDefEq true in
-    set_option trace.Meta.isDefEq.delta true in
-    set_option trace.Meta.isDefEq.printTransparency true in
-    infer_instance
-  sorry
+/-! # Issue -/
 
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 -- set_option allowUnsafeReducibility true in
@@ -639,6 +447,138 @@ lemma isIso_pushoutSection_of_iSup_eq
     ext1
     · simp [αF, c, Under.liftCone, c', c₀]
     · simp [αF, c, c']
+
+/-! ## Explanation -/
+
+/-
+Why the real declaration above needs `"markOrSynth"`, reproduced by the demo below:
+synthesizing `Mono (αF.app (op (pair i j)))` applies the hypothesis `hV'`; its resolution
+assigns the resulting instance to a metavariable, re-checking the types with the
+`(?m : Mono (pushoutSection …)) := (hV' i j : Mono (pushoutSection …))` assignment below.
+The direct `.instances` check fails: with no metavariables left on the right, `tryHeuristic`
+no longer compares by congruence but falls back to delta, unfolding `pushoutSection` on both
+sides so its implicit arguments are compared at the stricter `.instances` transparency.
+Under `"mark"` the assignment is then rejected and synthesis fails; under `"markOrSynth"` the
+rejected instance is re-synthesized at its own type (`✅ Mono (pushoutSection …)`, returning
+`hV' i j`) and the fresh instance unifies (`✅ hV' i j =?= hV' i j`), so the assignment is
+accepted and the proof goes through.
+-/
+
+private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
+  fun trees => trees.mapM go
+where
+  go (t : TraceTree) : Lean.CoreM TraceTree := do
+    match t with
+    | .leaf msg => return .leaf msg
+    | .node data msg children wrap =>
+      if ← p t then
+        return .node data m!"{msg} (truncated)" #[] wrap
+      else
+        return .node data msg (← children.mapM go) wrap
+
+private meta def keepFirst : TracePostprocessor := fun roots => return roots.extract 0 1
+
+set_option linter.style.longLine false in
+/--
+trace: [Meta.synthInstance] ✅️ Mono (αF.app (op (Pairwise.pair i j)))
+  [Meta.isDefEq] ✅️ [instances] ?m.1066 =?= hV' i j
+    [Meta.isDefEq.assign.checkTypes] ✅️ (?m.1066 : Mono
+          (pushoutSection H hUST ⋯ ⋯)) := (hV' i j : Mono (pushoutSection H hUST ⋯ ⋯))
+      [Meta.isDefEq] ❌️ [instances] Mono (pushoutSection H hUST ⋯ ⋯) =?= Mono (pushoutSection H hUST ⋯ ⋯) (truncated)
+      [Meta.synthInstance] ✅️ Mono (pushoutSection H hUST ⋯ ⋯) (truncated)
+      [Meta.isDefEq] ✅️ [instances] hV' i j =?= hV' i j
+---
+warning: declaration uses `sorry`
+-/
+#guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> (containsString "hV' i j" x))
+  >=> keepFirst
+  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> (succeeded x) <&&>
+    (containsString "pushoutSection" x))
+  >=> elideBelow (fun x => (ofClass `Meta.isDefEq x) <&&> (failed x))
+in
+set_option allowUnsafeReducibility true in
+set_option backward.isDefEq.instanceTypes "markOrSynth" in
+set_option backward.defeqAttrib.useBackward true in
+set_option backward.isDefEq.respectTransparency false in
+-- attribute [local instance_reducible] Pairwise.diagram Pairwise.diagramObj Functor.op in
+example
+    {ι : Type u} [Finite ι] (VX : ι → X.Opens) (hVU : iSup VX = UX)
+    (hV : ∀ i, IsIso (pushoutSection H hUST (show VX i ≤ _ by aesop) rfl))
+    (hV' : ∀ i j, Mono (pushoutSection H hUST
+      (show VX i ⊓ VX j ≤ _ from inf_le_left.trans (by clear hV; aesop)) rfl))
+    (hT : (f.appLE US UT hUST).hom.Flat) :
+    IsIso (pushoutSection H hUST hUSX hUY) := by
+  classical
+  /-
+  We shall show that `Γ(T, Uₜ) ⊗[Γ(S, Uₛ)] Γ(X, U) ⟶ Γ(X ×ₛ T, pr₁ ⁻¹ U ∩ pr₂ ⁻¹ Uₜ)` is
+  injective using the following diagram
+  ```
+  0 → Γ(T, Uₜ) ⊗ Γ(X, U) ------→ Γ(T, Uₜ) ⊗ ∏ᵢ Γ(X, Vᵢ) ---→ Γ(T, Uₜ) ⊗ ∏ᵢⱼ Γ(X, Vᵢ ∩ Vⱼ)
+           |                              |                           |
+           ↓                              ↓                           ↓
+  0 → Γ(X ×ₛ T, U ∩ Uₜ)  ------→ ∏ᵢ Γ(X ×ₛ T, Vᵢ ∩ Uₜ)  ---→ ∏ᵢ Γ(X ×ₛ T, Vᵢ ∩ Vⱼ ∩ Uₜ)
+  ```
+  The two rows are exact because of the sheaf axiom (and additionally the flatness assumption for
+  the top row). The vertical arrow in the middle is an isomorphism by assumption, and the one
+  one the right is monomorphic by assumption. Hence the left arrow is also an isomorphism.
+
+  In the actual proof we use `Pairwise`-indexed diagrams instead of nested limits because it works
+  better with the existing API.
+  -/
+  -- The diagram consisting of `Γ(X, Vᵢ) ⟶ Γ(X, Vᵢ ∩ Vⱼ)`.
+  let D := Pairwise.diagram VX
+  have h : iSup D.obj = UX := by
+    refine le_antisymm (iSup_le_iff.mpr ?_) ?_
+    · subst hVU; rintro (i | ⟨i, j⟩); exacts [le_iSup VX _, inf_le_left.trans (le_iSup VX _)]
+    · subst hVU; exact iSup_le_iff.mpr fun i ↦ le_iSup D.obj (.single i)
+  let c₀ : Cocone D := (colimit.cocone _).extend
+    (eqToIso (Y := UX) (by simpa [CompleteLattice.colimit_eq_iSup])).hom
+  -- The diagram consisting of `Γ(T, Uₜ) ⊗ Γ(X, Vᵢ) ⟶ Γ(T, Uₜ) ⊗ Γ(X, Vᵢ ∩ Vⱼ)`.
+  let F := Under.lift _ ((Functor.const _).map (iX.appLE US UX hUSX) ≫
+    ((X.presheaf.mapCone c₀.op).π)) ⋙ Under.pushout (f.appLE US UT hUST) ⋙ Under.forget _
+  let G : X.Opens ⥤ Y.Opens :=
+    { obj U := g ⁻¹ᵁ U ⊓ iY ⁻¹ᵁ UT, map h := homOfLE (by gcongr; exact h.le) }
+  -- The natural transformation between the diagrams at the top and bottom.
+  let αF : F ⟶ D.op ⋙ G.op ⋙ Y.presheaf :=
+  { app i := (pushout.congrHom (by simp) rfl).hom ≫
+      pushoutSection H hUST (by grw [← hUSX, ← h]; exact le_iSup D.obj i.unop) rfl }
+  -- `Γ(T, Uₜ) ⊗ Γ(X, U)` as a (limit) cone over the top diagram.
+  let c : Cone F := (Under.pushout (f.appLE US UT hUST) ⋙ Under.forget _).mapCone
+    (Under.liftCone (X.presheaf.mapCone c₀.op) _)
+  have := CommRingCat.Under.preservesFiniteLimits_of_flat _ hT
+  cases nonempty_fintype ι
+  let hc : IsLimit c :=
+    haveI HX := ((TopCat.Presheaf.isSheaf_iff_isSheafPreservesLimitPairwiseIntersections
+      _).mp X.IsSheaf VX).preserves (c := c₀.op)
+    haveI HX := (HX (IsColimit.extendIso _ (colimit.isColimit _)).op).some
+    isLimitOfPreserves (Under.pushout _ ⋙ Under.forget _) (Under.isLimitLiftCone _ _ HX)
+  let c'₀ : Cocone (D ⋙ G) := (colimit.cocone _).extend
+    (eqToIso (Y := UY) (by
+      simp only [colimit.cocone_x, CompleteLattice.colimit_eq_iSup]
+      eta_expand
+      dsimp [G]
+      rw [← iSup_inf_eq, ← Scheme.Hom.preimage_iSup, h, hUY])).hom
+  -- `Γ(X ×ₛ T, U ∩ Uₜ)` as a (limit) cone over the bottom diagram.
+  let c' : Cone (D.op ⋙ G.op ⋙ Y.presheaf) := Y.presheaf.mapCone c'₀.op
+  let hc' : IsLimit c' := by
+    letI e : D ⋙ G ≅ Pairwise.diagram fun i ↦ g ⁻¹ᵁ VX i ⊓ iY ⁻¹ᵁ UT :=
+      NatIso.ofComponents (fun | .single i => .refl _ | .pair i j => eqToIso (by
+        dsimp [D, G]; rw [Scheme.Hom.preimage_inf, inf_inf_distrib_right]))
+    haveI HX := ((TopCat.Presheaf.isSheaf_iff_isSheafPreservesLimitPairwiseIntersections _).mp
+      Y.IsSheaf (fun i ↦ g ⁻¹ᵁ VX i ⊓ iY ⁻¹ᵁ UT)).preserves
+        (c := ((Cocone.precompose e.inv).obj c'₀).op)
+    exact (IsLimit.postcomposeHomEquiv (Functor.isoWhiskerRight (NatIso.op e.symm) Y.presheaf) _)
+      ((HX ((IsColimit.precomposeInvEquiv e _).symm
+        (IsColimit.extendIso _ (colimit.isColimit _))).op).some.ofIsoLimit (Cone.ext (.refl _)))
+  have HαF₂ (i j : _) : Mono (αF.app (.op <| .pair i j)) := by
+    set_option trace.Meta.synthInstance true in
+    set_option trace.Meta.isDefEq true in
+    set_option trace.Meta.isDefEq.printTransparency true in
+    set_option trace.Meta.isDefEq.assign.checkTypes true in
+    infer_instance
+  sorry
 
 lemma mono_pushoutSection_of_isCompact_of_flat_right [Flat f]
     (hUS : IsAffineOpen US) (hUT : IsAffineOpen UT) (hUX : IsCompact (X := X) UX) :

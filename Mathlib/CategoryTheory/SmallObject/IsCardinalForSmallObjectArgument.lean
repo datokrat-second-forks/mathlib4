@@ -157,7 +157,9 @@ isomorphisms on the right side. -/
 def propArrow : MorphismProperty (Arrow C) := fun _ _ f ↦
   (coproducts.{w} I).pushouts f.left ∧ (isomorphisms C) f.right
 
--- works with "markOrSynth" if `Arrow` and `Arrow.Hom` are made implicit-reducible
+/-! # Issue -/
+
+-- Works with "markOrSynth" if `Arrow` and `Arrow.Hom` are made implicit-reducible.
 set_option backward.isDefEq.instanceTypes "none" in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
@@ -176,62 +178,21 @@ lemma succStruct_prop_le_propArrow :
     dsimp [succStruct]
     infer_instance
 
-set_option linter.style.longLine false
-/-
-tl;dr: works with "markOrSynth" if `Arrow` and `Arrow.Hom` are made implicit-reducible
+/-! ## Explanation -/
 
-`succStruct_prop_le_propArrow` needs `backward.isDefEq.instanceTypes "none"` for its opening
-`intro _ _ _ ⟨F⟩ f`. The hypothesis being destructured is `(succStruct I κ).prop f✝`, which
-unfolds to `ofHoms (fun (G : Arrow C ⥤ Arrow C) ↦ (succStruct I κ).toSucc G) f✝` — the class of
-maps `X ⟶ succ X` of the successor structure. The `⟨F⟩` pattern re-elaborates the constructor
-`ofHoms.mk F`, so the elaborator unifies `ofHoms ?fam (?fam F) =?= ofHoms (family) f✝`.
+-- The opening `intro _ _ _ ⟨F⟩ f` destructures `(succStruct I κ).prop f✝`, which unfolds to an
+-- `ofHoms` whose carrier `Arrow C ⥤ Arrow C` is exposed as `Comma (𝟭 C) (𝟭 C) ⥤ Comma (𝟭 C) (𝟭 C)`.
+-- The `⟨F⟩` pattern re-elaborates `ofHoms.mk F`, and its `Functor.category` instance needs the base
+-- `[Category (Arrow C)]`; that becomes an instance-typed mvar whose type is read off the goal at the
+-- `Comma (𝟭 C) (𝟭 C)` spelling. The candidate `instCategoryArrow` (spelled at the `Arrow` synonym) is
+-- rejected (trace below): the direct `.instances` check can't cross `Comma (𝟭 C) (𝟭 C) =?= Arrow C`
+-- (`Arrow` is a plain semireducible `def`), and under `markOrSynth` the re-synthesis fallback finds
+-- `commaCategory`, which is not defeq to `instCategoryArrow` at `.instances` either. So the mvar is
+-- never solved and `ofHoms.mk F` fails to unify. Same `Comma`/`Arrow`-vs-`Cat.of` carrier boundary
+-- as `Mathlib/CategoryTheory/Filtered/CostructuredArrow.lean`, here introduced by destructuring
+-- rather than a `simp only`.
 
-`ofHoms {ι} {X Y : ι → 𝒞} [Category 𝒞] …` carries a `[Category 𝒞]` instance argument, here at
-`𝒞 = Arrow C ⥤ Arrow C`. The functor-category instance `Functor.category` for it in turn needs
-the base `[Category (Arrow C)]`; the elaborator creates an instance-typed metavariable `?m` for
-that base, and reads its type off the goal as `Category (Comma (𝟭 C) (𝟭 C))` — `succStruct` and
-`SuccStruct.ofNatTrans` have been unfolded, exposing `Arrow C` as its definition
-`Comma (𝟭 C) (𝟭 C)`. The candidate value offered for `?m` is `instCategoryArrow : Category (Arrow C)`,
-spelled at the `Arrow` synonym. The rejected assignment is therefore
-
-  ❌ (?m : Category (Comma (𝟭 C) (𝟭 C))) := (instCategoryArrow : Category (Arrow C))
-
-(demo 1). Its two types agree only above `.instances`: `Arrow` is a plain semireducible `def`
-(`Arrow T := Comma (𝟭 T) (𝟭 T)` in `Mathlib/CategoryTheory/Comma/Arrow.lean`, neither
-`@[reducible]` nor an instance), so `Comma (𝟭 C) (𝟭 C) =?= Arrow C` fails at `.instances`. Because
-the metavariable's type `Category …` is not a Π-type, the eta-tolerant branch of
-`checkInstanceTypedTypes` does not apply, and the direct (`mark`-style) check fails.
-
-Under the build's `markOrSynth` mode the fallback then synthesizes an instance for the
-metavariable's type. `Category (Comma (𝟭 C) (𝟭 C))` does resolve — to `commaCategory` (demo 2a) —
-so the fallback synthesis (leg b) succeeds. `markOrSynth` next requires the candidate
-`instCategoryArrow` to be definitionally equal to that synthesized `commaCategory`, and this
-leg (c) is where the assignment dies: the two `Category` structures sit at the different carrier
-spellings `Arrow C` and `Comma (𝟭 C) (𝟭 C)`, and reconciling those carriers is once more the
-`.instances`-transparency obstruction that `Arrow`'s semireducibility blocks (demo 2b). So neither
-leg accepts the assignment; `?m` is never solved, the `ofHoms` family metavariable in
-`ofHoms ?m.69 (?m.69 F)` stays undetermined, and the constructor term fails to unify with
-`(succStruct I κ).prop f✝`, giving `Type mismatch: ofHoms.mk F has type ofHoms ?m.69 (?m.69 F) but
-is expected to have type (succStruct I κ).prop f✝`, plus a spurious `No goals to be solved`.
-
-The rejected metavariable is the `Category` instance — data-valued, not `Prop` — so the parked
-Prop-exemption does not apply, even though `ofHoms …` and `MorphismProperty` are `Prop`-valued.
-
-This is the same `Comma`/`Arrow`-vs-`Cat.of` carrier boundary on a `Category` instance
-metavariable documented in `Mathlib/CategoryTheory/Filtered/CostructuredArrow.lean`; there the
-mismatch is introduced by a `simp only`, here by destructuring an `ofHoms` whose carrier is the
-`Arrow` synonym.
-
-Possible fixes (proof-local preferred):
-* Restructure the opening `intro`/`rintro` so the `ofHoms.mk` constructor is elaborated at the
-  `Arrow C` carrier — e.g. destructure the hypothesis through the successor-structure API
-  (`SuccStruct.prop_iff`) or a `show`/`change` to the `Arrow`-spelled `ofHoms` — so the
-  `[Category (Arrow C)]` slot already carries `instCategoryArrow`.
-* Upstream: making `Arrow` reducible (or exposing the `Category (Arrow T)` carrier at `.instances`)
-  would let both legs cross the boundary, but that is a definition change beyond this proof.
--/
-
-section InstanceTypesDemos
+section InstanceTypesDemo
 
 open Lean.PostprocessTraces
 
@@ -247,13 +208,7 @@ where
       else
         return .node data msg (← children.mapM go) wrap
 
-/- Demo 1: the rejected assignment. `instanceTypes` is pinned to `"markOrSynth"` (the build
-default supplied by the Mathlib lakefile; the option registers as `"mark"`, so a bare
-`lake env lean` would otherwise run this demo under `"mark"`) so the demo faithfully exercises the
-mode the site is compiled in. The `⟨F⟩` destructuring re-elaborates `ofHoms.mk F`; the
-`[Category (Arrow C)]` base slot of its `Functor.category` becomes an instance metavariable spelled
-`Category (Comma (𝟭 C) (𝟭 C))`, and the `Arrow C`-spelled candidate `instCategoryArrow` is
-rejected. -/
+set_option linter.style.longLine false in
 /--
 error: Type mismatch
   ofHoms.mk F
@@ -288,139 +243,53 @@ trace: [Meta.synthInstance] ❌️ Category.{max u v, max u v} (Comma (𝟭 C) (
                 [Meta.isDefEq.onFailure] ❌️ Category.{?u.59, max u v}
                       (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
               [Meta.synthInstance] ✅️ Category.{v, max u v} (Comma (𝟭 C) (𝟭 C)) (truncated)
-              [Meta.isDefEq] ❌️ [implicit] instCategoryArrow =?= commaCategory
-                [Meta.isDefEq] ❌️ [implicit] { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-                      comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-                      assoc := ⋯ } =?= commaCategory
-                  [Meta.isDefEq] ❌️ [implicit] { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-                        comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-                        assoc :=
-                          ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
-                        id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
-                        comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ },
-                        id_comp := ⋯, comp_id := ⋯, assoc := ⋯ }
-                    [Meta.isDefEq] ❌️ [implicit] Arrow C =?= Comma (𝟭 C) (𝟭 C)
-                      [Meta.isDefEq] ❌️ [implicit] Arrow =?= @Comma
-                      [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
-                      [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
-                    [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-                          comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-                          assoc :=
-                            ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
-                          id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
-                          comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ },
-                          id_comp := ⋯, comp_id := ⋯, assoc := ⋯ }
-                    [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-                          comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-                          assoc :=
-                            ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
-                          id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
-                          comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ },
-                          id_comp := ⋯, comp_id := ⋯, assoc := ⋯ }
+              [Meta.isDefEq] ❌️ [implicit] instCategoryArrow =?= commaCategory (truncated)
+            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.75 : Category.{?u.59, max u v}
+                  (Comma (𝟭 C)
+                    (𝟭
+                      C))) := ({ toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+                  comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+                  assoc := ⋯ } : Category.{v, max u v} (Arrow C))
+              [Meta.isDefEq] ❌️ [instances] Category.{?u.59, max u v}
+                    (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
+                [Meta.isDefEq] ❌️ [instances] Comma (𝟭 C) (𝟭 C) =?= Arrow C
+                  [Meta.isDefEq] ❌️ [instances] @Comma =?= Arrow
+                  [Meta.isDefEq.onFailure] ❌️ Comma (𝟭 C) (𝟭 C) =?= Arrow C
+                  [Meta.isDefEq.onFailure] ❌️ Comma (𝟭 C) (𝟭 C) =?= Arrow C
+                [Meta.isDefEq.onFailure] ❌️ Category.{?u.59, max u v}
+                      (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
+                [Meta.isDefEq.onFailure] ❌️ Category.{?u.59, max u v}
+                      (Comma (𝟭 C) (𝟭 C)) =?= Category.{v, max u v} (Arrow C)
+              [Meta.synthInstance] ✅️ Category.{v, max u v} (Comma (𝟭 C) (𝟭 C)) (truncated)
+              [Meta.isDefEq] ❌️ [implicit] { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
+                    comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
+                    assoc := ⋯ } =?= commaCategory (truncated)
 -/
 #guard_msgs in
+postprocess_traces
+  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x) <&&>
+    containsString "Functor.category" x)
+  >=> filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
+  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> succeeded x)
+  >=> elideBelow (fun x => (ofClass `Meta.isDefEq x) <&&> containsString "commaCategory" x)
+in
 set_option backward.isDefEq.instanceTypes "markOrSynth" in
 set_option backward.isDefEq.respectTransparency.types false in
-set_option trace.Meta.synthInstance true in
-set_option trace.Meta.isDefEq true in
-set_option trace.Meta.isDefEq.printTransparency true in
 set_option backward.defeqAttrib.useBackward true in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x) <&&> (containsString "Functor.category" x))
-  >=>
-  filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x)
-      <&&> (containsString "instCategoryArrow : Category" x) <&&> (containsString "Comma" x)
-      <&&> (return !(← containsString "toQuiver" x)))
-  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> succeeded x)
-in
 example :
     (succStruct I κ).prop ≤ (propArrow.{w} I).functorCategory (Arrow C) := by
   have := locallySmall I κ
   have := isSmall I κ
   have := hasColimitsOfShape_discrete I κ
   have := hasPushouts I κ
+  set_option trace.Meta.synthInstance true in
+  set_option trace.Meta.isDefEq true in
+  set_option trace.Meta.isDefEq.printTransparency true in
   set_option trace.Meta.isDefEq.assign.checkTypes true in
   intro _ _ _ ⟨F⟩ f
   all_goals sorry
 
-/- Demo 2a: the `markOrSynth` fallback synthesis itself succeeds — `Category (Comma (𝟭 C) (𝟭 C))`
-has the instance `commaCategory`. So the fallback fails at leg (c), the defeq of the candidate
-against this synthesized instance, not at leg (b). -/
-/-- info: commaCategory -/
-#guard_msgs in
-#synth Category (Comma (𝟭 C) (𝟭 C))
-
-/- Demo 2b: the carrier `Arrow C` is a semireducible `def`, so it is not defeq to
-`Comma (𝟭 C) (𝟭 C)` at reducible transparency (a proxy for `.instances`). This is exactly the
-carrier boundary the strict `.instances` type check — and hence leg (c)'s defeq — cannot cross. -/
-/--
-error: Tactic `rfl` failed: The left-hand side
-  Arrow C
-is not definitionally equal to the right-hand side
-  Comma (𝟭 C) (𝟭 C)
-
-C : Type u
-inst✝³ : Category.{v, u} C
-I : MorphismProperty C
-κ : Cardinal.{w}
-inst✝² : Fact κ.IsRegular
-inst✝¹ : OrderBot κ.ord.ToType
-inst✝ : I.IsCardinalForSmallObjectArgument κ
-⊢ Arrow C = Comma (𝟭 C) (𝟭 C)
--/
-#guard_msgs in
-example : Arrow C = Comma (𝟭 C) (𝟭 C) := by with_reducible_and_instances rfl
-
-/--
-error: Tactic `rfl` failed: The left-hand side
-  instCategoryArrow
-is not definitionally equal to the right-hand side
-  commaCategory
-
-C : Type u
-inst✝³ : Category.{v, u} C
-I : MorphismProperty C
-κ : Cardinal.{w}
-inst✝² : Fact κ.IsRegular
-inst✝¹ : OrderBot κ.ord.ToType
-inst✝ : I.IsCardinalForSmallObjectArgument κ
-⊢ instCategoryArrow = commaCategory
----
-trace: [Meta.isDefEq] ❌️ instCategoryArrow =?= commaCategory
-  [Meta.isDefEq] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-        comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯, assoc := ⋯ } =?= commaCategory
-    [Meta.isDefEq] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-          comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-          assoc :=
-            ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
-          id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
-          comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ }, id_comp := ⋯,
-          comp_id := ⋯, assoc := ⋯ }
-      [Meta.isDefEq] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
-        [Meta.isDefEq] ❌️ Arrow =?= @Comma
-        [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
-        [Meta.isDefEq.onFailure] ❌️ Arrow C =?= Comma (𝟭 C) (𝟭 C)
-      [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-            comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-            assoc :=
-              ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
-            id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
-            comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ }, id_comp := ⋯,
-            comp_id := ⋯, assoc := ⋯ }
-      [Meta.isDefEq.onFailure] ❌️ { toQuiver := instQuiverArrow, id := instCategoryArrow._aux_1,
-            comp := @instCategoryArrow._aux_3 C inst✝³, id_comp := ⋯, comp_id := ⋯,
-            assoc :=
-              ⋯ } =?= { Hom := fun X Y ↦ CommaMorphism X Y,
-            id := fun X ↦ { left := 𝟙 X.left, right := 𝟙 X.right, w := ⋯ },
-            comp := fun {X Y Z} f g ↦ { left := f.left ≫ g.left, right := f.right ≫ g.right, w := ⋯ }, id_comp := ⋯,
-            comp_id := ⋯, assoc := ⋯ }
--/
-#guard_msgs in
-example : instCategoryArrow (T := C) = commaCategory := by
-  set_option trace.Meta.isDefEq true in
-  with_implicit apply_rfl
-
-end InstanceTypesDemos
+end InstanceTypesDemo
 
 /-- The functor `κ.ord.ToType ⥤ Arrow C ⥤ Arrow C` corresponding to the
 iterations of the successor structure `succStruct I κ`. -/
