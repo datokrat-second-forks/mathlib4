@@ -106,9 +106,6 @@ attribute [local implicit_reducible]
   Valuation.restrict
   coe
   exp
-  Multiplicative.ofAdd
-  Additive.ofMul
-  Multiplicative.toAdd
 in
 open MonoidWithZeroHom.ValueGroup₀ in
 example : IsUniformInducing ((Rat.castHom ℚ_[p]).comp
