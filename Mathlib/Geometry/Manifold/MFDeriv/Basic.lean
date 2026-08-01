@@ -493,12 +493,13 @@ theorem writtenInExtChartAt_comp (h : ContinuousWithinAt f s x) :
 variable {f' f₀' f₁' : TangentSpace% x →L[𝕜] TangentSpace% (f x)}
   {g' : TangentSpace% (f x) →L[𝕜] TangentSpace% (g (f x))}
 
-/-!
-# Issue
-
-Fixed by making `TangentSpace` implicit-reducible at its definition site.
+#adaptation_note
+/--
+Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
+After that, `instanceTypes false` can be removed, too.
 -/
-
+set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency false in
 /-- `UniqueMDiffWithinAt` achieves its goal: it implies the uniqueness of the derivative. -/
 protected nonrec theorem UniqueMDiffWithinAt.eq (U : UniqueMDiffAt[s] x)
     (h : HasMFDerivAt[s] f x f') (h₁ : HasMFDerivAt[s] f x f₁') : f' = f₁' := by
@@ -521,10 +522,24 @@ theorem mfderivWithin_univ : mfderiv[univ] f = mfderiv% f := by
   simp only [mfderivWithin, mfderiv, mfld_simps]
   rw [mdifferentiableWithinAt_univ]
 
+#adaptation_note
+/--
+Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
+After that, `instanceTypes false` can be removed, too.
+-/
+set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency false in
 theorem mfderivWithin_zero_of_not_mdifferentiableWithinAt (h : ¬MDiffAt[s] f x) :
     mfderiv[s] f x = 0 := by
   simp only [mfderivWithin, h, ite_eq_right, not_false_iff]
 
+#adaptation_note
+/--
+Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
+After that, `instanceTypes false` can be removed, too.
+-/
+set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency false in
 theorem mfderiv_zero_of_not_mdifferentiableAt (h : ¬MDiffAt f x) :
     mfderiv% f x = 0 := by simp only [mfderiv, h, ite_eq_right, not_false_iff]
 
@@ -588,12 +603,26 @@ theorem hasMFDerivAt_unique (h₀ : HasMFDerivAt% f x f₀') (h₁ : HasMFDerivA
   rw [← hasMFDerivWithinAt_univ] at h₀ h₁
   exact (uniqueMDiffWithinAt_univ I).eq h₀ h₁
 
+#adaptation_note
+/--
+Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
+After that, `instanceTypes false` can be removed, too.
+-/
+set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_inter' (h : t ∈ 𝓝[s] x) :
     HasMFDerivAt[s ∩ t] f x f' ↔ HasMFDerivAt[s] f x f' := by
   rw [HasMFDerivWithinAt, HasMFDerivWithinAt, extChartAt_preimage_inter_eq,
     hasFDerivWithinAt_inter', continuousWithinAt_inter' h]
   exact extChartAt_preimage_mem_nhdsWithin h
 
+#adaptation_note
+/--
+Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
+After that, `instanceTypes false` can be removed, too.
+-/
+set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_inter (h : t ∈ 𝓝 x) :
     HasMFDerivAt[s ∩ t] f x f' ↔ HasMFDerivAt[s] f x f' := by
   rw [HasMFDerivWithinAt, HasMFDerivWithinAt, extChartAt_preimage_inter_eq, hasFDerivWithinAt_inter,

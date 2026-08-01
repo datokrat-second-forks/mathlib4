@@ -371,7 +371,7 @@ would probably work with HSMul 𝕜 (TangentSpace I x) ?m.238
 -/
 
 set_option backward.isDefEq.instanceTypes false in
--- set_option backward.isDefEq.respectTransparency false in
+set_option backward.isDefEq.respectTransparency false in
 /-- Pulling back through `extChartAt` the scalar multiplication of a vector field by
 the derivative of a scalar function equals the scalar multiplication by the manifold derivative. -/
 lemma mpullback_mfderivWithin_apply_smul {f : M → 𝕜}

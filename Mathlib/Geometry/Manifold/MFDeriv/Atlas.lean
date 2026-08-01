@@ -309,6 +309,11 @@ lemma mfderivWithin_extChartAt_symm_comp_mfderiv_extChartAt
     simp only [Function.comp_def, PartialEquiv.left_inv (extChartAt I x) hz, id_eq]
   · simp only [Function.comp_def, PartialEquiv.right_inv (extChartAt I x) hy, id_eq]
 
+#adaptation_note
+/--
+Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
+-/
+set_option backward.isDefEq.respectTransparency false in
 /-- The composition of the derivative of the inverse of `extChartAt` with the derivative of
 `extChartAt` gives the identity.
 Version where the basepoint belongs to `(extChartAt I x).source`. -/
