@@ -59,6 +59,36 @@ remove `respectTransparency false`.
 
 /-! # First issue: `tensorObjMap` -/
 
+#adaptation_note
+/--
+We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
+Concretely, the following instance cannot be synthesized:
+`TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)`
+
+The failure happens while applying `@TensorProduct.CompatibleSMul.isScalarTower`: assigning one of
+its instance-implicit-argument metavariables is rejected because the metavariable's type and the
+type of the assigned value do not match at `.instances` transparency. The metavariable's expected
+type is `DistribMulAction ↑(R.obj Y) ↑(M₂.obj Y)`, whereas the assigned value
+`ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction` has type
+```
+DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
+  ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
+      (M₂.obj Y))
+```
+Lean falls back to synthesize an instance of the correct type, but it returns
+`(M₂.obj Y).isModule.toDistribMulAction`, which is again not defeq to the assigned value. Both
+comparisons bottom out at `↑(R.obj Y) =?= ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)`, the same
+ring bundled once as a `CommRingCat` and once as a `RingCat`; seeing that these agree requires
+unfolding `⋙`, which is `@[implicit_reducible]`.
+
+Potential fix: Concentrate on removing `respectTransparency false` first.
+For example, do this by making `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars`
+implicit-reducible *at their definition site*.
+Without the backward-compatibility flag `respectTransparency false`, Lean bumps transparency for
+instance-implicit arguments to `implicit`, thereby comparing the synthesized and unified instances
+at implicit transparency instead of the stricter instance transparency.
+After that, you can remove `instanceTypes false`, too.
+-/
 set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
 /-- Auxiliary definition for `tensorObj`. -/
@@ -75,155 +105,6 @@ noncomputable def tensorObjMap {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M�
       dsimp +instances
       rw [map_add, TensorProduct.tmul_add])
     (by intro a m₁ m₂; dsimp; erw [M₂.map_smul, TensorProduct.tmul_smul (r := R.map f a)]; rfl)
-
-/-! ## Explanation -/
-
-private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
-  fun trees => trees.mapM go
-where
-  go (t : TraceTree) : Lean.CoreM TraceTree := do
-    match t with
-    | .leaf msg => return .leaf msg
-    | .node data msg children wrap =>
-      if ← p t then
-        return .node data m!"{msg} (truncated)" #[] wrap
-      else
-        return .node data msg (← children.mapM go) wrap
-
-/--
-error: failed to synthesize instance of type class
-  TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
----
-error: unsolved goals
-C : Type u_1
-inst✝ : Category.{v_1, u_1} C
-R : Cᵒᵖ ⥤ CommRingCat
-M₁ M₂ M₃ M₄ : PresheafOfModules (R ⋙ forget₂ CommRingCat RingCat)
-X Y : Cᵒᵖ
-f : X ⟶ Y
-a : ↑((R ⋙ forget₂ CommRingCat RingCat).obj X)
-m₁ : ↑(M₁.obj X)
-m₂ : ↑(M₂.obj X)
-⊢ TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
----
-trace: [Meta.synthInstance] ❌️ TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
-  [Meta.synthInstance.apply] ❌️ apply @TensorProduct.CompatibleSMul.isScalarTower to TensorProduct.CompatibleSMul
-        ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)
-    [Meta.synthInstance.tryResolve] ❌️ TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y)
-          ↑(M₂.obj Y) ≟ TensorProduct.CompatibleSMul ?m.272 ?m.273 ?m.276 ?m.277
-      [Meta.isDefEq] ❌️ [instances] TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y)
-            ↑(M₂.obj Y) =?= TensorProduct.CompatibleSMul ?m.272 ?m.273 ?m.276 ?m.277
-        [Meta.isDefEq] ❌️ [instances] ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction =?= ?m.285
-          [Meta.isDefEq.assign.checkTypes] ❌️ (?m.285 : DistribMulAction ↑(R.obj Y)
-                ↑(M₂.obj
-                    Y)) := (ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction : DistribMulAction
-                ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                    (M₂.obj Y)))
-            [Meta.isDefEq] ❌️ [instances] DistribMulAction ↑(R.obj Y)
-                  ↑(M₂.obj
-                      Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                  ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                      (M₂.obj Y))
-              [Meta.isDefEq] ❌️ [instances] ↑(R.obj Y) =?= ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                [Meta.isDefEq] ❌️ [instances] (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj Y).1
-                  [Meta.isDefEq.onFailure] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj Y).1
-              [Meta.isDefEq.onFailure] ❌️ DistribMulAction ↑(R.obj Y)
-                    ↑(M₂.obj
-                        Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                    ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                        (M₂.obj Y))
-            [Meta.synthInstance] ✅️ DistribMulAction ↑(R.obj Y) ↑(M₂.obj Y) (truncated)
-            [Meta.isDefEq] ❌️ [instances] ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction =?= (M₂.obj
-                      Y).isModule.toDistribMulAction
-              [Meta.isDefEq] ❌️ [instances] ModuleCat.instModuleCarrierObjRestrictScalars.1 =?= (M₂.obj Y).isModule.1
-                [Meta.isDefEq] ❌️ [instances] { toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1,
-                      mul_smul := ⋯, one_smul := ⋯, smul_zero := ⋯, smul_add := ⋯ } =?= (M₂.obj Y).isModule.1
-                  [Meta.isDefEq] ❌️ [instances] DistribMulAction ↑(R.obj Y)
-                        ↑(M₂.obj
-                            Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                        ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                            (M₂.obj Y))
-                    [Meta.isDefEq] ❌️ [instances] ↑(R.obj Y) =?= ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                      [Meta.isDefEq] ❌️ [instances] (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj Y).1
-                        [Meta.isDefEq.onFailure] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj Y).1
-                    [Meta.isDefEq.onFailure] ❌️ DistribMulAction ↑(R.obj Y)
-                          ↑(M₂.obj
-                              Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                          ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                              (M₂.obj Y))
-                  [Meta.isDefEq.onFailure] ❌️ { toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1,
-                        mul_smul := ⋯, one_smul := ⋯, smul_zero := ⋯, smul_add := ⋯ } =?= (M₂.obj Y).isModule.1
-          [Meta.isDefEq.assign.checkTypes] ❌️ (?m.285 : DistribMulAction ↑(R.obj Y)
-                ↑(M₂.obj
-                    Y)) := ({ toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1, mul_smul := ⋯,
-                one_smul := ⋯, smul_zero := ⋯,
-                smul_add :=
-                  ⋯ } : DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                    (M₂.obj Y)))
-            [Meta.isDefEq] ❌️ [instances] DistribMulAction ↑(R.obj Y)
-                  ↑(M₂.obj
-                      Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                  ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                      (M₂.obj Y))
-              [Meta.isDefEq] ❌️ [instances] ↑(R.obj Y) =?= ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-              [Meta.isDefEq.onFailure] ❌️ DistribMulAction ↑(R.obj Y)
-                    ↑(M₂.obj
-                        Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                    ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                        (M₂.obj Y))
-            [Meta.synthInstance] ✅️ DistribMulAction ↑(R.obj Y) ↑(M₂.obj Y) (truncated)
-            [Meta.isDefEq] ❌️ [instances] { toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1,
-                  mul_smul := ⋯, one_smul := ⋯, smul_zero := ⋯,
-                  smul_add := ⋯ } =?= (M₂.obj Y).isModule.toDistribMulAction
-              [Meta.isDefEq] ❌️ [instances] { toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1,
-                    mul_smul := ⋯, one_smul := ⋯, smul_zero := ⋯, smul_add := ⋯ } =?= (M₂.obj Y).isModule.1
-                [Meta.isDefEq] ❌️ [instances] DistribMulAction ↑(R.obj Y)
-                      ↑(M₂.obj
-                          Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                      ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                          (M₂.obj Y))
-                  [Meta.isDefEq] ❌️ [instances] ↑(R.obj Y) =?= ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                    [Meta.isDefEq] ❌️ [instances] (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj Y).1
-                      [Meta.isDefEq.onFailure] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj Y).1
-                  [Meta.isDefEq.onFailure] ❌️ DistribMulAction ↑(R.obj Y)
-                        ↑(M₂.obj
-                            Y) =?= DistribMulAction ↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)
-                        ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                            (M₂.obj Y))
-                [Meta.isDefEq.onFailure] ❌️ { toSMul := ModuleCat.instModuleCarrierObjRestrictScalars._aux_1,
-                      mul_smul := ⋯, one_smul := ⋯, smul_zero := ⋯, smul_add := ⋯ } =?= (M₂.obj Y).isModule.1
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.isDefEq.assign.checkTypes x) <&&> failed x)
-  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> succeeded x)
-in
-set_option backward.isDefEq.respectTransparency false in
-/-- `tensorObjMap` -/
-noncomputable example {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M₂.obj X ⟶
-    (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y) :=
-  ModuleCat.MonoidalCategory.tensorLift (fun m₁ m₂ ↦ M₁.map f m₁ ⊗ₜ M₂.map f m₂)
-    (by
-      intro m₁ m₁' m₂
-      dsimp +instances
-      rw [map_add, TensorProduct.add_tmul])
-    (by intro a m₁ m₂; dsimp; erw [M₁.map_smul]; rfl)
-    (by
-      intro m₁ m₂ m₂'
-      dsimp +instances
-      rw [map_add, TensorProduct.tmul_add])
-    (by
-      intro a m₁ m₂
-      dsimp
-      erw [M₂.map_smul]
-      (set_option trace.Meta.synthInstance true in
-      set_option trace.Meta.isDefEq true in
-      set_option trace.Meta.isDefEq.printTransparency true in
-      set_option trace.Meta.isDefEq.assign.checkTypes true in
-      erw [TensorProduct.tmul_smul (r := R.map f a)]) -- fails on the `erw`
-      rfl)
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -244,13 +125,32 @@ noncomputable def tensorObj : PresheafOfModules (R ⋙ forget₂ _ _) where
 
 variable {M₁ M₂ M₃ M₄}
 
-/-! # Second issue: `tensorObj_map_tmul` -/
+#adaptation_note
+/--
+We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
+Concretely, the following instance cannot be synthesized:
+`Module ↑(R.obj Y)
+  ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
+      (M₁.obj Y))`
 
--- Needs `instanceTypes false` for the same `R.obj Y` (`CommRingCat`) vs
--- `(R ⋙ forget₂ CommRingCat RingCat).obj Y` (`RingCat`) ring-carrier synonym as `tensorObjMap`
--- above: here the `Module ↑(R.obj Y) ↑((restrictScalars …).obj (M₁.obj Y))` needed to type the
--- coercion is unsynthesizable because its `Ring ↑(R.obj Y)` slot rejects (leg (c)) the
--- `RingCat`-bundled instance the goal carries. See the analysis before `tensorObjMap`.
+The failure happens while applying `@ModuleCat.isModule`: assigning one of its
+instance-implicit-argument metavariables is rejected because the metavariable's type and the type
+of the assigned value do not match at `.instances` transparency. The metavariable's expected type
+is `Ring ↑(R.obj Y)`, whereas the assigned value `RingCat.instRingObjForgetRingHomCarrier` has type
+`Ring ((forget RingCat).obj ((R ⋙ forget₂ CommRingCat RingCat).obj X))`. Lean falls back to
+synthesize an instance of the correct type, but it returns
+`CommRingCat.instCommRingObjForgetRingHomCarrier.toRing`, which is again not defeq to the assigned
+value. As for `tensorObjMap` above, both comparisons bottom out at
+`(R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1`.
+
+Potential fix: Concentrate on removing `respectTransparency false` first.
+For example, do this by making `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars`
+implicit-reducible  *at their definition site*.
+Without the backward-compatibility flag `respectTransparency false`, Lean bumps transparency for
+instance-implicit arguments to `implicit`, thereby comparing the synthesized and unified instances
+at implicit transparency instead of the stricter instance transparency.
+After that, you can remove `instanceTypes false`, too.
+-/
 set_option backward.isDefEq.instanceTypes false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
@@ -258,94 +158,6 @@ lemma tensorObj_map_tmul {X Y : Cᵒᵖ} (f : X ⟶ Y) (m₁ : M₁.obj X) (m₂
     DFunLike.coe (α := (M₁.obj X ⊗ M₂.obj X :))
       (β := fun _ ↦ (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y))
       (ModuleCat.Hom.hom (R := ↑(R.obj X)) ((tensorObj M₁ M₂).map f)) (m₁ ⊗ₜ[R.obj X] m₂) =
-    M₁.map f m₁ ⊗ₜ[R.obj Y] M₂.map f m₂ := rfl
-
-/-! ## Explanation: -/
-
-/-- Keeps the `checkTypes` rejection head lines (both types) but drops their verbose
-fallback-synthesis subtrees, so the trace demo stays small. -/
-private meta partial def dropCheckTypesChildren (t : TraceTree) : TraceTree :=
-  if t.cls? == some `Meta.isDefEq.assign.checkTypes then t.withChildren #[]
-  else t.withChildren (t.children.map dropCheckTypesChildren)
-
-set_option linter.style.longLine false in
-/--
-error: failed to synthesize instance of type class
-  Module ↑(R.obj Y)
-    ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj (M₁.obj Y))
----
-trace: [Meta.synthInstance] ❌️ Module ↑(R.obj Y)
-      ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj (M₁.obj Y))
-  [Meta.synthInstance.apply] ❌️ apply @ModuleCat.isModule to Module ↑(R.obj Y)
-        ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj (M₁.obj Y))
-    [Meta.synthInstance.tryResolve] ❌️ Module ↑(R.obj Y)
-          ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-              (M₁.obj Y)) ≟ Module ?m.226 ↑?m.228
-      [Meta.isDefEq] ❌️ Module ↑(R.obj Y)
-            ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                (M₁.obj Y)) =?= Module ?m.226 ↑?m.228
-        [Meta.isDefEq] ❌️ ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-                (M₁.obj Y)) =?= ↑?m.228
-          [Meta.isDefEq] ❌️ RingCat.instRingObjForgetRingHomCarrier =?= ?m.227
-            [Meta.isDefEq] RingCat.instRingObjForgetRingHomCarrier [nonassignable] =?= ?m.227 [assignable]
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.227 : Ring
-                  ↑(R.obj
-                      Y)) := (RingCat.instRingObjForgetRingHomCarrier : Ring
-                  ((forget RingCat).obj ((R ⋙ forget₂ CommRingCat RingCat).obj X)))
-              [Meta.isDefEq] ❌️ Ring
-                    ↑(R.obj Y) =?= Ring ((forget RingCat).obj ((R ⋙ forget₂ CommRingCat RingCat).obj X))
-                [Meta.isDefEq] ❌️ ↑(R.obj Y) =?= (forget RingCat).obj ((R ⋙ forget₂ CommRingCat RingCat).obj X)
-                  [Meta.isDefEq] ❌️ (R.obj Y).1 =?= (forget RingCat).1 ((R ⋙ forget₂ CommRingCat RingCat).obj X)
-                    [Meta.isDefEq] ❌️ (R.obj Y).1 =?= ToType ((R ⋙ forget₂ CommRingCat RingCat).obj X)
-                      [Meta.isDefEq] ❌️ (R.obj Y).1 =?= ↑((R ⋙ forget₂ CommRingCat RingCat).obj X)
-                        [Meta.isDefEq] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-                          [Meta.isDefEq.onFailure] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-                [Meta.isDefEq.onFailure] ❌️ Ring
-                      ↑(R.obj Y) =?= Ring ((forget RingCat).obj ((R ⋙ forget₂ CommRingCat RingCat).obj X))
-              [Meta.synthInstance] ✅️ Ring ↑(R.obj Y) (truncated)
-              [Meta.isDefEq] ❌️ RingCat.instRingObjForgetRingHomCarrier =?= CommRingCat.instCommRingObjForgetRingHomCarrier.toRing
-                [Meta.isDefEq] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                        X).ring =?= CommRingCat.instCommRingObjForgetRingHomCarrier.toRing
-                  [Meta.isDefEq] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                          X).2 =?= CommRingCat.instCommRingObjForgetRingHomCarrier.toRing
-                    [Meta.isDefEq] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                            X).2 =?= CommRingCat.instCommRingObjForgetRingHomCarrier.1
-                      [Meta.isDefEq.onFailure] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                              X).2 =?= CommRingCat.instCommRingObjForgetRingHomCarrier.1
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.227 : Ring
-                  ↑(R.obj
-                      Y)) := (((R ⋙ forget₂ CommRingCat RingCat).obj
-                    X).2 : Ring ((R ⋙ forget₂ CommRingCat RingCat).obj X).1)
-              [Meta.isDefEq] ❌️ Ring ↑(R.obj Y) =?= Ring ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-                [Meta.isDefEq] ❌️ ↑(R.obj Y) =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-                  [Meta.isDefEq] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-                    [Meta.isDefEq.onFailure] ❌️ (R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-                [Meta.isDefEq.onFailure] ❌️ Ring ↑(R.obj Y) =?= Ring ((R ⋙ forget₂ CommRingCat RingCat).obj X).1
-              [Meta.synthInstance] ✅️ Ring ↑(R.obj Y) (truncated)
-              [Meta.isDefEq] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                      X).2 =?= CommRingCat.instCommRingObjForgetRingHomCarrier.toRing
-                [Meta.isDefEq] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                        X).2 =?= CommRingCat.instCommRingObjForgetRingHomCarrier.1
-                  [Meta.isDefEq.onFailure] ❌️ ((R ⋙ forget₂ CommRingCat RingCat).obj
-                          X).2 =?= CommRingCat.instCommRingObjForgetRingHomCarrier.1
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x)
-      <&&> (containsString "ModuleCat.isModule" x) <&&> (containsString "M₁.obj Y" x))
-  >=> elideBelow (fun x => (ofClass `Meta.synthInstance x) <&&> (containsString "Ring " x))
-  >=> filterSubtrees (fun x => (failed x) <&&> (containsString "instRingObjForget" x))
-in
-set_option backward.isDefEq.respectTransparency false in
-set_option trace.Meta.synthInstance true in
-set_option trace.Meta.isDefEq true in
-set_option trace.Meta.isDefEq.assign.checkTypes true in
-example {M₁ M₂ : PresheafOfModules.{u} (R ⋙ forget₂ _ _)} {X Y : Cᵒᵖ} (f : X ⟶ Y)
-    (m₁ : M₁.obj X) (m₂ : M₂.obj X) :
-    DFunLike.coe (α := (M₁.obj X ⊗ M₂.obj X :))
-      (β := fun _ ↦ (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y))
-      (ModuleCat.Hom.hom (R := ↑(R.obj X))
-        ((_root_.PresheafOfModules.Monoidal.tensorObj M₁ M₂).map f)) (m₁ ⊗ₜ[R.obj X] m₂) =
     M₁.map f m₁ ⊗ₜ[R.obj Y] M₂.map f m₂ := rfl
 
 set_option backward.defeqAttrib.useBackward true in

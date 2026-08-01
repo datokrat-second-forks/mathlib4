@@ -191,12 +191,6 @@ def universalFactorizationMapLiftEquiv (p : MonicDegreeEq S n) :
   left_inv f := by ext <;> simp
   right_inv q := by ext <;> simp
 
-/-!
-# Issue
-
-Fixed after adjusting the `onFailure` logic in `isDefEqApp`.
--/
-
 lemma ker_eval₂Hom_universalFactorizationMap :
     RingHom.ker (eval₂Hom (S₁ := MvPolynomial (Fin m) R ⊗[R] MvPolynomial (Fin k) R)
       (universalFactorizationMap R n m k hn) (Sum.elim (.X · ⊗ₜ 1) (1 ⊗ₜ .X ·))) =
@@ -230,10 +224,6 @@ lemma ker_eval₂Hom_universalFactorizationMap :
     change AlgHom.id R _ p = ((aeval _).comp (tensorEquivSum R _ _ R).toAlgHom) p
     congr 1
     ext <;> simp
-
-postprocess_traces
-  filterSubtrees fun x => containsString "=?= Mul.mul" x
-in
 set_option backward.isDefEq.respectTransparency false in
 /-- The canonical presentation of `universalFactorizationMap`. -/
 @[simps] def universalFactorizationMapPresentation :

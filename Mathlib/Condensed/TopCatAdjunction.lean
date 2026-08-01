@@ -7,7 +7,6 @@ module
 
 public import Mathlib.Condensed.TopComparison
 public import Mathlib.Topology.Category.CompactlyGenerated
-meta import Lean.PostprocessTraces
 /-!
 
 # The adjunction between condensed sets and topological spaces
@@ -22,8 +21,6 @@ The counit is an isomorphism for compactly generated spaces, and we conclude tha
 
 
 @[expose] public section
-
-open Lean.PostprocessTraces
 
 universe u
 
@@ -95,31 +92,38 @@ noncomputable def topCatAdjunctionCounit (X : TopCat.{u + 1}) : X.toCondensedSet
       rw [continuous_coinduced_dom]
       continuity }
 
--- The dual of `filterSubtrees`: drop matching subtrees (used to remove `onFailure` duplicates).
-private meta partial def dropSubtrees (p : TracePattern) : TracePostprocessor :=
-  fun trees => trees.filterMapM go
-where
-  go (t : TraceTree) : Lean.CoreM (Option TraceTree) := do
-    if ← p t then
-      return none
-    match t with
-    | .leaf msg => return some (.leaf msg)
-    | .node data msg children wrap => return some (.node data msg (← children.filterMapM go) wrap)
+#adaptation_note
+/--
+We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
+Concretely, the following instance cannot be synthesized:
+`DFunLike C(C(PUnit, ↑X), ↑X) ?m ?m`
+It is needed by the `DFunLike.coe` below, whose `F` annotation leaves the topology on `C(PUnit, X)`
+to be determined by unification.
 
-private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
-  fun trees => trees.mapM go
-where
-  go (t : TraceTree) : Lean.CoreM TraceTree := do
-    match t with
-    | .leaf msg => return .leaf msg
-    | .node data msg children wrap =>
-      if ← p t then
-        return .node data m!"{msg} (truncated)" #[] wrap
-      else
-        return .node data msg (← children.mapM go) wrap
+The failure happens while applying `@ContinuousMap.instFunLike`: assigning one of its
+instance-implicit-argument metavariables is rejected because the metavariable's type and the type
+of the assigned value do not match at `.instances` transparency. The metavariable's expected type
+is `TopologicalSpace C(PUnit, ↑X)`, whereas the assigned value `X.toCondensedSet.toTopCat.str` has
+type `TopologicalSpace ↑X.toCondensedSet.toTopCat`. The two carrier spellings are defeq at
+`.default`, but seeing that requires unfolding the whole `toCondensedSet`/`toTopCat` chain down to
+`ContinuousMap =?= X.toCondensedSet.obj.1`, which does not happen at `.instances`. Lean falls back
+to synthesize an instance of the correct type, which succeeds, but it returns
+`ContinuousMap.compactOpen`, which is a genuinely different topology from the coinduced one carried
+by `X.toCondensedSet.toTopCat.str`, so it is not defeq to the assigned value at any transparency
+(see the `apply_rfl` example below). Hence the fallback cannot repair this case, and only the direct
+check could: that would need the carrier chain to unfold at `.instances`.
 
-/-! # Issue (Medium Severity) -/
+With the metavariable unsolved, `DFunLike` synthesis fails and `x` is no longer known to be a
+function.
 
+Potential fix: Unclear. With an explicit type on the `x : C(PUnit, X)` parameter, the explicit
+`F` argument is no longer needed to make the lemma elaborate. However, that would change the
+lemma's statement and also its discrimination key. A last resort is to explicitly supply the
+desired instance. Alternatively, one could investigate whether `ContinuousMap.compactOpen` and
+`X.toCondensedSet.toTopCat.str` can be made defeq at implicit transparency, but this should be done
+with care: If many declarations need to be made implicit-reducible, it might degrade performance
+in other places.
+-/
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.isDefEq.instanceTypes false in
 /-- `simp`-normal form of the lemma that `@[simps]` would generate. -/
@@ -127,118 +131,6 @@ set_option backward.isDefEq.instanceTypes false in
     -- We have to specify here to not infer the `TopologicalSpace` instance on `C(PUnit, X)`,
     -- which suggests type synonyms are being unfolded too far somewhere.
     DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)
-        (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
-      (x PUnit.unit : TopCat.carrier X) := rfl
-
-/-!
-# Explanation
-
-Summary of the investigation:
-* This lemma explicitly requires non-canonical topologies on spaces of continuous maps.
-* Possible workaround: Give the instance explicitly.
-* Question: Is this lemma's signature actually useful in this form? It seems to be unused.
--/
-
-set_option linter.style.longLine false in
-/--
-error: failed to synthesize instance of type class
-  DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.1 ?m.7
----
-error: Function expected at
-  x
-but this term has type
-  ?m.1
-
-Note: Expected a function because this term is being applied to the argument
-  PUnit.unit
----
-trace: [Meta.synthInstance] ❌️ DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.1 ?m.7
-  [Meta.synthInstance.apply] ❌️ apply @ContinuousMap.instFunLike to DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11 ?m.12
-    [Meta.synthInstance.tryResolve] ❌️ DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11
-          ?m.12 ≟ DFunLike C(?m.14, ?m.15) ?m.14 fun x ↦ ?m.15
-      [Meta.isDefEq] ❌️ [instances] DFunLike C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) ?m.11
-            ?m.12 =?= DFunLike C(?m.14, ?m.15) ?m.14 fun x ↦ ?m.15
-        [Meta.isDefEq] ❌️ [instances] C(C(PUnit.{?u.16 + 1}, ↑X), ↑X) =?= C(?m.14, ?m.15)
-          [Meta.isDefEq] ❌️ [implicit] X.toCondensedSet.toTopCat.str =?= ?m.16
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.16 : TopologicalSpace
-                  C(PUnit.{?u.16 + 1},
-                    ↑X)) := (X.toCondensedSet.toTopCat.str : TopologicalSpace ↑X.toCondensedSet.toTopCat)
-              [Meta.isDefEq] ❌️ [instances] TopologicalSpace
-                    C(PUnit.{?u.16 + 1}, ↑X) =?= TopologicalSpace ↑X.toCondensedSet.toTopCat
-                [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1}, ↑X) =?= ↑X.toCondensedSet.toTopCat
-                  [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1}, ↑X) =?= X.toCondensedSet.toTopCat.1
-                    [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1},
-                          ↑X) =?= X.toCondensedSet.obj.obj (Opposite.op (of PUnit.{?u.16 + 1}))
-                      [Meta.isDefEq] ❌️ [instances] C(PUnit.{?u.16 + 1},
-                            ↑X) =?= X.toCondensedSet.obj.1 (Opposite.op (of PUnit.{?u.16 + 1}))
-                        [Meta.isDefEq] ❌️ [instances] ContinuousMap =?= X.toCondensedSet.obj.1
-                          [Meta.isDefEq.onFailure] ❌️ ContinuousMap =?= X.toCondensedSet.obj.1
-                        [Meta.isDefEq.onFailure] ❌️ C(PUnit.{?u.16 + 1},
-                              ↑X) =?= X.toCondensedSet.obj.1 (Opposite.op (of PUnit.{?u.16 + 1}))
-                [Meta.isDefEq.onFailure] ❌️ TopologicalSpace
-                      C(PUnit.{?u.16 + 1}, ↑X) =?= TopologicalSpace ↑X.toCondensedSet.toTopCat
-              [Meta.synthInstance] ✅️ TopologicalSpace C(PUnit.{?u.16 + 1}, ↑X) (truncated)
-              [Meta.isDefEq] ❌️ [implicit] X.toCondensedSet.toTopCat.str =?= ContinuousMap.compactOpen (truncated)
-            [Meta.isDefEq.assign.checkTypes] ❌️ (?m.16 : TopologicalSpace
-                  C(PUnit.{?u.16 + 1},
-                    ↑X)) := ({ IsOpen := fun s ↦ IsOpen (X.toCondensedSet.coinducingCoprod ⁻¹' s), isOpen_univ := ⋯,
-                  isOpen_inter := ⋯,
-                  isOpen_sUnion :=
-                    ⋯ } : TopologicalSpace (X.toCondensedSet.obj.obj (Opposite.op (of PUnit.{?u.16 + 1})))) (truncated)
--/
-#guard_msgs in
-postprocess_traces
-  filterSubtrees (fun x => (ofClass `Meta.synthInstance.apply x) <&&>
-    (containsString "ContinuousMap.instFunLike" x))
-  >=> filterSubtrees (fun x => ofClass `Meta.isDefEq.assign.checkTypes x <&&> failed x)
-  >=> elideBelow (fun x => ofClass `Meta.synthInstance x <&&> succeeded x)
-  >=> elideBelow (fun x => ofClass `Meta.isDefEq x <&&> containsString "ContinuousMap.compactOpen" x)
-  >=> elideBelow (fun x => ofClass `Meta.isDefEq.assign.checkTypes x <&&> containsString ":= ({" x)
-in
-set_option trace.Meta.synthInstance true in
-set_option trace.Meta.isDefEq true in
-set_option trace.Meta.isDefEq.printTransparency true in
-set_option trace.Meta.isDefEq.assign.checkTypes true in
-set_option backward.isDefEq.respectTransparency.types false in
-example (X : TopCat) (x) :
-    DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)
-        (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
-      x PUnit.unit := rfl
-
-section
-variable (X : TopCat.{u + 1})
-
-/--
-error: Tactic `rfl` failed: The left-hand side
-  X.toCondensedSet.toTopCat.str
-is not definitionally equal to the right-hand side
-  ContinuousMap.compactOpen
-
-X✝¹ : CondensedSet
-X✝ X : TopCat
-⊢ X.toCondensedSet.toTopCat.str = ContinuousMap.compactOpen
--/
-#guard_msgs in
-example (X : TopCat.{u + 1}) :
-    X.toCondensedSet.toTopCat.str =
-      (ContinuousMap.compactOpen : TopologicalSpace C(PUnit, X)) := by
-  apply_rfl
-
-end
-
-
-/-! # Fix -/
-/-
-Potential fix: explicitly annotate `x`, making the synthesis succeed without the `F` annotation.
-This changes the `F` value, though, and this affects the discrimination key.
-It's a very significant change, but I can't tell which version has the correct signature.
--/
-set_option backward.isDefEq.respectTransparency.types false in
-/-- `simp`-normal form of the lemma that `@[simps]` would generate. -/
-@[simp] lemma topCatAdjunctionCounit_hom_apply_fixed? (X : TopCat) (x : C(PUnit, X)) :
-    -- We have to specify here to not infer the `TopologicalSpace` instance on `C(PUnit, X)`,
-    -- which suggests type synonyms are being unfolded too far somewhere.
-    DFunLike.coe
         (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
       (x PUnit.unit : TopCat.carrier X) := rfl
 
