@@ -11,7 +11,6 @@ public import Mathlib.CategoryTheory.ConcreteCategory.Elementwise
 public import Mathlib.Data.DFinsupp.BigOperators
 public import Mathlib.Data.DFinsupp.Small
 public import Mathlib.GroupTheory.QuotientGroup.Defs
-meta import Lean.PostprocessTraces
 /-!
 # The category of additive commutative groups has all colimits.
 
@@ -19,7 +18,6 @@ This file constructs colimits in the category of additive commutative groups, as
 quotients of finitely supported functions.
 
 -/
-open Lean.PostprocessTraces
 
 @[expose] public section
 
@@ -303,13 +301,13 @@ namespace AddCommGrpCat
 
 open QuotientAddGroup
 
-/-!
-# Issue (Trivial Severity)
-
-Actually, the `respectTransparency false` "fixes it" already by *preventing* a bump.
-However, the sustainable fix would be to fix the `lift_mk` rfl lemma.
+#adaptation_note
+/--
+This definition fails without `respectTransparency false`. Removing `lift_mk` from the `dsimp only`
+set in `inv_hom_id` would help. A more sustainable fix would probably be to revisit the `lift_mk`
+refl lemma: Its LHS and RHS are not defeq at implicit transparency. Either the lemma shouldn't be
+a refl lemma or more declarations need to be implicit-reducible.
 -/
-
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- The categorical cokernel of a morphism in `AddCommGrpCat`

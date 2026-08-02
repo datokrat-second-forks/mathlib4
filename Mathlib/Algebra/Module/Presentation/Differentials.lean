@@ -84,12 +84,6 @@ lemma hom₁_single (r : σ) :
     hom₁ pres (Finsupp.single r 1) = Extension.Cotangent.mk ⟨pres.relation r, by simp⟩ := by
   simp [hom₁]
 
-/-!
-# Issue (Low Severity)
-
-Fixed by making `Generators.toExtension` implicit-reducible and removing `respectTransparency false`
--/
-
 #adaptation_note
 /--
 We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.

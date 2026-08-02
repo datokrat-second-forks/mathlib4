@@ -7,7 +7,6 @@ Authors: Nathaniel Thomas, Jeremy Avigad, Johannes Hölzl, Mario Carneiro, Anne 
 module
 
 public import Mathlib.Algebra.Module.LinearMap.Defs
-meta import Lean.PostprocessTraces
 
 /-!
 # (Semi)linear equivalences
@@ -584,10 +583,6 @@ def _root_.RingEquiv.toSemilinearEquiv (f : R ≃+* S) :
   { f with
     toFun := f
     map_smul' := f.map_mul }
-
-open Lean.PostprocessTraces
-
-/-! # Issue -/
 
 #adaptation_note
 /--

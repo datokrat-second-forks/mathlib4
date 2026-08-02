@@ -7,8 +7,6 @@ module
 
 public import Mathlib.Algebra.Category.ModuleCat.Presheaf.Colimits
 public import Mathlib.Algebra.Category.ModuleCat.Monoidal.Closed
--- imported only for the `InstanceTypesDemos` section at the end of this file
-meta import Lean.PostprocessTraces
 
 /-!
 # The monoidal category structure on presheaves of modules
@@ -28,7 +26,6 @@ This contribution was created as part of the AIM workshop
 @[expose] public section
 
 open CategoryTheory MonoidalCategory BraidedCategory Category Limits
-open Lean.PostprocessTraces
 
 universe v u v₁ u₁
 
@@ -331,7 +328,6 @@ check runs at: it accepts nothing below `.default`, which is exactly where the t
 spellings and the instances built on them diverge. Delete this whole section once the
 `R.obj`/`forget₂` carrier synonym is resolved upstream.
 -/
-open Lean.PostprocessTraces
 
 namespace PresheafOfModules.Monoidal
 

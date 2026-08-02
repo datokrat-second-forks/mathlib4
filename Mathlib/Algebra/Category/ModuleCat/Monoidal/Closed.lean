@@ -9,12 +9,9 @@ public import Mathlib.CategoryTheory.Monoidal.Closed.Basic
 public import Mathlib.CategoryTheory.Linear.Yoneda
 public import Mathlib.Algebra.Category.ModuleCat.Monoidal.Symmetric
 
-meta import Lean.PostprocessTraces
 /-!
 # The monoidal closed structure on `Module R`.
 -/
-
-open Lean.PostprocessTraces
 
 @[expose] public section
 

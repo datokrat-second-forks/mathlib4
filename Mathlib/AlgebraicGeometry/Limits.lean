@@ -15,8 +15,6 @@ public import Mathlib.CategoryTheory.Limits.Constructions.ZeroObjects -- shake: 
 -- This import adds an instance which, despite failing to trigger,
 -- is necessary for some typeclass syntheses in this file to succeed.
 
-meta import Lean.PostprocessTraces
-
 /-!
 # (Co)Limits of Schemes
 
@@ -34,8 +32,6 @@ We construct various limits and colimits in the category of schemes.
 * Spec preserves finite coproducts.
 
 -/
-
-open Lean.PostprocessTraces
 
 @[expose] public section
 
@@ -235,8 +231,6 @@ noncomputable instance [Small.{u} σ] : CoproductsOfShapeDisjoint Scheme.{u} σ 
 
 instance : HasFiniteCoproducts Scheme.{u} where
   out := inferInstance
-
-/-! # Issue -/
 
 set_option linter.style.longLine false in
 #adaptation_note

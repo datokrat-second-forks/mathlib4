@@ -9,7 +9,6 @@ public import Mathlib.Algebra.Homology.HomotopyCategory.HomComplex
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Module.Equiv.Basic
 public import Mathlib.Tactic.Linarith
-meta import Lean.PostprocessTraces
 
 /-! # Shifting cochains
 
@@ -334,44 +333,6 @@ lemma leftShift_smul (a n' : ℤ) (hn' : n + a = n') (x : R) :
   dsimp
   simp only [leftShift_v _ a n' hn' p q hpq (p + a) (by lia), smul_v, Linear.comp_smul,
     smul_comm x]
-
-/-! ## Explanation -/
-
-open Lean.PostprocessTraces
-
-/-- Truncate every trace subtree below `depth`. -/
-private meta partial def maxDepth (depth : Nat) : TracePostprocessor := fun trees =>
-  let rec truncateTree (t : TraceTree) (depth : Nat) : TraceTree :=
-    match t with
-    | .leaf msg => TraceTree.leaf msg
-    | .node data msg children wrap =>
-      match depth with
-      | 0 => .node data m!"{msg} (truncated)" #[] wrap
-      | depth' + 1 => .node data msg (children.map (truncateTree · depth')) wrap
-  return trees.map (truncateTree · depth)
-
-private meta partial def elideBelow (p : TracePattern) : TracePostprocessor :=
-  fun trees => trees.mapM go
-where
-  go (t : TraceTree) : Lean.CoreM TraceTree := do
-    match t with
-    | .leaf msg => return .leaf msg
-    | .node data msg children wrap =>
-      if ← p t then
-        return .node data m!"{msg} (truncated)" #[] wrap
-      else
-        return .node data msg (← children.mapM go) wrap
-
--- The dual of `filterSubtrees`: drop matching subtrees (used to remove `onFailure` duplicates).
-private meta partial def dropSubtrees (p : TracePattern) : TracePostprocessor :=
-  fun trees => trees.filterMapM go
-where
-  go (t : TraceTree) : Lean.CoreM (Option TraceTree) := do
-    if ← p t then
-      return none
-    match t with
-    | .leaf msg => return some (.leaf msg)
-    | .node data msg children wrap => return some (.node data msg (← children.filterMapM go) wrap)
 
 set_option backward.isDefEq.respectTransparency false in
 @[simp]

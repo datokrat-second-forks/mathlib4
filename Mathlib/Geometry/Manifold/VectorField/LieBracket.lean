@@ -12,8 +12,6 @@ public import Mathlib.Geometry.Manifold.VectorBundle.MDifferentiable
 public import Mathlib.Geometry.Manifold.VectorField.Pullback
 import Mathlib.Geometry.Manifold.Notation
 
-meta import Lean.PostprocessTraces
-
 /-!
 # Lie brackets of vector fields on manifolds
 
@@ -28,8 +26,6 @@ The main results are the following:
   identity `[U, [V, W]] = [[U, V], W] + [V, [U, W]]`.
 
 -/
-
-open Lean.PostprocessTraces
 
 public section
 

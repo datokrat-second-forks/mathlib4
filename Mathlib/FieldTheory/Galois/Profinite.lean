@@ -9,8 +9,6 @@ public import Mathlib.FieldTheory.KrullTopology
 public import Mathlib.FieldTheory.Galois.GaloisClosure
 public import Mathlib.Topology.Algebra.Category.ProfiniteGrp.Basic
 
-meta import Lean.PostprocessTraces
-
 /-!
 
 # Galois Group as a profinite group
@@ -55,8 +53,6 @@ In a field extension `K/k`
 
 -/
 
-
-open Lean.PostprocessTraces
 
 @[expose] public section
 

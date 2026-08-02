@@ -8,8 +8,6 @@ module
 public import Mathlib.Algebra.Algebra.RestrictScalars
 public import Mathlib.Algebra.Lie.TensorProduct
 
-meta import Lean.PostprocessTraces
-
 /-!
 # Extension and restriction of scalars for Lie algebras and Lie modules
 
@@ -26,8 +24,6 @@ scalars.
 
 lie ring, lie algebra, extension of scalars, restriction of scalars, base change
 -/
-
-open Lean.PostprocessTraces
 
 @[expose] public section
 

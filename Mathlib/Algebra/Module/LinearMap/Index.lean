@@ -9,7 +9,6 @@ public import Mathlib.Algebra.Exact.Sequence
 public import Mathlib.Algebra.Module.LinearMap.Defs
 public import Mathlib.Algebra.Module.Submodule.Map
 public import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
-meta import Lean.PostprocessTraces
 
 /-!
 # The index of a linear map
@@ -65,8 +64,6 @@ public lemma index_of_surjective (hf : Surjective f) :
     f.index = finrank R f.ker := by
   rw [index_eq_finrank_sub, range_eq_top.mpr hf]
   simp [finrank_eq_zero_of_subsingleton]
-
-/-! # Issue -/
 
 #adaptation_note
 /--

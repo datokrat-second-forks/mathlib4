@@ -12,8 +12,6 @@ public import Mathlib.Topology.Sheaves.SheafCondition.Sites
 public import Mathlib.Topology.Sheaves.Functors
 public import Mathlib.Algebra.Module.LocalizedModule.Basic
 
-meta import Lean.PostprocessTraces
-
 /-!
 # $Spec$ as a functor to locally ringed spaces.
 
@@ -43,8 +41,6 @@ The adjunction `Γ ⊣ Spec` is constructed in `Mathlib/AlgebraicGeometry/GammaS
 -- Explicit universe annotations were used in this file to improve performance https://github.com/leanprover-community/mathlib4/issues/12737
 
 noncomputable section
-
-open Lean.PostprocessTraces
 
 universe u v
 

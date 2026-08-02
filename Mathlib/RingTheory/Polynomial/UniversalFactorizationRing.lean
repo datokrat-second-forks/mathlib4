@@ -13,8 +13,6 @@ public import Mathlib.RingTheory.Polynomial.Resultant.Basic
 public import Mathlib.RingTheory.Smooth.StandardSmoothCotangent
 public import Mathlib.RingTheory.LocalRing.ResidueField.Ideal
 
-meta import Lean.PostprocessTraces
-
 
 /-!
 
@@ -32,8 +30,6 @@ We construct the universal ring of the following functors on `R-Alg`:
   See `Polynomial.UniversalCoprimeFactorizationRing.homEquiv`.
 
 -/
-
-open Lean.PostprocessTraces
 
 @[expose] public section
 
@@ -516,12 +512,6 @@ def UniversalFactorizationRing.presentation :
   letI := (MvPolynomial.universalFactorizationMap R n m k hn).toAlgebra
   letI := ((MvPolynomial.mapEquivMonic R _ n).symm p).toAlgebra
   (MvPolynomial.universalFactorizationMapPresentation R n m k hn).baseChange _
-
-/-!
-# Issue 2 (Low Severity)
-
-Same.
--/
 
 lemma UniversalFactorizationRing.jacobian_resentation :
     (presentation m k hn p).jacobian =
