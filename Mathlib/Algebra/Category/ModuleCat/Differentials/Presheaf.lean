@@ -79,12 +79,33 @@ variable (d : M.Derivation φ)
 @[simp] lemma d_one (X : Dᵒᵖ) : d.d (X := X) 1 = 0 := by
   simpa using d.d_mul (X := X) 1 1
 
-/-!
-# Issue (Low Severity)
+#adaptation_note
+/--
+We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
+Concretely, the following instance cannot be synthesized, writing `Y` for
+`Opposite.op (F.obj (Opposite.unop X))`:
+`FunLike (↑(M.obj Y) →ₗ[↑(R.obj Y)] ↑(N.obj Y)) ↑(M.obj Y) ↑(N.obj Y)`
+It is needed by the `rw [map_zero]` in `d_app` below; the accompanying `ZeroHomClass` fails the
+same way.
 
-Has uncontroversial fix.
+The failure happens while applying `@LinearMap.instFunLike`: assigning one of its
+instance-implicit-argument metavariables is rejected because the metavariable's type and the type
+of the assigned value do not match at `.instances` transparency. The metavariable's expected type
+is `Module ↑(R.obj Y) ↑(M.obj Y)`, whereas the assigned value `(M.obj (F.op.obj X)).isModule` has
+type `Module ↑((R ⋙ forget₂ CommRingCat RingCat).obj (F.op.obj X)) ↑(M.obj (F.op.obj X))`. The
+comparison bottoms out at
+`(R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj (F.op.obj X)).1`, which would require
+unfolding `Functor.comp` and `Functor.op`; both are `@[implicit_reducible]` and therefore do not
+unfold at the `.instances` transparency that instance search runs at. Lean falls back to synthesize
+an instance of the correct type, which succeeds, but it returns `(M.obj Y).isModule`, which is again
+not defeq to the assigned value, stalling at `F.op.1 X =?= Opposite.op (F.obj (Opposite.unop X))`.
+That comparison, too, runs at `.instances`, since `respectTransparency false` suppresses the
+transparency bump that instance-implicit arguments would otherwise receive.
+
+Potential fix: see `# Fix` below — mark `ModuleCat.restrictScalars` and
+`ModuleCat.RestrictScalars.obj'` implicit-reducible. Then `respectTransparency false` and
+`instanceTypes false` can both go, and the `erw` becomes an `rw`.
 -/
-
 set_option backward.isDefEq.instanceTypes false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -96,26 +117,6 @@ def postcomp (f : M ⟶ N) : N.Derivation φ where
   d_app {X} a := by
     dsimp
     erw [d_app]
-    rw [map_zero]
-
-/-!
-# Fix
-
-Two harmless implicit_reducible annotations.
-Can even get rid of `erw`.
--/
-set_option allowUnsafeReducibility true
-attribute [local implicit_reducible]
-  ModuleCat.restrictScalars
-  ModuleCat.RestrictScalars.obj'
-in
-set_option backward.defeqAttrib.useBackward true in
-example (f : M ⟶ N) : N.Derivation φ where
-  d := (f.app _).hom.toAddMonoidHom.comp d.d
-  d_map {X Y} g x := by simpa using naturality_apply f g (d.d x)
-  d_app {X} a := by
-    dsimp
-    rw [d_app]
     rw [map_zero]
 
 /-- The universal property that a derivation `d : M.Derivation φ` must

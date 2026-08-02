@@ -47,30 +47,31 @@ noncomputable def equivPiTensorComplSingletonTensor (i₀ : ι) :
 
 variable (i₀ : ι)
 
-/-!
-# Issue (Low Severity)
--/
+#adaptation_note
+/--
+We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
+Concretely, the following instance cannot be synthesized:
+`AddCommMonoid (⨂[R] (i₁ : { i // ¬i = i₀ }), M ↑i₁)`
+The companion searches `Module R (⨂[R] (i₁ : { i // ¬i = i₀ }), M ↑i₁)` and the two `PUnit`-indexed
+variants fail in the same way. They are needed by the `rw [dsimp% …]` below, after `Equiv.symm_symm`
+has rewritten the index type to `{ i // ¬i = i₀ }` while the instance arguments in the term stay
+phrased through the equivalence.
 
-set_option backward.isDefEq.instanceTypes false in
-set_option backward.isDefEq.respectTransparency false in
-@[simp]
-lemma equivPiTensorComplSingletonTensor_tprod (i₀ : ι) (m : ∀ i, M i) :
-    equivPiTensorComplSingletonTensor R M i₀ (⨂ₜ[R] i, m i) =
-      (⨂ₜ[R] (j : ((Set.singleton i₀)ᶜ : Set ι)), m j) ⊗ₜ m i₀:= by
-  dsimp [equivPiTensorComplSingletonTensor]
-  have : (reindex R M (Equiv.subtypeNeSumPUnit.{0} i₀).symm) (⨂ₜ[R] (i : ι), m i) =
-      ⨂ₜ[R] j, m ((Equiv.subtypeNeSumPUnit.{0} i₀) j) := by
-    simp_rw [reindex_tprod (R := R) (s := M), Equiv.symm_symm]
-  rw [dsimp% this, dsimp% tmulEquivDep_symm_apply R
-    (fun i ↦ M ((Equiv.subtypeNeSumPUnit.{0} i₀) i))]
-  exact (LinearEquiv.lTensor_tmul _ _ _ _).trans (by congr; simp)
+The failure happens while applying `@PiTensorProduct.instAddCommMonoid`: assigning one of its
+instance-implicit-argument metavariables is rejected because the metavariable's type and the type of
+the assigned value do not match at `.instances` transparency. The metavariable's expected type is
+`(i : { i // ¬i = i₀ }) → AddCommMonoid (M ↑i)`, whereas the assigned value
+`fun i ↦ inst✝ ((Equiv.subtypeNeSumPUnit i₀) (Sum.inl i))` has type
+`(i : { i // i ≠ i₀ }) → AddCommMonoid (M ((Equiv.subtypeNeSumPUnit i₀) (Sum.inl i)))`. The
+comparison bottoms out at `i.1 =?= (Equiv.subtypeNeSumPUnit i₀).1 (Sum.inl i)`, i.e. at actually
+computing the equivalence on `Sum.inl i`. Lean falls back to synthesize an instance of the correct
+type, which succeeds, but it returns `fun i ↦ inst✝ ↑i`, which is again not defeq to the assigned
+value, for the same reason. The `respectTransparency false` backward-compatibility flag blocks Lean
+from bumping to implicit, so the comparison happens at `.instances` again.
 
-/-!
-# Fix
+Validated, but perhaps too invasive, fix: Make all of the following definitions implicit-reducible:
 
-Again the `respectTransparency` interaction. Getting rid of that would help.
--/
-attribute [local implicit_reducible]
+```
   Equiv.trans
   Equiv.optionSubtype
   Equiv.optionEquivSumPUnit
@@ -79,8 +80,15 @@ attribute [local implicit_reducible]
   Option.casesOn'
   Equiv.optionSubtypeNe
   Sum.elim
-in
-example (i₀ : ι) (m : ∀ i, M i) :
+```
+
+Then both backward compatibility options can go: first `respectTransparency false`, then
+`instanceTypes false`.
+-/
+set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency false in
+@[simp]
+lemma equivPiTensorComplSingletonTensor_tprod (i₀ : ι) (m : ∀ i, M i) :
     equivPiTensorComplSingletonTensor R M i₀ (⨂ₜ[R] i, m i) =
       (⨂ₜ[R] (j : ((Set.singleton i₀)ᶜ : Set ι)), m j) ⊗ₜ m i₀:= by
   dsimp [equivPiTensorComplSingletonTensor]

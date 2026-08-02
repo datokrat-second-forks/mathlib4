@@ -524,7 +524,6 @@ lemma mvfderivWithin_neg {g : M → F} {x : M} (hs : UniqueMDiffAt[s] x) :
   simp [mvfderivWithin, mfderivWithin_neg hs]
   rfl
 
-set_option allowUnsafeReducibility true in
 @[simp, to_fun mvfderivWithin_fun_smul]
 lemma mvfderivWithin_smul {a : M → 𝕜} (ha : MDiffAt[s] a x) {g : M → F} (hg : MDiffAt[s] g x)
     (hs : UniqueMDiffAt[s] x) :
