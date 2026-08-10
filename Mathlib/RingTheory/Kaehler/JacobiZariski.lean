@@ -51,7 +51,6 @@ for `Tor` modules is available.
 
 -/
 
-
 @[expose] public section
 
 open KaehlerDifferential Module MvPolynomial TensorProduct

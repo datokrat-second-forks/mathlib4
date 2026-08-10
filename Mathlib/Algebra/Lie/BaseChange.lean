@@ -149,6 +149,7 @@ end ExtendScalars
 
 namespace RestrictScalars
 
+
 variable [h : LieRing L]
 
 instance : LieRing (RestrictScalars R A L) :=

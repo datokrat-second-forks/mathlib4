@@ -19,7 +19,6 @@ The counit is an isomorphism for compactly generated spaces, and we conclude tha
 `topCatToCondensedSet` is fully faithful when restricted to compactly generated spaces.
 -/
 
-
 @[expose] public section
 
 universe u
@@ -132,7 +131,7 @@ set_option backward.isDefEq.instanceTypes false in
     -- which suggests type synonyms are being unfolded too far somewhere.
     DFunLike.coe (F := @ContinuousMap C(PUnit, X) X (_) _)
         (TopCat.Hom.hom (topCatAdjunctionCounit X)) x =
-      (x PUnit.unit : TopCat.carrier X) := rfl
+      x PUnit.unit := rfl
 
 set_option backward.isDefEq.respectTransparency.types false in
 /-- The counit of the adjunction `condensedSetToTopCat ⊣ topCatToCondensedSet` is always bijective,

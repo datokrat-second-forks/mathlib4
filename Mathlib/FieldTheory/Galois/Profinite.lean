@@ -53,7 +53,6 @@ In a field extension `K/k`
 
 -/
 
-
 @[expose] public section
 
 open CategoryTheory Opposite

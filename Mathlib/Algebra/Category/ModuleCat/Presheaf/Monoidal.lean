@@ -40,22 +40,6 @@ namespace Monoidal
 
 variable (M₁ M₂ M₃ M₄ : PresheafOfModules.{u} (R ⋙ forget₂ _ _))
 
-/-
-"markOrSynth" analysis:
-
-Affected declarations: `tensorObjMap`, `tensorObj_map_tmul`.
-
-* instance types with `R.obj X` vs. `(R ⋙ forget₂ CommRingCat RingCat).obj X` (`CommRingCat`)
-* `respectTransparency false` -> comparison of synthesized/unified at instance transparency
-
-fix:
-
-mark `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars` implicit-reducible,
-remove `respectTransparency false`.
--/
-
-/-! # First issue: `tensorObjMap` -/
-
 #adaptation_note
 /--
 We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
@@ -317,84 +301,5 @@ instance (F : PresheafOfModules.{u} (R ⋙ forget₂ _ _)) :
 instance (F : PresheafOfModules.{u} (R ⋙ forget₂ _ _)) :
     PreservesColimitsOfSize.{u, u} (tensorRight F) :=
   preservesColimits_of_natIso (tensorLeftIsoTensorRight F)
-
-section InstanceTypesDemos
-/-!
-Guarded demonstrations for the two `backward.isDefEq.instanceTypes false` sites above.
-The trace demo pins `"markOrSynth"` (the `lakefile.lean` project default; a bare
-`lake env lean` would otherwise fall back to the toolchain register default `"mark"`).
-`with_reducible rfl` is used as a proxy for the `.instances` transparency the instance-type
-check runs at: it accepts nothing below `.default`, which is exactly where the two ring
-spellings and the instances built on them diverge. Delete this whole section once the
-`R.obj`/`forget₂` carrier synonym is resolved upstream.
--/
-
-namespace PresheafOfModules.Monoidal
-
--- Demo 1 (shared root cause). The ring carriers, and the `Ring` instances built on them (site
--- `tensorObj_map_tmul`'s leg (c) pair), agree at `.default` …
-example (X : Cᵒᵖ) : (↑(R.obj X) : Type u) = ↑((R ⋙ forget₂ CommRingCat RingCat).obj X) := rfl
-example (X : Cᵒᵖ) :
-    (RingCat.instRingObjForgetRingHomCarrier (R := (R ⋙ forget₂ CommRingCat RingCat).obj X)) =
-      (CommRingCat.instCommRingObjForgetRingHomCarrier (R := R.obj X)).toRing := rfl
--- … but not at `.instances`/reducible, which is why leg (c) rejects the goal's candidate:
-/--
-error: Tactic `rfl` failed: The left-hand side
-  RingCat.instRingObjForgetRingHomCarrier
-is not definitionally equal to the right-hand side
-  CommRingCat.instCommRingObjForgetRingHomCarrier.toRing
-
-C : Type u_1
-inst✝ : Category.{v_1, u_1} C
-R : Cᵒᵖ ⥤ CommRingCat
-X : Cᵒᵖ
-⊢ RingCat.instRingObjForgetRingHomCarrier = CommRingCat.instCommRingObjForgetRingHomCarrier.toRing
--/
-#guard_msgs in
-example (X : Cᵒᵖ) :
-    (RingCat.instRingObjForgetRingHomCarrier (R := (R ⋙ forget₂ CommRingCat RingCat).obj X)) =
-      (CommRingCat.instCommRingObjForgetRingHomCarrier (R := R.obj X)).toRing := by
-  with_reducible_and_instances rfl
-
-
-
--- Demo 3 (site `tensorObjMap`, leg (c) value pair). The smul the goal carries on the
--- `restrictScalars` object and the `ModuleCat`-native smul instance synthesis produces agree at
--- `.default` …
-example {M₂ : PresheafOfModules.{u} (R ⋙ forget₂ _ _)} {X Y : Cᵒᵖ} (f : X ⟶ Y) :
-    (ModuleCat.instModuleCarrierObjRestrictScalars
-        (f := (R.map f).hom) (M := M₂.obj Y)).toDistribMulAction =
-      (M₂.obj Y).isModule.toDistribMulAction := rfl
--- … but not at `.instances`/reducible, so `CompatibleSMul.isScalarTower`'s `DistribMulAction`
--- slot rejects it:
-set_option linter.style.longLine false in
-/--
-error: Tactic `rfl` failed: The left-hand side
-  @Module.toDistribMulAction (↑(R.obj Y))
-    (↑((ModuleCat.restrictScalars (CommRingCat.Hom.hom (R.map f))).obj (M₂.obj Y)))
-    CommRingCat.instCommRingObjForgetRingHomCarrier.toSemiring
-    ((ModuleCat.restrictScalars (CommRingCat.Hom.hom (R.map f))).obj (M₂.obj Y)).isAddCommGroup.toAddCommMonoid
-    ModuleCat.instModuleCarrierObjRestrictScalars
-is not definitionally equal to the right-hand side
-  @Module.toDistribMulAction (↑((R ⋙ forget₂ CommRingCat RingCat).obj Y)) (↑(M₂.obj Y))
-    RingCat.instRingObjForgetRingHomCarrier.toSemiring (M₂.obj Y).isAddCommGroup.toAddCommMonoid (M₂.obj Y).isModule
-
-C : Type u_1
-inst✝ : Category.{v_1, u_1} C
-R : Cᵒᵖ ⥤ CommRingCat
-M₂ : PresheafOfModules (R ⋙ forget₂ CommRingCat RingCat)
-X Y : Cᵒᵖ
-f : X ⟶ Y
-⊢ ModuleCat.instModuleCarrierObjRestrictScalars.toDistribMulAction = (M₂.obj Y).isModule.toDistribMulAction
--/
-#guard_msgs in
-example {M₂ : PresheafOfModules.{u} (R ⋙ forget₂ _ _)} {X Y : Cᵒᵖ} (f : X ⟶ Y) :
-    (ModuleCat.instModuleCarrierObjRestrictScalars
-        (f := (R.map f).hom) (M := M₂.obj Y)).toDistribMulAction =
-      (M₂.obj Y).isModule.toDistribMulAction := by
-  with_reducible rfl
-
-end PresheafOfModules.Monoidal
-end InstanceTypesDemos
 
 end PresheafOfModules

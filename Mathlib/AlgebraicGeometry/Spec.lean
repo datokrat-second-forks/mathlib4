@@ -34,7 +34,6 @@ The adjunction `Γ ⊣ Spec` is constructed in `Mathlib/AlgebraicGeometry/GammaS
 
 -/
 
-
 @[expose] public section
 
 

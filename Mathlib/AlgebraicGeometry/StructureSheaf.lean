@@ -47,8 +47,6 @@ boundaries.
 
 -/
 
-set_option linter.style.longFile 0
-
 universe u
 
 noncomputable section
@@ -231,9 +229,6 @@ def structurePresheafInCommRingCat : Presheaf CommRingCat (PrimeSpectrum.Top R) 
       map_one' := rfl
       map_zero' := rfl }
 
-set_option linter.style.setOption false in
-set_option linter.style.maxHeartbeats false in
-set_option synthInstance.maxHeartbeats 30000 in
 instance (U : (Opens (PrimeSpectrum.Top R))ᵒᵖ) :
     Module ((structureSheafInType R R).obj.obj U) ((structureSheafInType R M).obj.obj U) :=
   inferInstanceAs (Module (sectionsSubalgebra R _) (sectionsSubalgebraSubmodule M _))
@@ -824,7 +819,6 @@ instance (x : PrimeSpectrum.Top R) :
   dsimp +instances [toStalkₗ', toOpenₗ]
   rw! [PrimeSpectrum.basicOpen_one]
   rfl
-
 
 set_option backward.isDefEq.respectTransparency false in
 variable (R M) in

@@ -14,7 +14,6 @@ This file gives defines intertwining maps of representations (aka equivariant li
 
 -/
 
-
 @[expose] public section
 
 open scoped MonoidAlgebra

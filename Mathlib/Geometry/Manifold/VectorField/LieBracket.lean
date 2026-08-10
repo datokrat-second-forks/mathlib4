@@ -139,9 +139,7 @@ lemma mlieBracketWithin_eq_zero_of_eq_zero (hV : V x = 0) (hW : W x = 0) :
     mlieBracketWithin I V W s x = 0 := by
   simp only [mlieBracketWithin, mpullback_apply]
   rw [lieBracketWithin_eq_zero_of_eq_zero]
-  · simp only [extChartAt, OpenPartialHomeomorph.extend, PartialEquiv.coe_trans,
-    ModelWithCorners.toPartialEquiv_coe, PartialHomeomorph.toFun_eq_coe,
-    OpenPartialHomeomorph.coe_toPartialHomeomorph, comp_apply, map_zero]
+  · simp
   · simp only [mpullbackWithin_apply]
     have : (extChartAt I x).symm ((extChartAt I x) x) = x := by simp
     rw [this, hV]

@@ -190,8 +190,7 @@ def universalFactorizationMapLiftEquiv (p : MonicDegreeEq S n) :
 lemma ker_eval₂Hom_universalFactorizationMap :
     RingHom.ker (eval₂Hom (S₁ := MvPolynomial (Fin m) R ⊗[R] MvPolynomial (Fin k) R)
       (universalFactorizationMap R n m k hn) (Sum.elim (.X · ⊗ₜ 1) (1 ⊗ₜ .X ·))) =
-    Ideal.span (Set.range fun i ↦ C (X i) -
-      map C (tensorEquivSum _ _ _ _
+    Ideal.span (Set.range fun i ↦ C (X i) - map C (tensorEquivSum _ _ _ _
       (universalFactorizationMap R n m k hn (X i)))) := by
   set f := eval₂Hom (R := MvPolynomial (Fin n) R)
     (S₁ := MvPolynomial (Fin m) R ⊗[R] MvPolynomial (Fin k) R)
@@ -220,6 +219,7 @@ lemma ker_eval₂Hom_universalFactorizationMap :
     change AlgHom.id R _ p = ((aeval _).comp (tensorEquivSum R _ _ R).toAlgHom) p
     congr 1
     ext <;> simp
+
 set_option backward.isDefEq.respectTransparency false in
 /-- The canonical presentation of `universalFactorizationMap`. -/
 @[simps] def universalFactorizationMapPresentation :

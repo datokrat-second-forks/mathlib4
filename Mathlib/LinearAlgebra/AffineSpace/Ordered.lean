@@ -28,7 +28,6 @@ for an ordered module interpreted as an affine space.
 affine space, ordered module, slope
 -/
 
-
 public section
 
 
@@ -104,7 +103,6 @@ set_option backward.isDefEq.respectTransparency false in
 theorem lineMap_lt_right_iff_lt (h : r < 1) : lineMap a b r < b ↔ a < b :=
   Iff.trans (by rw [lineMap_apply_one]) (lineMap_lt_lineMap_iff_of_lt h)
 
--- Same `OrderDual` transport as `lineMap_lt_left_iff_lt`; see the Explanation above.
 set_option backward.isDefEq.respectTransparency false in
 theorem right_lt_lineMap_iff_lt (h : r < 1) : b < lineMap a b r ↔ b < a :=
   lineMap_lt_right_iff_lt (E := Eᵒᵈ) h

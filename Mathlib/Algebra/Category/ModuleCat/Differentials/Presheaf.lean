@@ -39,7 +39,6 @@ to show that the two vanishing conditions `d_app` are equivalent).
 
 @[expose] public section
 
-
 universe v u v₁ v₂ u₁ u₂
 
 open CategoryTheory
