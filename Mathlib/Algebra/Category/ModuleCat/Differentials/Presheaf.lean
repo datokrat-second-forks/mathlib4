@@ -101,9 +101,9 @@ not defeq to the assigned value, stalling at `F.op.1 X =?= Opposite.op (F.obj (O
 That comparison, too, runs at `.instances`, since `respectTransparency false` suppresses the
 transparency bump that instance-implicit arguments would otherwise receive.
 
-Potential fix: see `# Fix` below — mark `ModuleCat.restrictScalars` and
-`ModuleCat.RestrictScalars.obj'` implicit-reducible. Then `respectTransparency false` and
-`instanceTypes false` can both go, and the `erw` becomes an `rw`.
+Potential fix: mark `ModuleCat.restrictScalars` and `ModuleCat.RestrictScalars.obj'`
+implicit-reducible. Then `respectTransparency false` and `instanceTypes false` can both go, and the
+`erw` becomes an `rw`.
 -/
 set_option backward.isDefEq.instanceTypes false in
 set_option backward.defeqAttrib.useBackward true in
