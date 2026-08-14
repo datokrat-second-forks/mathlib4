@@ -13,6 +13,7 @@ public import Mathlib.Data.Fintype.Pigeonhole
 public import Mathlib.Data.Fintype.Powerset
 public import Mathlib.Order.Lattice.Nat
 public import Mathlib.SetTheory.Cardinal.Finite
+public import Mathlib.Tactic.CrossRefAttribute
 
 /-!
 # Graph cliques
@@ -63,7 +64,7 @@ theorem induce_eq_top : G.induce s = ⊤ ↔ G.IsClique s := by
     simpa using ⟨Adj.ne, h hv hw⟩
 
 /-- A clique is a set of vertices whose induced graph is complete. -/
-@[deprecated induce_eq_top (since := "2026-04-23")]
+@[deprecated induce_eq_top +typeChanged (since := "2026-04-23")]
 theorem isClique_iff_induce_eq : G.IsClique s ↔ G.induce s = ⊤ :=
   induce_eq_top.symm
 
@@ -842,6 +843,7 @@ section IndepSet
 variable {s : Set α}
 
 /-- An independent set in a graph is a set of vertices that are pairwise not adjacent. -/
+@[wikidata Q1060343]
 abbrev IsIndepSet (s : Set α) : Prop :=
   s.Pairwise (fun v w ↦ ¬G.Adj v w)
 

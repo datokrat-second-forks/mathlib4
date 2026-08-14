@@ -107,7 +107,6 @@ implicit-reducible. Then `respectTransparency false` and `instanceTypes false` c
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- The postcomposition of a derivation by a morphism of presheaves of modules. -/
 @[simps! d_apply]
 def postcomp (f : M ⟶ N) : N.Derivation φ where
@@ -166,7 +165,6 @@ lemma d_app (d : M.Derivation' φ') {X : Dᵒᵖ} (a : S'.obj X) :
     d.d (φ'.app X a) = 0 :=
   Derivation.d_app d _
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- The derivation relative to the morphism of commutative rings `φ'.app X` induced by
 a derivation relative to a morphism of presheaves of commutative rings. -/
 noncomputable def app (d : M.Derivation' φ') (X : Dᵒᵖ) : (M.obj X).Derivation (φ'.app X) :=
@@ -181,7 +179,6 @@ section
 variable (d : ∀ (X : Dᵒᵖ), (M.obj X).Derivation (φ'.app X))
 
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- Given a morphism of presheaves of commutative rings `φ'`, this is the
 in derivation `M.Derivation' φ'` that is given by a compatible family of derivations
 with values in the modules `M.obj X` for all `X`. -/

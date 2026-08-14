@@ -267,14 +267,14 @@ theorem wellFoundedGT_characterisations : List.TFAE
 
 theorem wellFoundedGT_iff_isSupFiniteCompact :
     WellFoundedGT α ↔ IsSupFiniteCompact α :=
-  (wellFoundedGT_characterisations α).out 0 1
+  (wellFoundedGT_characterisations α).out 1 2
 
 theorem isSupFiniteCompact_iff_isSupClosedCompact : IsSupFiniteCompact α ↔ IsSupClosedCompact α :=
-  (wellFoundedGT_characterisations α).out 1 2
+  (wellFoundedGT_characterisations α).out 2 3
 
 theorem isSupClosedCompact_iff_wellFoundedGT :
     IsSupClosedCompact α ↔ WellFoundedGT α :=
-  (wellFoundedGT_characterisations α).out 2 0
+  (wellFoundedGT_characterisations α).out 3 1
 
 alias ⟨_, IsSupFiniteCompact.wellFoundedGT⟩ := wellFoundedGT_iff_isSupFiniteCompact
 
@@ -465,7 +465,7 @@ lemma iSupIndep_iff_supIndep {ι : Type*} {f : ι → α} :
   rw [Finset.supIndep_iff_disjoint_erase] at h
   exact h i (Finset.mem_insert_self i _)
 
-@[deprecated iSupIndep_iff_supIndep (since := "2026-02-18")]
+@[deprecated iSupIndep_iff_supIndep +typeChanged (since := "2026-02-18")]
 lemma iSupIndep_iff_supIndep_of_injOn {ι : Type*} {f : ι → α}
     (hf : InjOn f {i | f i ≠ ⊥}) :
     iSupIndep f ↔ ∀ (s : Finset ι), s.SupIndep f := by

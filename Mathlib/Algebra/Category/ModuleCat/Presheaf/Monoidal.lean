@@ -106,34 +106,6 @@ noncomputable def tensorObj : PresheafOfModules (R ⋙ forget₂ _ _) where
 
 variable {M₁ M₂ M₃ M₄}
 
-#adaptation_note
-/--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
-`Module ↑(R.obj Y)
-  ↑((ModuleCat.restrictScalars (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))).obj
-      (M₁.obj Y))`
-
-The failure happens while applying `@ModuleCat.isModule`: assigning one of its
-instance-implicit-argument metavariables is rejected because the metavariable's type and the type
-of the assigned value do not match at `.instances` transparency. The metavariable's expected type
-is `Ring ↑(R.obj Y)`, whereas the assigned value `RingCat.instRingObjForgetRingHomCarrier` has type
-`Ring ((forget RingCat).obj ((R ⋙ forget₂ CommRingCat RingCat).obj X))`. Lean falls back to
-synthesize an instance of the correct type, but it returns
-`CommRingCat.instCommRingObjForgetRingHomCarrier.toRing`, which is again not defeq to the assigned
-value. As for `tensorObjMap` above, both comparisons bottom out at
-`(R.obj Y).1 =?= ((R ⋙ forget₂ CommRingCat RingCat).obj X).1`.
-
-Potential fix: Concentrate on removing `respectTransparency false` first.
-For example, do this by making `ModuleCat.RestrictScalars.obj'` and `ModuleCat.restrictScalars`
-implicit-reducible  *at their definition site*.
-Without the backward-compatibility flag `respectTransparency false`, Lean bumps transparency for
-instance-implicit arguments to `implicit`, thereby comparing the synthesized and unified instances
-at implicit transparency instead of the stricter instance transparency.
-After that, you can remove `instanceTypes false`, too.
--/
-set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma tensorObj_map_tmul {X Y : Cᵒᵖ} (f : X ⟶ Y) (m₁ : M₁.obj X) (m₂ : M₂.obj X) :
     DFunLike.coe (α := (M₁.obj X ⊗ M₂.obj X :))

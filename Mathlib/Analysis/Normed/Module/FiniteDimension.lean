@@ -88,8 +88,6 @@ end LinearIsometry
 
 namespace AffineIsometry
 
-open AffineMap
-
 variable {𝕜 : Type*} {V₁ V₂ : Type*} {P₁ P₂ : Type*} [NormedField 𝕜] [NormedAddCommGroup V₁]
   [SeminormedAddCommGroup V₂] [NormedSpace 𝕜 V₁] [NormedSpace 𝕜 V₂] [MetricSpace P₁]
   [PseudoMetricSpace P₂] [NormedAddTorsor V₁ P₁] [NormedAddTorsor V₂ P₂]
@@ -166,7 +164,7 @@ theorem AffineEquiv.coe_toHomeomorphOfFiniteDimensional_symm (f : PE ≃ᵃ[𝕜
     ⇑f.toHomeomorphOfFiniteDimensional.symm = f.symm :=
   rfl
 
-attribute [deprecated AffineEquiv.toContinuousAffineEquiv (since := "2026-05-11")]
+attribute [deprecated AffineEquiv.toContinuousAffineEquiv +typeChanged (since := "2026-05-11")]
   AffineEquiv.toHomeomorphOfFiniteDimensional
 
 /-- An affine map from a finite-dimensional space is automatically Lipschitz. -/
@@ -363,7 +361,6 @@ alias isOpen_setOf_affineIndependent := isOpen_setOfPred_affineIndependent
 
 namespace Module.Basis
 
-set_option backward.isDefEq.respectTransparency false in
 theorem opNNNorm_le {ι : Type*} [Fintype ι] (v : Basis ι 𝕜 E) {u : E →L[𝕜] F} (M : ℝ≥0)
     (hu : ∀ i, ‖u (v i)‖₊ ≤ M) : ‖u‖₊ ≤ Fintype.card ι • ‖v.equivFunL.toContinuousLinearMap‖₊ * M :=
   u.opNNNorm_le_bound _ fun e => by

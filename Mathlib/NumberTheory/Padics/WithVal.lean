@@ -33,7 +33,7 @@ namespace Padic
 
 variable {p : ℕ} [Fact p.Prime]
 
-open NNReal WithZero UniformSpace
+open WithZero UniformSpace
 
 #adaptation_note
 /--

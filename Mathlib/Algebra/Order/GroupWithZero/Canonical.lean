@@ -98,13 +98,10 @@ instance instLinearOrderedAddCommMonoidWithTopAdditiveOrderDual :
   top_add' a := by ext; simp [bot_eq_zero]
   isAddLeftRegular_of_ne_top := by simp +contextual [IsRegular.of_ne_zero, bot_eq_zero]
 
-set_option backward.isDefEq.respectTransparency false in
 instance instLinearOrderedAddCommMonoidWithTopOrderDualAdditive :
     LinearOrderedAddCommMonoidWithTop (Additive α)ᵒᵈ where
   top_add' a := by ext; simp; simp [bot_eq_zero (α := α)]
   isAddLeftRegular_of_ne_top := by simp; simp +contextual [bot_eq_zero, IsRegular.of_ne_zero]
-
-variable [IsReduced α]
 
 lemma pow_pos_iff (hn : n ≠ 0) : 0 < a ^ n ↔ 0 < a := by
   simp_rw [pos_iff_ne_zero, pow_ne_zero_iff hn]
@@ -234,7 +231,7 @@ instance instBoundedOrder [OrderTop α] : BoundedOrder (WithZero α) :=
 instance : IsBotZeroClass (WithZero α) where
   isBot_zero _ := bot_le
 
-@[deprecated _root_.zero_le (since := "2026-05-06")]
+@[deprecated _root_.zero_le +typeChanged (since := "2026-05-06")]
 protected lemma zero_le (a : WithZero α) : 0 ≤ a := by simp
 
 /-- There is a general version `le_zero_iff`, but this lemma does not require a `PartialOrder`. -/

@@ -118,10 +118,10 @@ theorem le_iff_subset : s ≤ t ↔ s ⊆ t :=
 theorem lt_iff_ssubset : s < t ↔ s ⊂ t :=
   Iff.rfl
 
-@[deprecated "this is now a syntactic identity" (since := "2026-05-24")]
+@[deprecated "this is now a syntactic identity" +typeChanged (since := "2026-05-24")]
 alias ⟨_root_.LE.le.subset, _root_.HasSubset.Subset.le⟩ := le_iff_subset
 
-@[deprecated "this is now a syntactic identity" (since := "2026-05-24")]
+@[deprecated "this is now a syntactic identity" +typeChanged (since := "2026-05-24")]
 alias ⟨_root_.LT.lt.ssubset, _root_.HasSSubset.SSubset.lt⟩ := lt_iff_ssubset
 
 instance PiSetCoe.canLift (ι : Type u) (α : ι → Type v) [∀ i, Nonempty (α i)] (s : Set ι) :
@@ -287,7 +287,7 @@ theorem not_subset : ¬s ⊆ t ↔ ∃ a ∈ s, a ∉ t := by
 theorem not_univ_subset : ¬univ ⊆ s ↔ ∃ a, a ∉ s := by
   simp [not_subset]
 
-@[deprecated not_univ_subset (since := "2026-03-12")]
+@[deprecated not_univ_subset +typeChanged (since := "2026-03-12")]
 theorem not_top_subset : ¬⊤ ⊆ s ↔ ∃ a, a ∉ s :=
   not_univ_subset
 
@@ -566,8 +566,11 @@ theorem Nonempty.eq_univ [Subsingleton α] : s.Nonempty → s = univ := by
 theorem eq_univ_of_subset {s t : Set α} (h : s ⊆ t) (hs : s = univ) : t = univ :=
   eq_univ_of_univ_subset <| (hs ▸ h : univ ⊆ t)
 
-theorem exists_mem_of_nonempty (α) : ∀ [Nonempty α], ∃ x : α, x ∈ (univ : Set α)
+theorem exists_mem_univ_of_nonempty (α) : ∀ [Nonempty α], ∃ x : α, x ∈ (univ : Set α)
   | ⟨x⟩ => ⟨x, trivial⟩
+
+@[deprecated (since := "2026-08-07")]
+alias exists_mem_of_nonempty := exists_mem_univ_of_nonempty
 
 theorem ne_univ_iff_exists_notMem {α : Type*} (s : Set α) : s ≠ univ ↔ ∃ a, a ∉ s := by
   rw [← not_forall, ← eq_univ_iff_forall]
