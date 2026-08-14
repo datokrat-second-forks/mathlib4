@@ -519,7 +519,7 @@ type mismatch for `iU`.
 Potential fix: mark `PrimeSpectrum.Top` implicit-reducible, then remove both backward compatibility
 options.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem toBasicOpenₗ_surjective (f : R) : Function.Surjective (toBasicOpenₗ R M f) := by
   intro s

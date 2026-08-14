@@ -178,7 +178,7 @@ which fails to unify with `(succStruct I κ).prop f✝`.
 
 Potential fix: mark `Arrow` and `Arrow.Hom` implicit-reducible, then remove `instanceTypes false`.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 lemma succStruct_prop_le_propArrow :

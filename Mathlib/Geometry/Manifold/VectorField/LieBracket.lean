@@ -133,7 +133,7 @@ bumped comparison then unfolds both `TangentSpace`'s to `E`, so the point no lon
 matters. The annotation has to be at the definition site of `TangentSpace`; a `local` attribute here
 is not enough.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 lemma mlieBracketWithin_eq_zero_of_eq_zero (hV : V x = 0) (hW : W x = 0) :
     mlieBracketWithin I V W s x = 0 := by
@@ -182,7 +182,7 @@ goal `(mfderiv% (↑I ∘ ↑(chartAt H x✝)) x✝).inverse 0 = 0` is left open
 Potential fix: mark `TangentSpace` implicit-reducible at its definition site, then remove
 `respectTransparency false`.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp] lemma mlieBracketWithin_self : mlieBracketWithin I V V = 0 := by
   ext x; simp [mlieBracketWithin, mpullback]
@@ -420,7 +420,7 @@ Instance search follows this path:
             └ @Module.toMulActionWithZero
 ```
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 /-- Pulling back through `extChartAt` the scalar multiplication of a vector field by
 the derivative of a scalar function equals the scalar multiplication by the manifold derivative. -/

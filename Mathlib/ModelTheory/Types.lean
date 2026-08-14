@@ -263,7 +263,7 @@ implicit-reducible and replace `M.struc` with `cast rfl M.struc`, so that it get
 The `cast rfl` there is a quick and dirty way of ensuring that the `Structure` instance has the
 expected type.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem exists_modelType_is_realized_in (p : T.CompleteType α) :
     ∃ M : Theory.ModelType.{u, v, max u v w} T, p ∈ T.realizedTypes M α := by

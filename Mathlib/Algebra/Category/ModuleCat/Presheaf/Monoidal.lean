@@ -70,7 +70,7 @@ instance-implicit arguments to `implicit`, thereby comparing the synthesized and
 at implicit transparency instead of the stricter instance transparency.
 After that, you can remove `instanceTypes false`, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 /-- Auxiliary definition for `tensorObj`. -/
 noncomputable def tensorObjMap {X Y : Cᵒᵖ} (f : X ⟶ Y) : M₁.obj X ⊗ M₂.obj X ⟶
@@ -132,7 +132,7 @@ instance-implicit arguments to `implicit`, thereby comparing the synthesized and
 at implicit transparency instead of the stricter instance transparency.
 After that, you can remove `instanceTypes false`, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma tensorObj_map_tmul {X Y : Cᵒᵖ} (f : X ⟶ Y) (m₁ : M₁.obj X) (m₂ : M₂.obj X) :

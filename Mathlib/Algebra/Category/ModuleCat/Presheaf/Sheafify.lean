@@ -374,7 +374,7 @@ either.
 Potential fix: Mark `PresheafOfModules.restrictScalars` and `PresheafOfModules.restrictScalarsObj`
 implicit-reducible; then both backward compatibility options can go.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency.types false in
 /-- `@[simp]`-normal form of `toSheafify_app_apply`. -/
 @[simp]

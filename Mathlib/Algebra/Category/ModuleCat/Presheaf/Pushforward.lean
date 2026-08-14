@@ -139,7 +139,7 @@ Potential fix: Mark `pushforward`, `PresheafOfModules.restrictScalars` and
 `PresheafOfModules.restrictScalarsObj` implicit-reducible; then both backward compatibility options
 can go.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency.types false in
 /-- `@[simp]`-normal form of `pushforward_obj_map_apply`. -/
 @[simp]
@@ -174,7 +174,7 @@ Potential fix: Mark `pushforward`, `PresheafOfModules.restrictScalars` and
 `PresheafOfModules.restrictScalarsObj` implicit-reducible; then both backward compatibility options
 can go.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency.types false in
 /-- `@[simp]`-normal form of `pushforward_map_app_apply`. -/
 @[simp]

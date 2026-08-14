@@ -604,7 +604,7 @@ This is the intended behavior.
 A quick fix could be to provide the required instance via `haveI` or as a local instance.
 -/
 set_option backward.isDefEq.respectTransparency false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 @[simp]
 lemma _root_.RingEquiv.symm_toSemilinearEquiv_symm_apply (f : R ≃+* S) (x : R) :
   f.symm.toSemilinearEquiv.symm (σ' := RingHomClass.toRingHom f) x = f x := rfl

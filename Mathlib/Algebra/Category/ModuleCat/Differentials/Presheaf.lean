@@ -105,7 +105,7 @@ Potential fix: mark `ModuleCat.restrictScalars` and `ModuleCat.RestrictScalars.o
 implicit-reducible. Then `respectTransparency false` and `instanceTypes false` can both go, and the
 `erw` becomes an `rw`.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The postcomposition of a derivation by a morphism of presheaves of modules. -/

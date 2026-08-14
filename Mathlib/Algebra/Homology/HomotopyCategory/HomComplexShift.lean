@@ -324,7 +324,7 @@ since Lean bumps transparency for instance-implicit arguments to `implicit`.
 Potential fix: mark `CochainComplex.shiftFunctor` implicit-reducible at its definition site; then
 the local `attribute` and `allowUnsafeReducibility` here can be dropped.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma leftShift_smul (a n' : ℤ) (hn' : n + a = n') (x : R) :

@@ -124,7 +124,7 @@ with care: If many declarations need to be made implicit-reducible, it might deg
 in other places.
 -/
 set_option backward.isDefEq.respectTransparency.types false in
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 /-- `simp`-normal form of the lemma that `@[simps]` would generate. -/
 @[simp] lemma topCatAdjunctionCounit_hom_apply (X : TopCat) (x) :
     -- We have to specify here to not infer the `TopologicalSpace` instance on `C(PUnit, X)`,

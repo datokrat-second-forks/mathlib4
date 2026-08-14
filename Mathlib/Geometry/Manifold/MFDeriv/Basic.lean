@@ -498,7 +498,7 @@ variable {f' f₀' f₁' : TangentSpace% x →L[𝕜] TangentSpace% (f x)}
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceTypes false` can be removed, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 /-- `UniqueMDiffWithinAt` achieves its goal: it implies the uniqueness of the derivative. -/
 protected nonrec theorem UniqueMDiffWithinAt.eq (U : UniqueMDiffAt[s] x)
@@ -527,7 +527,7 @@ theorem mfderivWithin_univ : mfderiv[univ] f = mfderiv% f := by
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceTypes false` can be removed, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem mfderivWithin_zero_of_not_mdifferentiableWithinAt (h : ¬MDiffAt[s] f x) :
     mfderiv[s] f x = 0 := by
@@ -538,7 +538,7 @@ theorem mfderivWithin_zero_of_not_mdifferentiableWithinAt (h : ¬MDiffAt[s] f x)
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceTypes false` can be removed, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem mfderiv_zero_of_not_mdifferentiableAt (h : ¬MDiffAt f x) :
     mfderiv% f x = 0 := by simp only [mfderiv, h, ite_eq_right, not_false_iff]
@@ -608,7 +608,7 @@ theorem hasMFDerivAt_unique (h₀ : HasMFDerivAt% f x f₀') (h₁ : HasMFDerivA
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceTypes false` can be removed, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_inter' (h : t ∈ 𝓝[s] x) :
     HasMFDerivAt[s ∩ t] f x f' ↔ HasMFDerivAt[s] f x f' := by
@@ -621,7 +621,7 @@ theorem hasMFDerivWithinAt_inter' (h : t ∈ 𝓝[s] x) :
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceTypes false` can be removed, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_inter (h : t ∈ 𝓝 x) :
     HasMFDerivAt[s ∩ t] f x f' ↔ HasMFDerivAt[s] f x f' := by

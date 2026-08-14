@@ -85,7 +85,7 @@ Validated, but perhaps too invasive, fix: Make all of the following definitions 
 Then both backward compatibility options can go: first `respectTransparency false`, then
 `instanceTypes false`.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma equivPiTensorComplSingletonTensor_tprod (i₀ : ι) (m : ∀ i, M i) :

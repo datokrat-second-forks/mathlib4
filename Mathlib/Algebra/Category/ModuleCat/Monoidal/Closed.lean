@@ -98,7 +98,7 @@ instance-implicit arguments to `implicit`, thereby comparing the synthesized and
 at implicit transparency instead of the stricter instance transparency.
 After that, you can remove `instanceTypes false`, too.
 -/
-set_option backward.isDefEq.instanceTypes false in
+set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 /-- Describes the unit of the adjunction `M ⊗ - ⊣ Hom(M, -)`. Given an `R`-module `N` this should
 define a map `N ⟶ Hom(M, M ⊗ N)`, which is given by flipping the arguments in the natural
