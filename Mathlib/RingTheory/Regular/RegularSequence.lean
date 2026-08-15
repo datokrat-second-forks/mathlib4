@@ -573,8 +573,8 @@ section Perm
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `FunLike (M ⧸ torsionBy R M b →ₗ[R] M) (M ⧸ torsionBy R M b) M`
 It is needed by the `ha.of_injective _ <| ker_eq_bot.mp <| ker_liftQ_eq_bot' _ (lsmul R M b) rfl`
 below.

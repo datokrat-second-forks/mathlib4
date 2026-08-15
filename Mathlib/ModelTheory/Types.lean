@@ -239,8 +239,8 @@ section
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `(L.lhomWithConstants α).IsExpansionOn ↑(ModelType.reduct (L.lhomWithConstants α)
 (M.subtheoryModel ⋯))`
 It is needed by the `@Formula.realize_equivSentence_symm_con` application below, which passes

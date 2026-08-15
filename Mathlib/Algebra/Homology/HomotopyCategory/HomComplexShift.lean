@@ -293,8 +293,8 @@ lemma rightShift_smul (a n' : ℤ) (hn' : n' + a = n) (x : R) :
 
 #adaptation_note
 /--
-We had to mark `CochainComplex.shiftFunctor` implicit-reducible locally to make an instance search
-succeed. Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility option.
+Concretely, the following instance cannot be synthesized:
 `SMulCommClass R ℤˣ (K.X (p + a) ⟶ L.X q)`
 It is needed because `leftShift` carries a sign `u : ℤˣ`, so the closing `simp only` fires
 `smul_comm x`.

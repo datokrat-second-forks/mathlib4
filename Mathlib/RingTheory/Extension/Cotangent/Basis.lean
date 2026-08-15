@@ -238,8 +238,8 @@ def basisRight : Module.Basis Unit S D.presRight.toExtension.Cotangent :=
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `AddCommMonoid D.presRight.toExtension.Cotangent`
 It is needed by the `Module.Basis.prod` below.
 
@@ -275,8 +275,8 @@ lemma basis_inl [Nontrivial S] :
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following two instances cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following two instances cannot be synthesized:
 `OfNat D.presRight.toExtension.Cotangent 0`
 `AddCommMonoid (D.presRight.toExtension.Cotangent × S ⊗[D.T] D.presLeft.toExtension.Cotangent)`
 Both are needed by the pair `(0, D.basisLeft i)` below.
@@ -322,8 +322,8 @@ end
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `LE (Submodule P.Ring P.toExtension.Cotangent)`
 It is needed by the `refine le_trans le_top (top_le_iff.mpr ?_)` below, as are the `Preorder`,
 `PartialOrder` and `OrderTop` instances on the same type, which fail in the same way.
@@ -340,7 +340,7 @@ it returns `AddMonoidAlgebra.semiring`, which is again not defeq to the assigned
 comparison also runs at `.instances`, `respectTransparency false` suppressing the transparency bump.
 
 Potential fix: make `Algebra.Generators.toExtension` implicit-reducible.
-Then `respectTransparency false` and `instanceTypes false` can both go.
+Then `respectTransparency false` and `instanceSearchTypes false` can both go.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.defeqAttrib.useBackward true in

@@ -42,8 +42,8 @@ variable (M₁ M₂ M₃ M₄ : PresheafOfModules.{u} (R ⋙ forget₂ _ _))
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `TensorProduct.CompatibleSMul ↑(R.obj Y) ↑(R.obj Y) ↑(M₁.obj Y) ↑(M₂.obj Y)`
 
 The failure happens while applying `@TensorProduct.CompatibleSMul.isScalarTower`: assigning one of
@@ -68,7 +68,7 @@ implicit-reducible *at their definition site*.
 Without the backward-compatibility flag `respectTransparency false`, Lean bumps transparency for
 instance-implicit arguments to `implicit`, thereby comparing the synthesized and unified instances
 at implicit transparency instead of the stricter instance transparency.
-After that, you can remove `instanceTypes false`, too.
+After that, you can remove `instanceSearchTypes false`, too.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in

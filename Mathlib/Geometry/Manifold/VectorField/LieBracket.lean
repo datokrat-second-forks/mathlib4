@@ -105,8 +105,8 @@ lemma mlieBracketWithin_eq_lieBracketWithin {V W : Π (x : E), TangentSpace 𝓘
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `FunLike (TangentSpace 𝓘(𝕜, E) (↑I (↑(chartAt H x) x)) →L[𝕜] TangentSpace I x) _ _`
 It is needed by `map_zero` in the first bullet's `simp only`. That same `simp only` unfolds
 `extChartAt`, which rewrites `↑(extChartAt I x) x` in the type index to `↑I (↑(chartAt H x) x)`,
@@ -168,9 +168,9 @@ lemma mlieBracket_swap : mlieBracket I V W = - mlieBracket I W V :=
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-This is the same failure as for `mlieBracketWithin_eq_zero_of_eq_zero` above, reached through the
-`simp` below instead: the instance
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. This is the same failure as for `mlieBracketWithin_eq_zero_of_eq_zero` above, reached
+through the `simp` below instead: the instance
 `FunLike (TangentSpace 𝓘(𝕜, E) (↑I (↑(chartAt H x✝) x✝)) →L[𝕜] TangentSpace I x✝) _ _` cannot be
 synthesized, because while applying `@ContinuousLinearMap.funLike` the metavariable of type
 `TopologicalSpace (TangentSpace 𝓘(𝕜, E) (↑I (↑(chartAt H x✝) x✝)))` is assigned
@@ -385,8 +385,8 @@ private lemma mfderiv_extChart_inverse_comp_aux :
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `HSMul (TangentSpace 𝓘(𝕜, 𝕜) (f x)) (TangentSpace I x) ?m`
 It is needed for the `•` in the statement below, and reduces through the `instHSMul`/`SMul`/…/
 `Module` chain sketched in the section header to
@@ -398,7 +398,7 @@ mathematically: it makes `TangentSpace I x` a `𝕜`-module, but not a
 
 Unlike for the two adaptations above, marking `TangentSpace` implicit-reducible at its definition
 site does not fix this one. It does make `respectTransparency false` removable, but
-`instanceTypes false` is still needed afterwards.
+`instanceSearchTypes false` is still needed afterwards.
 
 The technical reason for the failure: assigning one of the instane's instance-implicit-argument
 metavariables is rejected because the metavariable's type and the type of the assigned value do not

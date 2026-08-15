@@ -37,8 +37,8 @@ open WithZero UniformSpace
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 ```
 MonoidWithZeroHomClass ((MonoidWithZeroHom.ofClass Valued.v).ValueGroup₀ →*₀
   WithZero (Multiplicative ℤ)) (MonoidWithZeroHom.ofClass Valued.v).ValueGroup₀

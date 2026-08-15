@@ -67,8 +67,8 @@ public lemma index_of_surjective (hf : Surjective f) :
 
 #adaptation_note
 /--
-We had to mark `LinearMap.ker` implicit-reducible locally to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `Module.Free R ↥⊥`
 It is needed by `finrank_eq_zero_of_subsingleton` in the closing `simp`.
 

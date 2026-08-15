@@ -495,8 +495,8 @@ theorem exists_le_iSup_basicOpen_and_smul_eq_smul_and_eq_const
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `IsConcreteLE (Opens (PrimeSpectrum R)) ↑(PrimeSpectrum.Top R)`
 It is needed by `← SetLike.coe_subset_coe` in the `simpa … using iU` below.
 

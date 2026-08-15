@@ -194,8 +194,8 @@ theorem KaehlerDifferential.DLinearMap_apply (s : S) :
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `LinearMap.CompatibleSMul (↥(ideal R S)) (ideal R S).Cotangent S (S ⊗[R] S)`
 It is needed by the two `← LinearMap.map_smul_of_tower (ideal R S).toCotangent` rewrites in
 `leibniz'` below. The `have` just above them does not rescue the search: it is stated for `Ω[S⁄R]`,
@@ -216,7 +216,7 @@ That second comparison also runs at `.instances`, `respectTransparency false` su
 transparency bump.
 
 Potential fix: mark `KaehlerDifferential` `@[implicit_reducible]` at its definition site.
-Then `instanceTypes false` and `respectTransparency false` can go, but only together: with
+Then `instanceSearchTypes false` and `respectTransparency false` can go, but only together: with
 `respectTransparency false` still in place, the comparison stays at `.instances`, where an
 implicit-reducible definition does not unfold, and the search fails as before.
 The `_aux_1` wrappers for the instance fields become implicit-reducible as soon as

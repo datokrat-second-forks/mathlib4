@@ -229,7 +229,6 @@ noncomputable instance [Small.{u} σ] : CoproductsOfShapeDisjoint Scheme.{u} σ 
 instance : HasFiniteCoproducts Scheme.{u} where
   out := inferInstance
 
-set_option linter.style.longLine false in
 #adaptation_note
 /--
 We had to add `(X := X)` in the `inferInstanceAs` below to make an instance search succeed.

@@ -496,7 +496,7 @@ variable {f' f₀' f₁' : TangentSpace% x →L[𝕜] TangentSpace% (f x)}
 #adaptation_note
 /--
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
-After that, `instanceTypes false` can be removed, too.
+After that, `instanceSearchTypes false` can be removed, too.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
@@ -525,7 +525,7 @@ theorem mfderivWithin_univ : mfderiv[univ] f = mfderiv% f := by
 #adaptation_note
 /--
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
-After that, `instanceTypes false` can be removed, too.
+After that, `instanceSearchTypes false` can be removed, too.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
@@ -536,7 +536,7 @@ theorem mfderivWithin_zero_of_not_mdifferentiableWithinAt (h : ¬MDiffAt[s] f x)
 #adaptation_note
 /--
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
-After that, `instanceTypes false` can be removed, too.
+After that, `instanceSearchTypes false` can be removed, too.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
@@ -606,7 +606,7 @@ theorem hasMFDerivAt_unique (h₀ : HasMFDerivAt% f x f₀') (h₁ : HasMFDerivA
 #adaptation_note
 /--
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
-After that, `instanceTypes false` can be removed, too.
+After that, `instanceSearchTypes false` can be removed, too.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
@@ -619,7 +619,7 @@ theorem hasMFDerivWithinAt_inter' (h : t ∈ 𝓝[s] x) :
 #adaptation_note
 /--
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
-After that, `instanceTypes false` can be removed, too.
+After that, `instanceSearchTypes false` can be removed, too.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in

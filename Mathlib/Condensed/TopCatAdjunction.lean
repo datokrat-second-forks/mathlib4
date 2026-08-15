@@ -93,8 +93,8 @@ noncomputable def topCatAdjunctionCounit (X : TopCat.{u + 1}) : X.toCondensedSet
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `DFunLike C(C(PUnit, ↑X), ↑X) ?m ?m`
 It is needed by the `DFunLike.coe` below, whose `F` annotation leaves the topology on `C(PUnit, X)`
 to be determined by unification.

@@ -488,8 +488,8 @@ instance : Module A (IntertwiningMap ρ σ) :=
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `LinearMap.CompatibleSMul ρ.asModule σ.asModule A A[G]`
 It is needed by `LinearMap.map_smul_of_tower`, with which the `simp` in `invFun`'s `map_smul'`
 below has to rewrite the goal `f (a • v) = a • f v`.
@@ -509,10 +509,10 @@ instance-implicit arguments would otherwise receive.
 With no `CompatibleSMul` instance found, the rewrite does not fire and `simp` makes no progress.
 
 Potential fix: mark `asModule` implicit-reducible *at its definition site*. Then
-`respectTransparency false` becomes obsolete, and once it is removed, `instanceTypes false` can go
-as well: `asModule` being implicit-reducible, the `instModuleAsModule._aux_1` constant becomes
-implicit-reducible as well. The reason for this is that `instModuleAsModule`'s definition uses
-`inferInstanceAs`, which wraps the instance's fields into wrappers to encapsulate defeq abuse.
+`respectTransparency false` becomes obsolete, and once it is removed, `instanceSearchTypes false`
+can go as well: `asModule` being implicit-reducible, the `instModuleAsModule._aux_1` constant
+becomes implicit-reducible as well. The reason for this is that `instModuleAsModule`'s definition
+uses `inferInstanceAs`, which wraps the instance's fields into wrappers to encapsulate defeq abuse.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in

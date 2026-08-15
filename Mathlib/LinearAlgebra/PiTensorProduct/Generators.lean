@@ -49,8 +49,8 @@ variable (i₀ : ι)
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `AddCommMonoid (⨂[R] (i₁ : { i // ¬i = i₀ }), M ↑i₁)`
 The companion searches `Module R (⨂[R] (i₁ : { i // ¬i = i₀ }), M ↑i₁)` and the two `PUnit`-indexed
 variants fail in the same way. They are needed by the `rw [dsimp% …]` below, after `Equiv.symm_symm`
@@ -83,7 +83,7 @@ Validated, but perhaps too invasive, fix: Make all of the following definitions 
 ```
 
 Then both backward compatibility options can go: first `respectTransparency false`, then
-`instanceTypes false`.
+`instanceSearchTypes false`.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in

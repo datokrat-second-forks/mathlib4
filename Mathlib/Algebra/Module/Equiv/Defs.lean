@@ -586,8 +586,8 @@ def _root_.RingEquiv.toSemilinearEquiv (f : R ≃+* S) :
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` and `respectTransparency` backward compatibility flags to make an
-instance search succeed. Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` and `respectTransparency` backward compatibility flags to
+make an instance search succeed. Concretely, the following instance cannot be synthesized:
 `CoeFun (R ≃ₛₗ[↑f] S) ?m`
 so without them the application below reports
 `Function expected at f.symm.toSemilinearEquiv.symm`.

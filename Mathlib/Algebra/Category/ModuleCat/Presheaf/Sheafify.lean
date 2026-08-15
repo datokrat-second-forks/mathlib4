@@ -340,8 +340,8 @@ lemma toSheafify_app_apply (X : Cᵒᵖ) (x : M₀.obj X) :
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 ```
 DFunLike (↑(M₀.obj X) →ₗ[↑(R₀.obj X)]
     ↑((ModuleCat.restrictScalars (RingCat.Hom.hom (α.app X))).obj ((sheafify α φ).val.obj X)))

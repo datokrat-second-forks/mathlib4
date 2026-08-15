@@ -157,8 +157,8 @@ def propArrow : MorphismProperty (Arrow C) := fun _ _ f ↦
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `Category.{max u v, max u v} (Comma (𝟭 C) (𝟭 C) ⥤ Comma (𝟭 C) (𝟭 C))`
 It is needed by the `⟨F⟩` pattern in the opening `intro`, which re-elaborates `ofHoms.mk F` against
 a goal where the carrier `Arrow C ⥤ Arrow C` is exposed at its `Comma (𝟭 C) (𝟭 C)` spelling.
@@ -176,7 +176,8 @@ returns `commaCategory`, which is again not defeq to `instCategoryArrow`: that c
 With the metavariable unsolved, the `intro` argument `⟨F⟩` has type `ofHoms ?m.69 (?m.69 F)`,
 which fails to unify with `(succStruct I κ).prop f✝`.
 
-Potential fix: mark `Arrow` and `Arrow.Hom` implicit-reducible, then remove `instanceTypes false`.
+Potential fix: mark `Arrow` and `Arrow.Hom` implicit-reducible, then remove
+`instanceSearchTypes false`.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency.types false in

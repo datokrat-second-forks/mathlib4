@@ -86,8 +86,8 @@ lemma hom₁_single (r : σ) :
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `RingHomSurjective (RingHom.id pres.Ring)`
 It is needed by the `rw [Submodule.map_span_le]` below.
 
@@ -105,7 +105,7 @@ boundary. That comparison, too, runs at `.instances`, since `respectTransparency
 the transparency bump that instance-implicit arguments would otherwise receive.
 
 Potential fix: Mark `Generators.toExtension` implicit-reducible; then `respectTransparency false`
-and `instanceTypes false` can both go.
+and `instanceSearchTypes false` can both go.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.defeqAttrib.useBackward true in

@@ -36,8 +36,8 @@ variable {T : Type u₁} [SmallCategory T]
 
 #adaptation_note
 /--
-We had to use the `instanceTypes` backward compatibility flag to make an instance search succeed.
-Concretely, the following instance cannot be synthesized:
+We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
+succeed. Concretely, the following instance cannot be synthesized:
 `HasColimitsOfShape (CostructuredArrow L (R.obj b)) (Type u₁)`
 It is needed by `filtered_colim_preservesFiniteLimits` in the `haveI` below. The `simp only`
 preceding it rewrites the shape of `colim` to `CostructuredArrow L (R.obj b)` via
@@ -59,7 +59,7 @@ the assigned value: that comparison bottoms out at the same `Cat.of` boundary, a
 instance-implicit arguments would otherwise receive.
 
 Potential fix: Mark `Cat.of` and `Bundled.of` implicit-reducible and then remove
-`instanceTypes false` and `respectTransparency false`.
+`instanceSearchTypes false` and `respectTransparency false`.
 -/
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
