@@ -402,6 +402,7 @@ theorem logEmbeddingQuot_apply (x : (𝓞 K)ˣ) :
     logEmbeddingQuot K (Additive.ofMul (QuotientGroup.mk x)) =
       logEmbedding K (Additive.ofMul x) := rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 theorem logEmbeddingQuot_injective :
     Function.Injective (logEmbeddingQuot K) := by
   unfold logEmbeddingQuot

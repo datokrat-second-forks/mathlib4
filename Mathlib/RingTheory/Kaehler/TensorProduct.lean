@@ -169,7 +169,7 @@ lemma tensorKaehlerEquiv_left_inv [Algebra.IsPushout R S A B] :
   obtain ⟨y, rfl⟩ := tensorProductTo_surjective _ _ y
   induction y
   · simp only [LinearMap.restrictScalars_comp, Derivation.tensorProductTo_tmul, LinearMap.coe_comp,
-      LinearMap.coe_restrictScalars, Function.comp_apply, LinearMap.liftBaseChange_tmul, map_smul,
+      LinearMap.coe_restrictScalars, Function.comp_apply, LinearMap.liftBaseChange_tmul,
       map_D, LinearMap.map_smul_of_tower, Derivation.liftKaehlerDifferential_comp_D,
       LinearMap.id_coe, id_eq, derivationTensorProduct_algebraMap]
     rw [smul_comm, TensorProduct.smul_tmul', smul_eq_mul, mul_one]

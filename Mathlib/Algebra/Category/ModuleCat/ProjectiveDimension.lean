@@ -86,6 +86,7 @@ lemma hasProjectiveDimensionLE_of_semiLinearEquiv (e' : M ≃ₛₗ[RingHomClass
 alias _root_.CategoryTheory.hasProjectiveDimensionLE_of_semiLinearEquiv :=
   hasProjectiveDimensionLE_of_semiLinearEquiv
 
+set_option backward.isDefEq.respectTransparency.instances false in
 attribute [local instance] RingHomInvPair.of_ringEquiv in
 lemma projectiveDimension_eq_of_semiLinearEquiv (e' : M ≃ₛₗ[RingHomClass.toRingHom e] N) :
     projectiveDimension M = projectiveDimension N := by

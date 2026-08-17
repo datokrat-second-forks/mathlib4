@@ -32,6 +32,8 @@ instance : CoeSort AlexDisc (Type _) :=
 instance category : Category AlexDisc :=
   inferInstanceAs <| Category (InducedCategory _ toTopCat)
 
+-- Would need to have a new type synonym for the `FunLike` instance for the induced category.
+set_option backward.isDefEq.respectTransparency.instances false in
 instance concreteCategory : ConcreteCategory AlexDisc (C(·, ·)) :=
   inferInstanceAs <| ConcreteCategory (InducedCategory _ toTopCat) _
 

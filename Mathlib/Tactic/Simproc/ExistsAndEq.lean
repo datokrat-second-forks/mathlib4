@@ -339,7 +339,7 @@ def existsAndEqCore (e : Expr) : MetaM Simp.Step := do
   lambdaBoundedTelescope p 1 fun xs (body : Q(Prop)) => do
     let some u := f.constLevels![0]? | unreachable!
     have α : Q(Sort $u) := α; have p : Q($α → Prop) := p
-    let some (a : Q($α)) := xs[0]? | return .continue
+    let some (a : Q($α)) := (xs[0]? :) | return .continue
     let some path ← findEqPath a body | return .continue
     let (fvars, lctx, newBody, a') ← findEq a body path
     let newBody := newBody.replaceFVar a a'
