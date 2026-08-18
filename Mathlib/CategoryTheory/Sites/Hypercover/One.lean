@@ -1116,6 +1116,7 @@ instance {S : C} (E : PreZeroHypercover S) [E.HasPullbacks] :
   dsimp
   infer_instance
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp]

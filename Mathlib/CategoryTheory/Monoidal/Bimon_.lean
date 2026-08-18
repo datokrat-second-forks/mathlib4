@@ -98,6 +98,7 @@ def toComon : Bimon C ⥤ Comon C := (Mon.forget C).mapComon
 @[simp]
 theorem toComon_forget : toComon C ⋙ Comon.forget C = forget C := rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 variable {C} in
@@ -132,6 +133,7 @@ theorem ofMonComonObjX_mul (M : Mon (Comon C)) :
     μ[(ofMonComonObjX M).X] = 𝟙 (M.X.X ⊗ M.X.X) ≫ μ[M.X].hom :=
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 attribute [local instance] ComonObj.instTensorUnit in
 attribute [local simp] MonObj.tensorObj.one_def MonObj.tensorObj.mul_def tensorμ in
@@ -265,6 +267,7 @@ theorem BimonObjAux_comul (M : Bimon C) :
     Δ[((toComon C).obj M).X] = Δ[M.X].hom :=
   Category.comp_id _
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 instance (M : Bimon C) : BimonObj M.X.X where
   counit := ε[M.X].hom

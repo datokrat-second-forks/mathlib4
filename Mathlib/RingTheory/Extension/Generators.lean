@@ -283,6 +283,7 @@ def baseChange (T) [CommRing T] [Algebra R T] (P : Generators R S ι) :
     use (a + b)
     rw [map_add, ha, hb]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 variable (T) in
 set_option backward.isDefEq.respectTransparency false in
@@ -301,6 +302,7 @@ lemma baseChangeFromBaseChange_apply (x : P.toExtension.baseChange.Ring) :
     dsimp% (P.baseChangeFromBaseChange T).toRingHom x = MvPolynomial.algebraTensorAlgEquiv R T x :=
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 variable (T) in
 set_option backward.isDefEq.respectTransparency false in
@@ -801,6 +803,7 @@ end Algebra.Generators
 
 namespace Algebra.Extension
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- The canonical homomorphism of extensions from the universal extension `R[S] → S`
