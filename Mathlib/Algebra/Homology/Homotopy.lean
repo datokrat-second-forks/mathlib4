@@ -839,7 +839,27 @@ open HomologicalComplex CategoryTheory
 variable {C : Type*} [Category* C] [Preadditive C] {ι : Type _} {c : ComplexShape ι}
   [DecidableRel c.Rel] {K L : HomologicalComplex C c} {f g : K ⟶ L}
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- tl;dr: a `binop%` metavariable race on the two `-` signs in `h₀` and `h₃`. The index
+-- placeholders are now written out, and the race does not start.
+--
+-- This is the same issue as in `Mathlib/AlgebraicTopology/DoldKan/Projections.lean`. See the note
+-- there for the three unification steps and for why the order of the arguments decides the
+-- outcome.
+--
+-- With `f.f _ - g.f _ - …` the index stays a metavariable `?n`, so `binop%` uses the homogeneous
+-- default instance `instHSub : HSub ?α ?α ?α`. The first operand gives
+-- `?α := (K.X ?n ⟶ L.X ?n)`. The third argument then forces
+-- `(K.X ?n ⟶ L.X ?n) =?= (((shortComplexFunctor C c i).obj K).X₃ ⟶ …)` at [instances], where
+-- `shortComplexFunctor` does not unfold. All 10 rejected blocks are this one `HSub` metavariable.
+-- Synthesis is stuck after the rollback, so no mark helps. The elaborator leaves `?n` open and
+-- `split_ifs` reports a goal with metavariables in it.
+--
+-- Naming the indices removes the race, so `backward.isDefEq.respectTransparency.instances false`
+-- is removed too.
+--
+-- The parent `backward.isDefEq.respectTransparency false` stays. It is not covering for the child
+-- here. Measured: with the indices named and the parent also removed, six new errors appear in
+-- `h₀_f`, `g_h₃`, `comm₁` and `comm₃`, which are `simp` and `abel` failures, not instance desyncs.
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- A homotopy between morphisms of homological complexes `K ⟶ L` induces a homotopy
@@ -850,13 +870,13 @@ noncomputable def Homotopy.toShortComplex (ho : Homotopy f g) (i : ι) :
   h₀ :=
     if c.Rel (c.prev i) i
     then ho.hom _ (c.prev (c.prev i)) ≫ L.d _ _
-    else f.f _ - g.f _ - K.d _ i ≫ ho.hom i _
+    else f.f (c.prev i) - g.f (c.prev i) - K.d (c.prev i) i ≫ ho.hom i (c.prev i)
   h₁ := ho.hom _ _
   h₂ := ho.hom _ _
   h₃ :=
     if c.Rel i (c.next i)
     then K.d _ _ ≫ ho.hom (c.next (c.next i)) _
-    else f.f _ - g.f _ - ho.hom _ i ≫ L.d _ _
+    else f.f (c.next i) - g.f (c.next i) - ho.hom (c.next i) i ≫ L.d i (c.next i)
   h₀_f := by
     split_ifs with h
     · dsimp

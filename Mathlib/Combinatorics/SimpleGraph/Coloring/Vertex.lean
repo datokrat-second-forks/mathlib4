@@ -112,11 +112,51 @@ theorem Coloring.mem_colorClasses {v : V} : C.colorClass (C v) ∈ C.colorClasse
 theorem Coloring.colorClasses_finite [Finite α] : C.colorClasses.Finite :=
   Setoid.finite_classes_ker _
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- tl;dr: `simp only [colorClasses]` unfolds the definition in the goal but not in the instance
+-- binder, and the resulting instance has no other source.
+--
+-- This declaration carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- removed and the proof states the instance transfer instead. The old proof was
+--   simp only [colorClasses]
+--   convert! Setoid.card_classes_ker_le C
+--
+-- Diagnosis. Traced with the option removed and every `respectTransparency` option at its default
+-- value, plus `diagnostics true`, `trace.diagnostics true`,
+-- `trace.Meta.isDefEq.assign.checkTypes true`, `trace.Meta.synthInstance true` and
+-- `pp.universes true`.
+--
+-- `simp only [colorClasses]` rewrites the goal to the unfolded spelling. It does not touch the
+-- type of the `[Fintype C.colorClasses]` binder, because that is an instance argument. The two
+-- spellings then have to meet.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Fintype.{u} ↑(Setoid.classes.{u} (Setoid.ker.{u, u_2} ⇑C))
+--        =?= Fintype.{u} ↑(colorClasses.{u, u_2} C)
+--    assigned: `inst✝`, the local binder.
+--    `colorClasses` is semireducible, so the two are not defeq at [instances]. Lean also prints
+--    the sharper form: the pair is not defeq at [implicit] either, only at [default].
+--
+-- ❌ synthesis. `result <not-available>`. There is no global `Fintype` instance for that set. The
+--    only source in the whole context is the binder that was just rejected.
+--
+-- —  unify. This step never runs. All 26 diagnostic blocks are the "could not be synthesized
+--    directly" leg.
+--
+-- Without the option the error is `unsolved goals` after `convert!`, and one of the two goals left
+-- open is `Fintype ↑(Setoid.classes (Setoid.ker ⇑C))`.
+--
+-- No mark helps. Measured: `attribute [local implicit_reducible] Coloring.colorClasses` gives the
+-- same error. The type check is pinned at [instances], and `implicit_reducible` does not unfold
+-- there. The synthesis fallback cannot be repaired by a mark either, because the assigned value is
+-- a local binder. No unfolding turns a free variable into a global instance application. Only
+-- `instance_reducible` on `colorClasses` would reach the pinned check, and that is too broad.
+--
+-- So the proof has to say which instance to use. That is what the `let` below does. It is
+-- discoverable from the error message, which names the instance that could not be synthesized.
 theorem Coloring.card_colorClasses_le [Fintype α] [Fintype C.colorClasses] :
     Fintype.card C.colorClasses ≤ Fintype.card α := by
-  simp only [colorClasses]
-  convert! Setoid.card_classes_ker_le C
+  let : Fintype (Setoid.ker C).classes := inferInstanceAs (Fintype C.colorClasses)
+  exact Setoid.card_classes_ker_le C
 
 theorem Coloring.not_adj_of_mem_colorClass {c : α} {v w : V} (hv : v ∈ C.colorClass c)
     (hw : w ∈ C.colorClass c) : ¬G.Adj v w := fun h => C.valid h (Eq.trans hv (Eq.symm hw))

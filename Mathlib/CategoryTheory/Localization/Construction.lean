@@ -203,19 +203,17 @@ def objEquiv : C ≃ W.Localization where
 instance : W.Q.EssSurj where
   mem_essImage Y := ⟨(objEquiv W).symm Y, ⟨Iso.refl _⟩⟩
 
+-- tl;dr: The induction fails because of a `Paths`-related defeq abuse.
+--
 -- This declaration needs an opt-out from the `.instances` check. This is the same issue as in
 -- `Mathlib/CategoryTheory/PathCategory/Basic.lean`. See the note there.
 --
--- The class is `Quiver`: the rejected assignment is
---   ?inst : Quiver (Paths (LocQuiver W)) := instQuiverLocQuiver W
--- so the opt-out is written as `attribute [local lax_instance_defeq] Quiver in` rather than
--- `backward.isDefEq.respectTransparency.instances false`. This is not a repair. The site is still
--- unresolved. The annotation only names the class instead of switching the whole check off.
--- `Quiver` carries data, so the propositional exemption does not apply to it.
+-- The class is `Quiver`, so the opt-out is written as `attribute [local lax_instance_defeq]
+-- Quiver in` rather than `backward.isDefEq.respectTransparency.instances false`. This is not a
+-- repair. The site is still unresolved.
 --
--- The opt-out is still needed. Removing the annotation gives back the `Internal error in
--- mkElimApp` error. The parent `backward.isDefEq.respectTransparency false` was stale and is
--- removed, and the file still compiles without it.
+-- The parent `backward.isDefEq.respectTransparency false` was stale here. It is removed, and the
+-- file still compiles without it.
 attribute [local lax_instance_defeq] Quiver in
 /-- A `MorphismProperty` in `W.Localization` is satisfied by all
 morphisms in the localized category if it contains the image of the

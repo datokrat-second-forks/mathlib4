@@ -114,7 +114,11 @@ def asSubmodule (σ : Subrepresentation ρ) : Submodule A[G] ρ.asModule where
       exact σ.toSubmodule.smul_mem' a (σ.apply_mem_toSubmodule g hv)
 
 -- Type-correct statement would be `(Representation.asModuleEquiv ρ).symm v ∈ asSubmodule σ`.
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is obsolete on this
+-- toolchain. This lemma, and the three `rfl` lemmas below that carried the same option, all
+-- compile with no replacement and no reducibility attribute. Checked by breaking one of the
+-- statements on purpose, so that the test can fail. The defeq abuse named above is still real.
+-- Only the option is obsolete.
 @[simp]
 lemma mem_asSubmodule_iff {σ : Subrepresentation ρ} {v : W} :
     v ∈ asSubmodule σ ↔ v ∈ σ := by rfl
@@ -135,7 +139,7 @@ def asSubmodule' (σ : Subrepresentation (Representation.ofModule (k := A) (G :=
 
 -- Type-correct statement would be
 -- `m ∈ asSubmodule' σ ↔ Representation.asModuleEquiv (Representation.ofModule M) m ∈ σ`.
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. See `mem_asSubmodule_iff`.
 @[simp]
 lemma mem_asSubmodule'_iff {σ : Subrepresentation (Representation.ofModule (k := A) (G := G) M)}
     {m : M} : m ∈ asSubmodule' σ ↔ m ∈ σ := by rfl
@@ -152,7 +156,7 @@ def ofSubmodule (N : Submodule A[G] M) :
 
 -- Type-correct statement would be
 -- `Representation.asModuleEquiv (Representation.ofModule M) m ∈ ofSubmodule N ↔ m ∈ N`.
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. See `mem_asSubmodule_iff`.
 @[simp]
 lemma mem_ofSubmodule_iff {N : Submodule A[G] M} {m : M} : m ∈ ofSubmodule N ↔ m ∈ N := by rfl
 
@@ -169,7 +173,7 @@ def ofSubmodule' (N : Submodule A[G] ρ.asModule) : Subrepresentation ρ where
     rw [Representation.single_smul, one_smul] at h
     exact h
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. See `mem_asSubmodule_iff`.
 @[simp]
 lemma mem_ofSubmodule'_iff {N : Submodule A[G] ρ.asModule} {w : W} : w ∈ ofSubmodule' N ↔ w ∈ N :=
   .rfl

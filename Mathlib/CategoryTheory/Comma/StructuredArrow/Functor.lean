@@ -69,9 +69,44 @@ def grothendieckPrecompFunctorToComma : Grothendieck (R ⋙ functor L) ⥤ Comma
   obj P := ⟨P.fiber.left, P.base, P.fiber.hom⟩
   map f := ⟨f.fiber.left, f.base, by simp⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- tl;dr: the fiber of `R ⋙ functor L` carries its own bundled category structure, and the goal
+-- also names that category as `CostructuredArrow L (R.obj X)`. The two do not meet at
+-- [instances].
+--
+-- This declaration carried `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are removed. The four marks below replace
+-- them.
+--
+-- Diagnosis. Traced with both options removed and no mark, all other options at their default
+-- value, plus `trace.Meta.isDefEq.assign.checkTypes` and `trace.Meta.synthInstance`.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Category.{?u, max u₁ v₂} (CostructuredArrow L (R.obj X))
+--        =?= Category.{v₁, max v₂ u₁} ↑((R ⋙ functor L).obj X)
+--    assigned: `((R ⋙ functor L).obj X).str`, the bundled structure of the `Cat`-valued fiber.
+--    To see the two carriers as one type you must unfold `functor` and `Functor.comp`. Neither
+--    unfolds at [instances].
+--
+-- ✅ synthesis. It succeeds, but with a different value,
+--    `instCategoryCostructuredArrow_1 L (R.obj X)`.
+--
+-- ❌ unify. The rejected value and the synthesized one are compared at the ambient transparency.
+--    All 42 rejected blocks are this one metavariable.
+--
+-- The marks work only after the parent option is gone. The parent suppresses the [implicit] bump
+-- that `isDefEqApp` gives to instance arguments, so the unify runs below the level the marks need.
+-- This was measured on three other sites, `Monoidal/Closed/FunctorCategory/Basic.lean`,
+-- `Sites/Plus.lean` and `Algebra/Category/Grp/Colimits.lean`. It was not re-measured here.
+--
+-- The four constants below are the ones `linter.tacticCheckInstances` named. Remove the parent
+-- option first, then run the linter, then mark what it names.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  Quiver.Hom
+  Grothendieck.ι
+  functor
+  grothendieckPrecompFunctorToComma
+in
 /-- Fibers of `grothendieckPrecompFunctorToComma L R`, composed with `Comma.fst L R`, are isomorphic
 to the projection `proj L (R.obj X)`. -/
 @[simps!]

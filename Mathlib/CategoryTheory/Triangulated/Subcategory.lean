@@ -521,11 +521,23 @@ lemma trW_of_isIso [P.ContainsZero] {X Y : C} (f : X ⟶ Y) [IsIso f] : P.trW f 
   refine (P.trW.arrow_mk_iso_iff ?_).1 (MorphismProperty.id_mem _ X)
   exact Arrow.isoMk (Iso.refl _) (asIso f)
 
--- TODO: regressed after removing respectTransparency
-set_option backward.isDefEq.respectTransparency.instances false in
+-- tl;dr: a `leftact%` metavariable race on the `•` below, in its `HSMul` form.
+--
+-- This is the same issue as in `Mathlib/AlgebraicTopology/DoldKan/Projections.lean`. See the note
+-- there for the three unification steps and for why the order of the arguments decides the
+-- outcome. There is no parent `backward.isDefEq.respectTransparency false` in this file.
+--
+-- With `Iso.refl _` the type of `n • (Iso.refl _)` stays open, so `leftact%` falls back to the
+-- homogeneous default instance `instHSMul : HSMul ?α ?β ?β`. That forces
+-- `(Arrow.mk (n • f)).left =?= (Arrow.mk f).left` at [instances], where `Arrow.mk` does not
+-- unfold.
+--
+-- Naming the objects removes the race, so `backward.isDefEq.respectTransparency.instances false`
+-- is removed too. The type of `n • Iso.refl X` is now closed, ordinary instance search finds
+-- `SMul ℤˣ (X ≅ X)`, and the default instance is never used.
 lemma smul_mem_trW_iff {X Y : C} (f : X ⟶ Y) (n : ℤˣ) :
     P.trW (n • f) ↔ P.trW f :=
-  P.trW.arrow_mk_iso_iff (Arrow.isoMk (n • (Iso.refl _)) (Iso.refl _))
+  P.trW.arrow_mk_iso_iff (Arrow.isoMk (n • (Iso.refl X)) (Iso.refl Y))
 
 variable {P} in
 lemma trW.shift [P.IsStableUnderShift ℤ]

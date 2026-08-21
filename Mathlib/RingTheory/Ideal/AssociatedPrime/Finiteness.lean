@@ -51,6 +51,41 @@ variable {A : Type u} [CommRing A] {M : Type v} [AddCommGroup M] [Module A M]
 def Submodule.IsQuotientEquivQuotientPrime (N₁ N₂ : Submodule A M) :=
   N₁ ≤ N₂ ∧ ∃ (p : PrimeSpectrum A), Nonempty ((↥N₂ ⧸ N₁.submoduleOf N₂) ≃ₗ[A] A ⧸ p.1)
 
+-- tl;dr: `simp [submoduleOf]` unfolds the definition in the goal but not in the instance argument
+-- of the quotient it sits in.
+--
+-- This declaration needs `backward.isDefEq.respectTransparency.instances false`. The option stays.
+-- The site is not repaired.
+--
+-- Diagnosis. Traced with the child option removed and the parent
+-- `backward.isDefEq.respectTransparency false` kept, all other options at their default value,
+-- plus `trace.Meta.isDefEq.assign.checkTypes` and `trace.Meta.synthInstance`.
+--
+-- `Submodule.submoduleOf N₁ N₂` is by definition `N₁.comap N₂.subtype`. The `simp` calls below
+-- carry `submoduleOf` in their simp set, so the goal is rewritten to the `comap` spelling while
+-- the quotient `↥N₂ ⧸ N₁.submoduleOf N₂` keeps its instances at the old spelling.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      AddCommMonoid (↥N₂ ⧸ comap N₂.subtype N₁)
+--        =?= AddCommMonoid (↥N₂ ⧸ N₁.submoduleOf N₂)
+--    assigned: `(Quotient.addCommGroup (N₁.submoduleOf N₂)).toAddCommMonoid`.
+--    `submoduleOf` is semireducible and does not unfold at [instances].
+--
+-- ✅ synthesis. It succeeds, but with a different value, `Quotient.addCommMonoid` applied to the
+--    `comap` spelling. The two values also take different paths through the algebraic hierarchy.
+--
+-- ❌ unify. The rejected value and the synthesized one are compared at the ambient transparency.
+--
+-- The usual repair does not apply here, because the parent option cannot be removed. Measured:
+--
+-- * With the parent removed as well, there are three errors, not one. Two are unsolved goals and
+--   one is `Failed to rewrite using equation theorems for mapQ`. Those are not instance desyncs,
+--   and `linter.tacticCheckInstances` names no constant for them.
+-- * With the parent kept, `attribute [local implicit_reducible] Submodule.submoduleOf` changes
+--   nothing. The error text is identical. The parent suppresses the [implicit] bump that
+--   `isDefEqApp` gives to instance arguments, so the unify runs below the level the mark needs.
+--
+-- So this site is blocked on the parent option, not on a missing mark.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 open LinearMap in

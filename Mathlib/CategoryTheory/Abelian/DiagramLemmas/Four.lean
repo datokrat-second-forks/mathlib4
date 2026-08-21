@@ -93,6 +93,18 @@ theorem mono_of_epi_of_mono_of_mono (hR₁ : R₁.Exact) (hR₂ : R₂.Exact)
     (by simpa only [R₁.map'_comp 0 1 2] using hR₁.toIsComplex.zero 0)
     (hR₁.exact 1).exact_toComposableArrows (hR₂.exact 0).exact_toComposableArrows h₀ h₁ h₃
 
+-- tl;dr: a `binop%` metavariable race on the `+` in the `refine` below.
+--
+-- `backward.isDefEq.respectTransparency.instances false` stays on the next declaration. This is
+-- the same issue as in `Mathlib/AlgebraicTopology/DoldKan/Projections.lean`. See the note there
+-- for the three unification steps and for why the order of the arguments decides the outcome.
+--
+-- The `+` here is `π₄ ≫ π₃ ≫ f₁ + f₀ ≫ (by exact R₁.map' 0 1)`. The right operand is a postponed
+-- `by` block, so its type is still a metavariable when `binop%` runs. `binop%` then falls back to
+-- the default `instHAdd` instance and has to re-check, at [instances], a type it already fixed
+-- from the expected type at a higher transparency.
+--
+-- This is a known Lean issue and not a Mathlib bug. No fix is applied.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

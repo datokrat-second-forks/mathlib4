@@ -227,6 +227,40 @@ variable (D) in
 def toPlusNatTrans : 𝟭 (Cᵒᵖ ⥤ D) ⟶ J.plusFunctor D where
   app P := J.toPlus P
 
+-- tl;dr: `Cover.Arrow.map` keeps the object `Y`, but only by unfolding, so the small category on
+-- `J.Cover I.Y` gets two spellings.
+--
+-- `backward.isDefEq.respectTransparency.instances false` stays on the next declaration. A mark
+-- would repair it, but only after the parent option goes, and the parent cannot go yet.
+--
+-- Diagnosis. Traced with `instances false` removed, the parent `respectTransparency false` kept,
+-- plus `diagnostics true`, `trace.diagnostics true` and
+-- `trace.Meta.isDefEq.assign.checkTypes true`. Four assignments are rejected, all on one leg.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Category.{max u v, max u v} (J.Cover I.Y)
+--    assigned: `Preorder.smallCategory (J.Cover (unop (op (Cover.Arrow.map I e.op.unop).Y)))`
+--
+-- ✅ synthesis. It finds the same small category at the folded spelling.
+--
+-- ❌ unify synthesized against assigned. It comes down to
+--      I.Y  =?=  unop (op (Cover.Arrow.map I e.op.unop).Y)
+--    `Arrow.map I f` is `⟨I.Y, I.f, _⟩`, so the two sides agree only after `Arrow.map` unfolds.
+--    `Arrow.map` is a plain def, hence semireducible.
+--
+-- The assigned value is a global instance application, not a local binder, so this fallback is the
+-- repairable kind. The mark is `implicit_reducible` on `GrothendieckTopology.Cover.Arrow.map`.
+--
+-- Why the option still stays. The mark is inert while the parent option is set. Measured: with the
+-- parent kept, adding the mark gives back the identical `unsolved goals` error. The parent
+-- suppresses the [implicit] bump on the ambient transparency, and this fallback unify reads the
+-- ambient, so it runs below the level at which `implicit_reducible` unfolds.
+--
+-- Removing the parent does let the mark act. The failure then changes rather than disappearing:
+-- the next tactic reports `rewrite failed`, with the pattern `colimit.ι ?m ?j ≫ colimMap ?α` not
+-- found. `linter.tacticCheckInstances` reports nothing there, so that one is not an instance
+-- desync and needs its own diagnosis. Until it is resolved, the parent cannot go, so the mark
+-- cannot act, so `instances false` has to stay.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

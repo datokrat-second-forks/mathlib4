@@ -41,41 +41,44 @@ section
 
 variable {F₁ F₂ F₂' F₃ F₃' : J ⥤ C}
 
--- Three declarations in this file need an opt-out from the `.instances` check. The class is
--- `Closed`, so the opt-out is written as `attribute [local lax_instance_defeq] Closed in` rather
--- than `backward.isDefEq.respectTransparency.instances false`. This is not a repair. The site is
--- still unresolved. The annotation only names the class instead of switching the whole check off.
--- All three are load-bearing: dropping one annotation at a time gives 7, 1 and 2 errors.
+-- This file needed three opt-outs from the `.instances` check, plus the parent
+-- `backward.isDefEq.respectTransparency false`. All four are gone. The marks below replace them.
 --
--- Trace on `homEquiv` with `.instances false` removed and the other options kept. Five
--- assignments are rejected. The first two are noise: they try `?inst : Category C := ...` with
--- the `Under j` category, `C =?= Under j` is simply false, and the fallback then synthesizes the
--- correct ambient instance. The three that matter all look like this:
---   ❌ mvar type check:
---     ❌ Closed (F₁.obj k₁.right)
---          =?= Closed (Opposite.unop ((Under.forget j ⋙ F₁).op.obj (Opposite.op k₁)))
---     assigned: `closed (Opposite.unop ((Under.forget j ⋙ F₁).op.obj (Opposite.op k₁)))`
---     ✅ synth finds `closed (F₁.obj k₁.right)`, the same instance at the other spelling
---     ❌ unify, down to
---       `F₁.obj k₁.right =?= Opposite.unop ((Under.forget j ⋙ F₁).op.obj (Opposite.op k₁))`
---     unification would not succeed at [implicit]. It needs [default].
+-- The failure was always the same instance desync. `simp` and `rw` rewrite the carrier of an
+-- instance argument but not the instance itself. Then Lean compares the two spellings:
+--     Closed (F₁.obj k.right)  =?=  Closed (unop ((Under.forget j ⋙ F₁).op.obj (op k)))
+-- Both name the same object of `C`. One side applies `F₁` directly. The other pushes `k` through
+-- `Under.forget j ⋙ F₁`, takes `.op` of the functor, applies it, and unops the result.
 --
--- Both sides name the same object of `C`. One side applies `F₁` directly. The other pushes `k₁`
--- through `Under.forget j ⋙ F₁`, takes `.op` of the functor, applies it to `op k₁`, and unops
--- the result. Closing that needs `Functor.op`, `Functor.comp` and `Under.forget` to unfold, and
--- they are plain semireducible defs. `defeqAt` probes, columns
--- [reducible] [instances] [implicit] [default]:
---   F₁.obj k.right =?= unop ((Under.forget j ⋙ F₁).op.obj (op k))          false false false true
---   the same two wrapped in `Closed`                                       false false false true
+-- Two measurements drove the fix.
 --
--- fix: none found. The failing step is the fallback unify, so a mark could in principle reach it,
--- but the gap needs [default] and no `implicit_reducible` mark gets there. The declaration also
--- carries the parent option, so the fallback runs at [reducible], which is lower still.
+-- 1. `trace.Meta.isDefEq.printTransparency true` prints the level of every comparison. With the
+--    parent option present, route 1 of `checkTypesAndAssign` ran like this:
+--      ❌ [instances] Closed (F₁.obj k₁.right) =?= Closed (unop (...))     -- pinned check
+--      ✅ [instances] Closed (F₁.obj k₁.right) =?= Closed ?m.173           -- synthesis
+--      ❌ [reducible] closed (unop (...)) =?= closed (F₁.obj k₁.right)     -- fallback unify
+--    At [reducible] no mark can help. The parent option was the cause. It suppresses the
+--    [implicit] bump that `isDefEqApp` gives to instance arguments, so the ambient stayed at the
+--    caller's level. A mark is only worth adding after the parent option is gone.
 --
--- `Closed` carries data, so the propositional exemption does not apply to it.
-attribute [local lax_instance_defeq] Closed in
+-- 2. `linter.tacticCheckInstances true` names the constants whose semireducibility blocks a goal.
+--    That produced the list below. Removing the parent option first, then marking what the linter
+--    names, closes every site. `Functor.op` and `Functor.comp` were already `implicit_reducible`.
+--
+-- The linter stays on. It still reports two desyncs on the `Closed (F₁.obj k.right)` pair above.
+-- Those are reports, not failures. The proofs succeed and the constants it would name are already
+-- `implicit_reducible`.
+
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  Under.forget
+  Under.map
+  Under.Hom
+  Monoidal.FunctorCategory.tensorObj
+  Enriched.FunctorCategory.functorEnrichedHom
+  Enriched.FunctorCategory.diagram
+  eHomFunctor
+in
 /-- The bijection `(F₁ ⊗ F₂ ⟶ F₃) ≃ (F₂ ⟶ functorEnrichedHom C F₁ F₃)` when `F₁`, `F₂`
 and `F₃` are functors `J ⥤ C`, and `C` is monoidal closed. -/
 noncomputable def homEquiv : (F₁ ⊗ F₂ ⟶ F₃) ≃ (F₂ ⟶ functorEnrichedHom C F₁ F₃) where
@@ -122,17 +125,33 @@ noncomputable def homEquiv : (F₁ ⊗ F₂ ⟶ F₃) ≃ (F₂ ⟶ functorEnric
     congr
     simp
 
-attribute [local lax_instance_defeq] Closed in
-set_option backward.isDefEq.respectTransparency.types false in
+
+attribute [local implicit_reducible]
+  Under.forget
+  Under.map
+  Under.Hom
+  Monoidal.FunctorCategory.tensorObj
+  Enriched.FunctorCategory.functorEnrichedHom
+  Enriched.FunctorCategory.diagram
+  eHomFunctor
+in
 lemma homEquiv_naturality_two_symm (f₂ : F₂ ⟶ F₂') (g : F₂' ⟶ functorEnrichedHom C F₁ F₃) :
     homEquiv.symm (f₂ ≫ g) = F₁ ◁ f₂ ≫ homEquiv.symm g := by
   dsimp [homEquiv]
   ext j
   simp [← uncurry_natural_left]
 
-attribute [local lax_instance_defeq] Closed in
+
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  Under.forget
+  Under.map
+  Under.Hom
+  Monoidal.FunctorCategory.tensorObj
+  Enriched.FunctorCategory.functorEnrichedHom
+  Enriched.FunctorCategory.diagram
+  eHomFunctor
+in
 lemma homEquiv_naturality_three [∀ (F₁ F₂ : J ⥤ C), HasEnrichedHom C F₁ F₂]
     (f : F₁ ⊗ F₂ ⟶ F₃) (f₃ : F₃ ⟶ F₃') :
     homEquiv (f ≫ f₃) = homEquiv f ≫ (ρ_ _).inv ≫ _ ◁ functorHomEquiv _ f₃ ≫

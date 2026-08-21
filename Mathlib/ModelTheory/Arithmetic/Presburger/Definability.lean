@@ -74,6 +74,41 @@ theorem IsSemilinearSet.definable [Finite α] (hs : IsSemilinearSet s) :
 
 namespace FirstOrder.Language.presburger
 
+-- tl;dr: the proof uses a function symbol of `constantsOn A` directly as a natural number. The
+-- coercion needs `(constantsOn ↑A).Functions 0` to reduce to `↑A`, which does not happen at
+-- [instances].
+--
+-- This declaration needs `backward.isDefEq.respectTransparency.instances false`. The option stays.
+-- The site is not repaired.
+--
+-- Diagnosis. Traced with the child option removed and the parent
+-- `backward.isDefEq.respectTransparency false` kept, all other options at their default value,
+-- plus `trace.Meta.isDefEq.assign.checkTypes` and `trace.Meta.synthInstance`.
+--
+-- `presburger[[A]]` is `presburger.sum (constantsOn A)`, and `Functions` of a language sum is a
+-- `Sum` type. The `cases f` below relies on that. In the `inr` branch `f` has the sum spelling
+-- while the goal keeps the `withConstants` spelling. Then `refine ⟨f, 0, …⟩` uses `f` where a
+-- natural number is wanted, which needs `(constantsOn ↑A).Functions 0` to reduce to `↑A`.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      (constantsOn ((constantsOn ↑A).Functions 0)).Structure ℕ
+--        =?= (constantsOn ↑A).Structure ℕ
+--    assigned: `paramsStructure ℕ A`.
+--    `constantsOn` is semireducible, so `(constantsOn ↑A).Functions 0` stays folded.
+--
+-- ❌ synthesis. `result <not-available>`. The only candidate is `constantsOnSelfStructure`, which
+--    has the shape `(constantsOn ?X).Structure ?X`. Matching gives
+--    `?X := (constantsOn ↑A).Functions 0`, and the second argument is `ℕ`, so the candidate is
+--    rejected.
+--
+-- —  unify. This step never runs. There is no synthesized value to compare against.
+--
+-- No mark helps, because synthesis never returns a value. For the same reason the parent option
+-- cannot help either. Its [implicit] bump only affects the unify step. Measured: with the parent
+-- also removed there are four errors instead of one, and none of them is this desync.
+--
+-- The reported error is downstream. `rw [withConstants_funMap_sumInr]` no longer finds its
+-- pattern, and Lean adds the note that the target is not type-correct at [implicit].
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 lemma term_realize_eq_add_dotProduct [Fintype α] (t : presburger[[A]].Term α) :

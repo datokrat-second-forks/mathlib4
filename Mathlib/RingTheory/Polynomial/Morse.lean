@@ -44,6 +44,49 @@ namespace Polynomial
 variable {R S : Type*} [CommRing R] [CommRing S] [Algebra R S] [IsDomain S]
   {G : Type*} [Group G] [MulSemiringAction G S] [SMulCommClass G R S] {f : R[X]}
 
+-- tl;dr: `simp` unfolds `rootSet` in the goal, and the `MulAction` instance on the roots is
+-- stated for the folded spelling, so it no longer applies.
+--
+-- `backward.isDefEq.respectTransparency.instances false` stays on the next declaration.
+--
+-- Diagnosis. Traced with `instances false` removed, the parent `respectTransparency false` kept,
+-- plus `diagnostics true`, `trace.diagnostics true` and
+-- `trace.Meta.isDefEq.assign.checkTypes true`. The parent stays because it cannot affect this
+-- gap, see the last paragraph.
+--
+-- `Polynomial.rootSet p S` is `(p.aroots S).toFinset`, coerced to a type. Inside
+-- `simpa [← rootSet.coe_smul]` the goal ends up at the unfolded spelling, while the `MulAction`
+-- instance is stated at the folded one. Four assignments are rejected. They are two spellings of
+-- one instance, each tried twice: `instMulActionElemRootSetOfSMulCommClass G f`, and the same
+-- instance unfolded to `{ smul := fun g x => ⟨g • ↑x, ⋯⟩, mul_smul := ⋯, one_smul := ⋯ }`.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      MulAction G ↥(f.aroots S).toFinset  =?=  MulAction G ↑(f.rootSet S)
+--    `rootSet` is a semireducible def, so the two spellings do not meet at [instances].
+--
+-- ❌ synthesis. The global instance is declared for `MulAction G (f.rootSet R)`. Its
+--    discrimination-tree key is `rootSet`, which the unfolded spelling no longer has, so the
+--    search does not reach it.
+--
+-- —  unify. This step never runs. All four diagnostic blocks are the "could not be synthesized
+--    directly" leg. There are no blocks of the other leg.
+--
+-- Without the option, `simpa [← rootSet.coe_smul]` stops early. It leaves `¬g • g • x = g • x`
+-- and the closing `assumption` cannot use `hx : g • x ≠ x`.
+--
+-- No fix is applied. A mark on `rootSet` cannot help. The type check is pinned at [instances],
+-- where `implicit_reducible` does not unfold, and synthesis fails for a discrimination-tree
+-- reason rather than a transparency one, so no mark reaches it either.
+--
+-- The parent option cannot help this gap. Its effect is to restore the [implicit] bump on the
+-- ambient transparency, and the only step that reads the ambient is the unify of the synthesized
+-- instance against the assigned one. Here synthesis returns nothing, so that unify never runs.
+-- This is a general rule: the parent matters on the other leg, not on this one.
+--
+-- Removing the parent as well is therefore not a test of anything here. It only uncovers a second
+-- and unrelated failure: two errors on the same source line rather than one, and diagnostics of a
+-- different kind, with zero `.instances` blocks and 54 of the `.implicit` kind. That second gap is
+-- out of scope for this note.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 /-- If the roots of `f` in `S` have at most one collision mod `p`, then a `MulSemiringAction` on

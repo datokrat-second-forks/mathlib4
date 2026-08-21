@@ -101,9 +101,38 @@ lemma Quot.map_ι [DecidableEq J] {j j' : J} {f : j ⟶ j'} (x : F.obj j) :
   simp only [DFinsupp.singleAddHom_apply]
   exact AddSubgroup.subset_closure ⟨j, j', f, x, rfl⟩
 
+-- tl;dr: two spellings of one type, `ULift.{u'} ↑(F.obj j)` and `↑((F ⋙ uliftFunctor).obj j)`.
+-- Only `uliftFunctor` connects them, and it is semireducible.
+--
+-- This declaration and `quotUliftToQuot` below both carried
+-- `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. All four options are gone. The
+-- `implicit_reducible uliftFunctor` mark replaces them.
+--
+-- Diagnosis, done on `quotUliftToQuot`. Traced with both options removed and no mark, all other
+-- options at their default value, plus `trace.Meta.isDefEq.assign.checkTypes`,
+-- `trace.Meta.synthInstance` and `pp.explicit`.
+--
+-- The proof mixes two views of the same type. The `DFinsupp` carrier is rewritten to
+-- `fun j => ULift.{u', w} ↑(F.obj j)`, but the zero instance it carries is still written at
+-- `↑((F ⋙ uliftFunctor).obj j)`. Both name the same type.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      AddZeroClass (ULift.{u', w} ↑(F.obj j))
+--        =?= AddZeroClass ↑((F ⋙ uliftFunctor).obj j)
+--    assigned: `AddMonoid.toAddZeroClass … ((F ⋙ uliftFunctor).obj j).str`.
+--    At [instances] `uliftFunctor` does not unfold, so the two carriers are different.
+--
+-- ✅ synthesis. It succeeds, but with a different value, `ULift.addZeroClass ↑(F.obj j) …`.
+--
+-- ❌ unify. The rejected value and the synthesized one are compared at the ambient transparency.
+--    This is the step the mark helps, and only after the parent option is gone. 47 blocks fail.
+--
+-- Measured. With the parent option kept, the mark changes nothing. The error text is identical.
+-- The parent option suppresses the [implicit] bump that `isDefEqApp` gives to instance arguments,
+-- so the unify runs below the level at which the mark takes effect. Remove the parent option
+-- first, then mark.
 attribute [local implicit_reducible] uliftFunctor in
--- set_option backward.isDefEq.respectTransparency.instances false in
--- set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /--
 The obvious additive map from `Quot F` to `Quot (F ⋙ uliftFunctor.{u'})`.
@@ -129,9 +158,9 @@ lemma quotToQuotUlift_ι [DecidableEq J] (j : J) (x : F.obj j) :
   simp only [DFinsupp.singleAddHom_apply, DFinsupp.sumAddHom_single]
   rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same issue as `quotToQuotUlift` above. See the note there.
+attribute [local implicit_reducible] uliftFunctor in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /--
 The obvious additive map from `Quot (F ⋙ uliftFunctor.{u'})` to `Quot F`.
 -/

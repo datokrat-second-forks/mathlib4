@@ -94,9 +94,37 @@ theorem intervalGapsWithin_snd_of_lt (hj : j < k) :
   simp only [coe_castPred, val_natCast, Nat.mod_succ_eq_iff_lt]
   lia
 
--- Defeq abuse: `F.orderEmbOfFin_mem` infers the `LinearOrder (Lex (α × α))` as
--- `LinearOrder (α × α)`.
-set_option backward.isDefEq.respectTransparency.instances false in
+-- tl;dr: defeq abuse. `F.orderEmbOfFin_mem` was picking up the `LinearOrder (Lex (α × α))` as a
+-- `LinearOrder (α × α)`. The call now names the lex order, as every other call in this file does.
+--
+-- This declaration carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- removed and the `(α := α ×ₗ α)` ascription is added instead.
+--
+-- Diagnosis. Traced with the option removed and every other option at its default value, plus
+-- `diagnostics true`, `trace.diagnostics true` and `trace.Meta.isDefEq.assign.checkTypes true`.
+--
+-- `F : Finset (α × α)`, but the order used throughout is the lexicographic one. Every other call
+-- to `orderEmbOfFin` in this file writes `(α := α ×ₗ α)`. This one did not, so Lean had to fill
+-- `LinearOrder (α × α)` from a value that has type `LinearOrder (α ×ₗ α)`.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      LinearOrder (α × α)  =?=  LinearOrder (Lex (α × α))
+--    assigned: `Prod.Lex.instLinearOrder α α`.
+--    `Lex` is semireducible, so the two do not meet at [instances].
+--
+-- ❌ synthesis. It finds nothing. `α × α` has no `LinearOrder` at all, because the product order
+--    on a pair is only a partial order. The lex order is the whole reason the synonym exists.
+--
+-- —  unify. This step never runs. All 268 diagnostic blocks are the "could not be synthesized
+--    directly" leg.
+--
+-- Without the option the errors are two unsolved goals: a `Prod` eta equation, and an open
+-- `LinearOrder (α × α)` goal that nothing can close.
+--
+-- No mark is possible, and none would be wanted. `Lex` is a type synonym whose only purpose is to
+-- carry a different order on the same type. Marking it reducible at any level would let instance
+-- search cross between `α × α` and `α ×ₗ α`, which is exactly what the synonym exists to prevent.
+-- The right repair is to say which order is meant, which is what the ascription does.
 theorem intervalGapsWithin_mapsTo : (Set.Iio k).MapsTo
     (fun (j : ℕ) ↦ ((F.intervalGapsWithin h a b j).2, (F.intervalGapsWithin h a b j.succ).1))
     F := by
@@ -104,7 +132,7 @@ theorem intervalGapsWithin_mapsTo : (Set.Iio k).MapsTo
   rw [mem_Iio] at hj
   simp only [intervalGapsWithin_snd_of_lt, intervalGapsWithin_succ_fst_of_lt,
     SetLike.mem_coe, hj]
-  convert! F.orderEmbOfFin_mem h ⟨j, hj⟩ using 1
+  convert! F.orderEmbOfFin_mem (α := α ×ₗ α) h ⟨j, hj⟩ using 1
 
 theorem intervalGapsWithin_injOn : (Set.Iio k).InjOn
     (fun (j : ℕ) ↦ ((F.intervalGapsWithin h a b j).2, (F.intervalGapsWithin h a b j.succ).1)) := by

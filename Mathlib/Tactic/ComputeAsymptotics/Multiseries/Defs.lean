@@ -808,6 +808,43 @@ end Sorted
 
 section Approximates
 
+-- tl;dr: the `coinductive` command builds its order instance at
+-- `Lean.Order.ReverseImplicationOrder` while the goal is phrased at `Prop`. The two are the same
+-- type, but only at [default].
+--
+-- This declaration needs `backward.isDefEq.respectTransparency.instances false`. The option stays.
+-- The site is not repaired. The cause is in the toolchain, not in Mathlib.
+--
+-- Diagnosis. Traced with the option removed and every other option at its default value, plus
+-- `trace.Meta.isDefEq.assign.checkTypes` and `trace.Meta.synthInstance`. There are four rejected
+-- blocks, all the same pair.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Lean.Order.PartialOrder ({basis : Basis} → MultiseriesExpansion basis → Prop)
+--        =?= Lean.Order.PartialOrder
+--              ((x : Basis) → MultiseriesExpansion x → ReverseImplicationOrder)
+--    assigned: `Lean.Order.instCompleteLatticePi.toPartialOrder`.
+--    `ReverseImplicationOrder` is `def ReverseImplicationOrder := Prop`, a semireducible synonym.
+--    It does not unfold at [instances].
+--
+-- ❌ synthesis. It walks down through `Lean.Order.instOrderPi` twice and arrives at
+--    `Lean.Order.PartialOrder Prop`. There it stops. `CompleteLattice Prop` has no instances at
+--    all, and the only `CCPO Prop` candidate does not apply. The order on `Prop` is registered on
+--    the synonym, not on `Prop`.
+--
+-- —  unify. This step never runs. There is no synthesized value to compare against.
+--
+-- No mark can help, because synthesis returns nothing. Marking `ReverseImplicationOrder` would
+-- also be wrong. It is a synonym whose only purpose is to carry a different order on `Prop`, so
+-- it has to stay opaque, in the same way as `Lex`.
+--
+-- This is a toolchain issue. `ReverseImplicationOrder` is declared in
+-- `Init/Internal/Order/Basic.lean`, and the coinductive elaborator inserts
+-- `ReverseImplicationOrder.instCompleteLattice` in
+-- `Lean/Elab/PreDefinition/PartialFixpoint/Main.lean`. The instance it builds carries the synonym
+-- spelling, while the goal it has to meet carries `Prop`. The repair belongs there.
+--
+-- All 20 further errors in this file after the option is removed are cascades of this one.
 set_option backward.isDefEq.respectTransparency.instances false in
 /-- Coinductive predicate stating that `ms` approximates its attached function on `basis`.
 * If `basis = []`, i.e. `ms` is just a real number, `Approximates` holds unconditionally.

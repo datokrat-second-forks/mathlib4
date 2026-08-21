@@ -47,7 +47,6 @@ noncomputable def equivPiTensorComplSingletonTensor (i₀ : ι) :
 
 variable (i₀ : ι)
 
-set_option backward.isDefEq.respectTransparency.instances false in
 #adaptation_note
 /--
 We had to use the `instanceSearchTypes` backward compatibility flag to make an instance search
@@ -84,7 +83,7 @@ Validated, but perhaps too invasive, fix: Make all of the following definitions 
 ```
 
 Then both backward compatibility options can go: first `respectTransparency false`, then
-`instanceSearchTypes false`.
+`instanceSearchTypes false` and `instances false`.
 -/
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency.instances false in

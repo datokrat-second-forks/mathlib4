@@ -111,8 +111,10 @@ variable
   (f : ∀ (P : Ideal R) [P.IsMaximal], M →ₗ[R] Mₚ P)
   [inst : ∀ (P : Ideal R) [P.IsMaximal], IsLocalizedModule P.primeCompl (f P)]
 
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is obsolete on this
+-- toolchain. This declaration compiles with no replacement and no reducibility attribute.
+-- Checked by breaking the proof on purpose, so that the test can fail.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency.instances false in
 attribute [local instance] RingHomInvPair.of_ringEquiv in
 include f in
 /--
