@@ -76,6 +76,56 @@ def associatorNatIsoLeftCat (a : B) {b c d : B} (g : b ⟶ c) (h : c ⟶ d) :
       (postcomposingCat ..).obj (g ≫ h) :=
   Cat.Hom.isoMk <| NatIso.ofComponents (α_ · g h)
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on four declarations in this file.
+-- All four are load-bearing. Removing any one of them alone gives errors.
+--
+-- Trace on `yoneda₀` with `.instances false` removed and the other options kept:
+--   ❌ mvar type check:
+--     ❌ Category.{?u, v} (a ⟶ b) =?= Category.{w, v} ↑(Cat.of (a ⟶ b))
+--     assigned: `(Cat.of (a ⟶ b)).str`
+--     ✅ synth finds `homCategory a b`
+--     ❌ unify at [reducible], down to `Cat.str =?= @homCategory`
+--     unification succeeds at [implicit]
+--
+-- `yoneda₀` bundles each hom-category again with `Cat.of (unop y ⟶ x)`. Everything after that
+-- needs `(Cat.of (a ⟶ b)).str` and `homCategory a b` to agree. `Cat.of` must unfold for that.
+--
+-- This site needs no mark. It needs the bump to [implicit], and
+-- `backward.isDefEq.respectTransparency false` on the same declarations suppresses that bump.
+--
+-- `Cat.of` and `Bundled.of` are both `@[implicit_reducible]`. Seeing through `Cat.of` is
+-- therefore an [implicit] operation by design. `defeqAt` probes, four columns
+-- [reducible] [instances] [implicit] [default]:
+--   (Cat.of (a ⟶ b)).str =?= homCategory a b                          false false true true
+--   (Cat.of (a ⟶ b)).str =?= Bundled.str (Cat.of (a ⟶ b))             false true  true true
+--   Cat.of (a ⟶ b) =?= Bundled.mk (a ⟶ b) (homCategory a b)           false false true true
+--   (Bundled.mk (a ⟶ b) (homCategory a b)).str =?= homCategory a b    true  true  true true
+--
+-- So neither `Cat.str` nor `Bundled.str` is the blocker. `Cat.str` unfolds at [instances] and
+-- the projection reduces on a constructor even at [reducible]. The blocker is that there is no
+-- constructor to project from. You reach it only by unfolding `Cat.of` and then `Bundled.of`,
+-- and both sit at [implicit].
+--
+-- The two options then fail at two different steps:
+--   - The pinned type check runs at exactly [instances]. `Cat.of` does not unfold there.
+--   - The synth fallback would rescue this, because it unifies at the ambient transparency and
+--     the probe says [implicit] succeeds. But `respectTransparency false` drops the ambient to
+--     [reducible], where not even `Cat.str` unfolds. That is the
+--     `❌ [reducible] Cat.str =?= @homCategory` line in the trace.
+--
+-- So `instances false` is here only to switch off a check that the fallback would have repaired.
+-- The probe above is the evidence. A second measurement agrees, with its control:
+--   parent ON , instances OFF : 25 errors
+--   parent OFF, instances ON  : 27 errors
+--   parent OFF, instances OFF : 27 errors, messages identical to the line above
+-- The last two agree and the first differs, so `instances false` does work while the parent
+-- option is present and none once it is gone. Read this test only together with its control.
+-- When all three configurations agree it proves nothing, which is the case in
+-- `Mathlib/CategoryTheory/Monoidal/Cartesian/ShrinkYoneda.lean`.
+--
+-- fix: remove `backward.isDefEq.respectTransparency false` from these four declarations, then
+-- `instances false` can go with it. That is separate work. Removing the parent option today
+-- leaves 27 errors that have nothing to do with instance metavariables.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

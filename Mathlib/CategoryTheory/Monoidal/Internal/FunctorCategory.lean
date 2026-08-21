@@ -125,13 +125,132 @@ def counitIso : inverse ⋙ functor ≅ 𝟭 (C ⥤ Mon D) :=
   NatIso.ofComponents (fun A =>
     NatIso.ofComponents (fun X => { hom := { hom := 𝟙 _ }, inv := { hom := 𝟙 _ } }))
 
+#print counitIso_hom_app_app_hom
+
 end MonFunctorCategoryEquivalence
 
 open MonFunctorCategoryEquivalence
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This file had three `backward.isDefEq.respectTransparency.instances false` sites. Two are now
+-- removed and one stays, on `CommMonFunctorCategoryEquivalence.functor`. Before the repair,
+-- removing them one at a time gave 42, 8 and 20 errors.
+--
+-- Trace with `.instances false` removed and the other options kept:
+--   ❌ mvar type check:
+--     ❌ MonObj (X ⋙ Mon.forget D) =?= MonObj (inverseObj X).X
+--     assigned: `(inverseObj X).mon`
+--     ❌ synth ("the instance could not be synthesized directly")
+--     unification would not succeed at [implicit]. It needs [default].
+--
+-- `inverseObj` is a plain `def` with `X := F ⋙ Mon.forget D`. The two sides name the same
+-- functor. One side spells it directly, the other reads it back out of `inverseObj`. `defeqAt`
+-- probes, columns [reducible] [instances] [implicit] [default]:
+--   (inverseObj F).X =?= F ⋙ Mon.forget D                false false false true
+--   MonObj ((inverseObj F).X) =?= MonObj (F ⋙ Mon.forget D)  false false false true
+--
+-- All 680 rejected assignments in this file have this shape, in the `Mon`, `Comon` and `CommMon`
+-- copies of the construction.
+--
+-- Where the metavariable comes from. The only field that fails is
+-- `Equivalence.functor_unitIso_comp`, and it fails inside its auto-param proof, not in its type.
+-- Measured: replacing that one auto-param by `functor_unitIso_comp _ := by sorry` takes the
+-- diagnostic blocks for this declaration from 12 to 0. So the field's type elaborates fine and
+-- the tactic is what creates the metavariable. Two further probes agree that the type is not the
+-- trigger: `example : 𝟭 (Mon (C ⥤ D)) ≅ functor ⋙ inverse := unitIso` and
+-- `example (X) : X ⟶ (functor ⋙ inverse).obj X := unitIso.hom.app X` both elaborate with no
+-- diagnostics at all.
+--
+-- The field reads (`Mathlib/CategoryTheory/Equivalence.lean`):
+--   functor_unitIso_comp (X : C) :
+--     dsimp% functor.map (unitIso.hom.app X) ≫ counitIso.hom.app (functor.obj X)
+--       = 𝟙 (functor.obj X) := by cat_disch
+-- Here `cat_disch` is `aesop_cat`. `categoryTheoryDischarger` only picks `grind` when
+-- `mathlib.tactic.category.grind` is true, and that `set_option` is scoped to the rest of
+-- `Mathlib/CategoryTheory/Category/Basic.lean`, so it does not reach this file.
+--
+-- The failing part is aesop's normalisation simp, not its rule search. `trace.aesop` shows the
+-- safe rules apply `ext` twice, giving
+--   ((functor.map (unitIso.hom.app X) ≫ counitIso.hom.app (functorObj X.X)).app x).hom
+--     = ((𝟙 (functorObj X.X)).app x).hom
+-- and the rejected assignments appear directly under the `<norm simp>` line that follows.
+-- Reproduced by hand: `ext x` alone gives 0 rejected assignments, `ext x; simp` gives 4.
+-- `intros` and `dsimp` are also clean on their own.
+--
+-- Which simp lemma fails. No single one does. `functorObj (A : C ⥤ D) [MonObj A] : C ⥤ Mon D`
+-- carries an instance argument. The `@[simps]` lemma `inverseObj_X : (inverseObj F).X =
+-- F ⋙ Mon.forget D` rewrites the carrier argument of a `functorObj` application. The instance
+-- argument must then move from `MonObj ((inverseObj F).X)` to `MonObj (F ⋙ Mon.forget D)`. That
+-- is the pair in the diagnostic, at the round trip object `inverseObj (functorObj X.X)`, that is
+-- `X` sent through `functor` and back through `inverse`:
+--   ?inst : MonObj (functorObj X.X ⋙ Mon.forget D) := (inverseObj (functorObj X.X)).mon
+-- The goal spells the carrier as `functorObj X.X ⋙ Mon.forget D`. The candidate is typed at
+-- `(inverseObj (functorObj X.X)).X`. Only unfolding `inverseObj` joins them.
+--
+-- `inverseObj_X` on its own is harmless. The smallest list that reproduces the rejection is
+--   simp only [functor_obj, inverse_obj, functorObj_obj, inverseObj_X, NatTrans.comp_app]
+-- after `intro X; ext x : 3`. It gives 4 rejected assignments. Removing any one of the five gives
+-- 0. Running the same five lemmas as two `simp only` calls in a row also gives 0. So the rejection
+-- needs one traversal that rewrites the carrier and re-applies `NatTrans.comp_app` above it.
+--
+-- A rejected assignment is not always an error. The repaired proof still prints 8 of them and
+-- compiles with `.instances false` removed. Under `cat_disch` the damage is that `simp` stops at
+--   𝟙 (X.X.obj x) ≫ 𝟙 ((functorObj (functorObj X.X ⋙ Mon.forget D)).obj x).X = 𝟙 (X.X.obj x)
+-- With `.instances false` the same `simp` closes the goal and prints no rejection.
+--
+-- No mark can help. The diagnostic says the instance could not be synthesized, so there is no
+-- second term for a fallback unify to reach. The only comparison that runs is the type check
+-- pinned at exactly [instances], and the gap needs [default]. These declarations carry
+-- `respectTransparency.types false`, not the parent option, so this is also not the bump case of
+-- `Mathlib/CategoryTheory/Bicategory/Yoneda.lean`.
+--
+-- fix: write the auto-param out by hand with `aesop_cat?`, then append `exact Category.comp_id _`.
+-- That one extra line is the whole repair. The `aesop_cat?` script on its own is not enough.
+-- Errors on `monFunctorCategoryEquivalence`, with and without `.instances false`:
+--   the `aesop_cat?` script as printed                 option on: 0    option off: 1
+--   the same script plus `exact Category.comp_id _`    option on: 41   option off: 0
+--
+-- The option and the `exact` exclude each other. `Category.comp_id` is already in the second lemma
+-- list. With the option it fires and closes the goal, so the extra `exact` reports `No goals to be
+-- solved`. Without the option the same `Category.comp_id` does not fire, and simp stops at
+--   𝟙 (X.X.obj x) ≫ 𝟙 ((functorObj (functorObj X.X ⋙ Mon.forget D)).obj x).X = 𝟙 (X.X.obj x)
+-- `Category.comp_id` does not fire because `functorObj_obj` did not fire, earlier in the same
+-- pass. `trace.Meta.Tactic.simp.rewrite` on `intro X; ext x : 3; simp` gives two runs that agree
+-- for 7 steps. Step 8 is where they part:
+--   option on:   functorObj_obj   (functorObj (functorObj X.X ⋙ Mon.forget D)).obj x
+--                             ==> functorObjObj (functorObj X.X ⋙ Mon.forget D) x
+--   option off:  the 4 rejected assignments above, and no rewrite
+-- `functorObj_obj : (functorObj A).obj x = functorObjObj A x` carries `[MonObj A]`. At
+-- `A := functorObj X.X ⋙ Mon.forget D` simp must fill that instance argument, and the only value
+-- present in the term is `(inverseObj (functorObj X.X)).mon`. So the rewrite is dropped, and with
+-- it the four steps that normalise the object of the second identity: `functorObjObj_X`,
+-- `Functor.comp_obj`, `Mon.forget_obj`, and a second `functorObjObj_X`.
+--
+-- With the option on, `Category.comp_id` then fires on `𝟙 (X.X.obj x) ≫ 𝟙 (X.X.obj x)`, where the
+-- two objects are already the same expression. It never joins two spellings. Without the option
+-- the two objects stay different expressions and no match is possible. `defeqAt` probes, columns
+-- [reducible] [instances] [implicit] [default]:
+--   X.X.obj x =?= ((functorObj (functorObj X.X ⋙ Mon.forget D)).obj x).X   false false false true
+--   MonObj (F ⋙ Mon.forget D) =?= MonObj (inverseObj F).X                  false false false true
+-- Both objects are the same functor, spelled differently, and only [default] joins them. simp
+-- matches below that level. `exact` elaborates at [default] and closes the goal. `rfl` fails.
+--
+-- Dropping `Functor.comp_obj`, `Mon.forget_obj` and `Category.comp_id` from the second list is
+-- cosmetic. After `exact` closes the goal those three are unused simp arguments, and the linter
+-- warns about each. Keeping them costs 3 warnings and no errors.
+-- `intro X; ext x : 3; simp; exact Category.comp_id _` also compiles, with the same 4 rejections.
+--
+-- `CommMonFunctorCategoryEquivalence.functor` keeps the option. The same technique works on its
+-- `naturality` field, with
+--   naturality _ _ g := by
+--     ext
+--     exact congr_arg Mon.Hom.hom
+--       (((monFunctorCategoryEquivalence C D).functor.map f.hom).naturality g)
+-- but that only moves the failure. Its other auto-params, and those of the declarations after it
+-- in the `CommMon` section, then fail in the same way. Repairing that section needs several more
+-- hand-written proofs and is left undone.
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
+set_option backward.isDefEq.respectTransparency.instances false in
 /-- When `D` is a monoidal category,
 monoid objects in `C ⥤ D` are the same thing
 as functors from `C` into the monoid objects of `D`.
@@ -142,6 +261,20 @@ def monFunctorCategoryEquivalence : Mon (C ⥤ D) ≌ C ⥤ Mon D where
   inverse := inverse
   unitIso := unitIso
   counitIso := counitIso
+  functor_unitIso_comp := by
+    intro X
+    simp_all only [functor_obj, inverse_obj, inverseObj_X]
+    ext x : 3
+    -- simp_all only [functorObj_obj, functorObjObj_X, NatTrans.comp_app, Mon.comp_hom',
+    --   functor_map_app_hom, inverseObj_X, unitIso_hom_app_hom_app, counitIso_hom_app_app_hom,
+    --   NatTrans.id_app, Mon.id_hom']
+    -- exact Category.comp_id _
+    -- `aesop_cat?` prints the script below. It needs `.instances false`. The three extra lemmas
+    -- are unused once `exact Category.comp_id _` closes the goal.
+    simp_all only [functorObj_obj, functorObjObj_X, NatTrans.comp_app, Mon.comp_hom',
+      Functor.comp_obj, Mon.forget_obj, functor_map_app_hom, inverseObj_X,
+      unitIso_hom_app_hom_app, counitIso_hom_app_app_hom, Category.comp_id, NatTrans.id_app,
+      Mon.id_hom']
 
 namespace ComonFunctorCategoryEquivalence
 
@@ -239,7 +372,6 @@ end ComonFunctorCategoryEquivalence
 
 open ComonFunctorCategoryEquivalence
 
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.privateInPublic true in
@@ -254,6 +386,20 @@ def comonFunctorCategoryEquivalence : Comon (C ⥤ D) ≌ C ⥤ Comon D where
   inverse := inverse
   unitIso := unitIso
   counitIso := counitIso
+  functor_unitIso_comp := by
+    intro X
+    simp_all only [ComonFunctorCategoryEquivalence.functor_obj,
+      ComonFunctorCategoryEquivalence.inverse_obj,
+      ComonFunctorCategoryEquivalence.inverseObj_X]
+    ext x : 3
+    simp_all only [ComonFunctorCategoryEquivalence.functorObj_obj,
+      ComonFunctorCategoryEquivalence.functorObjObj_X,
+      ComonFunctorCategoryEquivalence.functor_map_app_hom,
+      ComonFunctorCategoryEquivalence.inverseObj_X,
+      ComonFunctorCategoryEquivalence.unitIso_hom_app_hom_app,
+      ComonFunctorCategoryEquivalence.counitIso_hom_app_app_hom,
+      NatTrans.comp_app, Comon.comp_hom', NatTrans.id_app, Comon.id_hom']
+    exact Category.comp_id _
 
 variable [BraidedCategory.{v₂} D]
 

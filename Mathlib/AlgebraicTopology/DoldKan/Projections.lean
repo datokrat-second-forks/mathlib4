@@ -71,6 +71,32 @@ theorem P_add_Q (q : ℕ) : P q + Q q = 𝟙 K[X] := by
   rw [Q]
   abel
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on the next declaration.
+-- This is the known `binop%` metavariable race. `+` is notation for `binop% HAdd.hAdd`. The
+-- `<|> throwError ...` sites in `Mathlib/Tactic/NormNum/Result.lean` are the same problem for
+-- `HOrElse`, which uses the lazy form `binop_lazy%` of the same elaborator.
+--
+-- Trace with the option removed and everything else at default:
+--   ❌ mvar type check:
+--     ❌ HAdd (K[?X].X n ⟶ K[?X].X n) (K[?X'].X n ⟶ K[?X'].X n) (X _⦋n⦌ ⟶ X _⦋n⦌)
+--          =?= HAdd ?α ?α ?α
+--     assigned: `instHAdd`, the default instance for `+`
+--     ❌ synth (the goal still holds the open metavariables `?X` and `?X'`)
+--     unification would succeed at [implicit]
+--
+-- The three arguments are compared from left to right:
+--   1. `K[?X].X n ⟶ K[?X].X n =?= ?α` assigns `?α` to the spelling of the left operand.
+--   2. `K[?X'].X n ⟶ K[?X'].X n =?= ?α` succeeds.
+--   3. `X _⦋n⦌ ⟶ X _⦋n⦌ =?= ?α` fails, down to `X.1 (op ⦋n⦌) =?= K[?X].1 n`.
+--
+-- The third argument came from the right side of the equation, `𝟙 (X _⦋n⦌)`. Its type was fixed
+-- in an earlier unification that ran at [implicit] or higher. Step 3 must repeat that comparison
+-- at the weaker [instances], which cannot unfold `K[X]`. If the order was swapped, all three
+-- steps would succeed. This is why it is a race.
+--
+-- fix: writing the right side as `𝟙 (K[X].X n)` removes the error, because then all three
+-- arguments have the same spelling. This is not applied here. It states the same fact, but it
+-- hides the object `X _⦋n⦌` that the reader wants to see.
 set_option backward.isDefEq.respectTransparency.instances false in
 theorem P_add_Q_f (q n : ℕ) : (P q).f n + (Q q).f n = 𝟙 (X _⦋n⦌) :=
   HomologicalComplex.congr_hom (P_add_Q q) n

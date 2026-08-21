@@ -98,6 +98,32 @@ def toComon : Bimon C ⥤ Comon C := (Mon.forget C).mapComon
 @[simp]
 theorem toComon_forget : toComon C ⋙ Comon.forget C = forget C := rfl
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on three declarations in this
+-- file: `toMonComonObj` here, `ofMonComonObj`, and the `BimonObj M.X.X` instance. All three are
+-- load-bearing. Removing them one at a time gives 42, 47 and 9 errors.
+--
+-- Trace on the `BimonObj M.X.X` instance, the smallest of the three, with `.instances false`
+-- removed and the other options kept:
+--   ❌ mvar type check:
+--     ❌ ComonObj M.X.X =?= ComonObj ((toComon C).obj M).X
+--     assigned: `((toComon C).obj M).comon`
+--     ❌ synth ("the instance could not be synthesized directly")
+--     unification would not succeed at [implicit]. It needs [default].
+--
+-- `toComon C` is `(Mon.forget C).mapComon`. Both sides name the same object of `C`. One side
+-- reads the carrier straight out of `M`, the other pushes `M` through `toComon` and reads the
+-- carrier back. `defeqAt` probes, columns [reducible] [instances] [implicit] [default]:
+--   ((toComon C).obj M).X =?= M.X.X                    false false false true
+--   ComonObj ((toComon C).obj M).X =?= ComonObj M.X.X  false false false true
+--
+-- fix: none found, and no mark can help. The diagnostic says the instance could not be
+-- synthesized, so there is no second term for a fallback unify to reach. The only comparison
+-- that runs is the type check pinned at exactly [instances], and the gap needs [default].
+--
+-- These declarations do carry the parent `backward.isDefEq.respectTransparency false`, so they
+-- look like the bump case of `Mathlib/CategoryTheory/Bicategory/Yoneda.lean`. They are not.
+-- Removing the parent and comparing errors with and without `instances false` gives 69, 80, 80,
+-- which passes that test. The probe above refutes it. Trust the probe, not the error counts.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

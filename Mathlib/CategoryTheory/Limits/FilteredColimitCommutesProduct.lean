@@ -61,6 +61,40 @@ maps `k : ∀ i, I i` to `∏ᶜ fun (s : α) => (F s).obj (k s)`. -/
 noncomputable abbrev pointwiseProduct : (∀ i, I i) ⥤ C :=
   Functor.pi F ⋙ Pi.functor α
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on four declarations in this file.
+-- All four are load-bearing. Removing any one of them alone gives errors.
+--
+-- Trace on `Pi.equivalenceOfEquivCompPointwiseProduct` with `.instances false` removed and the
+-- other options kept:
+--   ❌ mvar type check:
+--     ❌ HasProduct fun i => (F (f i)).obj (X (f i))
+--          =?= HasProduct ((Functor.pi fun i => F (f i)).obj
+--                ((Pi.equivalenceOfEquiv I f).inverse.obj X))
+--     assigned: `equivalenceOfEquivCompPointwiseProduct._proof_1 F f X`, the instance that the
+--       statement of this very declaration already carries
+--     ✅ synth finds
+--       `instHasLimitOfHasLimitsOfShape (Discrete.functor fun i => (F (f i)).obj (X (f i)))`
+--     ❌ unify at [implicit], down to
+--       `(Functor.pi fun i => F (f i)).obj ((Pi.equivalenceOfEquiv I f).inverse.obj X)
+--          =?= fun i => (F (f i)).obj (X (f i))`
+--     unification succeeds at [default] only. A `defeqAt` probe on that last line gives
+--       reducible false, instances false, implicit false, default true.
+--       So this is not a missing bump to [implicit].
+--
+-- All 54 rejected assignments in this file have this shape. Both sides name the same product.
+-- One side spells it through `pointwiseProduct`, which is `Functor.pi F ⋙ Pi.functor α`. The
+-- other side spells it pointwise. To close the gap you must unfold `Functor.pi`,
+-- `Pi.equivalenceOfEquiv` and the `inverse` field that it builds. These are plain semireducible
+-- defs, so [implicit] stops at the first of them.
+--
+-- fix: none found. `attribute [local implicit_reducible] CategoryTheory.Functor.pi` takes the
+-- error count from 9 to 7. Adding `CategoryTheory.Limits.Pi.functor` and
+-- `CategoryTheory.Pi.equivalenceOfEquiv` does not improve on that, because the chain continues
+-- into the fields that `Pi.equivalenceOfEquiv` builds. Marking the whole chain is too broad.
+-- The declaration already carries `attribute [local simp] Functor.pi in`, so the author met the
+-- same wall from the simp side.
+--
+-- `HasProduct` is a propositional class.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in

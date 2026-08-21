@@ -559,6 +559,9 @@ theorem isRat_div {α : Type u} [DivisionRing α] : {a b : α} → {cn : ℤ} �
     IsRat (a * b⁻¹) cn cd → IsRat (a / b) cn cd
   | _, _, _, _, h => by simpa [div_eq_mul_inv] using h
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on the declarations below. This is
+-- the same `binop%` metavariable race as in `Mathlib/Tactic/NormNum/Result.lean`, for the `<|>`
+-- operator. See the note there.
 set_option backward.isDefEq.respectTransparency.instances false in
 /-- Helper function to synthesize a typed `DivisionSemiring α` expression. -/
 def inferDivisionSemiring {u : Level} (α : Q(Type u)) : MetaM Q(DivisionSemiring $α) :=

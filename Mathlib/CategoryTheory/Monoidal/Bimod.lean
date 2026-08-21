@@ -622,12 +622,39 @@ set_option backward.defeqAttrib.useBackward true in
 noncomputable def hom : TensorBimod.X (regular R) P ⟶ P.X :=
   coequalizer.desc P.actLeft (by dsimp; rw [Category.assoc, left_assoc])
 
-set_option backward.isDefEq.respectTransparency.instances false in
 /-- The underlying morphism of the inverse component of the left unitor isomorphism. -/
 noncomputable def inv : P.X ⟶ TensorBimod.X (regular R) P :=
   (λ_ P.X).inv ≫ (η[R.X] ▷ _) ≫ coequalizer.π _ _
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This file had four `backward.isDefEq.respectTransparency.instances false` sites. Two were
+-- stale, on `LeftUnitorBimod.inv` and `RightUnitorBimod.inv`, and are removed. The two
+-- `hom_inv_id` declarations needed the option. The mark below replaces it.
+--
+-- Trace on `LeftUnitorBimod.hom_inv_id` before the mark, with `.instances false` removed and
+-- `.types false` kept:
+--   ❌ mvar type check:
+--     ❌ HasCoequalizer ((regular R).actRight ▷ P.X)
+--            ((α_ (regular R).X R.X P.X).hom ≫ (regular R).X ◁ P.actLeft)
+--          =?= HasCoequalizer (μ ▷ P.X) ((α_ R.X R.X P.X).hom ≫ R.X ◁ P.actLeft)
+--     assigned: `TensorBimod.X._proof_1 (regular R) P`, the instance that `TensorBimod.X` carries
+--     ✅ synth finds
+--       `instHasColimitOfHasColimitsOfShape (parallelPair (μ ▷ P.X) (…))`
+--     ❌ unify at [implicit], down to `(regular R).X =?= R.X`, then `(regular R).1 =?= R.1`
+--     unification succeeds at [implicit] once `Bimod.regular` unfolds there
+--
+-- The failing step is the fallback unify, which runs at the ambient transparency. An
+-- `implicit_reducible` mark therefore reaches it. Measured with a `defeqAt` probe on
+-- `(regular R).X =?= R.X`:
+--   without the mark:  reducible false, instances false, implicit false, default true
+--   with the mark:     reducible false, instances false, implicit true,  default true
+--
+-- `HasCoequalizer` is a `Prop`, so proof irrelevance would close the goal. It does not fire,
+-- because proof irrelevance first needs the two types to agree, and that is the step that fails.
+--
+-- fix: the mark below. `Bimod.regular A` is a plain semireducible `def` with `X := A.X`. Both
+-- spellings name the same object, so the mark states a fact about `regular` and does not hide a
+-- real difference. With it, both `hom_inv_id` declarations lose the option.
+attribute [local implicit_reducible] Bimod.regular in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 theorem hom_inv_id : hom P ≫ inv P = 𝟙 _ := by
@@ -687,12 +714,12 @@ set_option backward.defeqAttrib.useBackward true in
 noncomputable def hom : TensorBimod.X P (regular S) ⟶ P.X :=
   coequalizer.desc P.actRight (by dsimp; rw [Category.assoc, right_assoc, Iso.hom_inv_id_assoc])
 
-set_option backward.isDefEq.respectTransparency.instances false in
 /-- The underlying morphism of the inverse component of the right unitor isomorphism. -/
 noncomputable def inv : P.X ⟶ TensorBimod.X P (regular S) :=
   (ρ_ P.X).inv ≫ (_ ◁ η[S.X]) ≫ coequalizer.π _ _
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same as `LeftUnitorBimod.hom_inv_id` above. See the note there.
+attribute [local implicit_reducible] Bimod.regular in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 theorem hom_inv_id : hom P ≫ inv P = 𝟙 _ := by

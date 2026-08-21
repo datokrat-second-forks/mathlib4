@@ -20,6 +20,9 @@ namespace Mathlib.Meta.NormNum
 
 open Lean.Meta Qq
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on the declarations below. This is
+-- the same `binop%` metavariable race as in `Mathlib/Tactic/NormNum/Result.lean`, for the `<|>`
+-- operator. See the note there.
 set_option backward.isDefEq.respectTransparency.instances false in
 /-- Helper function to synthesize a typed `CharZero α` expression given `Ring α`. -/
 def inferCharZeroOfRing {α : Q(Type u)} (_i : Q(Ring $α) := by with_reducible assumption) :

@@ -37,6 +37,51 @@ instance (M : Grp C) (X : Cᵒᵖ) : Small.{w} ((yonedaGrp.obj M).obj X) := by
   dsimp
   infer_instance
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on six declarations below. Two
+-- more sites were stale and are removed. All six declarations also carry
+-- `backward.isDefEq.respectTransparency false`, but that option alone is not sufficient.
+--
+-- Trace on `shrinkYonedaMon` with `.instances false` removed and the other options kept:
+--   ❌ mvar type check:
+--     ❌ Small.{w, v} ↑((yonedaMonObj X.X).obj Y) =?= Small.{w, v} ↑((yonedaMon.obj X).obj Y)
+--     assigned: the `Small` instance declared above, which is stated at `(yonedaMon.obj M).obj X`
+--     ❌ synth ("the instance could not be synthesized directly")
+--     unification would not succeed at [implicit]. It needs [default].
+--
+-- The comparison goes down to `(yonedaMonObj X.X).1 =?= (yonedaMon.obj X).1`. `yonedaMon` is a
+-- plain `def` whose value is a structure literal with `obj M := yonedaMonObj M.X`. To close the
+-- gap you must unfold `yonedaMon` and then reduce the projection. `yonedaMon` is semireducible,
+-- so [instances] cannot do this.
+--
+-- The `Small` instance above is stated for the functor value `(yonedaMon.obj M).obj X`. The goals
+-- that come out of `shrinkYonedaMon` are stated for the object presheaf `(yonedaMonObj M).obj X`.
+-- The declaration itself makes both spellings appear, because it reads
+-- `MonCat.shrinkFunctor (yonedaMon.obj X)` while `yonedaMon.map` produces terms typed at
+-- `yonedaMonObj`.
+--
+-- fix: none found.
+--   - `attribute [implicit_reducible] yonedaMon yonedaGrp` does not help. The check runs at
+--     exactly [instances], so no mark at [implicit] can reach it.
+--   - Restating both `Small` instances at `(yonedaMonObj M).obj X` leaves 10 errors, because
+--     `MonCat.shrinkFunctor (yonedaMon.obj X)` then finds no instance at all.
+--   - Declaring both spellings leaves 17 errors. Instance search picks one spelling per goal, so
+--     the mismatch only moves.
+--   - Defining `shrinkYonedaMon` from `yonedaMonObj X.X` instead of `yonedaMon.obj X`, with the
+--     `Small` instances restated to match, leaves 18 errors. Most of them are new, of the form
+--     `stuck at solving universe constraint`, because `yonedaMonObj` lands in `MonCat.{v}` while
+--     `shrinkYonedaMon` must land in `MonCat.{w}`. So this is not the repair either.
+--
+-- Unlike `Mathlib/CategoryTheory/Bicategory/Yoneda.lean`, this file is not just a missing bump.
+-- Removing the parent option and comparing errors with and without `instances false` looks like
+-- it says otherwise, because both give 34. That test is void here: `parent ON, instances OFF`
+-- also gives the same 34 errors with the same messages. All three broken configurations agree,
+-- so the test says only that both options are needed together.
+-- A `defeqAt` probe on `(yonedaMonObj M.X).obj Y =?= (yonedaMon.obj M).obj Y` gives
+-- reducible false, instances false, implicit false, default true. The same holds for the two
+-- sides wrapped in `Small.{w}`. So the comparison needs [default], and no bump to [implicit]
+-- would help.
+--
+-- `Small` is a propositional class, so the rejection might be a bit harsh.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -49,7 +94,6 @@ noncomputable def shrinkYonedaMon :
 
 open MonObj
 
-set_option backward.isDefEq.respectTransparency.instances false in
 /-- The type `(shrinkYonedaMon.obj M).obj Y` is equivalent to `Y.unop ⟶ M.X`. -/
 noncomputable def shrinkYonedaMonObjObjEquiv {M : Mon C} {Y : Cᵒᵖ} :
     (shrinkYonedaMon.{w}.obj M).obj Y ≃* (Y.unop ⟶ M.X) :=
@@ -88,7 +132,6 @@ noncomputable def shrinkYonedaGrp :
   obj X := GrpCat.shrinkFunctor (yonedaGrp.obj X)
   map f := GrpCat.shrinkFunctorMap (yonedaGrp.map f)
 
-set_option backward.isDefEq.respectTransparency.instances false in
 /-- The type `(shrinkYonedaGrp.obj M).obj Y` is equivalent to `Y.unop ⟶ M.X`. -/
 noncomputable def shrinkYonedaGrpObjObjEquiv {M : Grp C} {Y : Cᵒᵖ} :
     (shrinkYonedaGrp.{w}.obj M).obj Y ≃* (Y.unop ⟶ M.X) :=

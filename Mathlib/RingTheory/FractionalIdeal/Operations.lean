@@ -949,7 +949,35 @@ theorem _root_.IsFractional.mapEquiv {I : Submodule R K} (hI : IsFractional R⁰
   rw [Algebra.smul_def, ← ringEquivOfRingEquiv_algebraMap f (K := K) (L := L) r,
     ← map_mul, ← Algebra.smul_def, ← hr', ringEquivOfRingEquiv_algebraMap]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Two local `RingHomInvPair` instances are declared above. Both apply to the goal
+-- `RingHomInvPair ↑f.symm ?σ'`, because `σ'` is an `outParam`. The first one matches with
+-- `?e := f.symm` and reports `?σ' := ↑f.symm.symm`. The second one matches with `?e := f` and
+-- reports `?σ' := ↑f`. Only the second spelling is the one that the goals below carry.
+--
+-- Trace on `ringEquivOfRingEquiv` before the mark, with `.instances false` removed and
+-- `.types false` kept:
+--   ❌ mvar type check:
+--     ❌ RingHomInvPair ↑f.symm ↑f =?= RingHomInvPair ↑f.symm ↑f.symm.symm
+--     assigned: `instRingHomInvPairToRingHomRingEquivSymm f.symm`, the first local instance
+--     ✅ synth finds the second local instance, at `f`, with the exact type
+--     ❌ unify at [implicit], down to `f.symm.symm =?= f`
+--     unification succeeds at [implicit] once `RingEquiv.symm` and `MulEquiv.symm` unfold there
+--
+-- The fallback unify runs at the ambient transparency, so an `implicit_reducible` mark reaches
+-- it. `RingEquiv.symm` and `MulEquiv.symm` are plain semireducible defs. With both marked, the
+-- two sides differ only by structure eta, which holds at every level. `Equiv.symm` is already
+-- `implicit_reducible`, so it needs no mark.
+--
+-- The surface error before the mark was not an instance error. It was `unsolved goals` after
+-- `convert!`, because `convert!` matches fewer arguments once the two `RingHomInvPair` terms
+-- differ.
+--
+-- The next two lemmas keep `.instances false`. The same mark repairs their instance problem too,
+-- but then `simp only` no longer closes them. It leaves
+-- `Submodule.map ↑(e₁.trans e₂) I = Submodule.map ↑e₂ (Submodule.map ↑e₁ I)` in
+-- `ringEquivOfRingEquiv_trans` and `x ∈ Submodule.map id ↑I ↔ x ∈ I` in
+-- `ringEquivOfRingEquiv_refl`. No repair was found for those two goals.
+attribute [local implicit_reducible] RingEquiv.symm MulEquiv.symm in
 set_option backward.isDefEq.respectTransparency.types false in
 /-- The equiv `FractionalIdeal R⁰ K ≃+* FractionalIdeal S⁰ L`
   induced by a ring isomorphism `f : R ≃+* S`. -/

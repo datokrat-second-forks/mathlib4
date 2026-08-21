@@ -50,6 +50,39 @@ def instAddMonoidWithOne {α : Type u} [Ring α] : AddMonoidWithOne α := inferI
 /-- A shortcut (non)instance for `Nat.AtLeastTwo (n + 2)` to shrink generated proofs. -/
 lemma instAtLeastTwo (n : ℕ) : Nat.AtLeastTwo (n + 2) := inferInstance
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on the next three declarations.
+-- This is the known `binop%` metavariable race. `<|>` is notation for
+-- `binop_lazy% HOrElse.hOrElse` (`Init/Notation.lean`), so it goes through the same elaborator as
+-- `+` and the other arithmetic operators. The elaborator collects the operand types first and
+-- fixes the result type from the expected type. Only then does it unify the default instance.
+-- The same race shows up for `+` in `Mathlib/AlgebraicTopology/DoldKan/Projections.lean`.
+-- All 8 sites in `NormNum/Result.lean`, `NormNum/Inv.lean` and `NormNum/Basic.lean` are the same
+-- idiom and the same failure.
+--
+-- Trace with the option removed and everything else at default:
+--   ❌ mvar type check:
+--     ❌ HOrElse (MetaM Q(AddMonoidWithOne $α)) (?m.8 ?m.9) (MetaM Q(AddMonoidWithOne $α))
+--          =?= HOrElse ?α ?α ?α
+--     assigned: instHOrElseOfOrElse, the default instance for `<|>`
+--     ❌ synth (the goal still holds the open application `?m.8 ?m.9`)
+--     unification would succeed at [implicit]
+--
+-- The three arguments are compared from left to right:
+--   1. `MetaM Q(AddMonoidWithOne $α) =?= ?α` assigns `?α`. Here the right side of `q(...)` is
+--      the `Expr.app` spelling, because the argument came from the return type.
+--   2. `?m.8 ?m.9 =?= MetaM Q(...)` assigns the unknown type of `throwError`.
+--   3. `MetaM Q(AddMonoidWithOne $α) =?= MetaM Q(AddMonoidWithOne $α)` fails. The two sides print
+--      the same but are different terms: `(Expr.const `AddMonoidWithOne [u]).app α` against
+--      `q(AddMonoidWithOne $α)`, which is `Quoted.unsafeMk`. `Quoted.unsafeMk` is semireducible,
+--      so [instances] cannot unfold it.
+--
+-- Step 3 compares the result type, which `binop%` already fixed from the expected type in an
+-- earlier unification at [implicit] or higher. Step 3 must repeat that comparison at the weaker
+-- [instances]. If the order was swapped, both steps would succeed. This is why it is a race.
+--
+-- fix: none on Mathlib side. `(throwError ... : MetaM _)` leaves the result type open, so the
+-- `HOrElse` goal stays stuck. `(throwError ... : MetaM Q(AddMonoidWithOne $α))` makes the goal
+-- `HOrElse A A A` unsynthesizable even with the option, so it is not a fix either.
 set_option backward.isDefEq.respectTransparency.instances false in
 /-- Helper function to synthesize a typed `AddMonoidWithOne α` expression. -/
 meta def inferAddMonoidWithOne (α : Q(Type u)) : MetaM Q(AddMonoidWithOne $α) :=

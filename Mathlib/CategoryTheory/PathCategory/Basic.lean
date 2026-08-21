@@ -57,7 +57,7 @@ variable {V}
 
 -- Severity High
 -- Four `backward.isDefEq.respectTransparency.instances false` options stay in this file. No
--- acceptable fix was found for them. Only `induction_fixed_target` below is repaired, with a
+-- trivial fix was found for them. Only `induction_fixed_target` below is repaired, with a
 -- lemma swap that needs no option.
 --
 -- Diagnosis. Traced with every `respectTransparency` option at its default value, plus
@@ -124,6 +124,36 @@ variable {V}
   dsimp [Quiver.Hom] at f
   induction f with
 -/
+--
+-- The dance, and why it is needed. Write `Hom` honestly, as
+-- `fun X Y => Quiver.Path X.inner Y.inner`. Then `induction f` stops working, and the error
+-- becomes `Index in target's type is not a variable`. `Quiver.Path a` is a family indexed by its
+-- target in `V`. The `induction` tactic must generalize that index, so the index must be a
+-- variable. Here it is `Y.inner`, which is an application. The tactic does no unfolding first, so
+-- no attribute on `Paths.inner` helps. A one-field structure gives `{ inner := b }.inner`, which
+-- fails in the same way.
+--
+-- With the current `Hom := fun X Y : V => Quiver.Path X Y`, the ascription `(X Y : V)` retypes
+-- the object variables of `Paths V` as objects of `V`. The index is then the variable `Y`, and
+-- `induction` accepts it. So `induction` works here only because of that defeq abuse.
+--
+-- The fix is to give `Paths V` its own induction principle, with the objects in `Paths V`:
+--
+--   @[elab_as_elim]
+--   def homRec {a : Paths V} {motive : ∀ {b : Paths V}, (a ⟶ b) → Sort*}
+--       (nil : motive (𝟙 a))
+--       (cons : ∀ {b c : Paths V} (p : a ⟶ b) (e : b.inner ⟶ c.inner),
+--         motive p → motive (Quiver.Path.cons p e)) :
+--       ∀ {b : Paths V} (f : a ⟶ b), motive f :=
+--     fun {_} f => Quiver.Path.rec (motive := fun t p => motive (b := Paths.mk t) p)
+--       nil (fun p e ih => cons (b := Paths.mk _) (c := Paths.mk _) p e ih) f
+--
+-- Its indices are variables of type `Paths V`, so the tactic accepts them. Write
+-- `induction f using homRec`. A plain `induction f` still fails, because the tactic picks its
+-- eliminator from the type of `f`, which is a `Quiver.Path`.
+--
+-- The lemmas below are eliminators of this shape already. Only their own proofs need
+-- `Quiver.Path.rec` directly.
 set_option backward.isDefEq.respectTransparency.instances false in
 /-- To prove a property on morphisms of a path category with given source `a`, it suffices to
 prove it for the identity and prove that the property is preserved under composition on the right

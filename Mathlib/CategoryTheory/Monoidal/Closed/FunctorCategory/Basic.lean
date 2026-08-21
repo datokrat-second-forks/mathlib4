@@ -41,6 +41,33 @@ section
 
 variable {F₁ F₂ F₂' F₃ F₃' : J ⥤ C}
 
+-- `backward.isDefEq.respectTransparency.instances false` stays on three declarations in this
+-- file. All three are load-bearing. Removing them one at a time gives 7, 1 and 2 errors.
+--
+-- Trace on `homEquiv` with `.instances false` removed and the other options kept. Five
+-- assignments are rejected. The first two are noise: they try `?inst : Category C := ...` with
+-- the `Under j` category, `C =?= Under j` is simply false, and the fallback then synthesizes the
+-- correct ambient instance. The three that matter all look like this:
+--   ❌ mvar type check:
+--     ❌ Closed (F₁.obj k₁.right)
+--          =?= Closed (Opposite.unop ((Under.forget j ⋙ F₁).op.obj (Opposite.op k₁)))
+--     assigned: `closed (Opposite.unop ((Under.forget j ⋙ F₁).op.obj (Opposite.op k₁)))`
+--     ✅ synth finds `closed (F₁.obj k₁.right)`, the same instance at the other spelling
+--     ❌ unify, down to
+--       `F₁.obj k₁.right =?= Opposite.unop ((Under.forget j ⋙ F₁).op.obj (Opposite.op k₁))`
+--     unification would not succeed at [implicit]. It needs [default].
+--
+-- Both sides name the same object of `C`. One side applies `F₁` directly. The other pushes `k₁`
+-- through `Under.forget j ⋙ F₁`, takes `.op` of the functor, applies it to `op k₁`, and unops
+-- the result. Closing that needs `Functor.op`, `Functor.comp` and `Under.forget` to unfold, and
+-- they are plain semireducible defs. `defeqAt` probes, columns
+-- [reducible] [instances] [implicit] [default]:
+--   F₁.obj k.right =?= unop ((Under.forget j ⋙ F₁).op.obj (op k))          false false false true
+--   the same two wrapped in `Closed`                                       false false false true
+--
+-- fix: none found. The failing step is the fallback unify, so a mark could in principle reach it,
+-- but the gap needs [default] and no `implicit_reducible` mark gets there. The declaration also
+-- carries the parent option, so the fallback runs at [reducible], which is lower still.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
