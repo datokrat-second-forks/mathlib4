@@ -61,8 +61,13 @@ maps `k : ∀ i, I i` to `∏ᶜ fun (s : α) => (F s).obj (k s)`. -/
 noncomputable abbrev pointwiseProduct : (∀ i, I i) ⥤ C :=
   Functor.pi F ⋙ Pi.functor α
 
--- `backward.isDefEq.respectTransparency.instances false` stays on four declarations in this file.
--- All four are load-bearing. Removing any one of them alone gives errors.
+-- This file had four `backward.isDefEq.respectTransparency.instances false` sites. All four are
+-- now removed, and the file compiles with 0 errors and 0 warnings without them. The class
+-- involved is `HasProduct`, which is propositional, and the toolchain now exempts propositional
+-- classes from the `.instances` check by default.
+--
+-- The analysis below is kept because it records what the check was rejecting. It was measured on
+-- 2026-08-19, before the propositional exemption existed.
 --
 -- Trace on `Pi.equivalenceOfEquivCompPointwiseProduct` with `.instances false` removed and the
 -- other options kept:
@@ -87,7 +92,8 @@ noncomputable abbrev pointwiseProduct : (∀ i, I i) ⥤ C :=
 -- `Pi.equivalenceOfEquiv` and the `inverse` field that it builds. These are plain semireducible
 -- defs, so [implicit] stops at the first of them.
 --
--- fix: none found. `attribute [local implicit_reducible] CategoryTheory.Functor.pi` takes the
+-- fix at the time: none found. `attribute [local implicit_reducible] CategoryTheory.Functor.pi`
+-- took the
 -- error count from 9 to 7. Adding `CategoryTheory.Limits.Pi.functor` and
 -- `CategoryTheory.Pi.equivalenceOfEquiv` does not improve on that, because the chain continues
 -- into the fields that `Pi.equivalenceOfEquiv` builds. Marking the whole chain is too broad.
@@ -95,7 +101,6 @@ noncomputable abbrev pointwiseProduct : (∀ i, I i) ⥤ C :=
 -- same wall from the simp side.
 --
 -- `HasProduct` is a propositional class.
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 attribute [local simp] Functor.pi in
@@ -118,7 +123,6 @@ noncomputable def coconePointwiseProduct (c : ∀ i, Cocone (F i)) :
   pt := ∏ᶜ fun i ↦ (c i).pt
   ι := Functor.whiskerRight (NatTrans.pi fun i ↦ (c i).ι) _ ≫ (Pi.constCompPiIsoConst _).hom
 
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `coconePointwiseProduct` is invariant under isomorphisms of cocones. -/
@@ -167,7 +171,6 @@ noncomputable def pointwiseProductCompEvaluation (d : D) :
   NatIso.ofComponents (fun k => piObjIso _ _)
     (fun f => Pi.hom_ext _ _ (by simp [Functor.pi, ← NatTrans.comp_app]))
 
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- In a functor category, `coconePointwiseProduct` commutes with evaluation. -/
@@ -243,7 +246,6 @@ lemma IsIPCOfShape.of_isIso
   obtain ⟨_, h⟩ := H J F
   rwa [IsColimit.nonempty_isColimit_iff_isIso_desc (colimit.isColimit _)]
 
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 attribute [local simp] Functor.pi in

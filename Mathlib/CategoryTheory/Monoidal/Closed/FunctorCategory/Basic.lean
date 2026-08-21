@@ -41,8 +41,11 @@ section
 
 variable {F₁ F₂ F₂' F₃ F₃' : J ⥤ C}
 
--- `backward.isDefEq.respectTransparency.instances false` stays on three declarations in this
--- file. All three are load-bearing. Removing them one at a time gives 7, 1 and 2 errors.
+-- Three declarations in this file need an opt-out from the `.instances` check. The class is
+-- `Closed`, so the opt-out is written as `attribute [local lax_instance_defeq] Closed in` rather
+-- than `backward.isDefEq.respectTransparency.instances false`. This is not a repair. The site is
+-- still unresolved. The annotation only names the class instead of switching the whole check off.
+-- All three are load-bearing: dropping one annotation at a time gives 7, 1 and 2 errors.
 --
 -- Trace on `homEquiv` with `.instances false` removed and the other options kept. Five
 -- assignments are rejected. The first two are noise: they try `?inst : Category C := ...` with
@@ -68,7 +71,9 @@ variable {F₁ F₂ F₂' F₃ F₃' : J ⥤ C}
 -- fix: none found. The failing step is the fallback unify, so a mark could in principle reach it,
 -- but the gap needs [default] and no `implicit_reducible` mark gets there. The declaration also
 -- carries the parent option, so the fallback runs at [reducible], which is lower still.
-set_option backward.isDefEq.respectTransparency.instances false in
+--
+-- `Closed` carries data, so the propositional exemption does not apply to it.
+attribute [local lax_instance_defeq] Closed in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The bijection `(F₁ ⊗ F₂ ⟶ F₃) ≃ (F₂ ⟶ functorEnrichedHom C F₁ F₃)` when `F₁`, `F₂`
@@ -117,7 +122,7 @@ noncomputable def homEquiv : (F₁ ⊗ F₂ ⟶ F₃) ≃ (F₂ ⟶ functorEnric
     congr
     simp
 
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] Closed in
 set_option backward.isDefEq.respectTransparency.types false in
 lemma homEquiv_naturality_two_symm (f₂ : F₂ ⟶ F₂') (g : F₂' ⟶ functorEnrichedHom C F₁ F₃) :
     homEquiv.symm (f₂ ≫ g) = F₁ ◁ f₂ ≫ homEquiv.symm g := by
@@ -125,7 +130,7 @@ lemma homEquiv_naturality_two_symm (f₂ : F₂ ⟶ F₂') (g : F₂' ⟶ functo
   ext j
   simp [← uncurry_natural_left]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] Closed in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 lemma homEquiv_naturality_three [∀ (F₁ F₂ : J ⥤ C), HasEnrichedHom C F₁ F₂]

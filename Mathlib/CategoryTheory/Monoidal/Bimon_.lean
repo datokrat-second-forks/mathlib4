@@ -98,9 +98,10 @@ def toComon : Bimon C ⥤ Comon C := (Mon.forget C).mapComon
 @[simp]
 theorem toComon_forget : toComon C ⋙ Comon.forget C = forget C := rfl
 
--- `backward.isDefEq.respectTransparency.instances false` stays on three declarations in this
--- file: `toMonComonObj` here, `ofMonComonObj`, and the `BimonObj M.X.X` instance. All three are
--- load-bearing. Removing them one at a time gives 42, 47 and 9 errors.
+-- `backward.isDefEq.respectTransparency.instances false` was on three declarations in this
+-- file: `toMonComonObj` here, `ofMonComonObj`, and the `BimonObj M.X.X` instance.
+-- They were replaced with local `lax_instance_defeq` annotations on `ComonObj`.
+-- These annotations cannot be removed without producing errors.
 --
 -- Trace on the `BimonObj M.X.X` instance, the smallest of the three, with `.instances false`
 -- removed and the other options kept:
@@ -124,7 +125,7 @@ theorem toComon_forget : toComon C ⋙ Comon.forget C = forget C := rfl
 -- look like the bump case of `Mathlib/CategoryTheory/Bicategory/Yoneda.lean`. They are not.
 -- Removing the parent and comparing errors with and without `instances false` gives 69, 80, 80,
 -- which passes that test. The probe above refutes it. Trust the probe, not the error counts.
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] ComonObj in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 variable {C} in
@@ -159,7 +160,7 @@ theorem ofMonComonObjX_mul (M : Mon (Comon C)) :
     μ[(ofMonComonObjX M).X] = 𝟙 (M.X.X ⊗ M.X.X) ≫ μ[M.X].hom :=
   rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] MonObj in
 set_option backward.isDefEq.respectTransparency false in
 attribute [local instance] ComonObj.instTensorUnit in
 attribute [local simp] MonObj.tensorObj.one_def MonObj.tensorObj.mul_def tensorμ in
@@ -293,7 +294,7 @@ theorem BimonObjAux_comul (M : Bimon C) :
     Δ[((toComon C).obj M).X] = Δ[M.X].hom :=
   Category.comp_id _
 
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] ComonObj in
 set_option backward.isDefEq.respectTransparency false in
 instance (M : Bimon C) : BimonObj M.X.X where
   counit := ε[M.X].hom

@@ -430,6 +430,8 @@ end Functor
 
 namespace NatTrans
 
+-- set_option backward.isDefEq.respectTransparency.instances false in
+set_option trace.Meta.isDefEq.assign.checkTypes true in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- A natural transformation induces a natural transformation between the `map_presheaf` functors.
@@ -438,6 +440,17 @@ def onPresheaf {F G : C ⥤ D} (α : F ⟶ G) : G.mapPresheaf ⟶ F.mapPresheaf 
   app X :=
     { base := 𝟙 _
       c := whiskerLeft X.presheaf α ≫ eqToHom (Presheaf.Pushforward.id_eq _).symm }
+  naturality := by
+    intro X Y f
+    simp_all only [mapPresheaf_obj_X, mapPresheaf_obj_presheaf, eqToHom_refl, comp_id]
+    ext : 1
+    ext x : 1
+    on_goal 2 => ext U : 1
+    simp_all only [mapPresheaf_obj_X, comp_base, mapPresheaf_map_f, comp_id, id_comp]
+    simp_all only [mapPresheaf_obj_X, mapPresheaf_obj_presheaf, comp_obj, comp_base, mapPresheaf_map_f, op_obj,
+      Opens.map_comp_obj, eqToHom_refl, whiskerRight_id', Presheaf.comp_app, Presheaf.pushforward_obj_obj, comp_c_app,
+      whiskerLeft_app, mapPresheaf_map_c, whiskerRight_app, id_app, comp_id, naturality]
+    rfl
 
 -- TODO Assemble the last two constructions into a functor
 --   `(C ⥤ D) ⥤ (PresheafedSpace C ⥤ PresheafedSpace D)`
