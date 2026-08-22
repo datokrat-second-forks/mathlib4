@@ -366,9 +366,51 @@ end EquivLaxBraidedFunctorPUnit
 
 open EquivLaxBraidedFunctorPUnit
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `equivLaxBraidedFunctorPUnit` had an opt-out from the `.instances` check. The opt-out is gone.
+-- One mark replaces it. The sibling `respectTransparency.types false` stays, because it is a
+-- different axis. This declaration carries no parent `backward.isDefEq.respectTransparency false`.
+--
+-- Without the opt-out and without the mark the file gives 8 errors. The first is
+-- `could not synthesize default value for field 'functor_unitIso_comp'`, and `aesop` then fails.
+--
+-- Route 1 of `checkTypesAndAssign` rejects two instance metavariables. The trace was taken with the
+-- opt-out removed and no mark. To keep the lines short, write `A` for
+-- `X.mapCommMon.obj (trivial (Discrete PUnit.{u + 1}))` and `B` for `commMonToLaxBraidedObj A`.
+--
+-- The first, 12 times:
+--
+--   ❌ type check, pinned at [instances]
+--        B.LaxBraided  =?=  (of B).1.LaxBraided
+--   ✅ synthesis
+--        goal    B.LaxBraided
+--        result  instLaxBraidedDiscretePUnitCommMonToLaxBraidedObj A
+--   ❌ unify, at the ambient [implicit]
+--        (of B).2  =?=  instLaxBraidedDiscretePUnitCommMonToLaxBraidedObj A
+--
+-- The second, 11 times. It is the same pair with the field written by name:
+--
+--   ❌ type check, pinned at [instances]
+--        B.LaxBraided  =?=  (of B).LaxBraided
+--   ✅ synthesis
+--        goal    B.LaxBraided
+--        result  instLaxBraidedDiscretePUnitCommMonToLaxBraidedObj A
+--   ❌ unify, at the ambient [implicit]
+--        (of B).laxBraided  =?=  instLaxBraidedDiscretePUnitCommMonToLaxBraidedObj A
+--
+-- Both sides are the same `LaxBraided` instance on `B`. One side takes it out of the bundled
+-- `LaxBraidedFunctor.of B`. The other side is the instance itself. `LaxBraidedFunctor.of` is
+-- semireducible, so the projection does not reduce at [implicit]. The mark on it makes it reduce.
+--
+-- The unify runs at [implicit], not [reducible], because this declaration has no parent option.
+-- That is what makes a mark work here.
+--
+-- `linter.tacticCheckInstances true` is not the right tool on this site. It reports the two
+-- `@[simps]` lemmas and names `commMonToLaxBraided`, `laxBraidedToCommMon` and a list of
+-- arithmetic classes. Marking the two functors changes nothing. The trace names the real blocker.
+
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
+attribute [local implicit_reducible] CategoryTheory.LaxBraidedFunctor.of in
 /-- Commutative monoid objects in `C` are "just" braided lax monoidal functors from the trivial
 braided monoidal category to `C`.
 -/

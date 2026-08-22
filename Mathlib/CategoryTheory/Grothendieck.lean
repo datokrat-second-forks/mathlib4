@@ -452,12 +452,17 @@ def pre (G : D ⥤ C) : Grothendieck (G ⋙ F) ⥤ Grothendieck F where
 @[simp]
 theorem pre_id : pre F (𝟭 C) = 𝟭 _ := rfl
 
--- tl;dr: `instances false` here is collateral of the parent option, not a casualty of the
--- `[instances]` check. Remove the parent and the check has nothing left to reject.
+-- tl;dr: the parent `backward.isDefEq.respectTransparency false` is the reason. The opt-out from
+-- the `.instances` check is collateral of it, not a casualty of the check. Remove the parent and
+-- the check has nothing real left to reject, so the `.instances` opt-out goes too. The parent has
+-- not been removed here. See the last paragraph.
 --
--- This declaration carries `backward.isDefEq.respectTransparency.instances false`. The option
--- stays, with its parent. The site is not repaired. Do not count it as an independent
--- `[instances]` failure.
+-- This declaration opts out of the `.instances` check. The opt-out is now
+-- `attribute [local lax_instance_defeq] Category`, which turns the check off for one class in
+-- place of the whole `backward.isDefEq.respectTransparency.instances false` option. Every rejected
+-- assignment here has a `Category` metavariable, so the narrow form covers the site. It stays,
+-- with its parent. The site is not repaired. Do not count it as an independent `[instances]`
+-- failure.
 --
 -- The parent came first. Upstream `preNatIso` carried no options at all. The parent
 -- `backward.isDefEq.respectTransparency false` was added by an earlier adaptation. The child
@@ -547,7 +552,15 @@ theorem pre_id : pre F (𝟭 C) = 𝟭 _ := rfl
 --
 -- The three marks below change nothing that was measured. They are kept because they are harmless
 -- and they make the site easy to experiment on.
-set_option backward.isDefEq.respectTransparency.instances false in
+--
+-- Order of removal, measured. With the parent kept, dropping the `.instances` opt-out gives 2
+-- errors, so the opt-out cannot go on its own. The parent must go first. Attempts to remove the
+-- parent with marks have not succeeded. With both options gone and the three marks kept, 2 errors
+-- remain, and `linter.tacticCheckInstances true` reports a `simp` desync on
+-- `(F.obj ((map (whiskerRight α.hom F) ⋙ pre F H).obj Y✝).base).str` against
+-- `(F.obj (H.obj Y✝.base)).str`. Adding a fourth mark on `Grothendieck.pre` makes it worse, at 4
+-- errors. So the site stays open, and the open question is the parent option, not the check.
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 attribute [local implicit_reducible]
@@ -595,7 +608,7 @@ protected def preUnitIso (G : D ≌ C) :
   preNatIso _ G.unitIso.symm |>.symm
 
 -- Same issue as `preNatIso` above. See the note there.
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 attribute [local implicit_reducible]

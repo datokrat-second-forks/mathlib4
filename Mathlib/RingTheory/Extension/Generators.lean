@@ -280,7 +280,46 @@ def baseChange (T) [CommRing T] [Algebra R T] (P : Generators R S ι) :
     use (a + b)
     rw [map_add, ha, hb]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This declaration needed `backward.isDefEq.respectTransparency.instances false`. The narrower
+-- `lax_instance_defeq Semiring CommSemiring Algebra` below replaces it. The site is still open.
+-- The parent option below stays.
+--
+-- Failure: `Extension.Ring` is a structure projection. The extension `P.toExtension.baseChange`
+-- carries the ring `T ⊗[R] P.Ring`, but only [default] transparency shows that. A check pinned at
+-- [instances] sees two unrelated terms.
+--
+--   ❌ type check, pinned at [instances]
+--        Semiring (T ⊗[R] P.Ring)  =?=  Semiring P.toExtension.baseChange.Ring
+--      ↳ ❌ [instances] T ⊗[R] P.Ring =?= P.toExtension.baseChange.1
+--   ✅ synthesis
+--        goal    Semiring (T ⊗[R] P.Ring)
+--        result  TensorProduct.instSemiring
+--   ❌ unify, at the ambient [reducible]
+--        CommRing.toCommSemiring.toSemiring  =?=  TensorProduct.instSemiring
+--
+-- That trace comes from the configuration with the opt-out removed and the parent option kept. The
+-- block appears 6 times. With `Semiring` and `Algebra` made lax, the next wall has the same shape
+-- one class up:
+--
+--   ❌ type check, pinned at [instances]
+--        CommSemiring (T ⊗[R] P.Ring)  =?=  CommSemiring P.toExtension.baseChange.Ring
+--   ✅ synthesis
+--        goal    CommSemiring (T ⊗[R] P.Ring)
+--        result  TensorProduct.instCommSemiring
+--   ❌ unify, at the ambient [reducible]
+--        CommRing.toCommSemiring  =?=  TensorProduct.instCommSemiring
+--
+-- `Algebra` is the third wall of the same shape. All three classes are load-bearing. Drop any one
+-- of them from the list and 2 errors come back.
+--
+-- The two unified terms are two routes through the algebra hierarchy to the same instance. One
+-- route comes from the `CommRing` field of the extension. The other comes from the tensor product.
+-- No `implicit_reducible` mark can join them. The type check is pinned at [instances] and the
+-- unify runs at [reducible]. An `implicit_reducible` constant unfolds at neither level.
+--
+-- Symptom without the opt-out: the closing `simp` leaves a goal about `IsScalarTower.toAlgHom`
+-- applied to `X i`.
+attribute [local lax_instance_defeq] Semiring CommSemiring Algebra in
 set_option backward.defeqAttrib.useBackward true in
 variable (T) in
 set_option backward.isDefEq.respectTransparency false in
@@ -299,7 +338,10 @@ lemma baseChangeFromBaseChange_apply (x : P.toExtension.baseChange.Ring) :
     dsimp% (P.baseChangeFromBaseChange T).toRingHom x = MvPolynomial.algebraTensorAlgEquiv R T x :=
   rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Twin of `baseChangeFromBaseChange` above, in the other direction. The failure, the three walls
+-- and the replacement are the same. See the note above for the trace. The site is still open and
+-- the parent option below stays.
+attribute [local lax_instance_defeq] Semiring CommSemiring Algebra in
 set_option backward.defeqAttrib.useBackward true in
 variable (T) in
 set_option backward.isDefEq.respectTransparency false in
@@ -802,7 +844,42 @@ end Algebra.Generators
 
 namespace Algebra.Extension
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This declaration needed `backward.isDefEq.respectTransparency.instances false`. The narrower
+-- `lax_instance_defeq Semiring Algebra` below replaces it. The site is still open. The parent
+-- option below stays.
+--
+-- Same shape as `Generators.baseChangeFromBaseChange` earlier in this file. Here the extension is
+-- `(Generators.self R S).toExtension` and its ring is `MvPolynomial S R`. Only [default]
+-- transparency shows that.
+--
+--   ❌ type check, pinned at [instances]
+--        Semiring (MvPolynomial S R)  =?=  Semiring (Generators.self R S).toExtension.Ring
+--      ↳ ❌ [instances] AddMonoidAlgebra R (S →₀ ℕ) =?= (Generators.self R S).toExtension.1
+--   ✅ synthesis
+--        goal    Semiring (MvPolynomial S R)
+--        result  AddMonoidAlgebra.semiring
+--   ❌ unify, at the ambient [reducible]
+--        CommRing.toCommSemiring.toSemiring  =?=  AddMonoidAlgebra.semiring
+--
+-- That block appears 3 times. With `Semiring` made lax, the next wall is `Algebra`:
+--
+--   ❌ type check, pinned at [instances]
+--        Algebra R (MvPolynomial S R)  =?=  Algebra R (Generators.self R S).toExtension.Ring
+--   ✅ synthesis
+--        goal    Algebra R (MvPolynomial S R)
+--        result  AddMonoidAlgebra.algebra
+--   ❌ unify, at the ambient [reducible]
+--        (Generators.self R S).toExtension.instRingOfIsScalarTower  =?=  AddMonoidAlgebra.algebra
+--
+-- Both traces come from the configuration with the opt-out removed and the parent option kept.
+-- `Algebra` alone leaves 1 error, so both classes are needed. `CommSemiring` is not needed here.
+--
+-- No `implicit_reducible` mark can help. The type check is pinned at [instances] and the unify
+-- runs at [reducible]. An `implicit_reducible` constant unfolds at neither level.
+--
+-- Symptom without the opt-out: the closing `simp` leaves a goal about `IsScalarTower.toAlgHom`
+-- applied to `X i`.
+attribute [local lax_instance_defeq] Semiring Algebra in
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- The canonical homomorphism of extensions from the universal extension `R[S] → S`

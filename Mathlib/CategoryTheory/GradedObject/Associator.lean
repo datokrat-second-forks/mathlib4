@@ -61,7 +61,20 @@ noncomputable def mapBifunctorAssociator :
     mapIso ((((mapTrifunctorMapIso associator I₁ I₂ I₃).app X₁).app X₂).app X₃) r ≪≫
     mapBifunctorComp₂₃MapObjIso F G₂₃ ρ₂₃ X₁ X₂ X₃
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `ι_mapBifunctorAssociator_hom` had an opt-out from the `.instances` check next to the parent
+-- `backward.isDefEq.respectTransparency false`. The opt-out is gone. The parent stays.
+--
+-- The opt-out was collateral of the parent. It did no work of its own. With the parent kept and the
+-- opt-out removed, the file compiles with 0 errors and 0 warnings.
+--
+-- A trace in that state has no rejected assignment at all, so route 1 of `checkTypesAndAssign`
+-- rejects nothing here. Route 1 is the only route the `.instances` option controls. There is no
+-- type check, no synthesis and no unify to show for it.
+--
+-- A poison test shows that the file can still fail here. When the statement writes `associator.inv`
+-- in place of `associator.hom`, the file reports 3 errors. The first is a type mismatch at the
+-- statement. So the clean result is not a false pass.
+
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp, nolint unusedHavesSuffices)]

@@ -1116,7 +1116,15 @@ instance {S : C} (E : PreZeroHypercover S) [E.HasPullbacks] :
   dsimp
   infer_instance
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is stale on the current
+-- toolchain. It is removed and nothing replaces it. The `.types` opt-out below stays.
+--
+-- Measurement: with the option removed the file compiles with 0 errors and 0 warnings. A trace of
+-- this lemma with `trace.Meta.isDefEq.assign.checkTypes` shows no rejected assignment at all. There
+-- is no route-1 check to report, so this site has no three-step block.
+--
+-- Poison test: the conclusion `= ⊤` was changed to `= ⊥`. That gives 3 errors, so the test can
+-- fail.
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp]

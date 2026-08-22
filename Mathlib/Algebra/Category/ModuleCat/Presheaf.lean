@@ -148,7 +148,17 @@ noncomputable def presheaf : Cᵒᵖ ⥤ Ab where
 lemma presheaf_obj_coe (X : Cᵒᵖ) :
     (M.presheaf.obj X : Type _) = M.obj X := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is stale on the current
+-- toolchain. It is removed and nothing replaces it.
+--
+-- Measurement: this file does not compile clean at either setting. `unitHomEquiv` below fails with
+-- 2 errors, and that declaration carries no option of its own. The count stays at those same 2
+-- errors with the option removed here and at `toPresheaf_map_app_apply` below. A trace of both
+-- lemmas with `trace.Meta.isDefEq.assign.checkTypes` shows no rejected assignment at all. There is
+-- no route-1 check to report, so neither site has a three-step block.
+--
+-- Poison test: the right side of both lemmas was changed to `0`. That adds 4 errors on top of the
+-- 2, so the test can fail.
 @[simp]
 lemma presheaf_map_apply_coe {X Y : Cᵒᵖ} (f : X ⟶ Y) (x : M.obj X) :
     DFunLike.coe (α := M.obj X) (β := fun _ ↦ M.obj Y) (M.presheaf.map f).hom x = M.map f x := rfl
@@ -176,7 +186,9 @@ noncomputable def toPresheaf : PresheafOfModules.{v} R ⥤ Cᵒᵖ ⥤ Ab where
 lemma toPresheaf_obj_coe (X : Cᵒᵖ) :
     (((toPresheaf R).obj M).obj X : Type _) = M.obj X := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same result as `presheaf_map_apply_coe` above. The `.instances` opt-out was here and is stale on
+-- the current toolchain. It is removed and nothing replaces it. The measurement and the poison test
+-- are described in the note above.
 @[simp]
 lemma toPresheaf_map_app_apply (f : M₁ ⟶ M₂) (X : Cᵒᵖ) (x : M₁.obj X) :
     DFunLike.coe (α := M₁.obj X) (β := fun _ ↦ M₂.obj X)

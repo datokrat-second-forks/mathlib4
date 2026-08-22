@@ -302,7 +302,79 @@ instance (priority := 100) guitartExact_of_isEquivalence_of_isIso
   dsimp only [structuredArrowDownwards]
   infer_instance
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `guitartExact_id` keeps the parent `backward.isDefEq.respectTransparency false` and an opt-out
+-- from the `.instances` check. The opt-out is now `lax_instance_defeq` on the one class that needs
+-- it, `Category`. That is a narrower opt-out, not a repair.
+--
+-- The parent option is the reason. The `.instances` opt-out only covers for it. See part 2.
+--
+-- Measurements. The error counts are for the file. `lax_instance_defeq Category` gives the same
+-- counts as `backward.isDefEq.respectTransparency.instances false` in every row.
+--
+--   `.instances` opt-out   parent   result
+--   off                    off      2 errors
+--   on                     off      2 errors
+--   off                    on       2 errors
+--   on                     on       compiles
+--
+-- Part 1, what the `.instances` opt-out does. The trace below was taken with the parent option kept
+-- and no `.instances` opt-out of any kind. Route 1 of `checkTypesAndAssign` rejects two instance
+-- metavariables. The first, 16 times:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u.156, max u₁ v₂} (CostructuredArrow F X₃)
+--          =?= Category.{v₁, max u₁ v₂} (CostructuredArrow F ((𝟭 C₂).obj X₃))
+--   ✅ synthesis
+--        goal    Category.{v₁, max u₁ v₂} (CostructuredArrow F X₃)
+--        result  instCategoryCostructuredArrow_1 F X₃
+--   ❌ unify, at the ambient [reducible]
+--        instCategoryCostructuredArrow_1 F ((𝟭 C₂).obj X₃)
+--          =?= instCategoryCostructuredArrow_1 F X₃
+--
+-- The second, twice, with `F ⋙ 𝟭 C₂` in place of `F`:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u.155, max u₁ v₂} (CostructuredArrow (F ⋙ 𝟭 C₂) X₃)
+--          =?= Category.{v₁, max u₁ v₂} (CostructuredArrow (F ⋙ 𝟭 C₂) ((𝟭 C₂).obj X₃))
+--   ✅ synthesis
+--        goal    Category.{v₁, max u₁ v₂} (CostructuredArrow (F ⋙ 𝟭 C₂) X₃)
+--        result  instCategoryCostructuredArrow_1 (F ⋙ 𝟭 C₂) X₃
+--   ❌ unify, at the ambient [reducible]
+--        instCategoryCostructuredArrow_1 (F ⋙ 𝟭 C₂) ((𝟭 C₂).obj X₃)
+--          =?= instCategoryCostructuredArrow_1 (F ⋙ 𝟭 C₂) X₃
+--
+-- Both pairs are the same category instance under two spellings of one object, `X₃` and
+-- `(𝟭 C₂).obj X₃`. The unify runs at [reducible], where no `implicit_reducible` mark can help. The
+-- parent option causes that low level. It suppresses the bump that instance arguments normally get.
+--
+-- `linter.tacticCheckInstances true` shows where the second spelling comes from:
+--
+--   `simp` rewrote a term with Functor.id_map. The instance argument
+--     instCategoryCostructuredArrow_1 F ((𝟭 C₂).obj X₃)
+--   has type      Category.{v₁, max u₁ v₂} (CostructuredArrow F ((𝟭 C₂).obj X₃))
+--   but is expected to have type
+--                 Category.{v₁, max u₁ v₂} (CostructuredArrow F X₃)
+--   For the rest of this `simp` call, lemmas that mention this instance do not apply.
+--
+-- Part 2, why the parent option cannot go. With the parent removed, route 1 rejects nothing at all.
+-- A trace in that state has 538 rejected assignments and none of them is pinned at [instances].
+-- With `lax_instance_defeq Category` also in place, the linter reports no desync either. The
+-- instance problem is completely gone, and the proof still fails with the same 2 errors. So the
+-- parent is supplying something other than the instance check. It is the old blanket `.default` on
+-- implicit and instance arguments, which no reducibility attribute reproduces.
+--
+-- Narrowing, for the record. Supply the `w` field of the outer `StructuredArrow.homMk` by hand as
+-- `(by ext; simp)`. The goal then reduces to
+--
+--   (StructuredArrow.hom X₀ ≫ (CostructuredArrow.pre (𝟭 C₁) F X₃).map (…)).left
+--     = (StructuredArrow.hom X).left
+--
+-- and `simp` makes no progress. `Comma.comp_left` is reported as an unused simp argument, so it
+-- does not fire on `(f ≫ g).left` here. The composition sits in `StructuredArrowRightwards`, which
+-- is a chain of `StructuredArrow` and `CostructuredArrow` synonyms over `Comma`, and `simp`
+-- unifies its lemma sides at `.reducible`, where those synonyms do not unfold.
+--
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.isDefEq.respectTransparency false in
 instance guitartExact_id (F : C₁ ⥤ C₂) :
     GuitartExact (TwoSquare.mk (𝟭 C₁) F F (𝟭 C₂) (𝟙 F)) := by

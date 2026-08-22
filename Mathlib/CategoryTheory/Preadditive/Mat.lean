@@ -309,7 +309,42 @@ open CategoryTheory.Limits
 
 variable {C}
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This declaration needed `backward.isDefEq.respectTransparency.instances false`. The option is
+-- gone. The last `simp` of `hom_inv_id` now has `embedding` in its simp set.
+--
+-- The failure was an instance desync inside that `simp`. `embedding_obj_ι` rewrites the carrier of
+-- `Finset.univ` from `((embedding C).obj (M.X i)).ι` to `PUnit`. It does not rewrite the `Fintype`
+-- instance beside it. `Finset.univ_unique` then tries to match. Lean must accept the old instance
+-- for the new carrier.
+--
+--   ❌ type check, pinned at [instances]
+--        Fintype PUnit  =?=  Fintype ((embedding C).obj (M.X i)).ι
+--      ↳ ❌ [instances] PUnit =?= ((embedding C).obj (M.X i)).1
+--   ✅ synthesis
+--        goal    Fintype PUnit
+--        result  PUnit.fintype
+--   ❌ unify, at the ambient [reducible]
+--        ((embedding C).obj (M.X i)).2  =?=  PUnit.fintype
+--
+-- That trace comes from the configuration with the `.instances` opt-out removed and the parent
+-- `backward.isDefEq.respectTransparency false` kept. The same block repeats 8 times, twice per
+-- `Finset.univ` occurrence.
+--
+-- The result is that four lemmas stop applying. `simp?` lists `Finset.univ_unique`,
+-- `PUnit.default_eq_unit`, `Finset.card_singleton` and `one_smul` with the option. Without the
+-- option all four are absent. The goal keeps the factor `Finset.univ.card • eqToHom ⋯`.
+--
+-- No `implicit_reducible` mark can close this gap. The unify runs at [reducible]. An
+-- `implicit_reducible` constant does not unfold at that level. The parent option is the reason for
+-- [reducible]. The parent option cannot go either. Without it this file fails with 10 errors, and
+-- the `.instances` option makes no difference to those 10.
+--
+-- `simp [embedding]` unfolds the functor. The projection `.fintype` then reduces to `PUnit.fintype`
+-- and the two spellings agree. The sibling proof `inv_hom_id` below already unfolds `embedding` the
+-- same way.
+--
+-- `linter.tacticCheckInstances true` does not name this `simp`. It reports the two `@[simps]`
+-- lemmas instead, and it names `Quiver.Hom`, `DMatrix`, `Hom` and `embedding`.
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 open scoped Classical in
@@ -329,7 +364,7 @@ def isoBiproductEmbedding (M : Mat_ C) : M ≅ ⨁ fun i => (embedding C).obj (M
       rw [Fintype.univ_ofSubsingleton, Finset.sum_singleton, dite_eq_right hb.symm, zero_comp]
     · intro h
       simp at h
-    simp
+    simp [embedding]
   inv_hom_id := by
     apply biproduct.hom_ext
     intro i
@@ -425,9 +460,19 @@ set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 instance lift_additive (F : C ⥤ D) [Functor.Additive F] : Functor.Additive (lift F) where
 
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
+-- This declaration carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- stale on the current toolchain. It is removed and nothing replaces it.
+--
+-- Measurement: with the option removed the file compiles with 0 errors. A trace over this
+-- declaration with `trace.Meta.isDefEq.assign.checkTypes` shows 62 rejected assignments. Every one
+-- of them is checked at [default]. None is an instance metavariable on route 1 of
+-- `checkTypesAndAssign`. All 62 compare `Discrete ?J ⥤ ?C` against a functor out of `C` or
+-- `Mat_ C`. Such pairs fail at every transparency and are not evidence.
+--
+-- Poison test: the statement `embedding C ⋙ lift F ≅ F` was changed to `lift F ⋙ embedding C ≅ F`.
+-- That gives 9 errors, so the test can fail.
 /-- An additive functor `C ⥤ D` factors through its lift to `Mat_ C ⥤ D`. -/
 @[simps!]
 def embeddingLiftIso (F : C ⥤ D) [Functor.Additive F] : embedding C ⋙ lift F ≅ F :=

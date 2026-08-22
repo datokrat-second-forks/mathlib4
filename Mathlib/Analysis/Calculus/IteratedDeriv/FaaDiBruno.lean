@@ -62,8 +62,49 @@ theorem iteratedDeriv_vcomp_eq_sum_orderedFinpartition
   exact iteratedDerivWithin_vcomp_eq_sum_orderedFinpartition hg hf uniqueDiffOn_univ
     uniqueDiffOn_univ (mem_univ x) (mapsTo_univ f _) hi
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency false in
+-- This declaration needed `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are gone. The five marks below replace them.
+--
+-- The failure was an instance desync inside the `simp only` below. `OrderedFinpartition.default_eq`
+-- rewrites the carrier `Fin default.length` to `Fin 1`. It leaves the `Fintype` instance beside it
+-- at the old spelling. With both options at their default and no marks, route 1 of
+-- `checkTypesAndAssign` runs like this:
+--
+--   ❌ type check, pinned at [instances]
+--        Fintype (Fin 1)  =?=  Fintype (Fin default.length)
+--      ↳ ❌ [instances] Fin 1 =?= Fin default.length
+--   ✅ synthesis
+--        goal    Fintype (Fin 1)
+--        result  Fin.fintype 1
+--   ❌ unify, at the ambient [implicit]
+--        Fin.fintype default.length  =?=  Fin.fintype 1
+--      ↳ ❌ [implicit] default.length =?= 1
+--
+-- The block appears 16 times. The last line is the whole story. `default : OrderedFinpartition 1`
+-- is `atomic 1`, and the `length` field of `atomic n` is `n`. `atomic` is a plain semireducible
+-- definition, so [implicit] cannot reach the value on its own. Mark it and the four definitions
+-- around it, and the unify succeeds.
+--
+-- The parent option was the sole cause. It suppresses the [implicit] bump that `isDefEqApp` gives
+-- to instance arguments. With the parent present this same unify ran at [reducible], and no
+-- `implicit_reducible` mark unfolds at that level. Remove the parent first. Then the marks bite,
+-- and the `.instances` opt-out is not needed either.
+--
+-- The mark list comes from `linter.tacticCheckInstances true`. (Credit: Paul found it.) An earlier
+-- attempt here marked only `OrderedFinpartition.atomic` and still left 1 error. That led to the
+-- wrong conclusion that the parent could not go. The route was right and the mark set was too
+-- small. Remove both mark blocks in this file, with the options already gone, and 3 errors return.
+--
+-- Symptom with neither the options nor the marks: `simp` leaves
+-- `∑ x_1, fderivWithin 𝕜 g t (f x) …` unreduced. The sum still ranges over `Fin default.length`
+-- and not over `Fin 1`.
+attribute [local implicit_reducible]
+  OrderedFinpartition.extendEquiv
+  OrderedFinpartition.extendMiddle
+  OrderedFinpartition.extend
+  OrderedFinpartition.atomic
+  OrderedFinpartition.extendLeft
+in
 theorem iteratedDerivWithin_vcomp_two
     (hg : ContDiffWithinAt 𝕜 2 g t (f x)) (hf : ContDiffWithinAt 𝕜 2 f s x)
     (ht : UniqueDiffOn 𝕜 t) (hs : UniqueDiffOn 𝕜 s) (hx : x ∈ s) (hst : MapsTo f s t) :
@@ -87,9 +128,42 @@ theorem iteratedDeriv_vcomp_two (hg : ContDiffAt 𝕜 2 g (f x)) (hf : ContDiffA
   exact iteratedDerivWithin_vcomp_two hg hf uniqueDiffOn_univ
     uniqueDiffOn_univ (mem_univ x) (mapsTo_univ f _)
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same failure as `iteratedDerivWithin_vcomp_two` above, and the same fix. Both options are gone
+-- and the same five marks replace them.
+--
+-- This proof reaches more `OrderedFinpartition` spellings, so the desynced lengths are longer. A
+-- representative rejection, again with both options at their default and no marks:
+--
+--   ❌ type check, pinned at [instances]
+--        Fintype (Fin (x.length + 1))
+--          =?= Fintype (Fin ((OrderedFinpartition.extendEquiv 1) ⟨x, none⟩).length)
+--   ✅ synthesis
+--        goal    Fintype (Fin (x.length + 1))
+--        result  Fin.fintype (x.length + 1)
+--   ❌ unify, at the ambient [implicit]
+--        Fin.fintype ((OrderedFinpartition.extendEquiv 1) ⟨x, none⟩).length
+--          =?= Fin.fintype (x.length + 1)
+--      ↳ ❌ [implicit] ((OrderedFinpartition.extendEquiv 1) ⟨x, none⟩).length =?= x.length + 1
+--
+-- The other lengths in the list are `((extendEquiv 1) ⟨x, some i⟩).length` and `x.length`. Each of
+-- them needs one of the five marked definitions to unfold, and the marks cover all of them.
+--
+-- With the parent option present this file also desynced `DecidableEq (Fin 1)` against
+-- `DecidableEq (Fin (atomic 1).length)`. That was a downstream effect. Once the `Fintype` unify
+-- succeeds, the `DecidableEq` rejections do not appear at all.
+--
+-- Symptoms with neither the options nor the marks: `congr <;> ext x` fails with "No applicable
+-- extensionality theorem found for type F". The `simp only` above also reports
+-- `Fin.default_eq_zero`, `Fin.succ_zero_eq_one`, `update_self` and `update_idem` as unused
+-- arguments. Those four lemmas stop firing for the same reason.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  OrderedFinpartition.extendEquiv
+  OrderedFinpartition.extendMiddle
+  OrderedFinpartition.extend
+  OrderedFinpartition.atomic
+  OrderedFinpartition.extendLeft
+in
 theorem iteratedDerivWithin_vcomp_three
     (hg : ContDiffWithinAt 𝕜 3 g t (f x)) (hf : ContDiffWithinAt 𝕜 3 f s x)
     (ht : UniqueDiffOn 𝕜 t) (hs : UniqueDiffOn 𝕜 s) (hx : x ∈ s) (hst : MapsTo f s t) :

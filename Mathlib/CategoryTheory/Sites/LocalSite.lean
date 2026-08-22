@@ -159,13 +159,54 @@ instance (A : Type u') [Category.{v'} A] [HasColimitsOfSize.{v, v} A]
 instance : (coconstantSheaf.{w} J A).IsRightAdjoint :=
   ⟨Γ J A, ⟨ΓCoconstantSheafAdj J A⟩⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `coconstantSheafΓNatIsoId` had an opt-out from the `.instances` check. The opt-out is gone. The
+-- second `letI` below replaces it.
+--
+-- Without the opt-out and without that `letI`, the declaration gives 4 errors. The first is
+-- `failed to synthesize Unique ((point J).fiber.obj (⊤_ C))`, which then runs out of heartbeats.
+--
+-- Route 1 of `checkTypesAndAssign` rejects one instance metavariable. The trace was taken with the
+-- opt-out removed, the original single `letI`, and every other option at its default:
+--
+--   ❌ type check, pinned at [instances]
+--        Unique ((point J).fiber.obj (⊤_ C))
+--          =?= Unique (unop ((point J).fiber.op.obj (op (⊤_ C))))
+--      The check walks down to
+--        ❌ [instances] (point J).fiber.1 (⊤_ C) =?= ((point J).fiber.op.obj (op (⊤_ C))).1
+--   💥 synthesis
+--        goal       Unique ((point J).fiber.obj (⊤_ C))
+--        candidates #[Concrete.instUniqueToTypeTerminal, this]
+--        result     none. `this` is refused for the same reason as the type check. Then
+--                   `Concrete.instUniqueToTypeTerminal` is accepted and the search runs on until
+--                   the typeclass heartbeat limit stops it.
+--   -- no unify: synthesis never returned a term, so there is nothing to unify against
+--
+-- Where the two spellings come from. `linter.tacticCheckInstances true` names the step:
+--
+--   `simp` rewrote a term with Functor.op_obj. The instance argument `this`
+--   has type       Unique (unop ((point J).fiber.op.obj (op (⊤_ C))))
+--   but is expected to have type
+--                  Unique ((point J).fiber.obj (⊤_ C))
+--
+-- The `simp` in the last line rewrites the carrier of the instance argument and the instance
+-- argument does not follow. Instance search then has to find `Unique` at the new spelling on its
+-- own, and it cannot.
+--
+-- The repair gives the instance at both spellings. `equivShrink` only typechecks against the
+-- `unop`/`op` spelling, so the first `letI` keeps it and the second transports it. Writing only the
+-- second one, with `equivShrink` on the right, does not elaborate.
+--
+-- This is not a mark case. Both legs of route 1 fail. The type check is pinned at [instances], and
+-- the two spellings differ by `Functor.op`, which is already `implicit_reducible` and so starts one
+-- rung above [instances].
+
 set_option backward.defeqAttrib.useBackward true in
 /-- The global sections of the coconstant sheaf on a type are naturally isomorphic to that type. -/
 noncomputable def coconstantSheafΓNatIsoId :
     IsLocalSite.coconstantSheaf.{w} J A ⋙ Γ J A ≅ 𝟭 A :=
-  letI : Unique (unop ((IsLocalSite.point J).fiber.op.obj (op (⊤_ C)))) :=
+  letI inst₀ : Unique (unop ((IsLocalSite.point J).fiber.op.obj (op (⊤_ C)))) :=
     (equivShrink (⊤_ C ⟶ ⊤_ C)).symm.unique
+  letI : Unique ((IsLocalSite.point J).fiber.obj (⊤_ C)) := inst₀
   (Functor.isoWhiskerLeft _ (ΓNatIsoSheafSections J _ terminalIsTerminal)) ≪≫
     NatIso.ofComponents (fun X ↦ productUniqueIso _) (by simp [IsLocalSite.coconstantSheaf])
 

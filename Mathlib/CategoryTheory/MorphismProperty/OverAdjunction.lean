@@ -185,7 +185,28 @@ section Adjunction
 
 variable [P.IsStableUnderComposition] [Q.IsStableUnderBaseChange]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `Over.mapPullbackAdj` and `Under.mapPushoutAdj` below both had an opt-out from the `.instances`
+-- check next to the parent `backward.isDefEq.respectTransparency false`. The opt-outs are gone. The
+-- parent stays on both.
+--
+-- The opt-out was collateral of the parent. It did no work of its own.
+--
+--   `.instances false`   parent   result
+--   off                  off      22 errors
+--   off                  on       compiles
+--   on                   on       compiles
+--
+-- A trace with the parent kept and the opt-out removed confirms the reason. It has 494 rejected
+-- assignments and not one of them is pinned at [instances], so route 1 of `checkTypesAndAssign`
+-- rejects nothing here. Route 1 is the only route the `.instances` option controls. There is no
+-- type check, no synthesis and no unify to show for it.
+--
+-- The parent option is a separate matter and stays. Without it the file gives 22 errors.
+-- `linter.tacticCheckInstances true` reports the four `@[simps!]` lemmas and names a long list:
+-- `MorphismProperty`, `Comma.lift`, `Comma.forget`, `Comma.mapRight`, `Over.mk`, `pullback`, `map`,
+-- `limit.cone`, `CategoryStruct.comp`, `CategoryStruct.id` and `Quiver.Hom`. No mark set was tried
+-- against that list. `Quiver.Hom` in it is the universal escape hatch and is not acceptable.
+
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `P.Over.map` is left adjoint to `P.Over.pullback` if pullbacks of morphisms satisfying `P`
@@ -346,7 +367,8 @@ section Adjunction
 
 variable [P.IsStableUnderComposition] [Q.IsStableUnderCobaseChange]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same diagnosis as `Over.mapPullbackAdj` above. See the note there.
+
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 attribute [local instance] hasPushouts_symmetry_of_hasPushoutsAlong in

@@ -188,9 +188,71 @@ def prelaxfunctor : PrelaxFunctor Cat Cat where
     ext X
     cases X <;> rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- The two `pseudofunctor` declarations in this file, one for `WithTerminal` and one for
+-- `WithInitial`, are the same proof twice. Both had an opt-out from the `.instances` check and the
+-- parent `backward.isDefEq.respectTransparency false`. Both options are gone from both
+-- declarations. Three marks replace them.
+--
+-- The parent option was the cause. The `.instances` opt-out only looked necessary because the
+-- parent was there. Once marks replace the parent, the `.instances` opt-out goes too.
+--
+-- Measurements before the repair. The error counts are for the file.
+--
+--   `.instances false`   parent   result
+--   off                  off      10 errors
+--   on                   off      10 errors
+--   off                  on       10 errors
+--   on                   on       compiles
+--
+-- So neither option worked alone, and the pair looked irreducible. It was not.
+--
+-- Part 1, what the parent option was hiding. With the parent kept and no `.instances` opt-out,
+-- route 1 of `checkTypesAndAssign` rejects one instance metavariable 6 times:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u.68, ?u.22} (WithTerminal ↑a✝¹)
+--          =?= Category.{?u.21, ?u.22} ↑(Cat.of (WithTerminal ↑a✝¹))
+--   ✅ synthesis
+--        goal    Category.{?u.21, ?u.22} (WithTerminal ↑a✝¹)
+--        result  instCategory
+--   ❌ unify, at the ambient [reducible]
+--        (Cat.of (WithTerminal ↑a✝¹)).str  =?=  instCategory
+--
+-- Both terms are the `Category` structure on `WithTerminal ↑a✝¹`. One side takes it out of the
+-- bundled `Cat.of`. The other side is the instance itself. The unify runs at [reducible], where no
+-- `implicit_reducible` mark can help. The parent option causes that low level. It suppresses the
+-- bump that instance arguments normally get. So the `.instances` opt-out was doing nothing but
+-- covering for the parent, and no mark could be found while the parent was in place.
+--
+-- Part 2, removing the parent. With the parent gone the failures move to route 2, which checks at
+-- [implicit], and marks reach them. Three marks close both declarations:
+--
+--   prelaxfunctor       ❌ [implicit] Cat.of (WithTerminal ↑a✝¹) =?= prelaxfunctor.obj a✝¹
+--                         ❌ [implicit] { α := WithTerminal ↑a✝¹, str := instCategory }
+--                              =?= prelaxfunctor.toPrefunctor.1 a✝¹
+--                           ❌ [implicit] @Bundled.mk =?= prelaxfunctor.toPrefunctor.1
+--   WithTerminal.Hom    the failing `simp` in `map₂_whisker_left` and its siblings does not apply
+--                       `Category.comp_id`. `simp?` isolates that step. A defeq trace on it shows
+--                       `WithTerminal.Hom` must unfold for the rewrite to match.
+--   Quiver.Hom          named by `linter.tacticCheckInstances true`
+--
+-- All three are necessary. Removing `prelaxfunctor` gives 10 errors, removing `Quiver.Hom` gives 6,
+-- removing the `Hom` mark gives 8.
+--
+-- Two more marks were tried and are not necessary. `CategoryStruct.id` is named by the linter but
+-- changes nothing. `implicit_reducible` on `pseudofunctor` itself is allowed, and it does move the
+-- linter one layer down, but it also changes nothing here.
+--
+-- Method note. `linter.tacticCheckInstances true` names the candidate constants, including the
+-- declaration under construction. Write the mark into that declaration's own attribute list, as in
+-- `@[simps, implicit_reducible]`. The attribute lands after the body is elaborated, so it does not
+-- reach the declaration's own tactic proofs, but it does reach the `@[simps]` lemmas.
+attribute [local implicit_reducible]
+  prelaxfunctor
+  Quiver.Hom
+  WithTerminal.Hom
+in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- The pseudofunctor from `Cat` to `Cat` defined with `WithTerminal`. -/
 @[simps]
 def pseudofunctor : Pseudofunctor Cat Cat where
@@ -604,9 +666,14 @@ def prelaxfunctor : PrelaxFunctor Cat Cat where
     ext X
     cases X <;> rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same diagnosis and same repair as `WithTerminal.pseudofunctor` above. See the note there.
+
+attribute [local implicit_reducible]
+  prelaxfunctor
+  Quiver.Hom
+  WithInitial.Hom
+in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
 /-- The pseudofunctor from `Cat` to `Cat` defined with `WithInitial`. -/
 @[simps]
 def pseudofunctor : Pseudofunctor Cat Cat where

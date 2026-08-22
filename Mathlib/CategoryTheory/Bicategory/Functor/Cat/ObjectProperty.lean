@@ -174,7 +174,17 @@ def fullsubcategory : Pseudofunctor B Cat where
 -- The mark is not applied below. It is recorded because it isolates the instance desync cleanly,
 -- which is useful when judging whether the `[instances]` check is what breaks this site. It is
 -- not.
-set_option backward.isDefEq.respectTransparency.instances false in
+--
+-- The parent `backward.isDefEq.respectTransparency false` is the reason here as well. The matrix
+-- above shows it: with the parent gone the mark clears every instance rejection, and the same 10
+-- errors stay, so the check is not what breaks this site. If the parent could be removed, the
+-- `.instances` opt-out would go with it. The parent has not been removed here.
+--
+-- The opt-out below is `attribute [local lax_instance_defeq] Category`, which turns the
+-- `.instances` check off for one class in place of the whole
+-- `backward.isDefEq.respectTransparency.instances false` option. It gives the same result. This is
+-- a narrower opt-out, not a repair.
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The inclusion of `P.fullsubcategory` in `F`. -/

@@ -154,7 +154,19 @@ lemma comap_id : comap (𝟙 M) ⊤ = ⊤ := rfl
 @[simp]
 lemma comap_comp (p' : M' ⟶ M'') : S''.comap (p ≫ p') = (S''.comap p').comap p := by rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `image_comap_ι` had an opt-out from the `.instances` check. The opt-out is stale on the current
+-- toolchain. The lemma compiles with no option and no mark. The sibling
+-- `respectTransparency.types false` stays, because it is a different axis.
+--
+-- A poison test shows that the file can still fail here. When the statement writes `= ⊤` in place
+-- of `= S`, the file reports 1 error, `aesop` failed, made no progress. So the clean result is not
+-- a false pass.
+--
+-- There is nothing to report about route 1 of `checkTypesAndAssign`. A trace with the option
+-- removed has 136 rejected assignments. None of them is pinned at [instances], so none of them
+-- comes from route 1. Route 1 is the only route the `.instances` option controls. There is no type
+-- check, no synthesis and no unify to show for it.
+
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp]

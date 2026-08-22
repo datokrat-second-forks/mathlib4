@@ -120,7 +120,65 @@ theorem hasColimit_map_comp_ι_comp_grothendieckProj {X Y : D} (f : X ⟶ Y) :
       grothendieckProj L ⋙ F) :=
   hasColimit_of_iso (isoWhiskerRight (mapCompιCompGrothendieckProj L f) F)
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `leftKanExtensionIsoFiberwiseColimit` and `ι_colimitIsoColimitGrothendieck_inv` below both keep
+-- the parent `backward.isDefEq.respectTransparency false` and an opt-out from the `.instances`
+-- check. The opt-out is now `lax_instance_defeq` on the one class that needs it, `Category`. That
+-- is a narrower opt-out, not a repair.
+--
+-- The parent option is the reason. The opt-out only covers for it, and it cannot go on its own.
+--
+--   `.instances` opt-out   parent   result
+--   off                    on       2 errors
+--   on                     off      3 errors
+--   on                     on       compiles
+--
+-- Route 1 of `checkTypesAndAssign` rejects one instance metavariable in each declaration. The trace
+-- was taken with the parent kept and no `.instances` opt-out of any kind.
+--
+-- In `leftKanExtensionIsoFiberwiseColimit`, 12 times:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u.193, max u_1 v_2} (CostructuredArrow L X✝)
+--          =?= Category.{v_1, max u_1 v_2} ↑((functor L).obj X✝)
+--   ✅ synthesis
+--        goal    Category.{v_1, max u_1 v_2} (CostructuredArrow L X✝)
+--        result  instCategoryCostructuredArrow_1 L X✝
+--   ❌ unify, at the ambient [reducible]
+--        ((functor L).obj X✝).str  =?=  instCategoryCostructuredArrow_1 L X✝
+--
+-- In `ι_colimitIsoColimitGrothendieck_inv`, twice, with `X.base` for `X✝`:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u.104, max u_1 v_2} (CostructuredArrow L X.base)
+--          =?= Category.{v_1, max u_1 v_2} ↑((CostructuredArrow.functor L).obj X.base)
+--   ✅ synthesis
+--        goal    Category.{v_1, max u_1 v_2} (CostructuredArrow L X.base)
+--        result  instCategoryCostructuredArrow_1 L X.base
+--   ❌ unify, at the ambient [reducible]
+--        ((CostructuredArrow.functor L).obj X.base).str
+--          =?=  instCategoryCostructuredArrow_1 L X.base
+--
+-- Both pairs are the same category instance on `CostructuredArrow L X`. One side takes it out of
+-- the bundled `Cat` object that `CostructuredArrow.functor` produces. The other side is the
+-- instance itself. The unify runs at [reducible], where no `implicit_reducible` mark can help. The
+-- parent option causes that low level.
+--
+-- `linter.tacticCheckInstances true` shows where the second spelling comes from:
+--
+--   `simp` rewrote a term with grothendieckProj_obj. The instance argument
+--     ((functor L).obj X✝).str
+--   has type      Category.{v_1, max u_1 v_2} ↑((functor L).obj X✝)
+--   but is expected to have type
+--                 Category.{v_1, max u_1 v_2} (CostructuredArrow L X✝)
+--   For the rest of this `simp` call, lemmas that mention this instance do not apply.
+--
+-- A mark on `CostructuredArrow.functor` does not help. The check is pinned at [instances] and
+-- `implicit_reducible` starts one rung above it. With the parent removed as well the file gives 3
+-- errors, so the parent cannot go either. The linter then names `fiberwiseColimit`,
+-- `grothendieckProj`, `Grothendieck.ι`, `colimit.cocone`, `CategoryStruct.comp`,
+-- `grothendieckPrecompFunctorToComma` and `Quiver.Hom`. No mark set was tried against that list.
+
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.isDefEq.respectTransparency false in
 /-- The left Kan extension of `F : C ⥤ H` along a functor `L : C ⥤ D` is isomorphic to the
 fiberwise colimit of the projection functor on the Grothendieck construction of the costructured
@@ -231,7 +289,9 @@ noncomputable def colimitIsoColimitGrothendieck :
   _ ≅ colimit (CostructuredArrow.grothendieckProj L ⋙ G) :=
         colimitFiberwiseColimitIso _
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same diagnosis as `leftKanExtensionIsoFiberwiseColimit` above. See the note there.
+
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma ι_colimitIsoColimitGrothendieck_inv (X : Grothendieck (CostructuredArrow.functor L)) :

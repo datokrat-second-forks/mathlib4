@@ -211,8 +211,18 @@ theorem limit_π_homDiagram_eqToHom {F : J ⥤ Cat.{v, v}} (X Y : limit (F ⋙ C
 --
 -- The marks are not applied below. With the parent in place they are inert, because the unify runs
 -- at [reducible]. They are recorded here for the next person who tries the parent-first recipe.
+--
+-- The parent `backward.isDefEq.respectTransparency false` is the reason here as well. It holds the
+-- fallback unify at [reducible], where no mark reaches it. If the parent could be removed, the
+-- `.instances` opt-out would go with it. The parent has not been removed here.
+--
+-- The opt-out below is `attribute [local lax_instance_defeq] Category CategoryStruct`, which turns
+-- the `.instances` check off for those two classes in place of the whole
+-- `backward.isDefEq.respectTransparency.instances false` option. The rejected assignments name
+-- both classes, so both are listed. Errors and warnings are the same either way. This is a
+-- narrower opt-out, not a repair.
 set_option linter.tacticCheckInstances true
-set_option backward.isDefEq.respectTransparency.instances false in
+attribute [local lax_instance_defeq] CategoryTheory.Category CategoryTheory.CategoryStruct in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- Auxiliary definition: the proposed cone is a limit cone. -/

@@ -94,8 +94,73 @@ instance forgetToQuiv.Faithful : Functor.Faithful forgetToQuiv where
 
 theorem forget_forgetToQuiv : forget ⋙ forgetToQuiv = Quiv.forget := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency false in
+-- `isoOfQuivIso` had the `.instances` opt-out and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are gone. One mark replaces the parent. The
+-- `.instances` opt-out is replaced by `lax_instance_defeq` on the one class that needs it,
+-- `ReflQuiver`. That is a narrower opt-out, not a repair. No mark can repair this site.
+--
+-- Measurements. Each row gives the state of the mark and of the two options. The `.instances false`
+-- column and the `lax_instance_defeq ReflQuiver` attribute give the same result in every row.
+--
+--   mark   `.instances false`   parent   result
+--   off    off                  off      1 error
+--   off    on                   off      1 error
+--   off    off                  on       1 error
+--   off    on                   on       compiles
+--   on     off                  off      1 error
+--   on     on                   off      compiles
+--
+-- Part 1, the parent. With no mark and no option the deepest failing comparison is a local
+-- `ReflQuiver` instance against the same instance taken out of the bundled object:
+--
+--   ❌ [implicit] e.inv.obj Y ⟶ e.inv.obj Y =?= e.inv.obj Y ⟶ e.inv.obj Y
+--     ❌ [implicit] (Quiv.of V).str' =?= (of V).instReflQuiverα.toQuiver
+--       ❌ [implicit] inst✝¹ =?= (of V).2
+--
+-- Both sides are the same `ReflQuiver V`. `of V` is `ReflQuiv.of V`, which packs `inst✝¹` into a
+-- `Bundled`. `ReflQuiv.of` is semireducible, so `(of V).2` does not reduce back to `inst✝¹` at
+-- [implicit]. The mark on `ReflQuiv.of` makes it reduce.
+--
+-- Part 2, the `.instances` opt-out. The trace below was taken with the mark on and both options
+-- removed, and with no `lax_instance_defeq` attribute. Two assignments of one instance
+-- metavariable are rejected. Both have the same metavariable type and the same synthesis failure,
+-- so one block covers both:
+--
+--   ❌ type check, pinned at [instances]
+--        ReflQuiver ↑(Quiv.of W)  =?=  ReflQuiver W        -- offered value `inst✝`
+--        ReflQuiver ↑(Quiv.of W)  =?=  ReflQuiver ↑(of W)  -- offered `(of W).instReflQuiverα`
+--     The check walks down to
+--        ❌ [instances] (Quiv.of W).1 =?= W
+--   ❌ synthesis
+--        goal    ReflQuiver ↑(Quiv.of W)
+--        result  <not-available>
+--   -- no unify: synthesis returned nothing, so there is no term to unify against
+--
+-- `Quiv.of` is already `implicit_reducible`, and that does not help. The type check is pinned at
+-- [instances], and `implicit_reducible` does not unfold there. Only `reducible` and
+-- `instance_reducible` unfold at [instances], and neither is acceptable for `Quiv.of`.
+--
+-- Synthesis cannot close the gap either. `Quiv` carries a `Quiver` instance on its objects, not a
+-- `ReflQuiver` one. The `ReflQuiver` instance lives on `ReflQuiv`. So `ReflQuiver ↑(Quiv.of W)` has
+-- no instance to find while `↑(Quiv.of W)` stays folded. The metavariable then reports as stuck:
+--
+--   [Meta.isDefEq.stuckMVar] found stuck MVar ?inst✝ : ReflQuiver ↑(Quiv.of W)
+--
+-- This site is the exception to the usual pattern. On most sites the parent option is the reason
+-- and the `.instances` opt-out goes away with it. Here the parent is already gone, replaced by the
+-- mark, and the opt-out is still needed. The matrix row `on / off / off` shows it: 1 error.
+--
+-- `linter.tacticCheckInstances true` names the trigger. The `simp` in `isoOfQuivIso` rewrites with
+-- `ReflQuiv.of_val`, which turns the carrier `↑(of W)` into `W` and leaves the instance argument
+-- `(of W).instReflQuiverα.toQuiver` at the old type. Excluding that lemma with
+-- `simp [-ReflQuiv.of_val, …]` does not help. The goal still fails.
+--
+-- Both legs of route 1 fail, so an opt-out is the only thing that lets the assignment through. The
+-- trace names `ReflQuiver` as the class in every rejected assignment, so
+-- `lax_instance_defeq ReflQuiver` covers the site and says which class the construction breaks.
+
+attribute [local lax_instance_defeq] CategoryTheory.ReflQuiver in
+attribute [local implicit_reducible] CategoryTheory.ReflQuiv.of in
 /-- An isomorphism of quivers lifts to an isomorphism of reflexive quivers given a suitable
 compatibility with the identities. -/
 def isoOfQuivIso {V W : Type u} [ReflQuiver V] [ReflQuiver W]

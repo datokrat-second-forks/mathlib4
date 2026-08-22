@@ -203,7 +203,20 @@ lemma top_mem_range (A₀ : Subobject X) {J : Type w} [LinearOrder J] [OrderBot 
   top_mem_range_transfiniteIterate (largerSubobject hG) A₀ (lt_largerSubobject hG) (by simp)
     (fun h ↦ by simpa [hasCardinalLT_iff_cardinal_mk_lt] using hJ.of_injective _ h)
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is stale on the current
+-- toolchain. It is removed and nothing replaces it.
+--
+-- Measurement: with the option removed the file compiles with 0 errors and 0 warnings. A trace of
+-- this lemma with `trace.Meta.isDefEq.assign.checkTypes` shows 378 rejected assignments. 118 of
+-- them are pinned at [instances], but all 118 are inert. They offer a value of type
+-- `HasColimitsOfShape (Discrete J) C` or `HasCountableCoproducts C` for a metavariable of type
+-- `∀ (J : Type _), HasCoproducts C`. One side is a function type and the other is not, so the pair
+-- fails at every transparency. The other 260 are checked at [implicit] and compare
+-- `Type _ → Prop` against `Type _ → Type _`. None of the 378 is a desync of the kind this option
+-- was added for.
+--
+-- Poison test: the conclusion `… = ⊤` was changed to `… = ⊥`. That gives 2 errors, so the test can
+-- fail.
 lemma exists_ordinal (A₀ : Subobject X) :
     ∃ (o : Ordinal.{w}) (j : o.ToType), transfiniteIterate (largerSubobject hG) j A₀ = ⊤ := by
   let κ := Order.succ (Cardinal.mk (Shrink.{w} (Subobject X)))

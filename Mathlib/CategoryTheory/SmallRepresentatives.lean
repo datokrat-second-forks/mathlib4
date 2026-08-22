@@ -123,7 +123,43 @@ the obvious functor `h.smallCategoryOfSet.obj ⥤ C` is an equivalence. -/
 noncomputable def equivalence : h.smallCategoryOfSet.obj ≌ C :=
   h.functor.asEquivalence
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `arrowEquiv` had an opt-out from the `.instances` check. The opt-out is now `lax_instance_defeq`
+-- on the one class that needs it, `Category`. That is a narrower opt-out, not a repair. This
+-- declaration carries no parent `backward.isDefEq.respectTransparency false`, so the parent is not
+-- the reason here.
+--
+-- Without any opt-out the declaration gives 3 errors. All three are the same shape. The first:
+--
+--   Type mismatch: After simplification, term
+--     congr_arg Arrow.leftFunc.obj hfg
+--   has type
+--     Eq.{u + 1} (h.functor.mapArrow.obj { left := x, right := y, hom := f }).left
+--       (h.functor.mapArrow.obj { left := x', right := y', hom := g }).left
+--   but is expected to have type
+--     Eq.{w + 1} x x'
+--
+-- `linter.tacticCheckInstances true` reports nothing, so this is not a `simp` instance desync.
+--
+-- Route 1 of `checkTypesAndAssign` rejects one instance metavariable. The trace was taken with no
+-- opt-out of any kind. The same block appears 8 times for each of several universe metavariables:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u.44, w} ↑h✝.obj  =?=  Category.{w, w} ↑h✝.smallCategoryOfSet.obj
+--   ❌ synthesis
+--        goal    Category.{?u.44, w} ↑h✝.obj
+--        result  <not-available>
+--   -- no unify: synthesis returned nothing, so there is no term to unify against
+--
+-- The offered value is the `Category` structure built by `smallCategoryOfSet`, and its carrier is
+-- `↑h.smallCategoryOfSet.obj`. The metavariable wants the same structure on `↑h.obj`. The two
+-- carriers are the same object. `smallCategoryOfSet` is semireducible, so the projection does not
+-- reduce at [instances].
+--
+-- Both legs of route 1 fail, so no mark can help. An `implicit_reducible` mark on
+-- `smallCategoryOfSet` starts one rung above [instances] and does not unfold there. Synthesis
+-- cannot help either, because `Category ↑h.obj` has no instance while `h.obj` is a plain type.
+
+attribute [local lax_instance_defeq] CategoryTheory.Category in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Given `h : CoreSmallCategoryOfSet Ω C`, the equivalence of categories

@@ -373,7 +373,20 @@ lemma homologyπ_extendHomologyIso_inv :
   simp only [← cancel_mono (K.extendHomologyIso e hj').hom,
     assoc, Iso.inv_hom_id, comp_id, homologyπ_extendHomologyIso_hom, Iso.inv_hom_id_assoc]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is stale on the current
+-- toolchain. It is removed and nothing replaces it. The parent option below stays.
+--
+-- Measurement: with the child option removed and the parent `backward.isDefEq.respectTransparency
+-- false` kept, the file compiles with 0 errors and 0 warnings. The parent option cannot go. Without
+-- it this lemma fails with 2 errors, and the child option makes no difference to those 2.
+--
+-- A trace of this lemma with `trace.Meta.isDefEq.assign.checkTypes` shows 8 rejected assignments.
+-- All 8 are checked at [default], so none of them takes route 1 of `checkTypesAndAssign`. They
+-- compare `Prop` against `Type`, or a hom out of `0`, `⊥_ C` or `⊤_ C` against a hom out of
+-- `(K.extend e).opcycles j'`. Such pairs fail at every transparency and are not evidence.
+--
+-- Poison test: `Iso.inv_hom_id` was removed from the first `rw`. That gives 1 error, so the test
+-- can fail.
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]

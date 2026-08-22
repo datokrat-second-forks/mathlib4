@@ -158,8 +158,16 @@ section
 
 variable [TotalComplexShapeSymmetry c₂ c₁ c] [TotalComplexShapeSymmetrySymmetry c₁ c₂ c]
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Two identical `backward.isDefEq.respectTransparency.instances false` lines were here. Both are
+-- stale on the current toolchain. They are removed and nothing replaces them. The `.types` opt-out
+-- below stays.
+--
+-- Measurement: with both lines removed the file compiles with 0 errors and 0 warnings. A trace of
+-- this lemma with `trace.Meta.isDefEq.assign.checkTypes` shows no rejected assignment at all. There
+-- is no route-1 check to report, so this site has no three-step block.
+--
+-- Poison test: `ComplexShape.σ_symm` was removed from the last `rw`. That gives 1 error, so the
+-- test can fail.
 set_option backward.isDefEq.respectTransparency.types false in
 lemma flip_totalFlipIso : K.flip.totalFlipIso c = (K.totalFlipIso c).symm := by
   ext j i₁ i₂ h

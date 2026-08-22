@@ -1147,7 +1147,16 @@ noncomputable def ofEpiOfIsIsoOfMono : RightHomologyData S₂ := by
 
 @[simp] lemma ofEpiOfIsIsoOfMono_H : (ofEpiOfIsIsoOfMono φ h).H = h.H := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `backward.isDefEq.respectTransparency.instances false` was here. It is stale on the current
+-- toolchain. It is removed and nothing replaces it. The `.types` opt-out below stays.
+--
+-- Measurement: with the option removed the file compiles with 0 errors and 0 warnings. A trace of
+-- this lemma with `trace.Meta.isDefEq.assign.checkTypes` shows no rejected assignment at all. There
+-- is no route-1 check to report, so this site has no three-step block.
+--
+-- Poison test: the right side was changed from `inv φ.τ₂ ≫ h.p` to `h.p`. The twin lemma
+-- `ofEpiOfIsIsoOfMono'_p` below got the same treatment. The two together give 13 errors, so the
+-- test can fail.
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp] lemma ofEpiOfIsIsoOfMono_p : (ofEpiOfIsIsoOfMono φ h).p = inv φ.τ₂ ≫ h.p := by
@@ -1180,7 +1189,10 @@ noncomputable def ofEpiOfIsIsoOfMono' : RightHomologyData S₁ := by
 
 @[simp] lemma ofEpiOfIsIsoOfMono'_H : (ofEpiOfIsIsoOfMono' φ h).H = h.H := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same result as `ofEpiOfIsIsoOfMono_p` above. The `.instances` opt-out was here and is stale on
+-- the current toolchain. It is removed and nothing replaces it. The `.types` opt-out below stays.
+-- The trace of this lemma also shows no rejected assignment at all. The poison test is described
+-- in the note above.
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp] lemma ofEpiOfIsIsoOfMono'_p : (ofEpiOfIsIsoOfMono' φ h).p = φ.τ₂ ≫ h.p := by
