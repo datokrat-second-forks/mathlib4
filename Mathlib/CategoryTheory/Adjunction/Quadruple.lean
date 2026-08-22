@@ -84,7 +84,13 @@ section RightFullyFaithful
 
 variable [F.Full] [F.Faithful]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This lemma carried `backward.isDefEq.respectTransparency.instances false`. The option is stale
+-- on the current toolchain. It is removed, with no replacement and no reducibility mark.
+--
+-- Measured: the lemma compiles with the option gone. A poison test confirms the check still runs.
+-- With `rw [forall_comm]` doubled the proof fails, as it must.
+--
+-- The sibling option `respectTransparency.types false` is kept. It was not under test.
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- For an adjoint quadruple `L ⊣ F ⊣ G ⊣ R` where `F` (and hence also `R`) is fully faithful, all

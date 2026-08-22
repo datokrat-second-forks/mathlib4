@@ -151,7 +151,37 @@ theorem Finset.all_card_le_biUnion_card_iff_exists_injective {ι : Type u} {α :
     apply Finset.card_le_card
     grind
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- tl;dr: unfolding `SetRel.image` in a simp set changes the goal but not the instance binder
+-- `[∀ a, Fintype (R.image {a})]`. The unfolding is also redundant, because `SetRel.mem_image` is
+-- already a simp lemma. Dropping it from the simp sets repairs both declarations.
+--
+-- This declaration and `Fintype.all_card_le_rel_image_card_iff_exists_injective` below both
+-- carried `backward.isDefEq.respectTransparency.instances false`. Both options are removed. The
+-- `respectTransparency.types false` options are a different axis and stay.
+--
+-- Diagnosis. Traced with the two options removed and the simp sets unchanged, every other option
+-- at its default value, plus `trace.Meta.isDefEq.assign.checkTypes` and
+-- `trace.Meta.synthInstance`. There is no parent `backward.isDefEq.respectTransparency false` in
+-- this file.
+--
+-- `SetRel.image R s` is `{b | ∃ a ∈ s, a ~[R] b}`. With the definition in the simp set the goal
+-- moves to the set-builder spelling, while the `Fintype` argument that came from the binder keeps
+-- the `R.image {a}` spelling.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Fintype ↑{b | ∃ a ∈ {x}, (a, b) ∈ R}  =?=  Fintype ↑(R.image {x})
+--    assigned: `inst✝ x`, the binder instance.
+--    `SetRel.image` is semireducible and does not unfold at [instances].
+--
+-- ❌ synthesis. `result <not-available>`. It tries `inst✝`, `Set.fintypeSep`, `Subtype.fintype`,
+--    `Unique.fintype` and `FinCategory.fintypeObj`. The binder instance is rejected for the same
+--    reason as above, and none of the others matches a bare set-builder set.
+--
+-- —  unify. This step never runs. There is no synthesized value to compare against.
+--
+-- No mark would have helped, because synthesis never returns a value. The repair is to stop
+-- unfolding the definition. `SetRel.mem_image` carries `@[simp]` already, so the goals close
+-- without it and the instance argument stays in one spelling.
 set_option backward.isDefEq.respectTransparency.types false in
 /-- Given a relation such that the image of every singleton set is finite, then the image of every
 finite set is finite. -/
@@ -159,11 +189,11 @@ instance {α : Type u} {β : Type v} [DecidableEq β] (R : SetRel α β)
     [∀ a : α, Fintype (R.image {a})] (A : Finset α) : Fintype (R.image A) := by
   have h : R.image A = (A.biUnion fun a => (R.image {a}).toFinset : Set β) := by
     ext
-    simp [SetRel.image]
+    simp
   rw [h]
   apply FinsetCoe.fintype
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same issue as the instance above. See the note there.
 set_option backward.isDefEq.respectTransparency.types false in
 /-- This is a version of **Hall's Marriage Theorem** in terms of a relation
 between types `α` and `β` such that `α` is finite and the image of
@@ -185,8 +215,8 @@ theorem Fintype.all_card_le_rel_image_card_iff_exists_injective {α : Type u} {�
     rw [← Set.toFinset_card]
     apply congr_arg
     ext b
-    simp [r', SetRel.image]
-  have h' : ∀ (f : α → β) (x), x ~[R] f x ↔ f x ∈ r' x := by simp [r', SetRel.image]
+    simp [r']
+  have h' : ∀ (f : α → β) (x), x ~[R] f x ↔ f x ∈ r' x := by simp [r']
   simp only [h, h']
   apply Finset.all_card_le_biUnion_card_iff_exists_injective
 

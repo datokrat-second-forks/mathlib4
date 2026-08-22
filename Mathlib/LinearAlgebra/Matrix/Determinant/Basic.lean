@@ -666,8 +666,30 @@ theorem det_blockDiagonal {o : Type*} [Fintype o] [DecidableEq o] (M : o → Mat
     rw [blockDiagonal_apply_ne]
     exact hkx
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency false in
+-- tl;dr: the set was written as the coercion of a `Subgroup`, `((sumCongrHom m n).range : Set _)`,
+-- but the goal that `convert!` produces spells it `Set.range ⇑(sumCongrHom m n)`. The `Fintype`
+-- argument of `Set.toFinset` stays at the first spelling. Writing `Set.range` directly repairs it.
+--
+-- This declaration carried `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are removed.
+--
+-- Diagnosis. Traced with both options removed and the old spelling, every other option at its
+-- default value, plus `trace.Meta.isDefEq.assign.checkTypes` and `trace.Meta.synthInstance`.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Fintype ↑(Set.range ⇑(sumCongrHom m n))
+--        =?= Fintype { x // x ∈ ↑(sumCongrHom m n).range }
+--    assigned: `Subtype.fintype (Membership.mem ↑(sumCongrHom m n).range)`.
+--    To see the two carriers as one type you must unfold `MonoidHom.range` and the `SetLike`
+--    coercion. Neither unfolds at [instances].
+--
+-- ✅ synthesis. It succeeds, but with a different value, found through `Set.fintypeRange`.
+--
+-- ❌ unify. The rejected value and the synthesized one are compared at the ambient transparency.
+--
+-- `linter.tacticCheckInstances` names no constant here, and removing the parent option alone does
+-- not change the error. The repair is to write the set the way the goal writes it. The two are the
+-- same set, and `Set.range` is the plainer of the two spellings.
 /-- The determinant of a 2×2 block matrix with the lower-left block equal to zero is the product of
 the determinants of the diagonal blocks. For the generalization to any number of blocks, see
 `Matrix.det_of_isUpperTriangular`. -/
@@ -678,7 +700,7 @@ theorem det_fromBlocks_zero₂₁ (A : Matrix m m R) (B : Matrix m n R) (D : Mat
     simp_rw [det_apply']
     convert!
       Eq.symm <|
-        sum_subset (M := R) (subset_univ ((sumCongrHom m n).range : Set (Perm (m ⊕ n))).toFinset) ?_
+        sum_subset (M := R) (subset_univ (Set.range ⇑(sumCongrHom m n)).toFinset) ?_
     · simp_rw [sum_mul_sum, ← sum_product', univ_product_univ]
       refine sum_nbij (fun σ ↦ σ.fst.sumCongr σ.snd) ?_ ?_ ?_ ?_
       · intro σ₁₂ _

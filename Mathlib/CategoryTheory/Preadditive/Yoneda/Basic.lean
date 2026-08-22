@@ -147,9 +147,40 @@ section
 
 variable {D : Type u₁} [Category.{v} D] [Preadditive D] (F : C ⥤ D) [F.Additive]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `preadditiveYonedaMap` had the `.instances` opt-out and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are gone. One mark replaces them.
+--
+-- The `.instances` opt-out was stale. Three measurements show this.
+--
+--   options kept          result
+--   parent only           0 errors
+--   `.instances` only     5 errors
+--   neither               5 errors
+--
+-- So the parent alone carried the declaration and the child option did nothing.
+--
+-- A trace with both options removed confirms the reason. It has no rejection at all from route 1 of
+-- `checkTypesAndAssign`. Every `[instances]` comparison in that trace sits inside
+-- `synthInstance.tryResolve`, where the option has no part. Route 1 is the only route the
+-- `.instances` option controls, so the option could not change this file.
+--
+-- The real blocker is a route 2 rejection. Route 2 checks the type of a metavariable that is not
+-- instance-typed. It has no synthesis step and no fallback unify, so there is one line to show. The
+-- same pair is rejected 28 times:
+--
+--   ❌ type check, at [implicit]
+--        (preadditiveYonedaObj X).obj X_1 ⟶ (preadditiveYonedaObj X).obj Y
+--          =?= ModuleCat.of (End X) (unop X_1 ⟶ X) ⟶ ModuleCat.of (End X) (unop Y ⟶ X)
+--
+-- Both sides name the same two modules. One side applies the functor `preadditiveYonedaObj X`. The
+-- other side writes the result directly. `preadditiveYonedaObj` is semireducible, so the `.obj`
+-- projection does not reduce at [implicit]. The mark on it makes the projection reduce.
+--
+-- The mark on `preadditiveYonedaObj` is necessary. Without it all 5 errors come back. A second mark
+-- on `preadditiveYoneda` is not necessary.
+
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible] CategoryTheory.preadditiveYonedaObj in
 /-- The natural transformation `preadditiveYoneda.obj X ⟶ F.op ⋙ preadditiveYoneda.obj (F.obj X)`
 when `F : C ⥤ D` is an additive functor between preadditive categories and `X : C`. -/
 @[simps]

@@ -172,9 +172,41 @@ theorem normalizeAux_congr {a b c : B} (p : Path a b) {f g : Hom b c} (η : f �
   | whisker_right _ _ ih => funext; apply congr_arg₂ _ (congr_fun ih _) rfl
   | _ => funext; rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This theorem needed `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are gone. The two marks below replace them.
+--
+-- The blocker is the `FreeBicategory` type synonym. `FreeBicategory B` is `B`
+-- (`Bicategory/Free.lean:37`). The statement binds `{a b c : B}` and then uses them as objects of
+-- `FreeBicategory B`, so a comparison `FreeBicategory B =?= B` has to succeed.
+--
+-- Without the options that comparison is reached at [implicit], inside instance search:
+--
+--   [synthInstance.tryResolve] ❌ Category … ((preinclusion B).obj { as := a } ⟶ c)
+--                                 ≟ Category … (?m.41 ⟶ ?m.42)
+--     ✅ [instances] (preinclusion B).obj { as := a } =?= ?m.41
+--     ❌ [instances] c =?= ?m.42
+--          raising transparency instances → implicit
+--       ❌ [implicit] FreeBicategory B =?= B
+--
+-- The candidate `FreeBicategory.homCategory` is then rejected and synthesis reports
+--     failed to synthesize Category.{max u v, max u v} ((preinclusion B).obj { as := a } ⟶ c)
+--
+-- `implicit_reducible` on `FreeBicategory` fixes exactly this. It does not affect instance search,
+-- because instance search runs at `.instances` and `implicit_reducible` does not unfold there.
+-- Only `reducible` or `instance_reducible` would, and neither is used here. So the synonym stays
+-- opaque where it matters, and unfolds only at [implicit] and above.
+--
+-- `preinclusion` is needed for the same reason one level up. It is a `PrelaxFunctor`, and
+-- `(preinclusion B).obj { as := a }` is `a` by `rfl`, but only after `preinclusion` unfolds.
+--
+-- Both marks are necessary and they are the whole set. Measured by dropping each in turn:
+-- without `FreeBicategory` the 8 synthesis errors return, without `preinclusion` a different 13.
+-- `normalizeIso` and `inclusionPath` were tried and are not needed.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  CategoryTheory.FreeBicategory
+  CategoryTheory.FreeBicategory.preinclusion
+in
 /-- The 2-isomorphism `normalizeIso p f` is natural in `f`. -/
 theorem normalize_naturality {a b c : B} (p : Path a b) {f g : Hom b c} (η : f ⟶ g) :
     (preinclusion B).map ⟨p⟩ ◁ η ≫ (normalizeIso p g).hom =

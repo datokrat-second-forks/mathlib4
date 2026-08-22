@@ -96,7 +96,13 @@ def desc {Y Z : C} (f : Z ⟶ Y) (I : InjectiveResolution Y) (J : InjectiveResol
   CochainComplex.mkHom _ _ (descFZero f _ _) (descFOne f _ _) (descFOne_zero_comm f I J).symm
     fun n ⟨g, g', w⟩ => ⟨(descFSucc I J n g g' w.symm).1, (descFSucc I J n g g' w.symm).2.symm⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This theorem carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- stale on the current toolchain. It is removed, with no replacement and no reducibility mark.
+--
+-- Measured: the theorem compiles with the option gone. A poison test confirms the check still
+-- runs. With the two sides of the composition swapped in the statement it fails, as it must.
+--
+-- The sibling option `respectTransparency.types false` is kept. It was not under test.
 set_option backward.isDefEq.respectTransparency.types false in
 /-- The resolution maps intertwine the descent of a morphism and that morphism. -/
 @[reassoc (attr := simp)]

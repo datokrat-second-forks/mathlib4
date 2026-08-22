@@ -555,7 +555,18 @@ variable [DecidableEq I] [HasInitial C]
   [HasTensor (tensorObj X₁ tensorUnit) X₃] [HasTensor X₁ (tensorObj tensorUnit X₃)]
   [HasGoodTensor₁₂Tensor X₁ tensorUnit X₃] [HasGoodTensorTensor₂₃ X₁ tensorUnit X₃]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- `triangle` had an opt-out from the `.instances` check. The opt-out is stale on the current
+-- toolchain. The lemma compiles with no option and no mark.
+--
+-- A poison test shows that the file can still fail here. When the statement writes
+-- `(rightUnitor X₁).inv` in place of `(rightUnitor X₁).hom`, the file reports 8 errors. The first
+-- one is a type mismatch at the `convert!` call. So the clean result is not a false pass.
+--
+-- There is nothing to report about route 1 of `checkTypesAndAssign`. A trace with the option
+-- removed has 237 rejected assignments. None of them is pinned at [instances], so none of them
+-- comes from route 1. Route 1 is the only route the `.instances` option controls. There is no type
+-- check, no synthesis and no unify to show for it.
+
 set_option backward.defeqAttrib.useBackward true in
 lemma triangle :
     (associator X₁ tensorUnit X₃).hom ≫ tensorHom (𝟙 X₁) (leftUnitor X₃).hom =

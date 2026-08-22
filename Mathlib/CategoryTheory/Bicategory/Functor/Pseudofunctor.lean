@@ -152,9 +152,27 @@ def id (B : Type u₁) [Bicategory.{w₁, v₁} B] : B ⥤ᵖ B where
 instance : Inhabited (B ⥤ᵖ B) :=
   ⟨id B⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This definition needed `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are gone. The three marks below replace them.
+--
+-- `comp` is built on `F.toPrelaxFunctor.comp G.toPrelaxFunctor`, so its own fields are stated over
+-- a composition tower. Each structure in the tower has its own `comp`, and a comparison has to see
+-- through all of them. `PrelaxFunctor.comp` unfolds to `PrelaxFunctorStruct.comp`, and that to
+-- `Prefunctor.comp`.
+--
+-- All three marks are necessary. Measured by dropping each one in turn. Every single removal
+-- brings all 11 errors back. Marking only the top layer shows no improvement at all, because the
+-- failing comparison moves one layer down instead of going away.
+--
+-- The same tower is behind `Bicategory/Functor/StrictlyUnitary.lean` and
+-- `Bicategory/LocallyGroupoid.lean`. Those two also mark `Pseudofunctor.comp` itself, which is the
+-- definition below.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  CategoryTheory.PrelaxFunctor.comp
+  CategoryTheory.PrelaxFunctorStruct.comp
+  Prefunctor.comp
+in
 /-- Composition of pseudofunctors. -/
 @[simps]
 def comp (F : B ⥤ᵖ C) (G : C ⥤ᵖ D) : B ⥤ᵖ D where

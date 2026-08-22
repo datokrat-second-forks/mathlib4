@@ -130,6 +130,50 @@ def fullsubcategory : Pseudofunctor B Cat where
   mapId X := Cat.Hom.isoMk (P.mapId X)
   mapComp f g := Cat.Hom.isoMk (P.mapComp f g)
 
+-- tl;dr: both options are needed together, and a mark does not replace either. Removing every
+-- instance-metavariable rejection is not enough to repair this site.
+--
+-- Without the options `aesop` cannot fill the default fields `naturality_naturality`,
+-- `naturality_id` and `naturality_comp` of `Pseudofunctor.StrongTrans`.
+--
+-- The desync, traced with both options removed. 24 rejections, all the same:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u, max u' v'} (Cat.of (P.Obj a) ⟶ F.obj b)
+--          =?= Category.{max u' v', max u' v'} (P.fullsubcategory.obj a ⟶ F.obj b)
+--   ✅ synthesis
+--        goal    Category.{max u' v', max u' v'} (Cat.of (P.Obj a) ⟶ F.obj b)
+--        result  Cat.Hom.instCategory
+--   ❌ unify, at the ambient [implicit]
+--        { toQuiver := Cat.Hom.instQuiver, id := …, comp := …, … }  =?=  Cat.Hom.instCategory
+--
+-- `P.fullsubcategory.obj a` is `Cat.of (P.Obj a)`, but the composite spelling does not reduce.
+--
+-- A mark closes that gap completely and still does not repair the declaration. With
+--     attribute [local implicit_reducible] ObjectProperty.fullsubcategory
+-- and both options removed, the trace holds **zero** instance-metavariable rejections, and the
+-- same 10 errors remain. `aesop` still cannot close the naturality goals.
+--
+-- Measured, every combination:
+--
+--   mark   `instances false`   parent   result
+--   off    off                 off      10 errors, 24 rejections
+--   on     off                 off      10 errors,  0 rejections
+--   on     off                 on       10 errors
+--   off    on                  off      10 errors
+--   on     on                  off      10 errors
+--   off    on                  on       compiles
+--   on     on                  on       compiles
+--
+-- So the child option is needed given the parent, the parent is needed given the child, and the
+-- mark is neither necessary nor sufficient. What the parent supplies here is not the instance
+-- desync. It is the old behavior of `isDefEqArgs`, which compares instance arguments under
+-- `withInferTypeConfig`, that is at `.default` (`Lean/Meta/ExprDefEq.lean:480-488`). `aesop` needs
+-- that to close the goals, and no reducibility attribute reproduces a blanket `.default`.
+--
+-- The mark is not applied below. It is recorded because it isolates the instance desync cleanly,
+-- which is useful when judging whether the `[instances]` check is what breaks this site. It is
+-- not.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

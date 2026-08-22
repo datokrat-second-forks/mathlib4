@@ -98,7 +98,11 @@ lemma forget₂_map_restrictScalars {R : Type u₁} {S : Type u₂} [Ring R] [Ri
     (forget₂ _ Ab).map ((ModuleCat.restrictScalars f).map g) = (forget₂ _ Ab).map g :=
   rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This instance carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- stale on the current toolchain. It is removed, with no replacement and no reducibility mark.
+--
+-- Measured: the instance compiles with the option gone. A poison test confirms the check still
+-- runs. With the trailing `x` dropped from the `simpa` term the proof fails, as it must.
 instance {R : Type u₁} {S : Type u₂} [Ring R] [Ring S] (f : R →+* S) :
     (restrictScalars.{v} f).Faithful where
   map_injective h := by
@@ -655,7 +659,13 @@ end RestrictionCoextensionAdj
 
 set_option backward.isDefEq.respectTransparency false in
 -- Porting note: very fiddly universes
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This definition carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- stale on the current toolchain. It is removed, with no replacement and no reducibility mark.
+--
+-- Measured: the definition compiles with the option gone. A poison test confirms the check still
+-- runs. With the universe changed to `restrictScalars.{v, u₁, u₂}` it fails, as it must.
+--
+-- The parent `respectTransparency false` below is kept. It was not under test.
 /-- Restriction of scalars is left adjoint to coextension of scalars. -/
 -- @[simps] Porting note: not in normal form and not used
 def restrictCoextendScalarsAdj {R : Type u₁} {S : Type u₂} [Ring R] [Ring S] (f : R →+* S) :

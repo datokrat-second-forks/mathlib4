@@ -134,6 +134,84 @@ theorem limit_π_homDiagram_eqToHom {F : J ⥤ Cat.{v, v}} (X Y : limit (F ⋙ C
   subst h
   simp [-homDiagram_obj]
 
+-- tl;dr: this site is a real `[instances]` casualty, not collateral of the parent option. Both
+-- options stay. The site is not repaired, but marks get most of the way.
+--
+-- Diagnosis. Traced with the child option removed and the parent kept, every other option at its
+-- default value, plus `trace.Meta.isDefEq`, `trace.Meta.isDefEq.printTransparency`,
+-- `trace.Meta.isDefEq.assign`, `trace.Meta.isDefEq.assign.checkTypes` and
+-- `trace.Meta.synthInstance`. 150 assignments are rejected. 38 of them are instance
+-- metavariables, in two groups.
+--
+-- Group 1. `Cat.of` bundles the category structure, and the bundled copy is offered where the
+-- plain instance is wanted:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u, v} (limit (F ⋙ objects))  =?=  Category.{v, v} ↑(limitConeX F)
+--   ✅ synthesis
+--        goal    Category.{v, v} (limit (F ⋙ objects))
+--        result  instCategoryLimitCompObjects F
+--   ❌ unify, at the ambient [reducible]
+--        (limitConeX F).str  =?=  instCategoryLimitCompObjects F
+--
+-- Group 2. The constant cone functor is not unfolded on the offered side:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u, v} ↑s.pt  =?=  Category.{v, v} ↑(((Functor.const J).obj s.pt).obj j)
+--   ✅ synthesis
+--        goal    Category.{v, v} ↑s.pt
+--        result  s.pt.str
+--   ❌ unify, at the ambient [reducible]
+--        (((Functor.const J).obj s.pt).obj j).str  =?=  s.pt.str
+--
+-- At [reducible] no mark can help, because `implicit_reducible` does not unfold there. The parent
+-- option puts the ambient there. It suppresses the [implicit] bump that `isDefEqApp` gives to
+-- instance arguments. So remove the parent first, then judge the marks.
+--
+-- With the parent removed the same rejections are still there, 20 of them, but now at [implicit].
+-- Group 1 keeps its type check and its synthesis, and only the unify moves:
+--
+--   ❌ unify, at the ambient [implicit]
+--        (limitConeX F).str  =?=  instCategoryLimitCompObjects F
+--        (limitConeX F).2    =?=  instCategoryLimitCompObjects F
+--
+-- A third metavariable also appears, on `CategoryStruct` rather than `Category`:
+--
+--   ❌ type check, pinned at [instances]
+--        CategoryStruct.{?u, v} (objects.obj (F.obj j))
+--          =?= CategoryStruct.{v, v} ((F ⋙ objects).obj j)
+--   ✅ synthesis
+--        goal    CategoryStruct.{v, v} (objects.obj (F.obj j))
+--        result  (F.obj j).instCategoryObjObjects.toCategoryStruct
+--   ❌ unify, at the ambient [implicit]
+--        categoryObjects.1  =?=  (F.obj j).instCategoryObjObjects.toCategoryStruct
+--
+-- That is why this site is not collateral. The check has real work to do with the parent gone.
+-- Comparing compiler output alone does not show this. With the parent removed, the output with
+-- `instances false` and without it is byte-identical, because the declaration already fails for
+-- its own reason and elaboration never reaches the difference. Only the trace separates them.
+--
+-- Marks measured, with the parent removed. This would work, but we can't make `Quiver.Hom`
+-- implicit-reducible:
+--
+-- attribute [local implicit_reducible]
+--   CategoryTheory.Cat.HasLimits.limitConeX
+--   CategoryTheory.Cat.objects
+--   CategoryTheory.Cat.HasLimits.homDiagram
+--   CategoryTheory.Cat.HasLimits.limitCone
+--   CategoryTheory.Cat.HasLimits.limitConeLift
+--   Quiver.Hom
+--    -- unnecessary if Cat.objects was implicit-reducible from at its definition already
+--   instCategoryObjObjects._aux_5 -- This is an example of tacticCheckInstances not helping.
+-- in
+--
+-- The problematic error solved by these marks is the `refine_2` branch of `uniq`. There `simp`
+-- reports `limit_π_homDiagram_eqToHom` as an unused argument, so that lemma never fires, but the
+-- origin of the issue is further above.
+--
+-- The marks are not applied below. With the parent in place they are inert, because the unify runs
+-- at [reducible]. They are recorded here for the next person who tries the parent-first recipe.
+set_option linter.tacticCheckInstances true
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

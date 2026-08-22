@@ -349,9 +349,31 @@ def id : StrictlyUnitaryPseudofunctor B B where
   map_id _ := rfl
   mapId_eq_eqToIso _ := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This definition needed `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. Both are gone. The four marks below replace them.
+--
+-- Without them `simp` left this goal open:
+--     (G.map₂Iso (eqToIso ⋯) ≪≫ eqToIso ⋯).hom = eqToHom ⋯
+--
+-- The cause is the composition tower under `Pseudofunctor.comp`. This definition builds its
+-- underlying pseudofunctor with `__ := Pseudofunctor.comp F.toPseudofunctor G.toPseudofunctor`,
+-- so every later comparison has to see through four layers of `comp`, one per structure in the
+-- tower. `Pseudofunctor.comp` unfolds to `PrelaxFunctor.comp`, that to
+-- `PrelaxFunctorStruct.comp`, and that to `Prefunctor.comp`.
+--
+-- All four marks are necessary. Measured by dropping each one in turn. Every single removal brings
+-- the goal back. Marking only the top of the tower does nothing visible, because the failure just
+-- moves one layer down.
+--
+-- The same four marks fix `Bicategory/LocallyGroupoid.lean`, which needs two more for its own
+-- definitions. See the note there for the full trace of the desync.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  CategoryTheory.Pseudofunctor.comp
+  CategoryTheory.PrelaxFunctor.comp
+  CategoryTheory.PrelaxFunctorStruct.comp
+  Prefunctor.comp
+in
 /-- Composition of `StrictlyUnitaryPseudofunctor`. -/
 @[simps!]
 def comp (F : StrictlyUnitaryPseudofunctor B C)

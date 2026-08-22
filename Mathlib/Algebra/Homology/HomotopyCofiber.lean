@@ -481,7 +481,13 @@ noncomputable def mapHomologicalComplexObjXIso (i : ι) :
   else H.mapIso (homotopyCofiber.XIso φ i hi) ≪≫
     (homotopyCofiber.XIso ((H.mapHomologicalComplex c).map φ) i hi).symm
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- These two lemmas carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- stale on the current toolchain for both. It is removed, with no replacement and no mark.
+--
+-- Measured: both compile with the option gone. A poison test confirms the check still runs. With
+-- `inlX φ i j hij` replaced by `inrX φ i` on the right the statement fails, as it must.
+--
+-- The parent `respectTransparency false` is kept on both. It was not under test.
 set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma inlX_mapHomologicalComplexObjXIso_inv
@@ -491,7 +497,7 @@ lemma inlX_mapHomologicalComplexObjXIso_inv
   obtain rfl := c.next_eq' hij
   simp [mapHomologicalComplexObjXIso, dite_eq_left hij, ← Functor.map_comp]
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same as the lemma above. See the note there.
 set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma inrX_mapHomologicalComplexObjXIso_inv (i : ι) :

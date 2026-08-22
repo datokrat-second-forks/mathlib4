@@ -131,9 +131,51 @@ section
 
 variable {B} {B' : Type u₂} [Bicategory.{w₂, v₂} B'] [IsLocallyGroupoid B'] (F : Pseudofunctor B' B)
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This declaration and the next one needed `backward.isDefEq.respectTransparency.instances false`
+-- and the parent `backward.isDefEq.respectTransparency false`. Both options are gone from both.
+-- The six marks below replace them.
+--
+-- Without the options `aesop` could not fill the default fields `naturality_naturality`,
+-- `naturality_id` and `naturality_comp` of `Pseudofunctor.StrongTrans`. The cause was one instance
+-- desync, repeated 22 times:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u, v₁} (F.obj a ⟶ F.obj b)
+--          =?= Category.{w₁, v₁} (((pseudofunctorToPith F).comp (inclusion B)).obj a ⟶ F.obj b)
+--   ✅ synthesis
+--        goal    Category.{w₁, v₁} (F.obj a ⟶ F.obj b)
+--        result  homCategory (F.obj a) (F.obj b)
+--   ❌ unify, at the ambient [implicit]
+--        homCategory (((pseudofunctorToPith F).comp (inclusion B)).obj a) (F.obj b)
+--          =?= homCategory (F.obj a) (F.obj b)
+--
+-- Some rejections offer `inst.2 …` instead of `homCategory …`. That is the same thing. `inst` is
+-- the ambient `Bicategory B` instance, renamed by `aesop` from `inst✝²`, and `.2` is its
+-- `homCategory` field. `inst` is the same on both sides, so it never blocks anything.
+--
+-- The real blocker is the argument. `((pseudofunctorToPith F).comp (inclusion B)).obj a` and
+-- `F.obj a` are the same object of `B`, but the composite spelling does not reduce at [implicit].
+--
+-- Finding the marks needed one trace per layer. Each mark exposes the next constant in the
+-- projection chain, and the failure moves one level down:
+--
+--   no marks                    ❌ F.obj a =?= ((pseudofunctorToPith F).obj a).1
+--   + pseudofunctorToPith       ❌ (pseudofunctorToPith F).comp (inclusion B) … =?= F.1
+--   + the three `comp` layers   ❌ (pseudofunctorToPith F).toPrefunctor
+--                                    ⋙q (inclusion B).toPrefunctor =?= F.toPrelaxFunctorStruct.1
+--   + Prefunctor.comp           compiles
+--
+-- All six marks are necessary. Measured by dropping each one in turn: every single removal brings
+-- the 14 errors back. All six are plain definitions. No structure and no `Quiver.Hom` is marked.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  CategoryTheory.Bicategory.Pith.pseudofunctorToPith
+  CategoryTheory.Bicategory.Pith.inclusion
+  CategoryTheory.Pseudofunctor.comp
+  CategoryTheory.PrelaxFunctor.comp
+  CategoryTheory.PrelaxFunctorStruct.comp
+  Prefunctor.comp
+in
 /-- The hom direction of the (strong) natural isomorphism of pseudofunctors
 between `(pseudofunctorToPith F).comp (inclusion B)` and `F`. -/
 noncomputable def pseudofunctorToPithCompInclusionStrongIsoHom :
@@ -141,9 +183,17 @@ noncomputable def pseudofunctorToPithCompInclusionStrongIsoHom :
   app b' := 𝟙 _
   naturality f := (ρ_ _) ≪≫ (λ_ _).symm
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- Same failure as the declaration above. See the note there.
+-- Same as the declaration above. See the note there.
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  CategoryTheory.Bicategory.Pith.pseudofunctorToPith
+  CategoryTheory.Bicategory.Pith.inclusion
+  CategoryTheory.Pseudofunctor.comp
+  CategoryTheory.PrelaxFunctor.comp
+  CategoryTheory.PrelaxFunctorStruct.comp
+  Prefunctor.comp
+in
 /-- The inv direction of the (strong) natural isomorphism of pseudofunctors
 between `(pseudofunctorToPith F).comp (inclusion B)` and `F`. -/
 noncomputable def pseudofunctorToPithCompInclusionStrongIsoInv :

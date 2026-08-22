@@ -130,8 +130,39 @@ variable (hg : b = g • a) (hh : c = h • b) (hk : c = k • a)
 theorem ofStabilizer.conjMap_apply (x : ofStabilizer G a) :
     (conjMap hg x : α) = g • x := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency false in
+-- tl;dr: the two `simp` calls below unfolded `stabilizerEquivStabilizer` and `MulAut.conj` in
+-- the goal but not in the instance arguments that sit inside it. They now use the `_apply` lemmas
+-- instead, and all four options are gone.
+--
+-- This declaration and `MulAction.stabilizerEquivStabilizer_compTriple` below each carried
+-- `backward.isDefEq.respectTransparency.instances false` and the parent
+-- `backward.isDefEq.respectTransparency false`. All four are removed.
+--
+-- Diagnosis. Traced with the two child options removed and the simp sets unchanged, every other
+-- option at its default value, plus `trace.Meta.isDefEq.assign.checkTypes` and
+-- `trace.Meta.synthInstance`. 29 blocks are rejected, three of them the relevant pair.
+--
+-- With `AddAut.addConj` in the simp set the goal moves to the anonymous-constructor spelling
+-- `{ toFun := fun x => g + x + -g, … }`, while the `Add` instance on the mapped subgroup keeps
+-- the `AddAut.addConj g` spelling.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      Add ↥(AddSubgroup.map ↑{ toFun := fun x => g + x + -g, … } (AddAction.stabilizer G a))
+--        =?= Add ↥(AddSubgroup.map ↑(AddAut.addConj g) (AddAction.stabilizer G a))
+--    assigned: the `.add` field of the second subgroup.
+--    `AddAut.addConj` is semireducible and does not unfold at [instances].
+--
+-- ✅ synthesis. It succeeds, but with a value built for the unfolded spelling.
+--
+-- ❌ unify. The rejected value and the synthesized one are compared at the ambient transparency.
+--
+-- The symptom is quiet. `simp` leaves an unsolved goal and reports `H` and `← add_assoc` as
+-- unused simp arguments. Those rewrites are never tried, because the goal no longer matches.
+--
+-- The repair is to stop unfolding the definitions. `stabilizerEquivStabilizer_apply` and
+-- `MulAut.conj_apply` say the same thing as lemmas, so the instance arguments stay in one
+-- spelling. With that change both declarations compile with every `respectTransparency` option at
+-- its default value.
 theorem _root_.AddAction.stabilizerEquivStabilizer_compTriple
     {G : Type*} [AddGroup G] {α : Type*} [AddAction G α]
     {g h k : G} {a b c : α} {hg : b = g +ᵥ a} {hh : c = h +ᵥ b} {hk : c = k +ᵥ a} (H : k = h + g) :
@@ -139,10 +170,9 @@ theorem _root_.AddAction.stabilizerEquivStabilizer_compTriple
       (AddAction.stabilizerEquivStabilizer hh) (AddAction.stabilizerEquivStabilizer hk) where
   comp_eq := by
     ext
-    simp [AddAction.stabilizerEquivStabilizer, H, AddAut.addConj, ← add_assoc]
+    simp [AddAction.stabilizerEquivStabilizer_apply, H, AddAut.addConj_apply, ← add_assoc]
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency false in
+-- Same issue as `AddAction.stabilizerEquivStabilizer_compTriple` above. See the note there.
 variable {hg hh hk} in
 @[to_additive existing]
 theorem _root_.MulAction.stabilizerEquivStabilizer_compTriple (H : k = h * g) :
@@ -150,7 +180,7 @@ theorem _root_.MulAction.stabilizerEquivStabilizer_compTriple (H : k = h * g) :
       (stabilizerEquivStabilizer hh) (stabilizerEquivStabilizer hk) where
   comp_eq := by
     ext
-    simp [stabilizerEquivStabilizer, H, MulAut.conj, ← mul_assoc]
+    simp [stabilizerEquivStabilizer_apply, H, MulAut.conj_apply, ← mul_assoc]
 
 variable {hg hh hk} in
 @[to_additive]

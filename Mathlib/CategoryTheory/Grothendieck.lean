@@ -452,9 +452,109 @@ def pre (G : D ⥤ C) : Grothendieck (G ⋙ F) ⥤ Grothendieck F where
 @[simp]
 theorem pre_id : pre F (𝟭 C) = 𝟭 _ := rfl
 
+-- tl;dr: `instances false` here is collateral of the parent option, not a casualty of the
+-- `[instances]` check. Remove the parent and the check has nothing left to reject.
+--
+-- This declaration carries `backward.isDefEq.respectTransparency.instances false`. The option
+-- stays, with its parent. The site is not repaired. Do not count it as an independent
+-- `[instances]` failure.
+--
+-- The parent came first. Upstream `preNatIso` carried no options at all. The parent
+-- `backward.isDefEq.respectTransparency false` was added by an earlier adaptation. The child
+-- `instances false` was added on top of it, in `ea8987667f`.
+--
+-- Diagnosis. Traced with the child option removed and the parent kept, every other option at its
+-- default value, plus `trace.Meta.isDefEq.assign`, `trace.Meta.isDefEq.assign.checkTypes`,
+-- `trace.Meta.synthInstance` and `trace.Meta.isDefEq.printTransparency`. 69 assignments are
+-- rejected. Six of them are instance metavariables.
+--
+-- All six are the same metavariable, `Category.{v₂, u₂} ↑(F.obj (H.obj Y.base))`. The value
+-- offered for it is always a `Cat`-bundled `.str` that names the same object of `C` by a longer
+-- route. Route 1 of `checkTypesAndAssign` runs three steps on each one:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u, u₂} ↑(F.obj (H.obj Y.base))
+--          =?= Category.{v₂, u₂} ↑((H ⋙ F).obj Y.base)
+--   ✅ synthesis
+--        goal    Category.{v₂, u₂} ↑(F.obj (H.obj Y.base))
+--        result  (F.obj (H.obj Y.base)).str
+--   ❌ unify, at the ambient [reducible]
+--        ((H ⋙ F).obj Y.base).str  =?=  (F.obj (H.obj Y.base)).str
+--
+-- The other five rejections differ only in the spelling of the offered value. Each one unifies
+-- against the same synthesized `(F.obj (H.obj Y.base)).str`, at [reducible]:
+--
+--   ❌ (F.obj ((pre F H).obj ((map (whiskerRight α.hom F)).obj Y)).base).str
+--   ❌ (F.obj ({ base := G.obj Y.base, fiber := Y.fiber }.transport (α.app Y.base).hom).base).str
+--
+-- No mark can help at [reducible]. `implicit_reducible` does not unfold there. The parent option
+-- is the cause. It suppresses the [implicit] bump that `isDefEqApp` gives to instance arguments,
+-- so the ambient stays at the caller's level.
+--
+-- Removing the parent option clears all six, with the marks and without them. Measured on
+-- `trace.Meta.isDefEq.assign` nodes, with both options removed, one class-typed rejection is left:
+--
+--   ❌ type check, pinned at [instances]
+--        Category.{?u, u} C  =?=  Category.{v₁, u₁} D
+--   ✅ synthesis
+--        goal    Category.{v, u} C
+--        result  inst✝¹
+--   ❌ unify, at the ambient [default]
+--        inst✝  =?=  inst✝¹
+--
+-- That one is ordinary instance search trying the wrong ambient instance. Search then succeeds.
+-- It is not evidence about the `[instances]` check. `C` and `D` are different variables, so the
+-- type check fails at every transparency. With `instances false` the check runs at `.implicit`
+-- instead and rejects the same assignment. Only the fallback disappears.
+--
+-- So with the parent removed, `instances false` changes nothing here. That is the verdict for this
+-- site. The child option is doing no work of its own. It exists only because the parent lowers the
+-- ambient to [reducible], where the six real rejections cannot be repaired.
+--
+-- `Grothendieck.pre`, `Functor.comp` and `whiskerRight` need no mark. They already carry the
+-- attribute.
+--
+-- The proof still fails. The remaining failure is a different mechanism. Two goals stay open, and
+-- both print with identical sides:
+--
+--   ⊢ eqToHom ⋯ ≫ eqToHom ⋯ ≫ (F.map (α.hom.app Y.base)).toFunctor.map f.fiber =
+--       eqToHom ⋯ ≫ eqToHom ⋯ ≫ (F.map (α.hom.app Y.base)).toFunctor.map f.fiber
+--
+-- `pp.explicit true` shows why. The goal states its own hom-type at one spelling and carries the
+-- `Category` instance at the other:
+--
+--   carrier   @Bundled.α Category.{v₂, u₂} (F.obj (H.obj Y.base))
+--   instance  @Bundled.α Category.{v₂, u₂}
+--               (F.obj ((map (whiskerRight α.hom F) ⋙ pre F H).obj Y).base)
+--
+-- That is the same spelling pair as the six rejections above. Here it is built into the goal
+-- instead of rejected during assignment. `rfl` at [default] does not close it, and neither does
+-- `simp`. This desync is what the parent option is holding up. It is not caused by the
+-- `[instances]` check.
+--
+-- Neither option can be dropped, with or without the marks. Measured, all four combinations:
+--
+--   `instances false`   parent   marks    result
+--   on                  on       on       compiles
+--   off                 on       on       2 unsolved goals
+--   on                  off      on       2 unsolved goals
+--   on                  off      off      2 unsolved goals
+--   off                 off      on       2 unsolved goals
+--
+-- Every failing combination leaves the same goal. The parent option is load-bearing in its own
+-- right, for the desync shown above. The child option is load-bearing only while the parent is
+-- present. The marks replace neither.
+--
+-- The three marks below change nothing that was measured. They are kept because they are harmless
+-- and they make the site easy to experiment on.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  Grothendieck.transport
+  Grothendieck.transportIso
+  Grothendieck.map
+in
 /--
 A natural isomorphism between functors `G ≅ H` induces a natural isomorphism between the canonical
 morphism `pre F G` and `pre F H`, up to composition with
@@ -464,7 +564,8 @@ def preNatIso {G H : D ⥤ C} (α : G ≅ H) :
     pre F G ≅ map (whiskerRight α.hom F) ⋙ (pre F H) :=
   NatIso.ofComponents
     (fun X => (transportIso ⟨G.obj X.base, X.fiber⟩ (α.app X.base)).symm)
-    (fun f => by fapply Grothendieck.ext <;> simp)
+    (fun f => by
+      fapply Grothendieck.ext <;> simp)
 
 /--
 Given an equivalence of categories `G`, `preInv _ G` is the (weak) inverse of the `pre _ G.functor`.
@@ -493,9 +594,15 @@ protected def preUnitIso (G : D ≌ C) :
     map (whiskerRight G.unitInv _) ≅ pre (G.functor ⋙ F) (G.functor ⋙ G.inverse) :=
   preNatIso _ G.unitIso.symm |>.symm
 
+-- Same issue as `preNatIso` above. See the note there.
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  Grothendieck.transport
+  Grothendieck.transportIso
+  Grothendieck.map
+in
 /--
 Given a functor `F : C ⥤ Cat` and an equivalence of categories `G : D ≌ C`, the functor
 `pre F G.functor` is an equivalence between `Grothendieck (G.functor ⋙ F)` and `Grothendieck F`.

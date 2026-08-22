@@ -406,8 +406,62 @@ def freeObj (X : TopCat.{v}) : TopModuleCat.{max v u} R :=
 
 lemma coe_freeObj (X : TopCat.{v}) : freeObj R X = (X →₀ R) := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
-set_option backward.isDefEq.respectTransparency false in
+-- This file had four opt-outs from the `.instances` check, on `freeMap`, `freeMap_map`, `free` and
+-- `freeAdj`. `freeMap` and `freeAdj` also carried the parent `backward.isDefEq.respectTransparency
+-- false`. All six options are gone now. Two `implicit_reducible` marks replace them.
+--
+-- Three of the four `.instances` opt-outs were stale. `freeMap`, `freeMap_map` and `free` compile
+-- with no option and no mark. A poison test shows that the file can still fail here. When
+-- `freeMap_map` states `Finsupp.mapDomain f.hom (v + v)` in place of `Finsupp.mapDomain f.hom v`,
+-- the file reports 3 errors. So the clean result is not a false pass.
+--
+-- The fourth site, `freeAdj`, was a real casualty of the check. With both of its options removed it
+-- reports 4 errors. `linter.tacticCheckInstances true` names no constant here, so the two marks
+-- below come from the trace. The trace was taken with all four options removed and no marks.
+--
+-- Route 1 of `checkTypesAndAssign` rejects this instance metavariable:
+--
+--   ❌ type check, pinned at [instances]
+--        FunLike C(↑X, ↑(freeObj R Y).toModuleCat) ↑X ↑(freeObj R Y).toModuleCat
+--          =?= FunLike C(↑((𝟭 TopCat).obj X), ↑((free R ⋙ forget₂ (TopModuleCat R) TopCat).obj Y))
+--                ↑((𝟭 TopCat).obj X) ↑((free R ⋙ forget₂ (TopModuleCat R) TopCat).obj Y)
+--   ✅ synthesis
+--        goal    FunLike C(↑X, ↑(freeObj R Y).toModuleCat) ↑X ↑(freeObj R Y).toModuleCat
+--        result  ContinuousMap.instFunLike
+--   ❌ unify, at the ambient [implicit]
+--        (fun X Y => ContinuousMap.instFunLike) ((𝟭 TopCat).obj X)
+--              ((free R ⋙ forget₂ (TopModuleCat R) TopCat).obj Y)
+--          =?= ContinuousMap.instFunLike
+--
+-- Both sides name the same `FunLike` structure. Only the carrier differs. One side writes the free
+-- module directly as `freeObj R Y`. The other side pushes `Y` through the functor `free R`. The
+-- unify walks down to this pair and stops there:
+--
+--   ❌ [implicit] (free R).1 =?= freeObj
+--
+-- `free` is a `def` that returns a structure literal with `obj := freeObj R`. `free` is
+-- semireducible, so the `.obj` projection does not reduce at [implicit]. The mark on `free` makes
+-- it reduce.
+--
+-- A second metavariable fails on the same carrier pair in the `counit` field, where
+-- `rw [coinduced_le_iff_le_induced, induced_compose]` reports "did not find an occurrence". This
+-- metavariable comes
+-- from the rewrite pattern, not from instance synthesis, so route 1 does not apply to it. Route 2
+-- checks it and stops. Route 2 has no synthesis step and no fallback unify, so there is only one
+-- line to show:
+--
+--   ❌ type check, at [implicit]
+--        TopologicalSpace (↑((forget₂ (TopModuleCat R) TopCat).obj X) →₀ R)
+--          =?= TopologicalSpace ↑((forget₂ (TopModuleCat R) TopCat ⋙ free R).obj X).toModuleCat
+--
+-- The mark on `freeObj` closes this one. Both marks are necessary. When either one is removed, all
+-- 4 errors come back. A third mark on `freeMap` is not necessary.
+--
+-- The parent option on `freeMap` came off in the same way. Without it and without a mark, `freeMap`
+-- gives 9 errors, and the kernel rejects three later declarations. The single mark on `freeObj`
+-- closes all of them.
+
+attribute [local implicit_reducible] TopModuleCat.freeObj in
 /-- The free topological module over a topological space is functorial. -/
 noncomputable
 def freeMap {X Y : TopCat.{v}} (f : X ⟶ Y) : freeObj R X ⟶ freeObj R Y :=
@@ -424,11 +478,9 @@ def freeMap {X Y : TopCat.{v}} (f : X ⟶ Y) : freeObj R X ⟶ freeObj R Y :=
     ext x
     simp [coe_freeObj]⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
 lemma freeMap_map {X Y : TopCat.{v}} (f : X ⟶ Y) (v : X →₀ R) :
     (freeMap R f : (X →₀ R) → (Y →₀ R)) v = Finsupp.mapDomain f.hom v := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
 /-- The free topological module over a topological space as a functor.
 This is left adjoint to the forgetful functor. -/
 @[simps] noncomputable
@@ -438,9 +490,11 @@ def free : TopCat.{v} ⥤ TopModuleCat.{max v u} R :=
     map_id M := by ext x; exact DFunLike.congr_fun (Finsupp.lmapDomain_id _ _) x
     map_comp f g := by ext; exact DFunLike.congr_fun (Finsupp.lmapDomain_comp _ _ f.hom g.hom) _ }
 
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
-set_option backward.isDefEq.respectTransparency false in
+attribute [local implicit_reducible]
+  TopModuleCat.freeObj
+  TopModuleCat.free
+in
 /-- The free-forgetful adjoint for `TopModuleCat R`. -/
 noncomputable
 def freeAdj : free.{max v u} R ⊣ forget₂ (TopModuleCat.{max v u} R) TopCat.{max v u} where

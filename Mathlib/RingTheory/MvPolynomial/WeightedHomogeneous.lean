@@ -387,14 +387,50 @@ section WeightedHomogeneousComponent
 
 variable {w : σ → M} (n : M) (φ ψ : MvPolynomial σ R)
 
--- TODO: regressed after removing respectTransparency
+-- tl;dr: the `simp` below unfolds `weightedHomogeneousComponent` into a `Finsupp.filter` whose
+-- `DecidablePred` argument comes from the set `{d | weight w d = n}`, while the rest of the goal
+-- uses the ambient `DecidableEq M`. `Finsupp.filter_apply` then never fires.
+--
+-- This declaration needs `backward.isDefEq.respectTransparency.instances false`. The option stays.
+-- The site is not repaired. There is no parent `backward.isDefEq.respectTransparency false` here.
+--
+-- Diagnosis. Traced with the option removed and every other option at its default value, plus
+-- `trace.Meta.isDefEq.assign.checkTypes` and `trace.Meta.synthInstance`. 26 blocks are rejected.
+-- One of them is the relevant pair.
+--
+-- ❌ mvar type check, pinned at [instances]:
+--      DecidablePred fun d => weight w d = n
+--        =?= (a : σ →₀ ℕ) → Decidable (a ∈ {a | weight w a = n})
+--    assigned: `fun a => Set.decidableSetOf a fun d => weight w d = n`.
+--    To see the two as one type you must reduce `a ∈ {a | P a}` to `P a`.
+--
+-- ✅ synthesis. It succeeds, but with a different value, the ambient instance reached directly
+--    rather than through `Set.decidableSetOf`.
+--
+-- ❌ unify. The rejected value and the synthesized one are compared at the ambient transparency.
+--
+-- No mark is available, and the reason is worth recording. `a ∈ {a | P a}` reduces to `P a` only
+-- if `Membership.mem` unfolds. `Membership.mem` is already marked `implicit_reducible`, in
+-- `Init/Prelude.lean`, and `implicit_reducible` does not unfold at [instances]. So the pinned
+-- check can never bridge this gap, whatever a Mathlib file marks.
+--
+-- Measured, both with the option removed:
+--
+-- * `attribute [local implicit_reducible] setOf Membership.mem` is refused. `Membership.mem`
+--   already carries the attribute.
+-- * `attribute [local implicit_reducible] setOf Set.decidableSetOf` leaves both errors unchanged.
+--   `Set.decidableSetOf` is an instance, so the mark only demotes it out of `instance_reducible`.
+--
+-- The symptom is quiet. Lean reports `Finsupp.filter_apply` as an unused simp argument, not as a
+-- failure. The lemma is never tried, because its pattern no longer matches.
 set_option backward.isDefEq.respectTransparency.instances false in
 theorem coeff_weightedHomogeneousComponent [DecidableEq M] (d : σ →₀ ℕ) :
     coeff d (weightedHomogeneousComponent w n φ) =
       if weight w d = n then coeff d φ else 0 := by
   simp [weightedHomogeneousComponent, MvPolynomial, coeff, Finsupp.filter_apply]
 
--- TODO: regressed after removing respectTransparency
+-- Same issue as `coeff_weightedHomogeneousComponent` above. See the note there. Here the simp
+-- argument that stops firing is `Finsupp.filter_eq_sum`.
 set_option backward.isDefEq.respectTransparency.instances false in
 theorem weightedHomogeneousComponent_apply [DecidableEq M] :
     weightedHomogeneousComponent w n φ =

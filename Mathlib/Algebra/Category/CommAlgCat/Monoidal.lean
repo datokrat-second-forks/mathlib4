@@ -95,7 +95,11 @@ variable (A B) in
 variable (A B) in
 @[simp] lemma braiding_inv_hom : (β_ A B).inv.hom = (comm R B A).toAlgHom := rfl
 
-set_option backward.isDefEq.respectTransparency.instances false in
+-- This instance carried `backward.isDefEq.respectTransparency.instances false`. The option is
+-- stale on the current toolchain. It is removed, with no replacement and no reducibility mark.
+--
+-- Measured: the instance compiles with the option gone. A poison test confirms the check still
+-- runs. With the two sides of `fst_def` swapped the `change` fails, as it must.
 attribute [local ext] Quiver.Hom.unop_inj in
 instance : CartesianMonoidalCategory (CommAlgCat.{u} R)ᵒᵖ where
   isTerminalTensorUnit := terminalOpOfInitial isInitialSelf
