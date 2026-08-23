@@ -120,6 +120,7 @@ noncomputable def topCatAdjunctionUnit (X : LightCondSet.{u}) : X ⟶ X.toTopCat
         TopCat.toSheafCompHausLike_obj_map, ← Functor.map_comp_apply]
       rfl }
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The adjunction `lightCondSetToTopCat ⊣ topCatToLightCondSet` -/
@@ -131,6 +132,7 @@ noncomputable def topCatAdjunction : lightCondSetToTopCat.{u} ⊣ topCatToLightC
     change Y.obj.map (𝟙 _) _ = _
     simp
 
+set_option backward.isDefEq.respectTransparency.instances false in
 instance (X : TopCat) : Epi (topCatAdjunction.counit.app X) := by
   rw [TopCat.epi_iff_surjective]
   exact (topCatAdjunctionCounit_bijective _).2
@@ -198,6 +200,7 @@ noncomputable def sequentialAdjunctionCounitIso (X : Sequential.{0}) :
     lightCondSetToSequential.obj (sequentialToLightCondSet.obj X) ≅ X :=
   isoOfHomeo (sequentialAdjunctionHomeo X.toTop)
 
+set_option backward.isDefEq.respectTransparency.instances false in
 instance : IsIso sequentialAdjunction.{0}.counit := by
   rw [NatTrans.isIso_iff_isIso_app]
   intro X

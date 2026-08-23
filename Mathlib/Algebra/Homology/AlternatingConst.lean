@@ -177,6 +177,7 @@ def alternatingConstHomologyDataEvenNEZero (X : C) (n : ℕ) (hn : Even n) (h₀
     (Limits.zeroKernelOfCancelZero _ (by cases n <;> simp_all))
 
 set_option backward.defeqAttrib.useBackward true in
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 /-- The `n`-th homology of the alternating constant complex is zero for odd `n`. -/
 noncomputable

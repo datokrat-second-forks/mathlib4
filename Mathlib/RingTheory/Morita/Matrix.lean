@@ -130,6 +130,7 @@ def fromModuleCatToModuleCatLinearEquiv (M : Type*) [AddCommGroup M] [Module R M
     simp [← hy]
   right_inv x := by simp
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 /-- The natural isomorphism showing that `toModuleCat` is the left inverse of `toMatrixModCat`. -/
 def MatrixModCat.unitIso (i : ι) :
@@ -170,6 +171,7 @@ def toModuleCatFromModuleCatLinearEquiv (M : ModuleCat (Matrix ι ι R)) (j : ι
     obtain ⟨y, hy⟩ := by simpa [-SetLike.coe_mem] using (v i).2
     simp [← mul_smul, ← hy]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 /-- The natural isomorphism showing that `toMatrixModCat` is the right inverse of `toModuleCat`. -/
 def MatrixModCat.counitIso (i : ι) :
@@ -179,6 +181,7 @@ def MatrixModCat.counitIso (i : ι) :
     ext
     simp [toModuleCatFromModuleCatLinearEquiv]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 -- This declaration has been on the tipping point of timeout ever since nightly-2026-02-23.
 /-- `ModuleCat.toMatrixModCat R ι` and `MatrixModCat.toModuleCat R i` together form

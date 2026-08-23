@@ -457,6 +457,7 @@ noncomputable def valueGroup₀_hom_extensionValuation :
         · simpa
         · simp [extensionValuation_apply_coe, hxy, ← hx, ← hy, hx0, hy0]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 /-- The zero-preserving monoid homomorphism from the `ValueGroup₀` of the valuation on `K` to
   that of the extension to its completion. -/

@@ -198,6 +198,7 @@ theorem stalkPushforward_germ (f : X ⟶ Y) (F : X.Presheaf C) (U : Opens Y)
 
 namespace stalkPushforward
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
@@ -208,6 +209,7 @@ theorem id (ℱ : X.Presheaf C) (x : X) :
   erw [CategoryTheory.Functor.map_id]
   simp [stalkFunctor]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]

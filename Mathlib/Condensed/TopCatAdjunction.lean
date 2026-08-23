@@ -164,6 +164,7 @@ noncomputable def topCatAdjunctionUnit (X : CondensedSet.{u}) : X ⟶ X.toTopCat
         TypeCat.Fun.coe_mk, ← Functor.map_comp_apply]
       rfl }
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The adjunction `condensedSetToTopCat ⊣ topCatToCondensedSet` -/
@@ -175,6 +176,7 @@ noncomputable def topCatAdjunction : condensedSetToTopCat.{u} ⊣ topCatToConden
     change Y.obj.map (𝟙 _) _ = _
     simp
 
+set_option backward.isDefEq.respectTransparency.instances false in
 instance (X : TopCat) : Epi (topCatAdjunction.counit.app X) := by
   rw [TopCat.epi_iff_surjective]
   exact (topCatAdjunctionCounit_bijective _).2
@@ -236,6 +238,7 @@ noncomputable def compactlyGeneratedAdjunctionCounitIso (X : CompactlyGenerated.
     condensedSetToCompactlyGenerated.obj (compactlyGeneratedToCondensedSet.obj X) ≅ X :=
   isoOfHomeo (compactlyGeneratedAdjunctionCounitHomeo X.toTop)
 
+set_option backward.isDefEq.respectTransparency.instances false in
 instance : IsIso compactlyGeneratedAdjunction.counit := by
   rw [NatTrans.isIso_iff_isIso_app]
   intro X

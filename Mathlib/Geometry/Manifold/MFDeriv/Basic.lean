@@ -610,6 +610,7 @@ theorem hasMFDerivAt_unique (h₀ : HasMFDerivAt% f x f₀') (h₁ : HasMFDerivA
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceSearchTypes false` can be removed, too.
 -/
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_inter' (h : t ∈ 𝓝[s] x) :
@@ -623,6 +624,7 @@ theorem hasMFDerivWithinAt_inter' (h : t ∈ 𝓝[s] x) :
 Suggested fix: Make `TangentSpace` implicit-reducible, then remove `respectTransparency false`.
 After that, `instanceSearchTypes false` can be removed, too.
 -/
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.instanceSearchTypes false in
 set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_inter (h : t ∈ 𝓝 x) :
@@ -724,6 +726,7 @@ theorem mfderivWithin_of_mem_nhds (h : s ∈ 𝓝 x) : mfderiv[s] f x = mfderiv%
 lemma mfderivWithin_of_isOpen (hs : IsOpen s) (hx : x ∈ s) : mfderiv[s] f x = mfderiv% f x :=
   mfderivWithin_of_mem_nhds (hs.mem_nhds hx)
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 theorem hasMFDerivWithinAt_insert {y : M} :
     HasMFDerivAt[insert y s] f x f' ↔ HasMFDerivAt[s] f x f' := by
@@ -1111,6 +1114,7 @@ theorem mfderiv_congr {f' : M → M'} (h : f = f') :
 
 variable (x)
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 theorem HasMFDerivWithinAt.comp (hg : HasMFDerivAt[u] g (f x) g')
     (hf : HasMFDerivAt[s] f x f') (hst : s ⊆ f ⁻¹' u) :

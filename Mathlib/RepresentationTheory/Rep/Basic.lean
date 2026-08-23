@@ -773,6 +773,7 @@ protected noncomputable def ihom : Rep k G ⥤ Rep k G where
     ((Rep.ihom A).obj B).ρ g x = B.ρ g ∘ₗ x ∘ₗ A.ρ g⁻¹ :=
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- Given a `k`-linear `G`-representation `A`, this is the Hom-set bijection in the adjunction
@@ -795,6 +796,7 @@ def tensorHomEquiv (A B C : Rep.{u} k G) : (A ⊗ B ⟶ C) ≃ (B ⟶ (Rep.ihom 
 
 variable {A B C}
 
+set_option backward.isDefEq.respectTransparency.instances false in
 noncomputable instance : MonoidalClosed (Rep k G) where
   closed A :=
     { rightAdj := Rep.ihom A
@@ -806,25 +808,30 @@ noncomputable instance : MonoidalClosed (Rep k G) where
           Representation.IntertwiningMap.ext <|
             LinearMap.ext fun _ ↦ LinearMap.ext fun _ => rfl }) }
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 theorem ihom_obj_ρ_def (A B : Rep k G) : ((ihom A).obj B).ρ = ((Rep.ihom A).obj B).ρ :=
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 theorem homEquiv_def (A B C : Rep k G) : (ihom.adjunction A).homEquiv B C =
     Rep.tensorHomEquiv A B C :=
   congrFun (congrFun (Adjunction.mkOfHomEquiv_homEquiv _) _) _
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 theorem ihom_ev_app_hom (A B : Rep k G) :
     ((ihom.ev A).app B).hom.toLinearMap = (TensorProduct.uncurry (.id k) A (A →ₗ[k] B) B
       LinearMap.id.flip) := by
   ext; rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp] theorem ihom_coev_app_hom (A B : Rep k G) :
     ((ihom.coev A).app B).hom.toLinearMap = (TensorProduct.mk k _ _).flip :=
   LinearMap.ext fun _ => LinearMap.ext fun _ => rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 /-- There is a `k`-linear isomorphism between the sets of representation morphisms `Hom(A ⊗ B, C)`
 and `Hom(B, Homₖ(A, C))`. -/
 def MonoidalClosed.linearHomEquiv (A B C : Rep.{u} k G) : (A ⊗ B ⟶ C) ≃ₗ[k] B ⟶ A ⟶[Rep k G] C :=
@@ -832,30 +839,35 @@ def MonoidalClosed.linearHomEquiv (A B C : Rep.{u} k G) : (A ⊗ B ⟶ C) ≃ₗ
     map_add' := fun _ _ => rfl
     map_smul' := fun _ _ => rfl }
 
+set_option backward.isDefEq.respectTransparency.instances false in
 /-- There is a `k`-linear isomorphism between the sets of representation morphisms `Hom(A ⊗ B, C)`
 and `Hom(A, Homₖ(B, C))`. -/
 def MonoidalClosed.linearHomEquivComm (A B C : Rep.{u} k G) : (A ⊗ B ⟶ C) ≃ₗ[k] A ⟶ B
     ⟶[Rep k G] C :=
   Linear.homCongr k (β_ A B) (Iso.refl _) ≪≫ₗ MonoidalClosed.linearHomEquiv _ _ _
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 theorem MonoidalClosed.linearHomEquiv_hom (A B C : Rep.{u} k G) (f : A ⊗ B ⟶ C) :
     (MonoidalClosed.linearHomEquiv A B C f).hom.toLinearMap =
     (TensorProduct.curry f.hom.toLinearMap).flip :=
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 theorem MonoidalClosed.linearHomEquivComm_hom (A B C : Rep.{u} k G) (f : A ⊗ B ⟶ C) :
     (MonoidalClosed.linearHomEquivComm A B C f).hom.toLinearMap =
     TensorProduct.curry f.hom.toLinearMap :=
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 theorem MonoidalClosed.linearHomEquiv_symm_hom (A B C : Rep.{u} k G) (f : B ⟶ A ⟶[Rep k G] C) :
     ((MonoidalClosed.linearHomEquiv A B C).symm f).hom.toLinearMap =
       TensorProduct.uncurry (.id k) A B C f.hom.toLinearMap.flip := by
   simp [linearHomEquiv]
   rfl
 
+set_option backward.isDefEq.respectTransparency.instances false in
 theorem MonoidalClosed.linearHomEquivComm_symm_hom (A B C : Rep.{u} k G) (f : A ⟶ B ⟶[Rep k G] C) :
     ((MonoidalClosed.linearHomEquivComm A B C).symm f).hom.toLinearMap =
       TensorProduct.uncurry (.id k) A B C f.hom.toLinearMap :=

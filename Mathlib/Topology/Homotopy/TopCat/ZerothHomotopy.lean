@@ -39,6 +39,7 @@ noncomputable def toSSetObj₁Equiv :
       left_inv _ := by simp
       right_inv _ := by simp }
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toSSetObj₁Equiv_apply_zero (s : toSSet.obj X _⦋1⦌) :
@@ -46,6 +47,7 @@ lemma toSSetObj₁Equiv_apply_zero (s : toSSet.obj X _⦋1⦌) :
   simp [toSSetObj₀Equiv, toSSetObj₁Equiv, -ContinuousMap.coe_mk,
     Subsingleton.elim (default : stdSimplex ℝ (Fin 1)) (stdSimplex.vertex 0)]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toSSetObj₁Equiv_apply_one (s : toSSet.obj X _⦋1⦌) :

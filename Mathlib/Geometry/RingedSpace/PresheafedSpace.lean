@@ -430,6 +430,7 @@ end Functor
 
 namespace NatTrans
 
+set_option backward.isDefEq.respectTransparency.instances false in
 -- set_option backward.isDefEq.respectTransparency.instances false in
 set_option trace.Meta.isDefEq.assign.checkTypes true in
 set_option backward.defeqAttrib.useBackward true in

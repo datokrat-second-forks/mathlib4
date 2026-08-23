@@ -795,6 +795,7 @@ noncomputable def compPresheafIso : F.op ⋙ presheaf data G₀ ≅ G₀.obj :=
   (NatIso.ofComponents (fun _ ↦ (presheafObjObjIso data G₀ _).symm)
     (fun f ↦ presheafObjObjIso_inv_naturality data G₀ f.unop)).symm
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 lemma isSheaf : Presheaf.IsSheaf J (presheaf data G₀) := by

@@ -27,6 +27,7 @@ open CategoryTheory
 
 namespace AlgCat
 
+set_option backward.isDefEq.respectTransparency.instances false in
 /-- The functor sending an `R`-module `M` to its tensor algebra over `R`. -/
 @[simps]
 def tensorAlgebra (R : Type u) [CommRing R] : ModuleCat.{w} R ⥤ AlgCat.{max u w} R where
@@ -35,6 +36,7 @@ def tensorAlgebra (R : Type u) [CommRing R] : ModuleCat.{w} R ⥤ AlgCat.{max u 
 
 variable (R : Type u) [CommRing R]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Taking the tensor algebra forms a left adjoint of the forgetful functor from `AlgCat R` to
