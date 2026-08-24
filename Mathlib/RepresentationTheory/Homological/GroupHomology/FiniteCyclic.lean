@@ -44,6 +44,7 @@ namespace Rep.FiniteCyclicGroup
 
 variable {k G : Type u} [CommRing k] [CommGroup G] [Fintype G] (A : Rep k G) (g : G)
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 open ModuleCat.MonoidalCategory in
@@ -100,6 +101,7 @@ noncomputable abbrev groupHomologyπEven
   (ShortComplex.moduleCatCyclesIso <| subCompNormHom A g).inv ≫
     ShortComplex.homologyπ _ ≫ (groupHomologyIsoEven A g hg i hi).inv
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 lemma groupHomologyπEven_eq_zero_iff (hg : ∀ x, x ∈ Subgroup.zpowers g)

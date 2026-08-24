@@ -1006,6 +1006,7 @@ def H1ToTensorOfIsTrivial : H1 A →ₗ[ℤ] (Additive <| Abelianization G) ⊗[
       simp [← hz, d₂₁, sum_sum_index, sum_add_index', tmul_add, sum_sub_index, tmul_sub,
         shortComplexH1]).comp <| AddMonoidHomClass.toAddMonoidHom (H1Iso A).hom.hom).toIntLinearMap
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 variable {A} in
@@ -1019,6 +1020,7 @@ lemma H1ToTensorOfIsTrivial_H1π_single (g : G) (a : A) :
   simp [π_comp_H1Iso_hom_apply, ← Submodule.Quotient.quotientAddGroupMk_eq_mk, Submodule.mkQ,
     AddSubgroup.subtype, cycles₁IsoOfIsTrivial]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 /-- If a `G`-representation on `A` is trivial, this is the group isomorphism between
 `H₁(G, A) ≃+ Gᵃᵇ ⊗[ℤ] A` defined by `⟦single g a⟧ ↦ ⟦g⟧ ⊗ a`. -/
@@ -1043,12 +1045,14 @@ def H1AddEquivOfIsTrivial :
         simpa [AddSubgroup.subtype, -π_comp_H1Iso_inv_apply, QuotientAddGroup.mk',
           cycles₁IsoOfIsTrivial_inv_apply (A := A)] using! (π_comp_H1Iso_inv_apply A _).symm)
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 lemma H1AddEquivOfIsTrivial_single (g : G) (a : A) :
     H1AddEquivOfIsTrivial A (H1π A <| (cycles₁IsoOfIsTrivial A).inv (single g a)) =
       Additive.ofMul (Abelianization.of g) ⊗ₜ[ℤ] a := by
   rw [H1AddEquivOfIsTrivial_apply, H1ToTensorOfIsTrivial_H1π_single g a]
 
+set_option backward.isDefEq.respectTransparency.instances false in
 @[simp]
 lemma H1AddEquivOfIsTrivial_symm_tmul (g : G) (a : A) :
     (H1AddEquivOfIsTrivial A).symm (Additive.ofMul (Abelianization.of g) ⊗ₜ[ℤ] a) =

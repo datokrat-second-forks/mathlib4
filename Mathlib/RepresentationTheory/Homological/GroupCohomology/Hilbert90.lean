@@ -126,6 +126,7 @@ theorem norm_ofAlgebraAutOnUnits_eq (x : Lˣ) :
 
 variable [IsCyclic (L ≃ₐ[K] L)] {g : Gal(L/K)}
 
+set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 attribute [local instance] IsCyclic.commGroup in
 /-- Hilbert's Theorem 90: given a finite cyclic Galois extension `L/K`, an element `x : L` such
