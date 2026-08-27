@@ -11,6 +11,7 @@ public import Mathlib.Analysis.RCLike.TangentCone
 public import Mathlib.Data.Bundle
 public import Mathlib.Geometry.Manifold.HasGroupoid
 public import Mathlib.Tactic.CrossRefAttribute
+public meta import Mathlib.Topology.Algebra.Module.DeriveOneFieldStructure
 
 /-!
 # `C^n` manifolds (possibly with boundary or corners)
@@ -1032,16 +1033,17 @@ The definition of `TangentSpace` is not reducible so that type class inference
 does not pick wrong instances.
 -/
 @[nolint unusedArguments, wikidata Q909601]
-def TangentSpace {𝕜 : Type*} [NontriviallyNormedField 𝕜]
+structure TangentSpace {𝕜 : Type*} [NontriviallyNormedField 𝕜]
     {E : Type u} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
     {H : Type*} [TopologicalSpace H] (I : ModelWithCorners 𝕜 E H)
-    {M : Type*} [TopologicalSpace M] [ChartedSpace H M] (_x : M) : Type u := E
+    {M : Type*} [TopologicalSpace M] [ChartedSpace H M] (_x : M) : Type u where
+  inner : E
 deriving
-  TopologicalSpace, AddCommGroup, IsTopologicalAddGroup, Module 𝕜,
-  ContinuousSMul 𝕜,
+  TopologicalSpace, AddCommGroup, IsTopologicalAddGroup, Module,
+  ContinuousSMul,
   -- the following instance derives from the previous one, but through an instance with priority 100
   -- which takes a long time to be found. We register a shortcut instance instead
-  ContinuousConstSMul 𝕜
+  ContinuousConstSMul
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
@@ -1054,10 +1056,14 @@ this definition is a technical detail related to our specific implementation of 
 but it has no mathematical meaning. The mathematically meaningful version of this definition
 is the derivative of the extended chart at `x`, in its `mvfderiv` version. -/
 def tangentSpaceCastModel (x : M) : TangentSpace I x ≃L[𝕜] E where
-  toFun v := v
-  invFun v := v
+  toFun v := v.inner
+  invFun v := ⟨v⟩
+  left_inv _ := rfl
+  right_inv _ := rfl
   map_add' x y := rfl
   map_smul' c x := rfl
+  continuous_toFun := continuous_induced_dom
+  continuous_invFun := continuous_induced_rng.2 continuous_id
 
 /-- Identifying the tangent space at a normed space with the normed space itself.
 This canonical identification (which, in mathlib, is implemented using an abuse of definitional
@@ -1068,14 +1074,18 @@ def NormedSpace.fromTangentSpace (v : E) : TangentSpace 𝓘(𝕜, E) v ≃L[�
 /-- Definitional identification between the tangent space of a manifold at two points. This only
 makes sense mathematically when `x = y`. -/
 def tangentSpaceCast (x y : M) : TangentSpace I x ≃L[𝕜] TangentSpace I y where
-  toFun v := v
-  invFun v := v
+  toFun v := ⟨v.inner⟩
+  invFun v := ⟨v.inner⟩
+  left_inv _ := rfl
+  right_inv _ := rfl
   map_add' x y := rfl
   map_smul' c x := rfl
+  continuous_toFun := continuous_induced_rng.2 continuous_induced_dom
+  continuous_invFun := continuous_induced_rng.2 continuous_induced_dom
 
 instance : Inhabited (TangentSpace I x) := ⟨0⟩
 
-instance : T2Space (TangentSpace I x) := inferInstanceAs (T2Space E)
+deriving instance T2Space for TangentSpace
 
 variable (M) in
 -- is empty if the base manifold is empty
@@ -1091,6 +1101,6 @@ section Real
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {H : Type*} [TopologicalSpace H]
   {I : ModelWithCorners ℝ E H} {M : Type*} [TopologicalSpace M] [ChartedSpace H M] {x : M}
 
-deriving instance PathConnectedSpace for TangentSpace I x
+deriving instance PathConnectedSpace for TangentSpace
 
 end Real

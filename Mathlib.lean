@@ -386,6 +386,7 @@ public import Mathlib.Algebra.Group.Commute.Units
 public import Mathlib.Algebra.Group.Conj
 public import Mathlib.Algebra.Group.ConjFinite
 public import Mathlib.Algebra.Group.Defs
+public import Mathlib.Algebra.Group.DeriveOneFieldStructure
 public import Mathlib.Algebra.Group.DivInvMonoid
 public import Mathlib.Algebra.Group.Embedding
 public import Mathlib.Algebra.Group.End
@@ -790,6 +791,7 @@ public import Mathlib.Algebra.Module.CharacterModule
 public import Mathlib.Algebra.Module.Congruence.Defs
 public import Mathlib.Algebra.Module.DedekindDomain
 public import Mathlib.Algebra.Module.Defs
+public import Mathlib.Algebra.Module.DeriveOneFieldStructure
 public import Mathlib.Algebra.Module.End
 public import Mathlib.Algebra.Module.Equiv.Basic
 public import Mathlib.Algebra.Module.Equiv.Defs
@@ -7412,6 +7414,7 @@ public import Mathlib.Tactic.DeprecateTo
 public import Mathlib.Tactic.DeriveCountable
 public import Mathlib.Tactic.DeriveEncodable
 public import Mathlib.Tactic.DeriveFintype
+public import Mathlib.Tactic.DeriveOneFieldStructure
 public import Mathlib.Tactic.DeriveTraversable
 public import Mathlib.Tactic.Determinant.Bird.Cert
 public import Mathlib.Tactic.Determinant.Bird.Meta
@@ -7773,6 +7776,7 @@ public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Positive
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Quotient
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.Restrict
 public import Mathlib.Topology.Algebra.Module.ContinuousLinearMap.RestrictScalars
+public import Mathlib.Topology.Algebra.Module.DeriveOneFieldStructure
 public import Mathlib.Topology.Algebra.Module.Determinant
 public import Mathlib.Topology.Algebra.Module.EmbeddingOfLocal
 public import Mathlib.Topology.Algebra.Module.Equiv
@@ -8031,6 +8035,7 @@ public import Mathlib.Topology.Defs.Induced
 public import Mathlib.Topology.Defs.Sequences
 public import Mathlib.Topology.Defs.Ultrafilter
 public import Mathlib.Topology.DenseEmbedding
+public import Mathlib.Topology.DeriveOneFieldStructure
 public import Mathlib.Topology.DerivedSet
 public import Mathlib.Topology.DiscreteQuotient
 public import Mathlib.Topology.DiscreteSubset
