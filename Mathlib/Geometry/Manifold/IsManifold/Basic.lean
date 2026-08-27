@@ -1060,8 +1060,8 @@ def tangentSpaceCastModel (x : M) : TangentSpace I x ≃L[𝕜] E where
   invFun v := ⟨v⟩
   left_inv _ := rfl
   right_inv _ := rfl
-  map_add' x y := rfl
-  map_smul' c x := rfl
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
   continuous_toFun := continuous_induced_dom
   continuous_invFun := continuous_induced_rng.2 continuous_id
 
@@ -1078,8 +1078,8 @@ def tangentSpaceCast (x y : M) : TangentSpace I x ≃L[𝕜] TangentSpace I y wh
   invFun v := ⟨v.inner⟩
   left_inv _ := rfl
   right_inv _ := rfl
-  map_add' x y := rfl
-  map_smul' c x := rfl
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
   continuous_toFun := continuous_induced_rng.2 continuous_induced_dom
   continuous_invFun := continuous_induced_rng.2 continuous_induced_dom
 
