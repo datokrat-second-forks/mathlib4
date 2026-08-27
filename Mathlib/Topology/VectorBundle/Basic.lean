@@ -881,6 +881,34 @@ def fiberBundleAlong :
     FiberBundle F V :=
   Z.toFiberBundleCore.fiberBundleAlong fun x ↦ (ψ x).toHomeomorph
 
+theorem localTrivAlong_symm_apply (i : ι) {b : B} (hb : b ∈ Z.baseSet i) (v : F) :
+    letI := Z.totalSpaceTopologyAlong ψ
+    (Z.localTrivAlong ψ i).symm b v = (ψ b).symm (Z.coordChange i (Z.indexAt b) b v) := by
+  let := Z.totalSpaceTopologyAlong ψ
+  exact (Z.localTrivAlong ψ i).symm_apply hb v
+
+theorem localTrivAlong_continuousLinearMapAt (i : ι) {b : B} (hb : b ∈ Z.baseSet i) :
+    letI := Z.totalSpaceTopologyAlong ψ
+    letI := Z.fiberBundleAlong ψ
+    (Z.localTrivAlong ψ i).continuousLinearMapAt R b =
+      (Z.coordChange (Z.indexAt b) i b).comp (ψ b : V b →L[R] F) := by
+  let := Z.totalSpaceTopologyAlong ψ
+  let := Z.fiberBundleAlong ψ
+  ext1 v
+  rw [(Z.localTrivAlong ψ i).continuousLinearMapAt_apply_of_mem (R := R) hb]
+  rfl
+
+theorem localTrivAlong_symmL (i : ι) {b : B} (hb : b ∈ Z.baseSet i) :
+    letI := Z.totalSpaceTopologyAlong ψ
+    letI := Z.fiberBundleAlong ψ
+    (Z.localTrivAlong ψ i).symmL R b =
+      ((ψ b).symm : F →L[R] V b).comp (Z.coordChange i (Z.indexAt b) b) := by
+  let := Z.totalSpaceTopologyAlong ψ
+  let := Z.fiberBundleAlong ψ
+  ext1 v
+  rw [(Z.localTrivAlong ψ i).symmL_apply (R := R) hb, Z.localTrivAlong_symm_apply ψ i hb]
+  rfl
+
 /-- The realization of a vector bundle core on a family of topological modules along continuous
 linear fiberwise coordinates is a vector bundle. -/
 theorem vectorBundleAlong :
