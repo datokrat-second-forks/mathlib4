@@ -1038,12 +1038,12 @@ structure TangentSpace {𝕜 : Type*} [NontriviallyNormedField 𝕜]
     {H : Type*} [TopologicalSpace H] (I : ModelWithCorners 𝕜 E H)
     {M : Type*} [TopologicalSpace M] [ChartedSpace H M] (_x : M) : Type u where
   inner : E
-deriving
-  TopologicalSpace, AddCommGroup, IsTopologicalAddGroup, Module,
-  ContinuousSMul,
+deriving TopologicalSpace, AddCommGroup, IsTopologicalAddGroup
+
+deriving instance Module 𝕜, ContinuousSMul 𝕜,
   -- the following instance derives from the previous one, but through an instance with priority 100
   -- which takes a long time to be found. We register a shortcut instance instead
-  ContinuousConstSMul
+  ContinuousConstSMul 𝕜 for TangentSpace
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]

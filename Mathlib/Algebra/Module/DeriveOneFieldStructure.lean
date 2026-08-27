@@ -15,10 +15,10 @@ A deriving handler transferring `Module` along the canonical equivalence between
 structure and the type of its field. See `Mathlib/Tactic/DeriveOneFieldStructure.lean` for the
 general set-up.
 
-Since a deriving handler never sees the arguments of the class it is invoked for, the derived
-instance quantifies over the scalar ring: write `deriving Module`, not `deriving Module R`.
-The handler needs the additive structure of the one-field structure, so `AddCommGroup` has to be
-derived first.
+The scalar ring is given as an argument, as in `deriving instance Module 𝕜 for TangentSpace`;
+it may refer to the structure's parameters by name, and `Module 𝕜 (fieldType)` is synthesized
+from the structure's parameters at deriving time. The handler also needs the additive structure
+of the one-field structure, so `AddCommGroup` has to be derived first.
 -/
 
 public meta section
@@ -28,12 +28,12 @@ namespace Mathlib.Deriving.OneFieldStructure
 open Lean Elab Term
 
 initialize
-  registerDerivingHandler ``_root_.Module <|
-      mkOneFieldStructureHandler ``_root_.Module fun info => do
-    let α := info.fieldTypeStx
-    let S := info.typeStx
-    return (← `(∀ {R : Type _} [Semiring R] [AddCommGroup $α] [Module R $α], Module R $S),
-            ← `(fun {R : Type _} [Semiring R] [AddCommGroup $α] [Module R $α] =>
-                  (show $S ≃+ $α from ⟨$(info.equivStx), fun _ _ => rfl⟩).module R))
+  registerOneFieldStructureHandler ``_root_.Module fun info args => do
+    let #[R] := args
+      | throwError "deriving `Module` for a one-field structure needs the scalar ring as an \
+          argument, as in `deriving instance Module 𝕜 for MyStructure`"
+    return (← `(Module $R $(info.typeStx)),
+            ← `((show $(info.typeStx) ≃+ $(info.fieldTypeStx) from
+                  ⟨$(info.equivStx), fun _ _ => rfl⟩).module $R))
 
 end Mathlib.Deriving.OneFieldStructure

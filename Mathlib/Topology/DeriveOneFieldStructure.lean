@@ -18,8 +18,12 @@ structures with a single field. See `Mathlib/Tactic/DeriveOneFieldStructure.lean
 set-up.
 
 The topology derived for a one-field structure is the one induced by its projection, so that the
-projection is a homeomorphism onto the type of the field. All the other handlers in this file
-assume that the topology on the structure is that one, and fail otherwise.
+projection is a homeomorphism onto the type of the field. The other handlers in this file assume
+that the topology on the structure is that one, and fail otherwise. `TopologicalSpace` and
+`T2Space` synthesize the corresponding instance on the field type from the structure's parameters;
+`PathConnectedSpace` instead takes it as a hypothesis of the derived instance, since path
+connectedness of the field type is usually not synthesizable from the parameters (for
+`TangentSpace` it holds over `ℝ` but not over a general field).
 -/
 
 public meta section
@@ -29,24 +33,19 @@ namespace Mathlib.Deriving.OneFieldStructure
 open Lean Elab Term
 
 initialize
-  registerDerivingHandler ``TopologicalSpace <|
-      mkOneFieldStructureHandler ``TopologicalSpace fun info => do
+  registerOneFieldStructureHandler ``TopologicalSpace fun info args => do
+    ensureNoArgs ``TopologicalSpace args
+    return (← `(TopologicalSpace $(info.typeStx)),
+            ← `(TopologicalSpace.induced $(info.projStx) inferInstance))
+  registerOneFieldStructureHandler ``T2Space fun info args => do
+    ensureNoArgs ``T2Space args
+    return (← `(T2Space $(info.typeStx)),
+            ← `((Equiv.toHomeomorphOfIsInducing $(info.equivStx) ⟨rfl⟩).symm.t2Space))
+  registerOneFieldStructureHandler ``PathConnectedSpace fun info args => do
+    ensureNoArgs ``PathConnectedSpace args
     let α := info.fieldTypeStx
-    let S := info.typeStx
-    return (← `(∀ [TopologicalSpace $α], TopologicalSpace $S),
-            ← `(fun [TopologicalSpace $α] => TopologicalSpace.induced $(info.projStx) ‹_›))
-  registerDerivingHandler ``T2Space <| mkOneFieldStructureHandler ``T2Space fun info => do
-    let α := info.fieldTypeStx
-    let S := info.typeStx
-    return (← `(∀ [TopologicalSpace $α] [T2Space $α], T2Space $S),
-            ← `(fun [TopologicalSpace $α] [T2Space $α] =>
-                  (Equiv.toHomeomorphOfIsInducing $(info.equivStx) ⟨rfl⟩).symm.t2Space))
-  registerDerivingHandler ``PathConnectedSpace <|
-      mkOneFieldStructureHandler ``PathConnectedSpace fun info => do
-    let α := info.fieldTypeStx
-    let S := info.typeStx
-    return (← `(∀ [TopologicalSpace $α] [PathConnectedSpace $α], PathConnectedSpace $S),
-            ← `(fun [TopologicalSpace $α] [PathConnectedSpace $α] =>
+    return (← `(∀ [PathConnectedSpace $α], PathConnectedSpace $(info.typeStx)),
+            ← `(fun [PathConnectedSpace $α] =>
                   (Equiv.toHomeomorphOfIsInducing $(info.equivStx) ⟨rfl⟩).symm.pathConnectedSpace))
 
 end Mathlib.Deriving.OneFieldStructure
