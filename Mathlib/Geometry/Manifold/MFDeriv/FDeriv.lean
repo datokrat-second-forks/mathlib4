@@ -49,19 +49,41 @@ theorem ModelWithCorners.uniqueMDiffOn {H : Type*} [TopologicalSpace H]
 theorem writtenInExtChartAt_model_space : writtenInExtChartAt 𝓘(𝕜, E) 𝓘(𝕜, E') x f = f :=
   rfl
 
-variable {f' : TangentSpace 𝓘(𝕜, E) x →L[𝕜] TangentSpace 𝓘(𝕜, E') (f x)}
+variable {f' : E →L[𝕜] E'}
 
-set_option backward.isDefEq.respectTransparency false in
+/-- On a model vector space, a map has a manifold derivative at `x` within `s` iff it has the
+corresponding Fréchet derivative there. The manifold-side derivative is the given
+`f' : E →L[𝕜] E'` read through the canonical identification `NormedSpace.fromTangentSpace`
+between the tangent spaces of the model space and the model space itself. -/
 theorem hasMFDerivWithinAt_iff_hasFDerivWithinAt :
-    HasMFDerivAt[s] f x f' ↔ HasFDerivWithinAt f f' s x := by
-  simp only [HasMFDerivWithinAt, mfld_simps]
+    HasMFDerivAt[s] f x
+      (((NormedSpace.fromTangentSpace (𝕜 := 𝕜) (f x)).symm :
+          E' →L[𝕜] TangentSpace 𝓘(𝕜, E') (f x)) ∘L
+        f' ∘L (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x : TangentSpace 𝓘(𝕜, E) x →L[𝕜] E)) ↔
+      HasFDerivWithinAt f f' s x := by
+  have key : (tangentSpaceCastModel 𝓘(𝕜, E') (f x) :
+        TangentSpace 𝓘(𝕜, E') (f x) →L[𝕜] E') ∘L
+      (((NormedSpace.fromTangentSpace (𝕜 := 𝕜) (f x)).symm :
+          E' →L[𝕜] TangentSpace 𝓘(𝕜, E') (f x)) ∘L
+        f' ∘L (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x : TangentSpace 𝓘(𝕜, E) x →L[𝕜] E)) ∘L
+      ((tangentSpaceCastModel 𝓘(𝕜, E) x).symm : E →L[𝕜] TangentSpace 𝓘(𝕜, E) x) = f' := by
+    ext v
+    simp [NormedSpace.fromTangentSpace]
+  simp only [HasMFDerivWithinAt, key, mfld_simps]
   exact ⟨fun h ↦ h.2, fun h ↦ ⟨h.continuousWithinAt, h⟩⟩
 
 alias ⟨HasMFDerivWithinAt.hasFDerivWithinAt, HasFDerivWithinAt.hasMFDerivWithinAt⟩ :=
   hasMFDerivWithinAt_iff_hasFDerivWithinAt
 
-set_option backward.isDefEq.respectTransparency false in
-theorem hasMFDerivAt_iff_hasFDerivAt : HasMFDerivAt% f x f' ↔ HasFDerivAt f f' x := by
+/-- On a model vector space, a map has a manifold derivative at `x` iff it has the corresponding
+Fréchet derivative there; see `hasMFDerivWithinAt_iff_hasFDerivWithinAt` for the way the two
+derivatives correspond. -/
+theorem hasMFDerivAt_iff_hasFDerivAt :
+    HasMFDerivAt% f x
+      (((NormedSpace.fromTangentSpace (𝕜 := 𝕜) (f x)).symm :
+          E' →L[𝕜] TangentSpace 𝓘(𝕜, E') (f x)) ∘L
+        f' ∘L (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x : TangentSpace 𝓘(𝕜, E) x →L[𝕜] E)) ↔
+      HasFDerivAt f f' x := by
   rw [← hasMFDerivWithinAt_univ, hasMFDerivWithinAt_iff_hasFDerivWithinAt, hasFDerivWithinAt_univ]
 
 alias ⟨HasMFDerivAt.hasFDerivAt, HasFDerivAt.hasMFDerivAt⟩ := hasMFDerivAt_iff_hasFDerivAt
@@ -102,20 +124,32 @@ theorem mdifferentiable_iff_differentiable : MDiff f ↔ Differentiable 𝕜 f :
 alias ⟨MDifferentiable.differentiable, Differentiable.mdifferentiable⟩ :=
   mdifferentiable_iff_differentiable
 
-/-- For maps between vector spaces, `mfderivWithin` and `fderivWithin` coincide -/
+/-- For maps between vector spaces, `mfderivWithin` and `fderivWithin` coincide, through the
+canonical identification `NormedSpace.fromTangentSpace` of the tangent spaces of the model space
+with the model space itself. -/
 @[simp]
 theorem mfderivWithin_eq_fderivWithin :
-    mfderiv[s] f x = fderivWithin 𝕜 f s x := by
+    mfderiv[s] f x =
+      ((NormedSpace.fromTangentSpace (𝕜 := 𝕜) (f x)).symm : E' →L[𝕜] TangentSpace 𝓘(𝕜, E') (f x)) ∘L
+        fderivWithin 𝕜 f s x ∘L
+        (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x : TangentSpace 𝓘(𝕜, E) x →L[𝕜] E) := by
   by_cases h : MDiffAt[s] f x
-  · simp only [mfderivWithin, h, ite_eq_left, mfld_simps]
-    rfl
-  · simp only [mfderivWithin, h, ite_eq_right, not_false_iff]
-    rw [mdifferentiableWithinAt_iff_differentiableWithinAt] at h
-    exact (fderivWithin_zero_of_not_differentiableWithinAt h).symm
+  · rw [h.mfderivWithin]
+    simp [NormedSpace.fromTangentSpace, chartAt_self_eq, mfld_simps]
+  · have h' := mdifferentiableWithinAt_iff_differentiableWithinAt.not.1 h
+    rw [mfderivWithin_zero_of_not_mdifferentiableWithinAt h,
+      fderivWithin_zero_of_not_differentiableWithinAt h',
+      ContinuousLinearMap.zero_comp, ContinuousLinearMap.comp_zero]
 
-/-- For maps between vector spaces, `mfderiv` and `fderiv` coincide -/
+/-- For maps between vector spaces, `mfderiv` and `fderiv` coincide, through the canonical
+identification `NormedSpace.fromTangentSpace` of the tangent spaces of the model space with the
+model space itself. -/
 @[simp]
-theorem mfderiv_eq_fderiv : mfderiv% f x = fderiv 𝕜 f x := by
+theorem mfderiv_eq_fderiv :
+    mfderiv% f x =
+      ((NormedSpace.fromTangentSpace (𝕜 := 𝕜) (f x)).symm : E' →L[𝕜] TangentSpace 𝓘(𝕜, E') (f x)) ∘L
+        fderiv 𝕜 f x ∘L
+        (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x : TangentSpace 𝓘(𝕜, E) x →L[𝕜] E) := by
   rw [← mfderivWithin_univ, ← fderivWithin_univ]
   exact mfderivWithin_eq_fderivWithin
 
