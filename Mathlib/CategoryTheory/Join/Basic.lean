@@ -284,6 +284,13 @@ lemma mkFunctor_map_edge (c : C) (d : D) :
 
 end
 
+/-
+TODO:
+(h : whiskerRight (edgeTransform C D) F ≫ (associator ..).hom ≫ whiskerLeft (Prod.snd C D) αᵣ =
+      (associator ..).hom ≫ whiskerLeft (Prod.fst C D) αₗ ≫ (associator ..).inv
+      ≫ whiskerRight (edgeTransform C D) F' ≫ (associator ..).hom := by cat_disch)
+is the variant without the defeq abuse.
+-/
 /-- Construct a natural transformation between functors out of a join from
 the data of natural transformations between each side that are compatible with the
 action on edge maps. -/
@@ -338,6 +345,8 @@ lemma natTrans_ext {F F' : C ⋆ D ⥤ E} {α β : F ⟶ F'}
   | left t => exact congrArg (fun x ↦ x.app t) h₁
   | right t => exact congrArg (fun x ↦ x.app t) h₂
 
+-- TODO: `mkNatTrans` contains the defeq abuse
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma eq_mkNatTrans {F F' : C ⋆ D ⥤ E} (α : F ⟶ F') :
     mkNatTrans (whiskerLeft (inclLeft C D) α) (whiskerLeft (inclRight C D) α) = α := by
@@ -345,6 +354,8 @@ lemma eq_mkNatTrans {F F' : C ⋆ D ⥤ E} (α : F ⟶ F') :
 
 section
 
+-- TODO: `mkNatTrans` contains the defeq abuse
+set_option backward.isDefEq.respectTransparency false in
 /-- `mkNatTrans` respects vertical composition. -/
 lemma mkNatTransComp
     {F F' F'' : C ⋆ D ⥤ E}
@@ -352,10 +363,8 @@ lemma mkNatTransComp
     (αᵣ : inclRight C D ⋙ F ⟶ inclRight C D ⋙ F')
     (βₗ : inclLeft C D ⋙ F' ⟶ inclLeft C D ⋙ F'')
     (βᵣ : inclRight C D ⋙ F' ⟶ inclRight C D ⋙ F'')
-    (h : whiskerRight (edgeTransform C D) F ≫ whiskerLeft (Prod.snd C D) αᵣ =
-      whiskerLeft (Prod.fst C D) αₗ ≫ whiskerRight (edgeTransform C D) F' := by cat_disch)
-    (h' : whiskerRight (edgeTransform C D) F' ≫ whiskerLeft (Prod.snd C D) βᵣ =
-      whiskerLeft (Prod.fst C D) βₗ ≫ whiskerRight (edgeTransform C D) F'' := by cat_disch) :
+    (h : _ := by cat_disch)
+    (h' : _ := by cat_disch) :
     mkNatTrans (αₗ ≫ βₗ) (αᵣ ≫ βᵣ) (by simp [← h', reassoc_of% h]) =
     mkNatTrans αₗ αᵣ h ≫ mkNatTrans βₗ βᵣ h' := by
   apply natTrans_ext <;> cat_disch
@@ -463,6 +472,7 @@ lemma mapPairComp_hom_app_right (d : D) :
   dsimp [mapPairComp]
   simp
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp]
 lemma mapPairComp_inv_app_left (c : C) :
@@ -470,6 +480,7 @@ lemma mapPairComp_inv_app_left (c : C) :
   dsimp [mapPairComp]
   simp
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[simp]
 lemma mapPairComp_inv_app_right (d : D) :
