@@ -455,6 +455,7 @@ lemma mkOfHomEquiv_homEquiv (adj : CoreHomEquiv F G) :
   ext X Y g
   simp [mkOfHomEquiv, ← adj.homEquiv_naturality_right (𝟙 _) g]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Construct an adjunction between functors `F` and `G` given a unit and counit for the adjunction
 satisfying the triangle identities. -/
 @[simps!]

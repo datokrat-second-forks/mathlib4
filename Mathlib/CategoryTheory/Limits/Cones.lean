@@ -445,6 +445,7 @@ def whiskering (E : K ⥤ J) : Cone F ⥤ Cone (E ⋙ F) where
   obj c := c.whisker E
   map f := { hom := f.hom }
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Whiskering by an equivalence gives an equivalence between categories of cones.
 -/
 @[to_dual (attr := simps)
@@ -497,6 +498,7 @@ def functoriality : Cone F ⥤ Cone (F ⋙ G) where
     { hom := G.map f.hom
       w := ConeMorphism.map_w f G }
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Functoriality is functorial. -/
 @[to_dual /-- Functoriality is functorial. -/]
 def functorialityCompFunctoriality (H : D ⥤ E) :
