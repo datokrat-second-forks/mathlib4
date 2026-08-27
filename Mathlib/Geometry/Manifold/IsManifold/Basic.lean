@@ -1092,6 +1092,11 @@ def tangentSpaceCast (x y : M) : TangentSpace I x ≃L[𝕜] TangentSpace I y wh
   continuous_toFun := continuous_induced_rng.2 continuous_induced_dom
   continuous_invFun := continuous_induced_rng.2 continuous_induced_dom
 
+theorem tangentSpaceCast_heq {x y : M} (h : x = y) (v : TangentSpace I x) :
+    HEq (tangentSpaceCast I x y v) v := by
+  subst h
+  exact heq_of_eq rfl
+
 instance : Inhabited (TangentSpace I x) := ⟨0⟩
 
 deriving instance T2Space for TangentSpace
