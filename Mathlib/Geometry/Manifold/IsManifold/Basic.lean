@@ -1071,6 +1071,15 @@ equality) is very prevalent in a number of places: this device allows making it 
 def NormedSpace.fromTangentSpace (v : E) : TangentSpace 𝓘(𝕜, E) v ≃L[𝕜] E :=
   tangentSpaceCastModel 𝓘(𝕜, E) v
 
+/-- The canonical identification between the tangent space to the model space at one of its
+points and the model vector space. Contrary to `tangentSpaceCastModel` (of which it is a special
+case), this identification is mathematically meaningful: informally, it is the derivative of the
+model embedding `I : H → E`. Within Mathlib, it is characterized as the fiberwise linear part of
+the trivialization of the tangent bundle of the model space, see
+`ModelWithCorners.fromTangentSpace_eq_continuousLinearMapAt`. -/
+def ModelWithCorners.fromTangentSpace (x : H) : TangentSpace I x ≃L[𝕜] E :=
+  tangentSpaceCastModel I x
+
 /-- Definitional identification between the tangent space of a manifold at two points. This only
 makes sense mathematically when `x = y`. -/
 def tangentSpaceCast (x y : M) : TangentSpace I x ≃L[𝕜] TangentSpace I y where
