@@ -939,4 +939,4 @@ end Topology
 
 instance {M : Type*} [TopologicalSpace M] [ChartedSpace H M] {x : M} [FiniteDimensional 𝕜 E] :
     FiniteDimensional 𝕜 (TangentSpace I x) :=
-  (tangentSpaceCastModel I x).symm.toLinearEquiv.finiteDimensional
+  inferInstanceAs (FiniteDimensional 𝕜 E)

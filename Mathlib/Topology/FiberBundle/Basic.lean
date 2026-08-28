@@ -489,29 +489,19 @@ theorem mem_trivChange_source (i j : ι) (p : B × F) :
   rw [trivChange, mem_prod]
   simp
 
-section Realization
-
-/-! #### Realizing a fiber bundle core on a family of fibers
-
-A fiber bundle core defines a fiber bundle structure not only on the constant family
-`Z.Fiber = fun _ ↦ F`, but on any family of topological spaces `E : B → Type*` equipped with
-continuous fiberwise coordinates `ψ x : E x ≃ₜ F`: the local trivializations are those of the
-core, read in each fiber through `ψ`. The bundle `Z.Fiber` constructed below is the realization
-along the identity coordinates, and the tangent bundle of a manifold is the realization of
-`tangentBundleCore` along the canonical identification of each tangent space with the model
-space. -/
-
-variable {E : B → Type*} [∀ x, TopologicalSpace (E x)] (ψ : ∀ x, E x ≃ₜ F)
-
-/-- The partial equivalence version of the local trivialization with index `i` of the realization
-of the core `Z` on the family `E` along the fiberwise coordinates `ψ`: the trivialization of the
-core with index `i`, read in each fiber through `ψ`. See `localTrivAsPartialEquiv` for the
-realization on `Z.Fiber`. -/
-def localTrivAsPartialEquivAlong (i : ι) : PartialEquiv (Bundle.TotalSpace F E) (B × F) where
-  source := TotalSpace.proj ⁻¹' Z.baseSet i
+set_option backward.isDefEq.respectTransparency false in
+/-- Associate to a trivialization index `i : ι` the corresponding trivialization, i.e., a bijection
+between `proj ⁻¹ (baseSet i)` and `baseSet i × F`. As the fiber above `x` is `F` but read in the
+chart with index `index_at x`, the trivialization in the fiber above x is by definition the
+coordinate change from i to `index_at x`, so it depends on `x`.
+The local trivialization will ultimately be an open partial homeomorphism. For now, we only
+introduce the partial equivalence version, denoted with a prime.
+In further developments, avoid this auxiliary version, and use `Z.local_triv` instead. -/
+def localTrivAsPartialEquiv (i : ι) : PartialEquiv Z.TotalSpace (B × F) where
+  source := Z.proj ⁻¹' Z.baseSet i
   target := Z.baseSet i ×ˢ univ
-  invFun p := ⟨p.1, (ψ p.1).symm (Z.coordChange i (Z.indexAt p.1) p.1 p.2)⟩
-  toFun p := ⟨p.1, Z.coordChange (Z.indexAt p.1) i p.1 (ψ p.1 p.2)⟩
+  invFun p := ⟨p.1, Z.coordChange i (Z.indexAt p.1) p.1 p.2⟩
+  toFun p := ⟨p.1, Z.coordChange (Z.indexAt p.1) i p.1 p.2⟩
   map_source' p hp := by
     simpa only [Set.mem_preimage, and_true, Set.mem_univ, Set.prodMk_mem_set_prod_eq] using hp
   map_target' p hp := by
@@ -520,159 +510,13 @@ def localTrivAsPartialEquivAlong (i : ι) : PartialEquiv (Bundle.TotalSpace F E)
     rintro ⟨x, v⟩ hx
     replace hx : x ∈ Z.baseSet i := hx
     dsimp only
-    rw [Z.coordChange_comp, Z.coordChange_self, Homeomorph.symm_apply_apply] <;>
-      apply_rules [mem_baseSet_at, mem_inter]
+    rw [Z.coordChange_comp, Z.coordChange_self] <;> apply_rules [mem_baseSet_at, mem_inter]
   right_inv' := by
     rintro ⟨x, v⟩ hx
     simp only [prodMk_mem_set_prod_eq, and_true, mem_univ] at hx
     dsimp only
-    rw [Homeomorph.apply_symm_apply, Z.coordChange_comp, Z.coordChange_self]
+    rw [Z.coordChange_comp, Z.coordChange_self]
     exacts [hx, ⟨⟨hx, Z.mem_baseSet_at _⟩, hx⟩]
-
-variable (i : ι)
-
-theorem mem_localTrivAsPartialEquivAlong_source (p : Bundle.TotalSpace F E) :
-    p ∈ (Z.localTrivAsPartialEquivAlong ψ i).source ↔ p.1 ∈ Z.baseSet i :=
-  Iff.rfl
-
-theorem mem_localTrivAsPartialEquivAlong_target (p : B × F) :
-    p ∈ (Z.localTrivAsPartialEquivAlong ψ i).target ↔ p.1 ∈ Z.baseSet i := by
-  rw [localTrivAsPartialEquivAlong, mem_prod]
-  simp only [and_true, mem_univ]
-
-theorem localTrivAsPartialEquivAlong_apply (p : Bundle.TotalSpace F E) :
-    Z.localTrivAsPartialEquivAlong ψ i p =
-      ⟨p.1, Z.coordChange (Z.indexAt p.1) i p.1 (ψ p.1 p.2)⟩ :=
-  rfl
-
-/-- The composition of two realized local trivializations is the trivialization change
-`Z.trivChange i j`: the fiberwise coordinates cancel out. -/
-theorem localTrivAsPartialEquivAlong_trans (j : ι) :
-    (Z.localTrivAsPartialEquivAlong ψ i).symm.trans (Z.localTrivAsPartialEquivAlong ψ j) ≈
-      (Z.trivChange i j).toPartialEquiv := by
-  constructor
-  · ext x
-    simp only [mem_localTrivAsPartialEquivAlong_target, mfld_simps]
-    rfl
-  · rintro ⟨x, v⟩ hx
-    simp only [trivChange, localTrivAsPartialEquivAlong, PartialEquiv.symm,
-      Prod.mk_inj, prodMk_mem_set_prod_eq, PartialEquiv.trans_source, mem_inter_iff,
-      mem_preimage, mem_univ, (· ∘ ·),
-      PartialEquiv.coe_trans] at hx ⊢
-    simp only [Homeomorph.apply_symm_apply, Z.coordChange_comp, hx, mem_inter_iff, and_self_iff,
-      mem_baseSet_at]
-
-/-- Topology on the total space of the realization of the core `Z` on the family `E` along the
-fiberwise coordinates `ψ`, designed so that all the realized local trivializations are
-continuous. See `toTopologicalSpace` for the realization on `Z.Fiber`. -/
-@[instance_reducible]
-def totalSpaceTopologyAlong : TopologicalSpace (Bundle.TotalSpace F E) :=
-  TopologicalSpace.generateFrom <| ⋃ (i : ι) (s : Set (B × F)) (_ : IsOpen s),
-    {(Z.localTrivAsPartialEquivAlong ψ i).source ∩ Z.localTrivAsPartialEquivAlong ψ i ⁻¹' s}
-
-theorem isOpen_source_localTrivAsPartialEquivAlong :
-    IsOpen[Z.totalSpaceTopologyAlong ψ] (Z.localTrivAsPartialEquivAlong ψ i).source := by
-  let := Z.totalSpaceTopologyAlong ψ
-  apply TopologicalSpace.GenerateOpen.basic
-  simp only [exists_prop, mem_iUnion, mem_singleton_iff]
-  refine ⟨i, Z.baseSet i ×ˢ univ, (Z.isOpen_baseSet i).prod isOpen_univ, ?_⟩
-  ext p
-  simp only [localTrivAsPartialEquivAlong_apply, prodMk_mem_set_prod_eq, mem_inter_iff,
-    and_self_iff, mem_localTrivAsPartialEquivAlong_source, and_true, mem_univ, mem_preimage]
-
-/-- The realized local trivialization with index `i`, as a `Trivialization` with respect to the
-topology `Z.totalSpaceTopologyAlong ψ`. See `localTriv` for the realization on `Z.Fiber`. -/
-def localTrivAlong : @Trivialization B F _ _ _ (Z.totalSpaceTopologyAlong ψ) (π F E) :=
-  let _ := Z.totalSpaceTopologyAlong ψ
-  { baseSet := Z.baseSet i
-    open_baseSet := Z.isOpen_baseSet i
-    source_eq := rfl
-    target_eq := rfl
-    proj_toFun := fun p _ => rfl
-    open_source := Z.isOpen_source_localTrivAsPartialEquivAlong ψ i
-    open_target := (Z.isOpen_baseSet i).prod isOpen_univ
-    continuousOn_toFun := by
-      rw [continuousOn_open_iff (Z.isOpen_source_localTrivAsPartialEquivAlong ψ i)]
-      intro s s_open
-      apply TopologicalSpace.GenerateOpen.basic
-      simp only [exists_prop, mem_iUnion, mem_singleton_iff]
-      exact ⟨i, s, s_open, rfl⟩
-    continuousOn_invFun := by
-      refine continuousOn_isOpen_of_generateFrom fun t ht ↦ ?_
-      simp only [exists_prop, mem_iUnion, mem_singleton_iff] at ht
-      obtain ⟨j, s, s_open, ts⟩ : ∃ j s, IsOpen s ∧
-        t = (Z.localTrivAsPartialEquivAlong ψ j).source ∩
-          Z.localTrivAsPartialEquivAlong ψ j ⁻¹' s := ht
-      rw [ts]
-      simp only [preimage_inter]
-      let e := Z.localTrivAsPartialEquivAlong ψ i
-      let e' := Z.localTrivAsPartialEquivAlong ψ j
-      let f := e.symm.trans e'
-      have : IsOpen (f.source ∩ f ⁻¹' s) := by
-        rw [PartialEquiv.EqOnSource.source_inter_preimage_eq
-          (Z.localTrivAsPartialEquivAlong_trans ψ i j)]
-        exact (continuousOn_open_iff (Z.trivChange i j).open_source).1
-          (Z.trivChange i j).continuousOn _ s_open
-      convert! this using 1
-      dsimp [f, PartialEquiv.trans_source]
-      rw [← preimage_comp, inter_assoc]
-    toPartialEquiv := Z.localTrivAsPartialEquivAlong ψ i }
-
-/-- Preferred realized local trivialization at a point, for the realization of the core `Z` on
-the family `E` along `ψ`. See `localTrivAt` for the realization on `Z.Fiber`. -/
-def localTrivAtAlong (b : B) : @Trivialization B F _ _ _ (Z.totalSpaceTopologyAlong ψ) (π F E) :=
-  Z.localTrivAlong ψ (Z.indexAt b)
-
-theorem localTrivAlong_apply (p : Bundle.TotalSpace F E) :
-    Z.localTrivAlong ψ i p = ⟨p.1, Z.coordChange (Z.indexAt p.1) i p.1 (ψ p.1 p.2)⟩ :=
-  rfl
-
-theorem baseSet_localTrivAlong :
-    letI := Z.totalSpaceTopologyAlong ψ
-    (Z.localTrivAlong ψ i).baseSet = Z.baseSet i :=
-  rfl
-
-theorem mem_localTrivAlong_source (p : Bundle.TotalSpace F E) :
-    p ∈ (Z.localTrivAlong ψ i).source ↔ p.1 ∈ Z.baseSet i :=
-  Iff.rfl
-
-theorem mk_mem_localTrivAtAlong_source (b : B) (v : E b) :
-    (⟨b, v⟩ : Bundle.TotalSpace F E) ∈ (Z.localTrivAtAlong ψ b).source :=
-  Z.mem_baseSet_at b
-
-theorem localTrivAtAlong_apply_mk (b : B) (v : E b) :
-    Z.localTrivAtAlong ψ b ⟨b, v⟩ = (b, ψ b v) := by
-  rw [localTrivAtAlong, localTrivAlong_apply, Z.coordChange_self _ _ (Z.mem_baseSet_at b)]
-
-/-- The realization of a fiber bundle core on a family of fibers along continuous fiberwise
-coordinates is a fiber bundle. See `FiberBundleCore.fiberBundle` for the realization on
-`Z.Fiber`. -/
-@[instance_reducible]
-def fiberBundleAlong : @FiberBundle B F _ _ E (Z.totalSpaceTopologyAlong ψ) _ :=
-  let _ := Z.totalSpaceTopologyAlong ψ
-  { totalSpaceMk_isInducing' := fun b => isInducing_iff_nhds.2 fun x ↦ by
-      rw [(Z.localTrivAtAlong ψ b).nhds_eq_comap_inf_principal
-        (Z.mk_mem_localTrivAtAlong_source ψ b x), comap_inf, comap_principal, comap_comap]
-      simp only [Function.comp_def, localTrivAtAlong_apply_mk, Trivialization.coe_coe]
-      rw [eq_univ_of_forall (s := TotalSpace.mk b ⁻¹' (Z.localTrivAtAlong ψ b).source)
-        (Z.mk_mem_localTrivAtAlong_source ψ b), principal_univ, inf_top_eq]
-      exact ((isEmbedding_prodMkRight b).comp (ψ b).isEmbedding).nhds_eq_comap x
-    trivializationAtlas' := Set.range (Z.localTrivAlong ψ)
-    trivializationAt' := Z.localTrivAtAlong ψ
-    mem_baseSet_trivializationAt' := Z.mem_baseSet_at
-    trivialization_mem_atlas' := fun b => ⟨Z.indexAt b, rfl⟩ }
-
-end Realization
-
-/-- Associate to a trivialization index `i : ι` the corresponding trivialization, i.e., a bijection
-between `proj ⁻¹ (baseSet i)` and `baseSet i × F`. As the fiber above `x` is `F` but read in the
-chart with index `index_at x`, the trivialization in the fiber above x is by definition the
-coordinate change from i to `index_at x`, so it depends on `x`.
-The local trivialization will ultimately be an open partial homeomorphism. For now, we only
-introduce the partial equivalence version, denoted with a prime.
-In further developments, avoid this auxiliary version, and use `Z.local_triv` instead. -/
-def localTrivAsPartialEquiv (i : ι) : PartialEquiv Z.TotalSpace (B × F) :=
-  Z.localTrivAsPartialEquivAlong (fun _ ↦ Homeomorph.refl F) i
 
 variable (i : ι)
 
@@ -681,8 +525,9 @@ theorem mem_localTrivAsPartialEquiv_source (p : Z.TotalSpace) :
   Iff.rfl
 
 theorem mem_localTrivAsPartialEquiv_target (p : B × F) :
-    p ∈ (Z.localTrivAsPartialEquiv i).target ↔ p.1 ∈ Z.baseSet i :=
-  Z.mem_localTrivAsPartialEquivAlong_target _ i p
+    p ∈ (Z.localTrivAsPartialEquiv i).target ↔ p.1 ∈ Z.baseSet i := by
+  rw [localTrivAsPartialEquiv, mem_prod]
+  simp only [and_true, mem_univ]
 
 theorem localTrivAsPartialEquiv_apply (p : Z.TotalSpace) :
     (Z.localTrivAsPartialEquiv i) p = ⟨p.1, Z.coordChange (Z.indexAt p.1) i p.1 p.2⟩ :=
@@ -691,23 +536,70 @@ theorem localTrivAsPartialEquiv_apply (p : Z.TotalSpace) :
 /-- The composition of two local trivializations is the trivialization change `Z.trivChange i j`. -/
 theorem localTrivAsPartialEquiv_trans (i j : ι) :
     (Z.localTrivAsPartialEquiv i).symm.trans (Z.localTrivAsPartialEquiv j) ≈
-      (Z.trivChange i j).toPartialEquiv :=
-  Z.localTrivAsPartialEquivAlong_trans _ i j
+      (Z.trivChange i j).toPartialEquiv := by
+  constructor
+  · ext x
+    simp only [mem_localTrivAsPartialEquiv_target, mfld_simps]
+    rfl
+  · rintro ⟨x, v⟩ hx
+    simp only [trivChange, localTrivAsPartialEquiv, PartialEquiv.symm,
+      Prod.mk_inj, prodMk_mem_set_prod_eq, PartialEquiv.trans_source, mem_inter_iff,
+      mem_preimage, proj, mem_univ, (· ∘ ·),
+      PartialEquiv.coe_trans] at hx ⊢
+    simp only [Z.coordChange_comp, hx, mem_inter_iff, and_self_iff, mem_baseSet_at]
 
 /-- Topological structure on the total space of a fiber bundle created from core, designed so
 that all the local trivialization are continuous. -/
 instance toTopologicalSpace : TopologicalSpace (Bundle.TotalSpace F Z.Fiber) :=
-  Z.totalSpaceTopologyAlong fun _ ↦ Homeomorph.refl F
+  TopologicalSpace.generateFrom <| ⋃ (i : ι) (s : Set (B × F)) (_ : IsOpen s),
+    {(Z.localTrivAsPartialEquiv i).source ∩ Z.localTrivAsPartialEquiv i ⁻¹' s}
 
 variable (b : B) (a : F)
 
-theorem open_source' (i : ι) : IsOpen (Z.localTrivAsPartialEquiv i).source :=
-  Z.isOpen_source_localTrivAsPartialEquivAlong _ i
+theorem open_source' (i : ι) : IsOpen (Z.localTrivAsPartialEquiv i).source := by
+  apply TopologicalSpace.GenerateOpen.basic
+  simp only [exists_prop, mem_iUnion, mem_singleton_iff]
+  refine ⟨i, Z.baseSet i ×ˢ univ, (Z.isOpen_baseSet i).prod isOpen_univ, ?_⟩
+  ext p
+  simp only [localTrivAsPartialEquiv_apply, prodMk_mem_set_prod_eq, mem_inter_iff, and_self_iff,
+    mem_localTrivAsPartialEquiv_source, and_true, mem_univ, mem_preimage]
 
 /-- Extended version of the local trivialization of a fiber bundle constructed from core,
 registering additionally in its type that it is a local bundle trivialization. -/
-def localTriv (i : ι) : Trivialization F Z.proj :=
-  Z.localTrivAlong (fun _ ↦ Homeomorph.refl F) i
+def localTriv (i : ι) : Trivialization F Z.proj where
+  baseSet := Z.baseSet i
+  open_baseSet := Z.isOpen_baseSet i
+  source_eq := rfl
+  target_eq := rfl
+  proj_toFun p _ := by
+    simp only [mfld_simps]
+    rfl
+  open_source := Z.open_source' i
+  open_target := (Z.isOpen_baseSet i).prod isOpen_univ
+  continuousOn_toFun := by
+    rw [continuousOn_open_iff (Z.open_source' i)]
+    intro s s_open
+    apply TopologicalSpace.GenerateOpen.basic
+    simp only [exists_prop, mem_iUnion, mem_singleton_iff]
+    exact ⟨i, s, s_open, rfl⟩
+  continuousOn_invFun := by
+    refine continuousOn_isOpen_of_generateFrom fun t ht ↦ ?_
+    simp only [exists_prop, mem_iUnion, mem_singleton_iff] at ht
+    obtain ⟨j, s, s_open, ts⟩ : ∃ j s, IsOpen s ∧
+      t = (localTrivAsPartialEquiv Z j).source ∩ localTrivAsPartialEquiv Z j ⁻¹' s := ht
+    rw [ts]
+    simp only [preimage_inter]
+    let e := Z.localTrivAsPartialEquiv i
+    let e' := Z.localTrivAsPartialEquiv j
+    let f := e.symm.trans e'
+    have : IsOpen (f.source ∩ f ⁻¹' s) := by
+      rw [PartialEquiv.EqOnSource.source_inter_preimage_eq (Z.localTrivAsPartialEquiv_trans i j)]
+      exact (continuousOn_open_iff (Z.trivChange i j).open_source).1
+        (Z.trivChange i j).continuousOn _ s_open
+    convert! this using 1
+    dsimp [f, PartialEquiv.trans_source]
+    rw [← preimage_comp, inter_assoc]
+  toPartialEquiv := Z.localTrivAsPartialEquiv i
 
 /-- Preferred local trivialization of a fiber bundle constructed from core, at a given point, as
 a bundle trivialization -/
@@ -812,9 +704,22 @@ theorem mem_localTrivAt_baseSet (b : B) : b ∈ (Z.localTrivAt b).baseSet := by
 theorem mk_mem_localTrivAt_source : (⟨b, a⟩ : Z.TotalSpace) ∈ (Z.localTrivAt b).source := by
   simp only [mfld_simps]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- A fiber bundle constructed from core is indeed a fiber bundle. -/
-instance fiberBundle : FiberBundle F Z.Fiber :=
-  Z.fiberBundleAlong fun _ ↦ Homeomorph.refl F
+instance fiberBundle : FiberBundle F Z.Fiber where
+  totalSpaceMk_isInducing' b := isInducing_iff_nhds.2 fun x ↦ by
+    rw [(Z.localTrivAt b).nhds_eq_comap_inf_principal (mk_mem_localTrivAt_source _ _ _), comap_inf,
+      comap_principal, comap_comap]
+    simp only [Function.comp_def, localTrivAt_apply_mk, Trivialization.coe_coe,
+      ← (isEmbedding_prodMkRight b).nhds_eq_comap]
+    convert_to 𝓝 x = 𝓝 x ⊓ 𝓟 univ
+    · congr
+      exact eq_univ_of_forall (mk_mem_localTrivAt_source Z _)
+    · rw [principal_univ, inf_top_eq]
+  trivializationAtlas' := Set.range Z.localTriv
+  trivializationAt' := Z.localTrivAt
+  mem_baseSet_trivializationAt' := Z.mem_baseSet_at
+  trivialization_mem_atlas' b := ⟨Z.indexAt b, rfl⟩
 
 /-- The inclusion of a fiber into the total space is a continuous map. -/
 @[continuity]

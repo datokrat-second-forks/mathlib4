@@ -11,7 +11,6 @@ public import Mathlib.Analysis.RCLike.TangentCone
 public import Mathlib.Data.Bundle
 public import Mathlib.Geometry.Manifold.HasGroupoid
 public import Mathlib.Tactic.CrossRefAttribute
-public meta import Mathlib.Topology.Algebra.Module.DeriveOneFieldStructure
 
 /-!
 # `C^n` manifolds (possibly with boundary or corners)
@@ -1033,17 +1032,16 @@ The definition of `TangentSpace` is not reducible so that type class inference
 does not pick wrong instances.
 -/
 @[nolint unusedArguments, wikidata Q909601]
-structure TangentSpace {𝕜 : Type*} [NontriviallyNormedField 𝕜]
+def TangentSpace {𝕜 : Type*} [NontriviallyNormedField 𝕜]
     {E : Type u} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
     {H : Type*} [TopologicalSpace H] (I : ModelWithCorners 𝕜 E H)
-    {M : Type*} [TopologicalSpace M] [ChartedSpace H M] (_x : M) : Type u where
-  inner : E
-deriving TopologicalSpace, AddCommGroup, IsTopologicalAddGroup
-
-deriving instance Module 𝕜, ContinuousSMul 𝕜,
+    {M : Type*} [TopologicalSpace M] [ChartedSpace H M] (_x : M) : Type u := E
+deriving
+  TopologicalSpace, AddCommGroup, IsTopologicalAddGroup, Module 𝕜,
+  ContinuousSMul 𝕜,
   -- the following instance derives from the previous one, but through an instance with priority 100
   -- which takes a long time to be found. We register a shortcut instance instead
-  ContinuousConstSMul 𝕜 for TangentSpace
+  ContinuousConstSMul 𝕜
 
 variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
@@ -1056,14 +1054,10 @@ this definition is a technical detail related to our specific implementation of 
 but it has no mathematical meaning. The mathematically meaningful version of this definition
 is the derivative of the extended chart at `x`, in its `mvfderiv` version. -/
 def tangentSpaceCastModel (x : M) : TangentSpace I x ≃L[𝕜] E where
-  toFun v := v.inner
-  invFun v := ⟨v⟩
-  left_inv _ := rfl
-  right_inv _ := rfl
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-  continuous_toFun := continuous_induced_dom
-  continuous_invFun := continuous_induced_rng.2 continuous_id
+  toFun v := v
+  invFun v := v
+  map_add' x y := rfl
+  map_smul' c x := rfl
 
 /-- Identifying the tangent space at a normed space with the normed space itself.
 This canonical identification (which, in mathlib, is implemented using an abuse of definitional
@@ -1071,35 +1065,17 @@ equality) is very prevalent in a number of places: this device allows making it 
 def NormedSpace.fromTangentSpace (v : E) : TangentSpace 𝓘(𝕜, E) v ≃L[𝕜] E :=
   tangentSpaceCastModel 𝓘(𝕜, E) v
 
-/-- The canonical identification between the tangent space to the model space at one of its
-points and the model vector space. Contrary to `tangentSpaceCastModel` (of which it is a special
-case), this identification is mathematically meaningful: informally, it is the derivative of the
-model embedding `I : H → E`. Within Mathlib, it is characterized as the fiberwise linear part of
-the trivialization of the tangent bundle of the model space, see
-`ModelWithCorners.fromTangentSpace_eq_continuousLinearMapAt`. -/
-def ModelWithCorners.fromTangentSpace (x : H) : TangentSpace I x ≃L[𝕜] E :=
-  tangentSpaceCastModel I x
-
 /-- Definitional identification between the tangent space of a manifold at two points. This only
 makes sense mathematically when `x = y`. -/
 def tangentSpaceCast (x y : M) : TangentSpace I x ≃L[𝕜] TangentSpace I y where
-  toFun v := ⟨v.inner⟩
-  invFun v := ⟨v.inner⟩
-  left_inv _ := rfl
-  right_inv _ := rfl
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-  continuous_toFun := continuous_induced_rng.2 continuous_induced_dom
-  continuous_invFun := continuous_induced_rng.2 continuous_induced_dom
-
-theorem tangentSpaceCast_heq {x y : M} (h : x = y) (v : TangentSpace I x) :
-    HEq (tangentSpaceCast I x y v) v := by
-  subst h
-  exact heq_of_eq rfl
+  toFun v := v
+  invFun v := v
+  map_add' x y := rfl
+  map_smul' c x := rfl
 
 instance : Inhabited (TangentSpace I x) := ⟨0⟩
 
-deriving instance T2Space for TangentSpace
+instance : T2Space (TangentSpace I x) := inferInstanceAs (T2Space E)
 
 variable (M) in
 -- is empty if the base manifold is empty
@@ -1115,6 +1091,6 @@ section Real
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {H : Type*} [TopologicalSpace H]
   {I : ModelWithCorners ℝ E H} {M : Type*} [TopologicalSpace M] [ChartedSpace H M] {x : M}
 
-deriving instance PathConnectedSpace for TangentSpace
+deriving instance PathConnectedSpace for TangentSpace I x
 
 end Real

@@ -602,26 +602,6 @@ instance instContMDiffVectorBundle : ContMDiffVectorBundle n F Z.Fiber IB where
     ext v
     exact Z.localTriv_coordChange_eq i i' hb v
 
-variable {V : B → Type*} [∀ x, AddCommMonoid (V x)] [∀ x, Module 𝕜 (V x)]
-  [∀ x, TopologicalSpace (V x)]
-
-/-- If a `VectorBundleCore` has the `IsContMDiff` mixin, then its realization on a family of
-topological modules along continuous linear fiberwise coordinates (see
-`VectorBundleCore.vectorBundleAlong`) is a `C^n` vector bundle. -/
-theorem contMDiffVectorBundleAlong (ψ : ∀ x, V x ≃L[𝕜] F) :
-    letI := Z.totalSpaceTopologyAlong ψ
-    letI := Z.fiberBundleAlong ψ
-    haveI := Z.vectorBundleAlong ψ
-    ContMDiffVectorBundle n F V IB := by
-  let := Z.totalSpaceTopologyAlong ψ
-  let := Z.fiberBundleAlong ψ
-  have := Z.vectorBundleAlong ψ
-  refine { contMDiffOn_coordChangeL := ?_ }
-  rintro - - ⟨i, rfl⟩ ⟨i', rfl⟩
-  refine (Z.contMDiffOn_coordChange IB i i').congr fun b hb ↦ ?_
-  ext v
-  exact Z.localTrivAlong_coordChange_eq ψ i i' hb v
-
 end VectorBundleCore
 
 /-! ### The trivial `C^n` vector bundle -/
