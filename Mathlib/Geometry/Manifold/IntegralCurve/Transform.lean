@@ -28,6 +28,8 @@ public section
 
 open Function Set
 
+open scoped Manifold
+
 variable
   {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
   {H : Type*} [TopologicalSpace H] {I : ModelWithCorners ℝ E H}
@@ -41,11 +43,14 @@ section Translation
 lemma IsMIntegralCurveOn.comp_add (hγ : IsMIntegralCurveOn γ v s) (dt : ℝ) :
     IsMIntegralCurveOn (γ ∘ (· + dt)) v { t | t + dt ∈ s } := by
   intro t ht
-  rw [comp_apply, ← ContinuousLinearMap.comp_id (ContinuousLinearMap.smulRight 1 (v (γ (t + dt))))]
-  apply HasMFDerivWithinAt.comp t (hγ (t + dt) ht) _ subset_rfl
-  refine ⟨(continuous_add_const _).continuousWithinAt, ?_⟩
-  simp only [mfld_simps]
-  exact (hasFDerivWithinAt_id _ _).add_const _
+  -- the derivative of the translation identifies the tangent spaces at `t` and `t + dt`
+  have hadd : HasMFDerivAt[{ t | t + dt ∈ s }] (· + dt) t
+      (tangentSpaceCast 𝓘(ℝ, ℝ) t (t + dt) :
+        TangentSpace 𝓘(ℝ, ℝ) t →L[ℝ] TangentSpace 𝓘(ℝ, ℝ) (t + dt)) := by
+    refine ⟨(continuous_add_const _).continuousWithinAt, ?_⟩
+    simp only [mfld_simps]
+    exact (hasFDerivWithinAt_id _ _).add_const _
+  exact HasMFDerivWithinAt.comp t (hγ (t + dt) ht) hadd subset_rfl
 
 lemma isMIntegralCurveOn_comp_add {dt : ℝ} :
     IsMIntegralCurveOn (γ ∘ (· + dt)) v { t | t + dt ∈ s } ↔ IsMIntegralCurveOn γ v s := by
@@ -105,14 +110,30 @@ section Scaling
 lemma IsMIntegralCurveOn.comp_mul (hγ : IsMIntegralCurveOn γ v s) (a : ℝ) :
     IsMIntegralCurveOn (γ ∘ (· * a)) (a • v) { t | t * a ∈ s } := by
   intro t ht
-  have : (1 : ℝ →L[ℝ] ℝ).smulRight (a • v (γ (t * a))) =
-      (1 : ℝ →L[ℝ] ℝ).smulRight (v (γ (t * a))) ∘SL (1 : ℝ →L[ℝ] ℝ).smulRight a := by
-    simp [ContinuousLinearMap.smulRight_comp_smulRight]
-  rw [comp_apply, Pi.smul_apply, this]
-  refine HasMFDerivWithinAt.comp t (hγ (t * a) ht)
-    ⟨(continuous_mul_const _).continuousWithinAt, ?_⟩ subset_rfl
-  simp only [mfld_simps]
-  exact HasFDerivWithinAt.mul_const' (hasFDerivWithinAt_id _ _) _
+  -- the derivative of the scaling, as a map from the tangent space at `t` to the one at `t * a`
+  have hmul : HasMFDerivAt[{ t | t * a ∈ s }] (· * a) t
+      ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t : TangentSpace 𝓘(ℝ, ℝ) t →L[ℝ] ℝ).smulRight
+        ((NormedSpace.fromTangentSpace (𝕜 := ℝ) (t * a)).symm a)) := by
+    refine ⟨(continuous_mul_const _).continuousWithinAt, ?_⟩
+    simp only [mfld_simps]
+    have hid : (tangentSpaceCastModel 𝓘(ℝ, ℝ) (t * a) :
+          TangentSpace 𝓘(ℝ, ℝ) (t * a) →L[ℝ] ℝ) ∘L
+        ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t : TangentSpace 𝓘(ℝ, ℝ) t →L[ℝ] ℝ).smulRight
+          ((NormedSpace.fromTangentSpace (𝕜 := ℝ) (t * a)).symm a)) ∘L
+        ((tangentSpaceCastModel 𝓘(ℝ, ℝ) t).symm : ℝ →L[ℝ] TangentSpace 𝓘(ℝ, ℝ) t) =
+        (1 : ℝ →L[ℝ] ℝ).smulRight a := rfl
+    rw [hid]
+    exact HasFDerivWithinAt.mul_const' (hasFDerivWithinAt_id _ _) _
+  have key : ((NormedSpace.fromTangentSpace (𝕜 := ℝ) (t * a) :
+        TangentSpace 𝓘(ℝ, ℝ) (t * a) →L[ℝ] ℝ).smulRight (v (γ (t * a)))) ∘L
+      ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t : TangentSpace 𝓘(ℝ, ℝ) t →L[ℝ] ℝ).smulRight
+        ((NormedSpace.fromTangentSpace (𝕜 := ℝ) (t * a)).symm a)) =
+      (NormedSpace.fromTangentSpace (𝕜 := ℝ) t :
+        TangentSpace 𝓘(ℝ, ℝ) t →L[ℝ] ℝ).smulRight (a • v (γ (t * a))) := by
+    ext ξ
+    simp [smul_smul]
+  have := HasMFDerivWithinAt.comp t (hγ (t * a) ht) hmul subset_rfl
+  rwa [key] at this
 
 lemma isMIntegralCurveOn_comp_mul_ne_zero {a : ℝ} (ha : a ≠ 0) :
     IsMIntegralCurveOn (γ ∘ (· * a)) (a • v) { t | t * a ∈ s } ↔ IsMIntegralCurveOn γ v s := by
@@ -160,7 +181,7 @@ open ContinuousLinearMap in
 is a global integral curve of `v`. -/
 lemma isMIntegralCurve_const {x : M} (h : v x = 0) : IsMIntegralCurve (fun _ ↦ x) v := by
   intro t
-  rw [h, smulRight_one_eq_toSpanSingleton, toSpanSingleton_zero]
+  rw [h, ContinuousLinearMap.smulRight_zero]
   exact hasMFDerivAt_const ..
 
 end Scaling

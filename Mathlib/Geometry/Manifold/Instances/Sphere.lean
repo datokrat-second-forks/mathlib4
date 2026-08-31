@@ -494,7 +494,9 @@ theorem range_mvfderiv_subtypeVal {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : 
     (ne_zero_of_mem_unit_sphere (-v))).repr
   suffices
       (fderiv ℝ ((stereoInvFunAux (-v : E) ∘ (↑)) ∘ U.symm) 0).range = (ℝ ∙ (v : E))ᗮ by
-    rw [← this]
+    -- strip the identification `tangentSpaceCastModel`, which is surjective
+    rw [← this, LinearMap.range_comp_of_range_eq_top _
+      (LinearMap.range_eq_top_of_surjective _ (tangentSpaceCastModel (𝓡 n) v).surjective)]
     congr 3
     apply stereographic'_neg
   have :
@@ -520,9 +522,9 @@ theorem range_mvfderiv_subtypeVal {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : 
 
 @[deprecated range_mvfderiv_subtypeVal (since := "2026-08-02")]
 theorem range_mfderiv_coe_sphere {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
-    (mfderiv (𝓡 n) 𝓘(ℝ, E) ((↑) : sphere (0 : E) 1 → E) v : TangentSpace (𝓡 n) v →L[ℝ] E).range =
-      (ℝ ∙ (v : E))ᗮ := by
-  convert! range_mvfderiv_subtypeVal v
+    (mfderiv (𝓡 n) 𝓘(ℝ, E) ((↑) : sphere (0 : E) 1 → E) v).ofTangentSpaceAt.range =
+      (ℝ ∙ (v : E))ᗮ :=
+  range_mvfderiv_subtypeVal v
 
 /-- Consider the differential of the inclusion of the sphere in `E` at the point `v` as a continuous
 linear map from `TangentSpace (𝓡 n) v` to `E`.  This map is injective. -/
@@ -534,8 +536,10 @@ theorem injective_mvfderiv_subtypeVal_sphere {n : ℕ} [Fact (finrank ℝ E = n 
   let U := (OrthonormalBasis.fromOrthogonalSpanSingleton
       (𝕜 := ℝ) n (ne_zero_of_mem_unit_sphere (-v))).repr
   suffices Injective (fderiv ℝ ((stereoInvFunAux (-v : E) ∘ (↑)) ∘ U.symm) 0) by
+    -- strip the identification `tangentSpaceCastModel`, which is injective
+    rw [ContinuousLinearMap.coe_comp]
+    refine Function.Injective.comp ?_ (tangentSpaceCastModel (𝓡 n) v).injective
     convert! this using 3
-    congr 2
     apply stereographic'_neg (v := v)
   have : HasFDerivAt (stereoInvFunAux (-v : E) ∘ (Subtype.val : (ℝ ∙ (↑(-v) : E))ᗮ → E))
       (ℝ ∙ (↑(-v) : E))ᗮ.subtypeL (U.symm 0) := by
@@ -551,8 +555,8 @@ theorem injective_mvfderiv_subtypeVal_sphere {n : ℕ} [Fact (finrank ℝ E = n 
 
 @[deprecated injective_mvfderiv_subtypeVal_sphere (since := "2026-08-02")]
 theorem mfderiv_coe_sphere_injective {n : ℕ} [Fact (finrank ℝ E = n + 1)] (v : sphere (0 : E) 1) :
-    Injective (mfderiv (𝓡 n) 𝓘(ℝ, E) ((↑) : sphere (0 : E) 1 → E) v) := by
-  convert! injective_mvfderiv_subtypeVal_sphere v
+    Injective (mfderiv (𝓡 n) 𝓘(ℝ, E) ((↑) : sphere (0 : E) 1 → E) v).ofTangentSpaceAt :=
+  injective_mvfderiv_subtypeVal_sphere v
 
 end ContMDiffManifold
 

@@ -359,10 +359,16 @@ lemma MDifferentiableAt.isInteriorPoint_of_surjective_mfderiv {f : M → N} {x :
   let _ : NormedSpace ℝ E := NormedSpace.restrictScalars ℝ 𝕜 E
   let _ : NormedSpace ℝ E' := NormedSpace.restrictScalars ℝ 𝕜 E'
   -- Write everything in terms of extended charts around `x` and `f x`.
-  simp only [mfderiv, hf] at hf'
+  simp only [mfderiv, hf, ite_true] at hf'
   have hf'' := hf.differentiableWithinAt_writtenInExtChartAt.differentiableAt <| by
     simpa [← mem_interior_iff_mem_nhds] using! hx
   rw [fderivWithin_eq_fderiv (I.uniqueDiffOn _ <| by simp) hf''] at hf'
+  -- Strip the identifications `tangentSpaceCastModel` on both sides of the differential: they are
+  -- linear equivalences, so the differential in the charts is surjective as well.
+  replace hf' : Surjective (fderiv 𝕜 (writtenInExtChartAt I I' x f) (extChartAt I x x)) := by
+    intro y
+    obtain ⟨v, hv⟩ := hf' ((tangentSpaceCastModel I' (f x)).symm y)
+    exact ⟨tangentSpaceCastModel I x v, (tangentSpaceCastModel I' (f x)).symm.injective hv⟩
   /- Since `writtenInExtChartAt I I' x f` is differentiable with surjective differential at `x`
   over `𝕜`, it also is so over `ℝ`. -/
   replace hf' : Surjective (fderiv ℝ (writtenInExtChartAt I I' x f) (extChartAt I x x)) := by
@@ -388,7 +394,7 @@ lemma IsLocalDiffeomorphAt.isInteriorPoint_iff (hn : n ≠ 0) {f : M → N} {x :
     exact (hf.mfderivToContinuousLinearEquiv hn).surjective
   · rw [← hf.localInverse_left_inv hf.localInverse_mem_target]
     refine (hf.localInverse_mdifferentiableAt hn).isInteriorPoint_of_surjective_mfderiv ?_ h
-    exact (hf.mfderivToContinuousLinearEquiv hn).symm.surjective
+    exact hf.mfderiv_localInverse_surjective hn
 
 lemma IsLocalDiffeomorphAt.isBoundaryPoint_iff (hn : n ≠ 0) {f : M → N} {x : M}
     (hf : IsLocalDiffeomorphAt I I' n f x) : I.IsBoundaryPoint x ↔ I'.IsBoundaryPoint (f x) := by

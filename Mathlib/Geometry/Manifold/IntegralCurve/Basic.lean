@@ -64,18 +64,22 @@ variable
 `IsMIntegralCurveOn γ v s` means `γ t` is tangent to `v (γ t)` for all `t ∈ s`. The value of `γ`
 outside of `s` is irrelevant and considered junk. -/
 def IsMIntegralCurveOn (γ : ℝ → M) (v : (x : M) → TangentSpace% x) (s : Set ℝ) : Prop :=
-  ∀ t ∈ s, HasMFDerivAt[s] γ t ((1 : ℝ →L[ℝ] ℝ).smulRight <| v (γ t))
+  ∀ t ∈ s, HasMFDerivAt[s] γ t
+    ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t).toContinuousLinearMap.smulRight <| v (γ t))
 
 /-- If `v` is a vector field on `M` and `t₀ : ℝ`, `IsMIntegralCurveAt γ v t₀` means `γ : ℝ → M` is a
 local integral curve of `v` in a neighbourhood containing `t₀`. The value of `γ` outside of this
 interval is irrelevant and considered junk. -/
 def IsMIntegralCurveAt (γ : ℝ → M) (v : (x : M) → TangentSpace% x) (t₀ : ℝ) : Prop :=
-  ∀ᶠ t in 𝓝 t₀, HasMFDerivAt% γ t ((1 : ℝ →L[ℝ] ℝ).smulRight <| v (γ t))
+  ∀ᶠ t in 𝓝 t₀, HasMFDerivAt% γ t
+    ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t :
+      TangentSpace 𝓘(ℝ, ℝ) t →L[ℝ] ℝ).smulRight <| v (γ t))
 
 /-- If `v : M → TM` is a vector field on `M`, `IsMIntegralCurve γ v` means `γ : ℝ → M` is a global
 integral curve of `v`. That is, `γ t` is tangent to `v (γ t)` for all `t : ℝ`. -/
 def IsMIntegralCurve (γ : ℝ → M) (v : (x : M) → TangentSpace% x) : Prop :=
-  ∀ t : ℝ, HasMFDerivAt% γ t ((1 : ℝ →L[ℝ] ℝ).smulRight (v (γ t)))
+  ∀ t : ℝ, HasMFDerivAt% γ t
+    ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t).toContinuousLinearMap.smulRight (v (γ t)))
 
 variable {γ : ℝ → M} {v : (x : M) → TangentSpace% x} {s s' : Set ℝ} {t₀ : ℝ}
 
@@ -129,7 +133,8 @@ lemma IsMIntegralCurveOn.mono (h : IsMIntegralCurveOn γ v s) (hs : s' ⊆ s) :
     IsMIntegralCurveOn γ v s' := fun t ht ↦ (h t (hs ht)).mono hs
 
 lemma IsMIntegralCurveAt.hasMFDerivAt (h : IsMIntegralCurveAt γ v t₀) :
-    HasMFDerivAt% γ t₀ ((1 : ℝ →L[ℝ] ℝ).smulRight (v (γ t₀))) :=
+    HasMFDerivAt% γ t₀
+      ((NormedSpace.fromTangentSpace (𝕜 := ℝ) t₀).toContinuousLinearMap.smulRight (v (γ t₀))) :=
   have ⟨_, hs, h⟩ := isMIntegralCurveAt_iff.mp h
   h t₀ (mem_of_mem_nhds hs) |>.hasMFDerivAt hs
 
@@ -170,7 +175,7 @@ expressed in the local chart around the initial point `γ t₀`. -/
 lemma IsMIntegralCurveOn.hasDerivWithinAt (hγ : IsMIntegralCurveOn γ v s) {t : ℝ} (ht : t ∈ s)
     (hsrc : γ t ∈ (extChartAt I (γ t₀)).source) :
     HasDerivWithinAt ((extChartAt I (γ t₀)) ∘ γ)
-      (tangentCoordChange I (γ t) (γ t₀) (γ t) (v (γ t))) s t := by
+      (tangentCoordChange I (γ t) (γ t₀) (γ t) (tangentSpaceCastModel I (γ t) (v (γ t)))) s t := by
   -- turn `HasDerivWithinAt` into comp of `HasMFDerivWithinAt`
   replace hsrc := extChartAt_source I (γ t₀) ▸ hsrc
   rw [hasDerivWithinAt_iff_hasFDerivWithinAt, ← hasMFDerivWithinAt_iff_hasFDerivWithinAt]
@@ -187,7 +192,7 @@ lemma IsMIntegralCurveOn.hasDerivWithinAt (hγ : IsMIntegralCurveOn γ v s) {t :
 set_option backward.isDefEq.respectTransparency false in
 lemma IsMIntegralCurveAt.eventually_hasDerivAt (hγ : IsMIntegralCurveAt γ v t₀) :
     ∀ᶠ t in 𝓝 t₀, HasDerivAt ((extChartAt I (γ t₀)) ∘ γ)
-      (tangentCoordChange I (γ t) (γ t₀) (γ t) (v (γ t))) t := by
+      (tangentCoordChange I (γ t) (γ t₀) (γ t) (tangentSpaceCastModel I (γ t) (v (γ t)))) t := by
   apply eventually_mem_nhds_iff.mpr
     (hγ.continuousAt.preimage_mem_nhds (extChartAt_source_mem_nhds (I := I) _)) |>.and hγ |>.mono
   rintro t ⟨ht1, ht2⟩

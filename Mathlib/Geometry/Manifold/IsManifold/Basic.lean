@@ -1097,6 +1097,19 @@ theorem tangentSpaceCast_heq {x y : M} (h : x = y) (v : TangentSpace I x) :
   subst h
   exact heq_of_eq rfl
 
+@[simp] theorem tangentSpaceCast_self (v : TangentSpace I x) :
+    tangentSpaceCast I x x v = v := rfl
+
+@[simp] theorem tangentSpaceCast_tangentSpaceCast {x y z : M} (v : TangentSpace I x) :
+    tangentSpaceCast I y z (tangentSpaceCast I x y v) = tangentSpaceCast I x z v := rfl
+
+/-- Transporting the value at `x` of a section of the tangent bundle along an equality of points
+gives its value at `y`. -/
+theorem tangentSpaceCast_section {x y : M} (h : x = y) (V : Π z : M, TangentSpace I z) :
+    tangentSpaceCast I x y (V x) = V y := by
+  subst h
+  rfl
+
 instance : Inhabited (TangentSpace I x) := ⟨0⟩
 
 deriving instance T2Space for TangentSpace

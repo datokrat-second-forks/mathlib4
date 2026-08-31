@@ -48,7 +48,10 @@ variable
   {M : Type*} [TopologicalSpace M] [ChartedSpace H M]
 
 instance (x : ℝ) : One (TangentSpace 𝓘(ℝ) x) where
-  one := (1 : ℝ)
+  one := (NormedSpace.fromTangentSpace (𝕜 := ℝ) x).symm 1
+
+@[simp] lemma NormedSpace.fromTangentSpace_one (x : ℝ) :
+    NormedSpace.fromTangentSpace (𝕜 := ℝ) x (1 : TangentSpace 𝓘(ℝ) x) = 1 := rfl
 
 /-- Unit vector in the tangent space to a segment, as the image of the unit vector in the real line
 under the canonical projection. It is also mapped to the unit vector in the real line through
@@ -59,7 +62,8 @@ Note that one cannot abuse defeqs for this definition: this is *not* the same as
 orientation-reversing. -/
 irreducible_def oneTangentSpaceIcc {x y : ℝ} [h : Fact (x < y)] (z : Icc x y) :
     TangentSpace (𝓡∂ 1) z :=
-  mfderiv[Icc x y] (Set.projIcc x y h.out.le) z 1
+  tangentSpaceCast (𝓡∂ 1) (Set.projIcc x y h.out.le (z : ℝ)) z
+    (mfderiv[Icc x y] (Set.projIcc x y h.out.le) z 1)
 
 instance {x y : ℝ} [h : Fact (x < y)] (z : Icc x y) : One (TangentSpace (𝓡∂ 1) z) where
   one := oneTangentSpaceIcc z
@@ -198,11 +202,13 @@ lemma mfderivWithin_projIcc_one {z : ℝ} (hz : z ∈ Icc x y) :
     mfderiv[Icc x y] (Set.projIcc x y h.out.le) z 1 = 1 := by
   change _ = oneTangentSpaceIcc (Set.projIcc x y h.out.le z)
   simp only [oneTangentSpaceIcc]
-  congr
-  simp [projIcc_of_mem h.out.le hz]
+  rw [show ((Set.projIcc x y h.out.le z : Icc x y) : ℝ) = z by
+    simp [projIcc_of_mem h.out.le hz]]
+  rfl
 
 lemma mfderivWithin_comp_projIcc_one {f : Icc x y → M} {w : Icc x y} :
-    mfderiv[Icc x y] (f ∘ (projIcc x y h.out.le)) w 1 = mfderiv% f w 1 := by
+    tangentSpaceCast I (f (projIcc x y h.out.le (w : ℝ))) (f w)
+      (mfderiv[Icc x y] (f ∘ (projIcc x y h.out.le)) w 1) = mfderiv% f w 1 := by
   by_cases hw : MDiffAt f w; swap
   · rw [mfderiv_zero_of_not_mdifferentiableAt hw, mfderivWithin_zero_of_not_mdifferentiableWithinAt]
     · rfl
@@ -212,19 +218,17 @@ lemma mfderivWithin_comp_projIcc_one {f : Icc x y → M} {w : Icc x y} :
   · exact (contMDiffOn_projIcc _ w.2).mdifferentiableWithinAt one_ne_zero
   · exact (uniqueDiffOn_Icc h.out _ w.2).uniqueMDiffWithinAt
   simp only [Function.comp_apply, ContinuousLinearMap.comp_apply]
-  have : w = projIcc x y h.out.le (w : ℝ) := by rw [projIcc_of_mem]
-  rw [projIcc_of_mem _ w.2]
-  congr 1
-  convert! mfderivWithin_projIcc_one w.2
+  rw [mfderivWithin_projIcc_one w.2, projIcc_val]
+  rfl
 
 lemma mfderiv_subtypeVal_Icc_one (z : Icc x y) :
     mfderiv (𝓡∂ 1) 𝓘(ℝ) (Subtype.val : Icc x y → ℝ) z 1 = 1 := by
   have A : mfderiv[Icc x y] (Subtype.val ∘ (projIcc x y h.out.le)) z 1
-      = mfderiv[Icc x y] (@id ℝ) z 1 := by
-    congr 1
-    apply mfderivWithin_congr_of_mem _ z.2
-    intro z hz
-    simp [projIcc_of_mem h.out.le hz]
+      = tangentSpaceCast 𝓘(ℝ) (id (z : ℝ)) ((Subtype.val ∘ (projIcc x y h.out.le)) (z : ℝ))
+        (mfderiv[Icc x y] (@id ℝ) z 1) := by
+    rw [mfderivWithin_congr_of_mem (f := @id ℝ)
+      (fun w hw ↦ by simp [projIcc_of_mem h.out.le hw]) z.2]
+    rfl
   rw [← mfderivWithin_comp_projIcc_one, A]
   simp only [id_eq, mfderivWithin_eq_fderivWithin]
   rw [fderivWithin_id (uniqueDiffOn_Icc h.out _ z.2)]

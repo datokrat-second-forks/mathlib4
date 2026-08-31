@@ -102,41 +102,58 @@ variable (F) in
 product on each tangent space. -/
 noncomputable def riemannianMetricVectorSpace :
     ContMDiffRiemannianMetric 𝓘(ℝ, F) ω F (fun (x : F) ↦ TangentSpace% x) where
-  inner x := (innerSL ℝ (E := F) : F →L[ℝ] F →L[ℝ] ℝ)
+  inner x := ((NormedSpace.fromTangentSpace (𝕜 := ℝ) x).arrowCongr
+      ((NormedSpace.fromTangentSpace (𝕜 := ℝ) x).arrowCongr
+        (ContinuousLinearEquiv.refl ℝ ℝ))).symm
+    (innerSL ℝ (E := F) : F →L[ℝ] F →L[ℝ] ℝ)
   symm x v w := real_inner_comm _ _
-  pos x v hv := real_inner_self_pos.2 hv
+  pos x v hv := real_inner_self_pos.2
+    fun h ↦ hv ((NormedSpace.fromTangentSpace (𝕜 := ℝ) x).map_eq_zero_iff.1 h)
   isVonNBounded x := by
-    change IsVonNBounded ℝ {v : F | ⟪v, v⟫ < 1}
-    have : Metric.ball (0 : F) 1 = {v : F | ⟪v, v⟫ < 1} := by
+    have hball : Metric.ball (0 : F) 1 = {v : F | ⟪v, v⟫ < 1} := by
       ext v
       simp only [Metric.mem_ball, dist_zero_right, norm_eq_sqrt_re_inner (𝕜 := ℝ),
         RCLike.re_to_real, Set.mem_ofPred_eq]
       conv_lhs => rw [show (1 : ℝ) = √1 by simp]
       rw [Real.sqrt_lt_sqrt_iff]
       exact real_inner_self_nonneg
-    rw [← this]
-    exact NormedSpace.isVonNBounded_ball ℝ F 1
+    have H := (NormedSpace.isVonNBounded_ball ℝ F 1).image
+      ((NormedSpace.fromTangentSpace (𝕜 := ℝ) x).symm : F →L[ℝ] TangentSpace% x)
+    rw [hball] at H
+    have himg : ((NormedSpace.fromTangentSpace (𝕜 := ℝ) x).symm : F →L[ℝ] TangentSpace% x) ''
+          {v : F | ⟪v, v⟫ < 1}
+        = {v : TangentSpace% x | ⟪NormedSpace.fromTangentSpace (𝕜 := ℝ) x v,
+            NormedSpace.fromTangentSpace (𝕜 := ℝ) x v⟫ < 1} := by
+      ext v
+      simp only [Set.mem_image, Set.mem_ofPred_eq, ContinuousLinearEquiv.coe_coe]
+      constructor
+      · rintro ⟨w, hw, rfl⟩
+        simpa using hw
+      · exact fun hv ↦ ⟨_, hv, (NormedSpace.fromTangentSpace (𝕜 := ℝ) x).symm_apply_apply v⟩
+    rw [himg] at H
+    exact H
   contMDiff := by
     intro x
     rw [contMDiffAt_section]
-    convert! contMDiffAt_const (c := innerSL ℝ)
+    convert! contMDiffAt_const (c := (innerSL ℝ (E := F) : F →L[ℝ] F →L[ℝ] ℝ))
     ext v w
-    simp [hom_trivializationAt_apply, ContinuousLinearMap.inCoordinates, TangentSpace]
+    simp [hom_trivializationAt_apply, ContinuousLinearMap.inCoordinates]
 
 noncomputable instance : RiemannianBundle (fun (x : F) ↦ TangentSpace% x) :=
   ⟨(riemannianMetricVectorSpace F).toRiemannianMetric⟩
 
 set_option backward.isDefEq.respectTransparency false in
 lemma norm_tangentSpace_vectorSpace {x : F} {v : TangentSpace% x} :
-    ‖v‖ = ‖letI V : F := v; V‖ := by
+    ‖v‖ = ‖NormedSpace.fromTangentSpace (𝕜 := ℝ) x v‖ := by
   rw [norm_eq_sqrt_real_inner, norm_eq_sqrt_real_inner]
+  rfl
 
 lemma nnnorm_tangentSpace_vectorSpace {x : F} {v : TangentSpace% x} :
-    ‖v‖₊ = ‖letI V : F := v; V‖₊ := by
+    ‖v‖₊ = ‖NormedSpace.fromTangentSpace (𝕜 := ℝ) x v‖₊ := by
   simp [nnnorm, norm_tangentSpace_vectorSpace]
 
 lemma enorm_tangentSpace_vectorSpace {x : F} {v : TangentSpace% x} :
-    ‖v‖ₑ = ‖letI V : F := v; V‖ₑ := by
+    ‖v‖ₑ = ‖NormedSpace.fromTangentSpace (𝕜 := ℝ) x v‖ₑ := by
   simp [enorm, nnnorm_tangentSpace_vectorSpace]
 
 open MeasureTheory
@@ -219,9 +236,14 @@ as in the vector space.
 Should not be a global instance, as it does not coincide definitionally with the Riemannian
 structure for inner product spaces, but can be activated locally. -/
 @[instance_reducible]
-def normedAddCommGroupTangentSpaceVectorSpace (x : E) :
+noncomputable def normedAddCommGroupTangentSpaceVectorSpace (x : E) :
     NormedAddCommGroup (TangentSpace% x) :=
-  inferInstanceAs (NormedAddCommGroup E)
+  { ((NormedSpace.fromTangentSpace x).toHomeomorph.isEmbedding).comapMetricSpace _,
+    (inferInstance : AddCommGroup (TangentSpace% x)) with
+    norm v := ‖NormedSpace.fromTangentSpace x v‖
+    dist_eq v w := by
+      change dist (NormedSpace.fromTangentSpace x v) (NormedSpace.fromTangentSpace x w) = _
+      rw [neg_add_eq_sub, dist_eq_norm', map_sub] }
 
 attribute [local instance] normedAddCommGroupTangentSpaceVectorSpace
 
@@ -231,10 +253,24 @@ as in the vector space.
 Should not be a global instance, as it does not coincide definitionally with the Riemannian
 structure for inner product spaces, but can be activated locally. -/
 @[instance_reducible]
-def normedSpaceTangentSpaceVectorSpace (x : E) : NormedSpace ℝ (TangentSpace% x) :=
-  inferInstanceAs (NormedSpace ℝ E)
+noncomputable def normedSpaceTangentSpaceVectorSpace (x : E) :
+    NormedSpace ℝ (TangentSpace% x) :=
+  { (inferInstance : Module ℝ (TangentSpace% x)) with
+    norm_smul_le c v := norm_smul_le c (NormedSpace.fromTangentSpace x v) }
 
 attribute [local instance] normedSpaceTangentSpaceVectorSpace
+
+/-- With the vector space normed structure on the tangent spaces to a vector space,
+`NormedSpace.fromTangentSpace` is a linear isometry equivalence. -/
+def fromTangentSpaceₗᵢ (p : E) : TangentSpace% p ≃ₗᵢ[ℝ] E where
+  __ := (NormedSpace.fromTangentSpace (𝕜 := ℝ) p).toLinearEquiv
+  norm_map' _ := rfl
+
+/-- Precomposing with `NormedSpace.fromTangentSpace` does not change the operator norm. -/
+lemma norm_comp_fromTangentSpace {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G]
+    (p : E) (f : E →L[ℝ] G) :
+    ‖f ∘L (NormedSpace.fromTangentSpace (𝕜 := ℝ) p).toContinuousLinearMap‖ = ‖f‖ :=
+  f.opNorm_comp_linearIsometryEquiv (fromTangentSpaceₗᵢ p)
 
 variable (I)
 
@@ -267,10 +303,16 @@ lemma eventually_norm_mfderivWithin_symm_extChartAt_comp_lt (x : M) :
   refine ⟨C, C_pos, ?_⟩
   have hx : (chartAt H x).source ∈ 𝓝 x := chart_source_mem_nhds H x
   filter_upwards [hC, hx] with y hy h'y
-  rw [TangentBundle.symmL_trivializationAt h'y] at hy
   have A : (extChartAt I x).symm (extChartAt I x y) = y :=
     (extChartAt I x).left_inv (by simpa using h'y)
-  convert! hy using 3 <;> congr
+  have key : ∀ z : M, z = y →
+      ∀ g : TangentSpace 𝓘(ℝ, E) (extChartAt I x y) →L[ℝ] TangentSpace I y,
+      ‖(tangentSpaceCast I y z).toContinuousLinearMap ∘L g‖ = ‖g‖ := by
+    rintro z rfl g
+    rw [show (tangentSpaceCast I z z).toContinuousLinearMap
+      = ContinuousLinearMap.id ℝ (TangentSpace I z) from rfl, ContinuousLinearMap.id_comp]
+  rw [← TangentBundle.symmL_trivializationAt h'y, key _ A, norm_comp_fromTangentSpace]
+  exact hy
 
 set_option backward.isDefEq.respectTransparency false in
 lemma eventually_norm_mfderivWithin_symm_extChartAt_lt (x : M) :

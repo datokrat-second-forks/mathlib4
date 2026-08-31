@@ -67,6 +67,63 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
   {M'' : Type*} [TopologicalSpace M''] [ChartedSpace H'' M'']
   {f : M → M'} {s t : Set M} {x x₀ : M}
 
+/-- A section of the tangent bundle of a normed space, read as a vector field on that space
+through the canonical identification `NormedSpace.fromTangentSpace`. -/
+def _root_.NormedSpace.fromTangentSpaceField (V : Π (x : E), TangentSpace 𝓘(𝕜, E) x) : E → E :=
+  fun x ↦ NormedSpace.fromTangentSpace x (V x)
+
+/-- A vector field on a normed space, read as a section of its tangent bundle through the
+canonical identification `NormedSpace.fromTangentSpace`. -/
+def _root_.NormedSpace.toTangentSpaceField (V : E → E) : Π (x : E), TangentSpace 𝓘(𝕜, E) x :=
+  fun x ↦ (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x).symm (V x)
+
+@[simp] lemma _root_.NormedSpace.fromTangentSpaceField_apply
+    (V : Π (x : E), TangentSpace 𝓘(𝕜, E) x) (x : E) :
+    NormedSpace.fromTangentSpaceField V x = NormedSpace.fromTangentSpace x (V x) := rfl
+
+@[simp] lemma _root_.NormedSpace.toTangentSpaceField_apply (V : E → E) (x : E) :
+    NormedSpace.toTangentSpaceField (𝕜 := 𝕜) V x =
+      (NormedSpace.fromTangentSpace (𝕜 := 𝕜) x).symm (V x) := rfl
+
+@[simp] lemma _root_.NormedSpace.fromTangentSpaceField_toTangentSpaceField (V : E → E) :
+    NormedSpace.fromTangentSpaceField (NormedSpace.toTangentSpaceField (𝕜 := 𝕜) V) = V := rfl
+
+@[simp] lemma _root_.NormedSpace.toTangentSpaceField_fromTangentSpaceField
+    (V : Π (x : E), TangentSpace 𝓘(𝕜, E) x) :
+    NormedSpace.toTangentSpaceField (NormedSpace.fromTangentSpaceField V) = V := rfl
+
+@[simp] lemma _root_.NormedSpace.fromTangentSpaceField_zero :
+    NormedSpace.fromTangentSpaceField (E := E) (𝕜 := 𝕜) 0 = 0 := rfl
+
+@[simp] lemma _root_.NormedSpace.toTangentSpaceField_zero :
+    NormedSpace.toTangentSpaceField (E := E) (𝕜 := 𝕜) 0 = 0 := rfl
+
+@[simp] lemma _root_.NormedSpace.fromTangentSpaceField_add
+    (V W : Π (x : E), TangentSpace 𝓘(𝕜, E) x) :
+    NormedSpace.fromTangentSpaceField (V + W) =
+      NormedSpace.fromTangentSpaceField V + NormedSpace.fromTangentSpaceField W := rfl
+
+@[simp] lemma _root_.NormedSpace.toTangentSpaceField_add (V W : E → E) :
+    NormedSpace.toTangentSpaceField (𝕜 := 𝕜) (V + W) =
+      NormedSpace.toTangentSpaceField (𝕜 := 𝕜) V + NormedSpace.toTangentSpaceField (𝕜 := 𝕜) W :=
+  rfl
+
+@[simp] lemma _root_.NormedSpace.fromTangentSpaceField_smul (c : E → 𝕜)
+    (V : Π (x : E), TangentSpace 𝓘(𝕜, E) x) :
+    NormedSpace.fromTangentSpaceField (c • V) = c • NormedSpace.fromTangentSpaceField V := rfl
+
+@[simp] lemma _root_.NormedSpace.toTangentSpaceField_smul (c : E → 𝕜) (V : E → E) :
+    NormedSpace.toTangentSpaceField (𝕜 := 𝕜) (c • V) =
+      c • NormedSpace.toTangentSpaceField (𝕜 := 𝕜) V := rfl
+
+@[simp] lemma _root_.NormedSpace.fromTangentSpaceField_neg
+    (V : Π (x : E), TangentSpace 𝓘(𝕜, E) x) :
+    NormedSpace.fromTangentSpaceField (-V) = -NormedSpace.fromTangentSpaceField V := rfl
+
+@[simp] lemma _root_.NormedSpace.toTangentSpaceField_neg (V : E → E) :
+    NormedSpace.toTangentSpaceField (𝕜 := 𝕜) (-V) =
+      -NormedSpace.toTangentSpaceField (𝕜 := 𝕜) V := rfl
+
 instance {n : ℕ} [n.AtLeastTwo] [IsManifold I (minSmoothness 𝕜 (ofNat(n))) M] :
     IsManifold I (ofNat(n)) M :=
   IsManifold.of_le (n := minSmoothness 𝕜 n) le_minSmoothness
@@ -203,15 +260,22 @@ lemma mpullback_neg :
 @[simp]
 lemma mpullback_zero : mpullback I I' f 0 = 0 := by simp [← mpullbackWithin_univ]
 
-lemma mpullbackWithin_eq_pullbackWithin {f : E → E'} {V : E' → E'} {s : Set E} :
-    mpullbackWithin 𝓘(𝕜, E) 𝓘(𝕜, E') f V s = pullbackWithin 𝕜 f V s := by
+/-- Read in the model spaces through `NormedSpace.fromTangentSpace`, the pullback of a vector
+field on a manifold is the pullback of vector fields on normed spaces. -/
+lemma mpullbackWithin_eq_pullbackWithin {f : E → E'}
+    {V : Π (y : E'), TangentSpace 𝓘(𝕜, E') y} {s : Set E} :
+    NormedSpace.fromTangentSpaceField (mpullbackWithin 𝓘(𝕜, E) 𝓘(𝕜, E') f V s) =
+      pullbackWithin 𝕜 f (NormedSpace.fromTangentSpaceField V) s := by
   ext x
-  simp only [mpullbackWithin, mfderivWithin_eq_fderivWithin, pullbackWithin]
+  simp only [NormedSpace.fromTangentSpaceField_apply, mpullbackWithin,
+    mfderivWithin_eq_fderivWithin, pullbackWithin, tangentSpaceCastModelHom_symm_apply,
+    ContinuousLinearMap.inverse_equiv_comp, ContinuousLinearMap.inverse_comp_equiv]
   rfl
 
 set_option backward.isDefEq.respectTransparency false in
-lemma mpullback_eq_pullback {f : E → E'} {V : E' → E'} :
-    mpullback 𝓘(𝕜, E) 𝓘(𝕜, E') f V = pullback 𝕜 f V := by
+lemma mpullback_eq_pullback {f : E → E'} {V : Π (y : E'), TangentSpace 𝓘(𝕜, E') y} :
+    NormedSpace.fromTangentSpaceField (mpullback 𝓘(𝕜, E) 𝓘(𝕜, E') f V) =
+      pullback 𝕜 f (NormedSpace.fromTangentSpaceField V) := by
   simp only [← mpullbackWithin_univ, ← pullbackWithin_univ, mpullbackWithin_eq_pullbackWithin]
 
 @[simp] lemma mpullback_id {V : Π (x : M), TangentSpace I x} : mpullback I I id V = V := by
@@ -227,8 +291,8 @@ lemma mpullbackWithin_comp_of_left
   simp only [mpullbackWithin]
   have hg : MDifferentiableWithinAt I' I'' g t (f x₀) :=
     mdifferentiableWithinAt_of_isInvertible_mfderivWithin hg'
-  rw [mfderivWithin_comp _ hg hf h hu, Function.comp_apply,
-    IsInvertible.inverse_comp_apply_of_left hg']
+  rw [mfderivWithin_comp _ hg hf h hu, IsInvertible.inverse_comp_apply_of_left hg']
+  rfl
 
 lemma mpullbackWithin_comp_of_right
     {g : M' → M''} {f : M → M'} {V : Π (x : M''), TangentSpace I'' x} {s : Set M} {t : Set M'}
@@ -239,8 +303,8 @@ lemma mpullbackWithin_comp_of_right
   simp only [mpullbackWithin]
   have hf : MDifferentiableWithinAt I I' f s x₀ :=
     mdifferentiableWithinAt_of_isInvertible_mfderivWithin hf'
-  rw [mfderivWithin_comp _ hg hf h hu, IsInvertible.inverse_comp_apply_of_right hf',
-    Function.comp_apply]
+  rw [mfderivWithin_comp _ hg hf h hu, IsInvertible.inverse_comp_apply_of_right hf']
+  rfl
 
 
 /-! ### Regularity of pullback of vector fields
@@ -266,7 +330,7 @@ protected lemma _root_.MDifferentiableWithinAt.mpullbackWithin_vectorField_inter
   `b₁ = f`, `b₂ = id`, `v = V ∘ f`, `ϕ = fun x ↦ (mfderivWithin I I' f s x).inverse` -/
   let b₁ := f
   let b₂ : M → M := id
-  let v : Π (x : M), TangentSpace I' (f x) := V ∘ f
+  let v : Π (x : M), TangentSpace I' (f x) := fun x ↦ V (f x)
   let ϕ : Π (x : M), TangentSpace I' (f x) →L[𝕜] TangentSpace I x :=
     fun x ↦ (mfderiv[s] f x).inverse
   have hv : MDifferentiableWithinAt I I'.tangent
@@ -401,7 +465,7 @@ protected lemma _root_.ContMDiffWithinAt.mpullbackWithin_vectorField_inter
   `b₁ = f`, `b₂ = id`, `v = V ∘ f`, `ϕ = fun x ↦ (mfderivWithin I I' f s x).inverse` -/
   let b₁ := f
   let b₂ : M → M := id
-  let v : Π (x : M), TangentSpace I' (f x) := V ∘ f
+  let v : Π (x : M), TangentSpace I' (f x) := fun x ↦ V (f x)
   let ϕ : Π (x : M), TangentSpace I' (f x) →L[𝕜] TangentSpace I x :=
     fun x ↦ (mfderiv[s] f x).inverse
   have hv : ContMDiffWithinAt I I'.tangent m
@@ -642,15 +706,27 @@ lemma eventually_contMDiffWithinAt_mpullbackWithin_extChartAt_symm
 set_option backward.isDefEq.respectTransparency false in
 omit [CompleteSpace E] in
 lemma eventuallyEq_mpullback_mpullbackWithin_extChartAt (V : Π (x : M), TangentSpace I x) :
-    V =ᶠ[𝓝[s] x] mpullback I 𝓘(𝕜, E) (extChartAt I x)
-      (mpullbackWithin 𝓘(𝕜, E) I (extChartAt I x).symm V (range I)) := by
+    ∀ᶠ y in 𝓝[s] x, V y = mpullback I 𝓘(𝕜, E) (extChartAt I x)
+      (mpullbackWithin 𝓘(𝕜, E) I (extChartAt I x).symm V (range I)) y := by
   apply nhdsWithin_le_nhds
   filter_upwards [extChartAt_source_mem_nhds (I := I) x] with y hy
   have A : (extChartAt I x).symm (extChartAt I x y) = y := (extChartAt I x).left_inv hy
+  -- the composition of the derivatives of the chart and of its inverse is the identification
+  -- `tangentSpaceCast` between the tangent spaces at `y` and at `(extChartAt I x).symm
+  -- (extChartAt I x y)`, two propositionally equal points
+  have hD : (mfderiv[range I] (extChartAt I x).symm (extChartAt I x y)) ∘L
+      (mfderiv% (extChartAt I x) y) =
+      ((tangentSpaceCast I ((extChartAt I x).symm (extChartAt I x y)) y).symm :
+        TangentSpace I y →L[𝕜] TangentSpace I ((extChartAt I x).symm (extChartAt I x y))) := by
+    have h := mfderivWithin_extChartAt_symm_comp_mfderiv_extChartAt' (I := I) (x := x) hy
+    ext v
+    exact (tangentSpaceCast I ((extChartAt I x).symm (extChartAt I x y)) y).injective
+      (DFunLike.congr_fun h v)
   rw [mpullback_apply, mpullbackWithin_apply,
     ← (isInvertible_mfderiv_extChartAt hy).inverse_comp_apply_of_right,
-    mfderivWithin_extChartAt_symm_comp_mfderiv_extChartAt' hy, A]
-  simp only [ContinuousLinearMap.inverse_id, ContinuousLinearMap.coe_id', id_eq]
+    hD, ContinuousLinearMap.inverse_equiv,
+    ContinuousLinearEquiv.symm_symm, A]
+  rfl
 
 end ContMDiff
 

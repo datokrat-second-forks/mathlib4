@@ -45,11 +45,20 @@ section
 /-- If `s` has the unique differential property at `x`, `f` is differentiable within `s` at `x` and
 its derivative has dense range, then `f '' s` has the unique differential property at `f x`. -/
 theorem UniqueMDiffWithinAt.image_denseRange (hs : UniqueMDiffAt[s] x)
-    {f : M → M'} {f' : E →L[𝕜] E'} (hf : HasMFDerivAt[s] f x f')
-    (hd : DenseRange f') : UniqueMDiffAt[f '' s] (f x) := by
-  /- Rewrite in coordinates, apply `HasFDerivWithinAt.uniqueDiffWithinAt`. -/
+    {f : M → M'} {f' : TangentSpace I x →L[𝕜] TangentSpace I' (f x)}
+    (hf : HasMFDerivAt[s] f x f') (hd : DenseRange f') : UniqueMDiffAt[f '' s] (f x) := by
+  /- Rewrite in coordinates, apply `HasFDerivWithinAt.uniqueDiffWithinAt`. The derivative read in
+  the extended charts is `f'` conjugated by the identifications `tangentSpaceCastModel`, so it has
+  dense range as soon as `f'` does. -/
+  have hd' : DenseRange ⇑((tangentSpaceCastModel I' (f x) : TangentSpace I' (f x) →L[𝕜] E') ∘L
+      f' ∘L ((tangentSpaceCastModel I x).symm : E →L[𝕜] TangentSpace I x)) := by
+    simp only [ContinuousLinearMap.coe_comp, ContinuousLinearEquiv.coe_coe]
+    refine (tangentSpaceCastModel I' (f x)).surjective.denseRange.comp ?_
+      (tangentSpaceCastModel I' (f x)).continuous
+    rw [DenseRange, (tangentSpaceCastModel I x).symm.surjective.range_comp]
+    exact hd
   have := hs.inter' <| hf.1 (extChartAt_source_mem_nhds (I := I') (f x))
-  refine (((hf.2.mono ?sub1).uniqueDiffWithinAt this hd).mono ?sub2).congr_pt ?pt
+  refine (((hf.2.mono ?sub1).uniqueDiffWithinAt this hd').mono ?sub2).congr_pt ?pt
   case pt => simp only [mfld_simps]
   case sub1 => mfld_set_tac
   case sub2 =>
@@ -60,7 +69,8 @@ theorem UniqueMDiffWithinAt.image_denseRange (hs : UniqueMDiffAt[s] x)
 at every point of `s` has dense range, then `f '' s` has the unique differential property.
 This version uses the `HasMFDerivWithinAt` predicate. -/
 theorem UniqueMDiffOn.image_denseRange' (hs : UniqueMDiff[s]) {f : M → M'}
-    {f' : M → E →L[𝕜] E'} (hf : ∀ x ∈ s, HasMFDerivAt[s] f x (f' x))
+    {f' : ∀ x : M, TangentSpace I x →L[𝕜] TangentSpace I' (f x)}
+    (hf : ∀ x ∈ s, HasMFDerivAt[s] f x (f' x))
     (hd : ∀ x ∈ s, DenseRange (f' x)) :
     UniqueMDiff[f '' s] :=
   forall_mem_image.2 fun x hx ↦ (hs x hx).image_denseRange (hf x hx) (hd x hx)
@@ -95,9 +105,11 @@ theorem UniqueMDiffOn.uniqueMDiffOn_target_inter (hs : UniqueMDiff[s]) (x : M) :
   -- this is just a reformulation of `UniqueMDiffOn.uniqueMDiffOn_preimage`, using as `e`
   -- the local chart at `x`.
   rw [← PartialEquiv.image_source_inter_eq', inter_comm, extChartAt_source]
-  exact (hs.inter (chartAt H x).open_source).image_denseRange'
-    (fun y hy ↦ hasMFDerivWithinAt_extChartAt hy.2)
-    fun y hy ↦ ((mdifferentiable_chart _).mfderiv_surjective hy.2).denseRange
+  refine (hs.inter (chartAt H x).open_source).image_denseRange'
+    (fun y hy ↦ hasMFDerivWithinAt_extChartAt hy.2) fun y hy ↦ ?_
+  exact (Function.Surjective.comp
+    ((I.fromTangentSpace (chartAt H x y)).surjective.toTangentSpaceAt _)
+    ((mdifferentiable_chart _).mfderiv_surjective hy.2)).denseRange
 
 variable [IsManifold I 1 M] in
 /-- If a set in a manifold has the unique derivative property, then its pullback by any extended

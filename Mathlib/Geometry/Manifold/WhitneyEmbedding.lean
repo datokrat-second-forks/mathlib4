@@ -74,35 +74,47 @@ theorem embeddingPiTangent_injective (f : SmoothBumpCovering ι I M) :
     Injective f.embeddingPiTangent :=
   injOn_univ.1 f.embeddingPiTangent_injOn
 
+/-- Composing the derivative of `f.embeddingPiTangent` with the projection to the `E`-component of
+the `f.ind x hx`-th factor gives the derivative of the extended chart at `f.c (f.ind x hx)`. Both
+sides are read in the model space `E` through `ContinuousLinearMap.ofTangentSpaceAt`; this is what
+makes the statement type-correct, as the two maps land in the tangent spaces at the propositionally
+(but not definitionally) equal points `L (f.embeddingPiTangent x)` and `extChartAt I _ x`. -/
 theorem comp_embeddingPiTangent_mfderiv (x : M) (hx : x ∈ s) :
     ((ContinuousLinearMap.fst ℝ E ℝ).comp
             (@ContinuousLinearMap.proj ℝ _ ι (fun _ => E × ℝ) _ _ (fun _ => inferInstance)
               (f.ind x hx))).comp
-        (mfderiv I 𝓘(ℝ, ι → E × ℝ) f.embeddingPiTangent x) =
-      mfderiv% (chartAt H (f.c (f.ind x hx))) x := by
+        (mfderiv I 𝓘(ℝ, ι → E × ℝ) f.embeddingPiTangent x).ofTangentSpaceAt =
+      (mfderiv% (extChartAt I (f.c (f.ind x hx))) x).ofTangentSpaceAt := by
   set L :=
     (ContinuousLinearMap.fst ℝ E ℝ).comp
       (@ContinuousLinearMap.proj ℝ _ ι (fun _ => E × ℝ) _ _ (fun _ => inferInstance) (f.ind x hx))
-  have := L.hasMFDerivAt.comp x
+  have heq : (L ∘ f.embeddingPiTangent : M → E) =ᶠ[𝓝 x] extChartAt I (f.c (f.ind x hx)) := by
+    refine (f.eventuallyEq_one x hx).mono fun y hy => ?_
+    simp only [L, embeddingPiTangent_coe, ContinuousLinearMap.coe_comp, (· ∘ ·),
+      ContinuousLinearMap.coe_fst', ContinuousLinearMap.proj_apply]
+    rw [hy, Pi.one_apply, one_smul]
+  have h₁ := L.hasMFDerivAt.comp x
     (f.embeddingPiTangent.contMDiff.mdifferentiableAt (by simp)).hasMFDerivAt
-  convert! hasMFDerivAt_unique this _
-  refine (hasMFDerivAt_extChartAt (f.mem_chartAt_ind_source x hx)).congr_of_eventuallyEq ?_
-  refine (f.eventuallyEq_one x hx).mono fun y hy => ?_
-  simp only [L, embeddingPiTangent_coe, ContinuousLinearMap.coe_comp, (· ∘ ·),
-    ContinuousLinearMap.coe_fst', ContinuousLinearMap.proj_apply]
-  rw [hy, Pi.one_apply, one_smul]
-
-theorem embeddingPiTangent_ker_mfderiv (x : M) (hx : x ∈ s) :
-    (mfderiv I 𝓘(ℝ, ι → E × ℝ) f.embeddingPiTangent x).ker = ⊥ := by
-  apply bot_unique
-  rw [← (mdifferentiable_chart (f.c (f.ind x hx))).ker_mfderiv_eq_bot
-      (f.mem_chartAt_ind_source x hx),
-    ← comp_embeddingPiTangent_mfderiv]
-  exact LinearMap.ker_le_ker_comp _ _
+  have h₂ := (hasMFDerivAt_extChartAt (f.mem_chartAt_ind_source x hx)).congr_of_eventuallyEq heq
+  rw [(hasMFDerivAt_extChartAt (f.mem_chartAt_ind_source x hx)).mfderiv]
+  exact congrArg ContinuousLinearMap.ofTangentSpaceAt (hasMFDerivAt_unique h₁ h₂)
 
 theorem embeddingPiTangent_injective_mfderiv (x : M) (hx : x ∈ s) :
-    Injective (mfderiv I 𝓘(ℝ, ι → E × ℝ) f.embeddingPiTangent x) :=
-  LinearMap.ker_eq_bot.1 (f.embeddingPiTangent_ker_mfderiv x hx)
+    Injective (mfderiv I 𝓘(ℝ, ι → E × ℝ) f.embeddingPiTangent x) := by
+  set L :=
+    (ContinuousLinearMap.fst ℝ E ℝ).comp
+      (@ContinuousLinearMap.proj ℝ _ ι (fun _ => E × ℝ) _ _ (fun _ => inferInstance) (f.ind x hx))
+  have hchart : Injective (mfderiv% (extChartAt I (f.c (f.ind x hx))) x).ofTangentSpaceAt := by
+    rw [(hasMFDerivAt_extChartAt (f.mem_chartAt_ind_source x hx)).mfderiv]
+    exact (I.fromTangentSpace _).injective.comp
+      ((mdifferentiable_chart (f.c (f.ind x hx))).mfderiv_injective
+        (f.mem_chartAt_ind_source x hx))
+  rw [← comp_embeddingPiTangent_mfderiv f x hx] at hchart
+  exact fun v w h ↦ hchart (congrArg (fun z ↦ L (NormedSpace.fromTangentSpace _ z)) h)
+
+theorem embeddingPiTangent_ker_mfderiv (x : M) (hx : x ∈ s) :
+    (mfderiv I 𝓘(ℝ, ι → E × ℝ) f.embeddingPiTangent x).ker = ⊥ :=
+  LinearMap.ker_eq_bot.2 (f.embeddingPiTangent_injective_mfderiv x hx)
 
 /-- Baby version of the **Whitney weak embedding theorem**: if `M` admits a finite covering by
 supports of bump functions, then for some `n` it can be immersed into the `n`-dimensional
@@ -122,7 +134,8 @@ public theorem exists_immersion_euclidean {ι : Type*} [Finite ι] (f : SmoothBu
   rw [mfderiv_comp _ eEF.differentiableAt.mdifferentiableAt
       (f.embeddingPiTangent.contMDiff.mdifferentiableAt (by simp)),
     eEF.mfderiv_eq]
-  exact eEF.injective.comp (f.embeddingPiTangent_injective_mfderiv _ trivial)
+  exact (Function.Injective.toTangentSpace (f := (eEF : (ι → E × ℝ) →L[ℝ] F)) eEF.injective _).comp
+    (f.embeddingPiTangent_injective_mfderiv _ trivial)
 
 end SmoothBumpCovering
 

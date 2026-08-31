@@ -78,17 +78,15 @@ lemma isMIntegralCurve_abs_add_one_of_isMIntegralCurveOn_Ioo [BoundarylessManifo
   have ht : t ∈ Ioo (-(|t| + 1)) (|t| + 1) := by
     rw [mem_Ioo, ← abs_lt]
     exact lt_add_one _
-  /- TODO: to fix the defeq abuse, the correct fix is probably to introduce `vmfderiv` as
-  the derivative from a vector space to a manifold, and use it in the definition of
-  `IsMIntegralCurveOn` and friends. -/
-  apply HasMFDerivAt.congr_of_eventuallyEq_abuse (f := γ (|t| + 1))
-  · exact hγ (|t| + 1) (by positivity) _ ht |>.hasMFDerivAt (Ioo_mem_nhds ht.1 ht.2)
-  · rw [Filter.eventuallyEq_iff_exists_mem]
+  have heq : (fun t ↦ γ (|t| + 1) t) =ᶠ[𝓝 t] γ (|t| + 1) := by
+    rw [Filter.eventuallyEq_iff_exists_mem]
     refine ⟨Ioo (-(|t| + 1)) (|t| + 1), ?_,
       eqOn_abs_add_one_of_isMIntegralCurveOn_Ioo hv γ hγx hγ⟩
     have : |t| < |t| + 1 := lt_add_of_pos_right |t| zero_lt_one
     rw [abs_lt] at this
     exact Ioo_mem_nhds this.1 this.2
+  exact (hγ (|t| + 1) (by positivity) _ ht |>.hasMFDerivAt
+    (Ioo_mem_nhds ht.1 ht.2)).congr_of_eventuallyEq heq
 
 /-- The existence of a global integral curve is equivalent to the existence of a family of local
 integral curves `γ : ℝ → ℝ → M` with the same starting point `γ 0 = x` such that each `γ a` is
@@ -140,24 +138,35 @@ lemma isMIntegralCurveOn_piecewise [BoundarylessManifold I M]
     IsMIntegralCurveOn (piecewise (Ioo a b) γ γ') v (Ioo a b ∪ Ioo a' b') := by
   intro t ht
   by_cases hmem : t ∈ Ioo a b
-  · rw [piecewise, ite_eq_left hmem]
-    apply hγ t hmem |>.hasMFDerivAt (Ioo_mem_nhds hmem.1 hmem.2) |>.hasMFDerivWithinAt
-      (s := Ioo a b ∪ Ioo a' b') |>.congr_of_eventuallyEq _ (by rw [piecewise, ite_eq_left hmem])
-    rw [Filter.eventuallyEq_iff_exists_mem]
-    refine ⟨Ioo a b, ?_, fun _ ht' ↦ by rw [piecewise, ite_eq_left ht']⟩
-    rw [(isOpen_Ioo.union isOpen_Ioo).nhdsWithin_eq ht]
-    exact Ioo_mem_nhds hmem.1 hmem.2
+  · have hpt : piecewise (Ioo a b) γ γ' t = γ t := piecewise_eq_of_mem _ _ _ hmem
+    have heq : piecewise (Ioo a b) γ γ' =ᶠ[𝓝[Ioo a b ∪ Ioo a' b'] t] γ := by
+      rw [Filter.eventuallyEq_iff_exists_mem]
+      refine ⟨Ioo a b, ?_, fun _ ht' ↦ piecewise_eq_of_mem _ _ _ ht'⟩
+      rw [(isOpen_Ioo.union isOpen_Ioo).nhdsWithin_eq ht]
+      exact Ioo_mem_nhds hmem.1 hmem.2
+    have key := hγ t hmem |>.hasMFDerivAt (Ioo_mem_nhds hmem.1 hmem.2) |>.hasMFDerivWithinAt
+      (s := Ioo a b ∪ Ioo a' b') |>.congr_of_eventuallyEq heq hpt
+    convert key using 1
+    ext u
+    simp only [ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.coe_comp,
+      Function.comp_apply, ContinuousLinearEquiv.coe_coe, map_smul]
+    rw [tangentSpaceCast_section (I := I) hpt.symm v]
   · have ht' := ht
     rw [mem_union, or_iff_not_imp_left] at ht
-    rw [piecewise, ite_eq_right hmem]
-    apply hγ' t (ht hmem) |>.hasMFDerivAt (Ioo_mem_nhds (ht hmem).1 (ht hmem).2)
-      |>.hasMFDerivWithinAt (s := Ioo a b ∪ Ioo a' b')
-      |>.congr_of_eventuallyEq _ (by rw [piecewise, ite_eq_right hmem])
-    rw [Filter.eventuallyEq_iff_exists_mem]
-    refine ⟨Ioo a' b', ?_,
-      eqOn_piecewise_of_isMIntegralCurveOn_Ioo hv hγ hγ' ht₀ h⟩
-    rw [(isOpen_Ioo.union isOpen_Ioo).nhdsWithin_eq ht']
-    exact Ioo_mem_nhds (ht hmem).1 (ht hmem).2
+    have hpt : piecewise (Ioo a b) γ γ' t = γ' t := piecewise_eq_of_notMem _ _ _ hmem
+    have heq : piecewise (Ioo a b) γ γ' =ᶠ[𝓝[Ioo a b ∪ Ioo a' b'] t] γ' := by
+      rw [Filter.eventuallyEq_iff_exists_mem]
+      refine ⟨Ioo a' b', ?_,
+        eqOn_piecewise_of_isMIntegralCurveOn_Ioo hv hγ hγ' ht₀ h⟩
+      rw [(isOpen_Ioo.union isOpen_Ioo).nhdsWithin_eq ht']
+      exact Ioo_mem_nhds (ht hmem).1 (ht hmem).2
+    have key := hγ' t (ht hmem) |>.hasMFDerivAt (Ioo_mem_nhds (ht hmem).1 (ht hmem).2)
+      |>.hasMFDerivWithinAt (s := Ioo a b ∪ Ioo a' b') |>.congr_of_eventuallyEq heq hpt
+    convert key using 1
+    ext u
+    simp only [ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.coe_comp,
+      Function.comp_apply, ContinuousLinearEquiv.coe_coe, map_smul]
+    rw [tangentSpaceCast_section (I := I) hpt.symm v]
 
 /-- If there exists `ε > 0` such that the local integral curve at each point `x : M` is defined at
 least on an open interval `Ioo (-ε) ε`, then every point on `M` has a global integral curve

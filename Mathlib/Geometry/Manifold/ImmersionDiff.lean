@@ -81,7 +81,8 @@ lemma continuousAt (hf : IsDiffImmersionAt I I' f x) : ContinuousAt f x :=
   hf.mdifferentiableAt.continuousAt
 
 lemma congr (hf : IsDiffImmersionAt I I' f x) (hfg : g =ᶠ[𝓝 x] f) : IsDiffImmersionAt I I' g x := by
-  rwa [isDiffImmersionAt_iff, hfg.mfderiv_eq]
+  rw [isDiffImmersionAt_iff, hfg.mfderiv_eq]
+  exact (isDiffImmersionAt_iff.1 hf).continuousLinearEquivalence_comp
 
 /-- If `f` is an immersion at `x` and `g` is an immersion at `y`, then `f × g` is an immersion at
 `(x, y)` (all in the sense of differentials). -/
@@ -90,7 +91,7 @@ lemma prodMap {y : N} (hf : IsDiffImmersionAt I I' f x) {g : N → N'}
     IsDiffImmersionAt (I.prod J) (I'.prod J') (Prod.map f g) (x, y) := by
   rw [isDiffImmersionAt_iff, mfderiv_prodMap hf.mdifferentiableAt hg.mdifferentiableAt]
   rw [isDiffImmersionAt_iff] at hf hg
-  exact hf.prodMap hg
+  exact ((hf.prodMap hg).comp_continuousLinearEquivalence).continuousLinearEquivalence_comp
 
 lemma of_mfderiv_isInvertible (hf : (mfderiv% f x).IsInvertible) : IsDiffImmersionAt I I' f x := by
   rw [isDiffImmersionAt_iff]

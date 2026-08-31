@@ -90,7 +90,7 @@ theorem exists_isMIntegralCurveAt_of_contMDiffAt [CompleteSpace E]
   -- collect useful terms in convenient forms
   let xₜ : M := (extChartAt I x₀).symm (f t) -- `xₜ := γ t`
   have h : HasDerivAt f (x := t) <| fderivWithin ℝ (extChartAt I x₀ ∘ (extChartAt I xₜ).symm)
-    (range I) (extChartAt I xₜ xₜ) (v xₜ) := (haux t ht).1
+    (range I) (extChartAt I xₜ xₜ) (tangentSpaceCastModel I xₜ (v xₜ)) := (haux t ht).1
   rw [← tangentCoordChange_def] at h
   have hf3 := mem_preimage.mp <| mem_of_mem_nhds (haux t ht).2
   have hf3' := mem_of_mem_of_subset hf3 interior_subset
@@ -102,10 +102,12 @@ theorem exists_isMIntegralCurveAt_of_contMDiffAt [CompleteSpace E]
   refine ⟨(continuousAt_extChartAt_symm'' hf3').comp h.continuousAt,
     HasDerivWithinAt.hasFDerivWithinAt ?_⟩
   simp only [mfld_simps, hasDerivWithinAt_univ]
-  change HasDerivAt ((extChartAt I xₜ ∘ (extChartAt I x₀).symm) ∘ f) (v xₜ) t
+  change HasDerivAt ((extChartAt I xₜ ∘ (extChartAt I x₀).symm) ∘ f)
+    (tangentSpaceCastModel I xₜ (v xₜ)) t
   -- express `v (γ t)` as `D⁻¹ D (v (γ t))`, where `D` is a change of coordinates, so we can use
   -- `HasFDerivAt.comp_hasDerivAt` on `h`
-  rw [← tangentCoordChange_self (I := I) (x := xₜ) (z := xₜ) (v := v xₜ) hft2,
+  rw [← tangentCoordChange_self (I := I) (x := xₜ) (z := xₜ)
+      (v := tangentSpaceCastModel I xₜ (v xₜ)) hft2,
     ← tangentCoordChange_comp (x := x₀) ⟨⟨hft2, hft1⟩, hft2⟩]
   apply HasFDerivAt.comp_hasDerivAt _ _ h
   apply HasFDerivWithinAt.hasFDerivAt (s := range I) _ <|
@@ -137,7 +139,8 @@ theorem isMIntegralCurveAt_eventuallyEq_of_contMDiffAt (hγt₀ : I.IsInteriorPo
   -- this is basically what the function looks like when `hv` is unfolded
   set v' : E → E := fun x ↦
     tangentCoordChange I ((extChartAt I (γ t₀)).symm x) (γ t₀) ((extChartAt I (γ t₀)).symm x)
-      (v ((extChartAt I (γ t₀)).symm x)) with hv'
+      (tangentSpaceCastModel I ((extChartAt I (γ t₀)).symm x)
+        (v ((extChartAt I (γ t₀)).symm x))) with hv'
   -- extract a set `s` on which `v'` is Lipschitz
   rw [contMDiffAt_iff] at hv
   obtain ⟨_, hv⟩ := hv

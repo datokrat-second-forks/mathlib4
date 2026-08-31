@@ -52,6 +52,12 @@ namespace Manifold
 
 variable [∀ (x : M), ENorm (TangentSpace% x)] {a b c a' b' : ℝ} {γ γ' : ℝ → M}
 
+/-- The identification `tangentSpaceCast` between the tangent spaces at two propositionally equal
+points preserves the extended norm. -/
+lemma enorm_tangentSpaceCast {x y : M} (hxy : x = y) (v : TangentSpace I x) :
+    ‖tangentSpaceCast I x y v‖ₑ = ‖v‖ₑ := by
+  subst hxy; rfl
+
 variable (I) in
 /-- The length on `Icc a b` of a path into a manifold, where the path is defined on the whole real
 line.
@@ -89,10 +95,10 @@ lemma pathELength_congr_Ioo (h : EqOn γ γ' (Ioo a b)) :
     pathELength I γ a b = pathELength I γ' a b := by
   simp only [pathELength_eq_lintegral_mfderiv_Ioo]
   apply setLIntegral_congr_fun measurableSet_Ioo (fun t ht ↦ ?_)
-  have A : γ t = γ' t := h ht
-  congr! 2
-  apply Filter.EventuallyEq.mfderiv_eq
-  filter_upwards [Ioo_mem_nhds ht.1 ht.2] with a ha using h ha
+  have hEq : γ =ᶠ[𝓝 t] γ' := by
+    filter_upwards [Ioo_mem_nhds ht.1 ht.2] with a ha using h ha
+  rw [hEq.mfderiv_eq]
+  exact enorm_tangentSpaceCast (h ht).symm _
 
 lemma pathELength_congr (h : EqOn γ γ' (Icc a b)) : pathELength I γ a b = pathELength I γ' a b :=
   pathELength_congr_Ioo (fun _ hx ↦ h ⟨hx.1.le, hx.2.le⟩)
@@ -119,15 +125,15 @@ lemma lintegral_norm_mfderiv_Icc_eq_pathELength_projIcc {a b : ℝ}
     [h : Fact (a < b)] {γ : Icc a b → M} :
     ∫⁻ t, ‖mfderiv% γ t 1‖ₑ = pathELength I (γ ∘ (projIcc a b h.out.le)) a b := by
   rw [pathELength_eq_lintegral_mfderivWithin_Icc]
-  simp_rw [← mfderivWithin_comp_projIcc_one]
+  have key (t : Icc a b) : ‖mfderiv% γ t 1‖ₑ
+      = ‖mfderiv[Icc a b] (γ ∘ projIcc a b h.out.le) (t : ℝ) 1‖ₑ := by
+    rw [← mfderivWithin_comp_projIcc_one]
+    exact enorm_tangentSpaceCast (congrArg γ (projIcc_val h.out.le t)) _
+  simp_rw [key]
   have : MeasurePreserving (Subtype.val : Icc a b → ℝ) volume
     (volume.restrict (Icc a b)) := measurePreserving_subtype_coe measurableSet_Icc
   rw [← MeasurePreserving.lintegral_comp_emb this
     (MeasurableEmbedding.subtype_coe measurableSet_Icc)]
-  congr
-  ext t
-  have : t = projIcc a b h.out.le (t : ℝ) := by simp
-  congr
 
 open MeasureTheory
 
@@ -159,7 +165,9 @@ lemma pathELength_comp_of_monotoneOn {f : ℝ → ℝ} (h : a ≤ b) (hf : Monot
   rw [this]
   simp only [Function.comp_apply, ContinuousLinearMap.comp_apply]
   have : mfderiv[Icc a b] f t 1 = derivWithin f (Icc a b) t • (1 : TangentSpace% (f t)) := by
-    simp only [mfderivWithin_eq_fderivWithin, ← fderivWithin_derivWithin, smul_eq_mul, mul_one]
+    refine (NormedSpace.fromTangentSpace (𝕜 := ℝ) (f t)).injective ?_
+    simp only [mfderivWithin_eq_fderivWithin, map_smul, NormedSpace.fromTangentSpace_one,
+      smul_eq_mul, mul_one, ← fderivWithin_derivWithin]
     rfl
   rw [this]
   have : 0 ≤ derivWithin f (Icc a b) t := hf.derivWithin_nonneg
@@ -192,7 +200,9 @@ lemma pathELength_comp_of_antitoneOn {f : ℝ → ℝ} (h : a ≤ b) (hf : Antit
   simp only [Function.comp_apply, ContinuousLinearMap.comp_apply]
   have : mfderiv[Icc a b] f t 1
       = derivWithin f (Icc a b) t • (1 : TangentSpace% (f t)) := by
-    simp only [mfderivWithin_eq_fderivWithin, ← fderivWithin_derivWithin, smul_eq_mul, mul_one]
+    refine (NormedSpace.fromTangentSpace (𝕜 := ℝ) (f t)).injective ?_
+    simp only [mfderivWithin_eq_fderivWithin, map_smul, NormedSpace.fromTangentSpace_one,
+      smul_eq_mul, mul_one, ← fderivWithin_derivWithin]
     rfl
   rw [this]
   have : 0 ≤ -derivWithin f (Icc a b) t := by simp [hf.derivWithin_nonpos]

@@ -34,11 +34,11 @@ variable {𝕜 : Type*} [NontriviallyNormedField 𝕜]
 
 
 /-- The derivative of the chart at a base point is the chart of the tangent bundle, composed with
-the identification between the tangent bundle of the model space and the product space.
-This abuses the defeq between the tangent bundle to `H` and the bundle with constant fiber `E`. -/
+the identification `tangentBundleModelSpaceEquiv` between the tangent bundle of the model space and
+the product space. -/
 theorem tangentMap_chart {p q : TangentBundle I M} (h : q.1 ∈ (chartAt H p.1).source) :
     tangentMap% (chartAt H p.1) q =
-      (TotalSpace.toProd _ _).symm
+      (tangentBundleModelSpaceEquiv I).symm
         ((chartAt (ModelProd H E) p : TangentBundle I M → ModelProd H E) q) := by
   dsimp [tangentMap]
   rw [MDifferentiableAt.mfderiv]
@@ -46,23 +46,33 @@ theorem tangentMap_chart {p q : TangentBundle I M} (h : q.1 ∈ (chartAt H p.1).
   · exact mdifferentiableAt_atlas (chart_mem_atlas _ _) h
 
 /-- The derivative of the inverse of the chart at a base point is the inverse of the chart of the
-tangent bundle, composed with the identification between the tangent bundle of the model space and
-the product space.
-This abuses the defeq between the tangent bundle to `H` and the bundle with constant fiber `E`. -/
+tangent bundle, composed with the identification `tangentBundleModelSpaceEquiv` between the tangent
+bundle of the model space and the product space. -/
 theorem tangentMap_chart_symm {p : TangentBundle I M} {q : TangentBundle I H}
     (h : q.1 ∈ (chartAt H p.1).target) :
     tangentMap% (chartAt H p.1).symm q =
-      (chartAt (ModelProd H E) p).symm (TotalSpace.toProd H E q) := by
+      (chartAt (ModelProd H E) p).symm (tangentBundleModelSpaceEquiv I q) := by
   dsimp only [tangentMap]
-  rw [MDifferentiableAt.mfderiv_abuse (mdifferentiableAt_atlas_symm (chart_mem_atlas _ _) h)]
+  rw [MDifferentiableAt.mfderiv (mdifferentiableAt_atlas_symm (chart_mem_atlas _ _) h)]
   simp only [TangentBundle.chartAt, tangentBundleCore,
     mfld_simps]
   -- `simp` fails to apply `PartialEquiv.prod_symm` with `ModelProd`
-  congr
-  exact ((chartAt H (TotalSpace.proj p)).right_inv h).symm
+  refine TotalSpace.ext rfl (heq_of_eq ?_)
+  simp only [chartAt_self_eq, OpenPartialHomeomorph.refl_symm, OpenPartialHomeomorph.refl_apply,
+    id_eq]
+  -- the base point of the `fderivWithin` on the left is `I q.proj`, while on the right it is
+  -- `I ((chartAt H p.proj) ((chartAt H p.proj).symm q.proj))`; these agree by `right_inv`
+  rw [show (I q.proj : E) = I (chartAt H p.proj ((chartAt H p.proj).symm q.proj)) from
+    congrArg I ((chartAt H p.proj).right_inv h).symm]
+  rfl
 
+/-- The derivative of the chart at `y`, read through the identifications `tangentSpaceCastModel`
+and `ModelWithCorners.fromTangentSpace`, is the tangent coordinate change. -/
 lemma mfderiv_chartAt_eq_tangentCoordChange {x y : M} (hsrc : x ∈ (chartAt H y).source) :
-    mfderiv% (chartAt H y) x = tangentCoordChange I x y x := by
+    mfderiv% (chartAt H y) x =
+      ((I.fromTangentSpace (chartAt H y x)).symm : E →L[𝕜] TangentSpace I (chartAt H y x)) ∘L
+        tangentCoordChange I x y x ∘L
+        (tangentSpaceCastModel I x : TangentSpace I x →L[𝕜] E) := by
   have := mdifferentiableAt_atlas (I := I) (ChartedSpace.chart_mem_atlas _) hsrc
   simp [mfderiv, ite_eq_left this, Function.comp_assoc]
   rfl
@@ -84,34 +94,30 @@ lemma inTangentCoordinates_eq_mfderiv_comp
     (hx : f x ∈ (chartAt H (f x₀)).source) (hy : g x ∈ (chartAt H' (g x₀)).source) :
     inTangentCoordinates I I' f g ϕ x₀ x =
       mvfderiv I' (extChartAt I' (g x₀)) (g x) ∘L (ϕ x) ∘L
-      (mfderiv[range I] (extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x))
+      ((tangentSpaceCast I ((extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x))) (f x) :
+            TangentSpace I ((extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x))) →L[𝕜]
+              TangentSpace I (f x)) ∘L
+        mfderiv[range I] (extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x))
         ∘L (NormedSpace.fromTangentSpace
           (extChartAt I (f x₀) (f x))).symm.toContinuousLinearMap) := by
-  rw [inTangentCoordinates_eq f g ϕ hx hy, tangentBundleCore_coordChange]
-  congr
-  · have : MDiffAt (extChartAt I' (g x₀)) (g x) := mdifferentiableAt_extChartAt hy
-    simp_all [mvfderiv, mfderiv]
+  have ha : mvfderiv I' (extChartAt I' (g x₀)) (g x) =
+      (tangentBundleCore I' M').coordChange (achart H' (g x)) (achart H' (g x₀)) (g x) ∘L
+        (tangentSpaceCastModel I' (g x) : TangentSpace I' (g x) →L[𝕜] E') := by
+    rw [mvfderiv_eq_ofTangentSpaceAt, ← TangentBundle.continuousLinearMapAt_trivializationAt hy,
+      ContinuousLinearMap.ofTangentSpaceAt_toTangentSpaceAt,
+      TangentBundle.continuousLinearMapAt_trivializationAt_eq_core hy]
+  have hb : (tangentSpaceCast I ((extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x))) (f x) :
+        TangentSpace I ((extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x))) →L[𝕜]
+          TangentSpace I (f x)) ∘L
+      mfderiv[range I] (extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x)) ∘L
+      (NormedSpace.fromTangentSpace
+        (extChartAt I (f x₀) (f x))).symm.toContinuousLinearMap =
+      ((tangentSpaceCastModel I (f x)).symm : E →L[𝕜] TangentSpace I (f x)) ∘L
+        (tangentBundleCore I M).coordChange (achart H (f x₀)) (achart H (f x)) (f x) := by
+    rw [← TangentBundle.symmL_trivializationAt hx, TangentBundle.symmL_trivializationAt_eq_core hx]
     rfl
-  · simp only [mfderivWithin, writtenInExtChartAt, modelWithCornersSelf_coe, range_id, inter_univ]
-    rw [ite_eq_left]
-    · simp [Function.comp_def, OpenPartialHomeomorph.left_inv (chartAt H (f x₀)) hx]
-      rfl
-    · apply mdifferentiableWithinAt_extChartAt_symm
-      apply (extChartAt I (f x₀)).map_source
-      simpa using hx
-
-/-- To write a linear map between tangent spaces in coordinates amounts to precomposing and
-postcomposing it with derivatives of extended charts.
-Concrete version of `inTangentCoordinates_eq`, abusing defeq between the tangent space to the model
-space and the model space. -/
-lemma inTangentCoordinates_eq_mfderiv_comp_abuse
-    {N : Type*} {f : N → M} {g : N → M'}
-    {ϕ : Π x : N, TangentSpace% (f x) →L[𝕜] TangentSpace% (g x)} {x₀ : N} {x : N}
-    (hx : f x ∈ (chartAt H (f x₀)).source) (hy : g x ∈ (chartAt H' (g x₀)).source) :
-    inTangentCoordinates I I' f g ϕ x₀ x =
-      mfderiv% (extChartAt I' (g x₀)) (g x) ∘L (ϕ x) ∘L
-      mfderiv[range I] (extChartAt I (f x₀)).symm (extChartAt I (f x₀) (f x)) :=
-  inTangentCoordinates_eq_mfderiv_comp hx hy
+  rw [inTangentCoordinates_eq f g ϕ hx hy, ha, hb]
+  rfl
 
 open Bundle
 variable (I) in
@@ -119,6 +125,6 @@ variable (I) in
 as a diffeomorphism. -/
 def tangentBundleModelSpaceDiffeomorph (n : ℕ∞) :
     TangentBundle I H ≃ₘ^n⟮I.tangent, I.prod 𝓘(𝕜, E)⟯ ModelProd H E where
-  __ := TotalSpace.toProd H E
+  __ := tangentBundleModelSpaceEquiv I
   contMDiff_toFun := contMDiff_tangentBundleModelSpaceHomeomorph
   contMDiff_invFun := contMDiff_tangentBundleModelSpaceHomeomorph_symm
