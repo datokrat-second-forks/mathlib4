@@ -198,3 +198,109 @@ green. Two lessons:
   `= WithBot.toDual (a.map (ofDual ∘ f ∘ toDual))`. But since `WithBot`/`WithTop` are still the
   same `Option`, the shorter `= a.map (f ∘ ⇑toDual)` typechecks and is still `rfl`-after-`cases`.
   Prefer it.
+
+## 9. Higher-order unification in *bridge* lemmas
+
+Bridge lemmas that quantify over a relation, such as
+
+```lean
+theorem bounded_dual_iff :
+    Bounded (fun a b : αᵒᵈ ↦ r (OrderDual.ofDual a) (OrderDual.ofDual b))
+      (⇑OrderDual.ofDual ⁻¹' s) ↔ Bounded r s
+```
+
+are useless without help at the use site: unifying
+`fun a b ↦ ?r (ofDual a) (ofDual b) =?= fun x y ↦ x ≤ y` is a higher-order problem
+Lean does not solve, so `?r` stays open and the error surfaces as an
+*application type mismatch* several `.trans` steps later. Every one of the
+fourteen use sites in `Mathlib/Order/Bounded.lean` needs the relation pinned:
+
+```lean
+(bounded_dual_iff (r := (· ≥ ·))).symm.trans
+  ((bounded_le_inter_le (α := αᵒᵈ) (s := ⇑OrderDual.ofDual ⁻¹' s) (OrderDual.toDual a)).trans
+    (bounded_dual_iff (r := (· ≥ ·))))
+```
+
+This is §1 again, one level up: the wrapper now sits *under a binder inside the
+argument*, so not even the "pass the dualised argument" trick applies — only a
+named argument does.
+
+## 10. Conjugation by hand where the dual used to be the identity
+
+Wherever an `Equiv`/hom/embedding was `Equiv.refl`, `f.toEquiv` or
+`f.toEmbedding` because `αᵒᵈ` *was* `α`, it now has to be spelled as a real
+conjugation:
+
+```lean
+-- Order/Hom/Basic.lean
+def dualDual : α ≃o αᵒᵈᵒᵈ := { toEquiv := toDual.trans toDual, map_rel_iff' := Iff.rfl }
+def OrderIso.dual (f : α ≃o β) : αᵒᵈ ≃o βᵒᵈ :=
+  ⟨OrderDual.ofDual.trans (f.toEquiv.trans OrderDual.toDual), f.le_iff_le⟩
+```
+
+For *bundled algebraic* homs the conjugation needs a bundled wrapper, which has
+to be introduced privately in the file that needs it:
+
+```lean
+-- Algebra/Order/Hom/Monoid.lean
+private def toDualAddHom {γ : Type*} [AddZeroClass γ] : γ →+ γᵒᵈ where
+  toFun := OrderDual.toDual'; map_zero' := rfl; map_add' _ _ := rfl
+
+theorem antitone_iff_map_nonpos : Antitone (f : α → β) ↔ ∀ a, 0 ≤ a → f a ≤ 0 :=
+  monotone_toDual_comp_iff.symm.trans <|
+    monotone_iff_map_nonneg (F := α →+ βᵒᵈ) (toDualAddHom.comp (f : α →+ β))
+```
+
+Note that the conjugated statement then also differs *in its binders* (§2), so
+these proofs usually end in an `OrderDual.forall` / `OrderDual.exists` step too.
+
+Unwrapping-only structure fields are cheap by comparison — `Function.Injective.*`
+transport does the whole job, e.g. in `Algebra/Field/Basic.lean`:
+
+```lean
+instance : Field Kᵒᵈ := OrderDual.ofDual.injective.field _ rfl rfl (fun _ _ ↦ rfl) …
+```
+
+## 11. Quotients: the setoid must be pinned
+
+`Quotient.map'` picks its setoids by instance search, and with `αᵒᵈ` no longer
+syntactically `α` the two candidates are genuinely different instances. Leaving
+them implicit makes every subsequent field (`left_inv`, `map_rel_iff'`) fail with
+opaque mismatches; the fix is to name both:
+
+```lean
+-- Order/Antisymmetrization.lean
+Quotient.map' (s₁ := AntisymmRel.setoid α (· ≤ ·)) (s₂ := AntisymmRel.setoid αᵒᵈ (· ≤ ·))
+  OrderDual.toDual' (fun _ _ h => ⟨h.2, h.1⟩) (OrderDual.ofDual a)
+```
+
+Related: term-mode `Quotient.inductionOn'` proofs of the remaining fields had to
+become tactic blocks (`cases a with | _ q => induction q using Quotient.inductionOn'`),
+because the term-mode versions get re-elaborated at `implicit` transparency and
+no longer see through the wrapper.
+
+## 12. When the dual operation has a *different name*, `toDual_inj` stops working
+
+The standard repair for a dualised equation is
+`(OrderDual.toDual_inj (b := rhs)).1 (lemma (α := αᵒᵈ) …)`. It only works while
+both sides are spelled with the same operations. In a Heyting/Boolean algebra
+the dual of `⇨` is `\` and the dual of `ᶜ` is `hnot`, and the dualised statement
+therefore mentions `hnot` where the target says `ᶜ` — no injectivity step can
+bridge that. Four lemmas in `Order/BooleanAlgebra/Basic.lean` had to be reproved
+directly:
+
+```lean
+theorem compl_himp : (x ⇨ y)ᶜ = x \ y := by
+  rw [himp_eq, sdiff_eq, compl_sup, compl_compl, inf_comm]
+theorem codisjoint_himp_self_left : Codisjoint (x ⇨ y) x :=
+  codisjoint_iff.2 <| by rw [himp_eq, sup_assoc, compl_sup_eq_top, sup_top_eq]
+```
+
+Same conclusion in `Order/Interval/Set/LinearOrder.lean`, for a different reason:
+`Ioc_subset_Ioc_iff` used `convert! @Ico_subset_Ico_iff αᵒᵈ …`, which relied on
+`Set αᵒᵈ` being `Set α`. With real wrappers `convert` would have to cross a
+`ofDual ⁻¹' _` on every subterm, so the four-line direct proof wins.
+
+Rule of thumb from waves 5–8: dualise when the dual statement is the *same
+formula* over `αᵒᵈ` (then §1's named arguments suffice); write the proof directly
+as soon as the dual notation differs.

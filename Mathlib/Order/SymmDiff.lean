@@ -392,41 +392,43 @@ section CogeneralizedBooleanAlgebra
 
 @[simp]
 theorem inf_himp_bihimp : a ⇔ b ⇨ a ⊓ b = a ⊔ b :=
-  @sup_sdiff_symmDiff αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ⊔ b)).1 (sup_sdiff_symmDiff (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 theorem codisjoint_bihimp_sup : Codisjoint (a ⇔ b) (a ⊔ b) :=
-  @disjoint_symmDiff_inf αᵒᵈ _ _ _
+  disjoint_toDual_iff.1 (disjoint_symmDiff_inf (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem himp_bihimp_left : a ⇨ a ⇔ b = a ⇨ b :=
-  @symmDiff_sdiff_left αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ⇨ b)).1 (symmDiff_sdiff_left (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem himp_bihimp_right : b ⇨ a ⇔ b = b ⇨ a :=
-  @symmDiff_sdiff_right αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := b ⇨ a)).1 (symmDiff_sdiff_right (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem bihimp_himp_left : a ⇔ b ⇨ a = a ⊔ b :=
-  @sdiff_symmDiff_left αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ⊔ b)).1 (sdiff_symmDiff_left (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem bihimp_himp_right : a ⇔ b ⇨ b = a ⊔ b :=
-  @sdiff_symmDiff_right αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ⊔ b)).1 (sdiff_symmDiff_right (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem bihimp_eq_inf : a ⇔ b = a ⊓ b ↔ Codisjoint a b :=
-  @symmDiff_eq_sup αᵒᵈ _ _ _
+  ((OrderDual.toDual_inj (a := a ⇔ b) (b := a ⊓ b)).symm.trans
+    (symmDiff_eq_sup (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))).trans disjoint_toDual_iff
 
 @[simp]
 theorem bihimp_le_iff_left : a ⇔ b ≤ a ↔ Codisjoint a b :=
-  @le_symmDiff_iff_left αᵒᵈ _ _ _
+  (le_symmDiff_iff_left (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b)).trans disjoint_toDual_iff
 
 @[simp]
 theorem bihimp_le_iff_right : a ⇔ b ≤ b ↔ Codisjoint a b :=
-  @le_symmDiff_iff_right αᵒᵈ _ _ _
+  (le_symmDiff_iff_right (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b)).trans disjoint_toDual_iff
 
 theorem bihimp_assoc : a ⇔ b ⇔ c = a ⇔ (b ⇔ c) :=
-  @symmDiff_assoc αᵒᵈ _ _ _ _
+  (OrderDual.toDual_inj (b := a ⇔ (b ⇔ c))).1
+    (symmDiff_assoc (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b) (OrderDual.toDual c))
 
 instance bihimp_isAssociative : Std.Associative (α := α) (· ⇔ ·) :=
   ⟨bihimp_assoc⟩
@@ -453,17 +455,21 @@ theorem bihimp_left_involutive (a : α) : Involutive (· ⇔ a) :=
 theorem bihimp_right_involutive (a : α) : Involutive (a ⇔ ·) :=
   bihimp_bihimp_cancel_left _
 
-theorem bihimp_left_injective (a : α) : Injective (· ⇔ a) :=
-  @symmDiff_left_injective αᵒᵈ _ _
+theorem bihimp_left_injective (a : α) : Injective (· ⇔ a) := fun _ _ h ↦
+  congrArg OrderDual.ofDual' (symmDiff_left_injective (α := αᵒᵈ) (OrderDual.toDual a)
+    (congrArg OrderDual.toDual' h))
 
-theorem bihimp_right_injective (a : α) : Injective (a ⇔ ·) :=
-  @symmDiff_right_injective αᵒᵈ _ _
+theorem bihimp_right_injective (a : α) : Injective (a ⇔ ·) := fun _ _ h ↦
+  congrArg OrderDual.ofDual' (symmDiff_right_injective (α := αᵒᵈ) (OrderDual.toDual a)
+    (congrArg OrderDual.toDual' h))
 
-theorem bihimp_left_surjective (a : α) : Surjective (· ⇔ a) :=
-  @symmDiff_left_surjective αᵒᵈ _ _
+theorem bihimp_left_surjective (a : α) : Surjective (· ⇔ a) := fun b ↦
+  let ⟨x, hx⟩ := symmDiff_left_surjective (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b)
+  ⟨OrderDual.ofDual x, congrArg OrderDual.ofDual' hx⟩
 
-theorem bihimp_right_surjective (a : α) : Surjective (a ⇔ ·) :=
-  @symmDiff_right_surjective αᵒᵈ _ _
+theorem bihimp_right_surjective (a : α) : Surjective (a ⇔ ·) := fun b ↦
+  let ⟨x, hx⟩ := symmDiff_right_surjective (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b)
+  ⟨OrderDual.ofDual x, congrArg OrderDual.ofDual' hx⟩
 
 variable {a b c}
 
@@ -477,11 +483,15 @@ theorem bihimp_right_inj : a ⇔ b = a ⇔ c ↔ b = c :=
 
 @[simp]
 theorem bihimp_eq_left : a ⇔ b = a ↔ b = ⊤ :=
-  @symmDiff_eq_left αᵒᵈ _ _ _
+  ((OrderDual.toDual_inj (a := a ⇔ b) (b := a)).symm.trans
+    (symmDiff_eq_left (α := αᵒᵈ) (a := OrderDual.toDual a) (b := OrderDual.toDual b))).trans
+    (OrderDual.toDual_inj (b := ⊤))
 
 @[simp]
 theorem bihimp_eq_right : a ⇔ b = b ↔ a = ⊤ :=
-  @symmDiff_eq_right αᵒᵈ _ _ _
+  ((OrderDual.toDual_inj (a := a ⇔ b) (b := b)).symm.trans
+    (symmDiff_eq_right (α := αᵒᵈ) (a := OrderDual.toDual a) (b := OrderDual.toDual b))).trans
+    (OrderDual.toDual_inj (b := ⊤))
 
 protected theorem Codisjoint.bihimp_left (ha : Codisjoint a c) (hb : Codisjoint b c) :
     Codisjoint (a ⇔ b) c :=
@@ -501,7 +511,7 @@ theorem symmDiff_eq' : a ∆ b = (a ⊔ b) ⊓ (aᶜ ⊔ bᶜ) := by
   rw [symmDiff_eq_sup_sdiff_inf, sdiff_eq, compl_inf]
 
 theorem bihimp_eq' : a ⇔ b = a ⊓ b ⊔ aᶜ ⊓ bᶜ :=
-  @symmDiff_eq' αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ⊓ b ⊔ aᶜ ⊓ bᶜ)).1 (symmDiff_eq' (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem compl_symmDiff : (a ∆ b)ᶜ = a ⇔ b := by
@@ -509,7 +519,7 @@ theorem compl_symmDiff : (a ∆ b)ᶜ = a ⇔ b := by
 
 @[simp]
 theorem compl_bihimp : (a ⇔ b)ᶜ = a ∆ b :=
-  @compl_symmDiff αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ∆ b)).1 (compl_symmDiff (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem compl_symmDiff_compl : aᶜ ∆ bᶜ = a ∆ b :=
@@ -517,7 +527,7 @@ theorem compl_symmDiff_compl : aᶜ ∆ bᶜ = a ∆ b :=
 
 @[simp]
 theorem compl_bihimp_compl : aᶜ ⇔ bᶜ = a ⇔ b :=
-  @compl_symmDiff_compl αᵒᵈ _ _ _
+  (OrderDual.toDual_inj (b := a ⇔ b)).1 (compl_symmDiff_compl (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
 
 @[simp]
 theorem symmDiff_eq_top : a ∆ b = ⊤ ↔ IsCompl a b := by
