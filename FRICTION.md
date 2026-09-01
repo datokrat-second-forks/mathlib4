@@ -837,3 +837,97 @@ Three sub-frictions worth noting.
   (`(OrderHom.dual f).lfp = OrderDual.toDual f.gfp`), but unification cannot *invert* that, so
   `OrderDual.toDual_inj.1` on a goal whose RHS is `(OrderHom.dual f).lfp` fails. Introduce the
   identity as a named `have hlfp : … := rfl` and `rw [hlfp]` instead of relying on it silently.
+
+## 29. Instances that were literally `‹_›` (`instance : C Xᵒᵈ := ‹C X›`)
+
+Every structure carried "without change" onto the dual was spelled by *handing back the same
+instance*:
+
+```lean
+instance : Bornology αᵒᵈ := ‹Bornology α›
+instance OrderDual.instTopologicalSpace : TopologicalSpace Xᵒᵈ := ‹_›
+instance OrderDual.instDiscreteTopology [DiscreteTopology X] : DiscreteTopology Xᵒᵈ := ‹_›
+```
+
+Each of these now has to *transport* the structure along `toDual`, and the choice of transport is
+a real decision, because it fixes which downstream lemmas stay `rfl`:
+
+```lean
+-- Mathlib/Topology/Bornology/Basic.lean
+instance instBornology : Bornology αᵒᵈ where
+  cobounded := (Bornology.cobounded α).map toDual
+  le_cofinite := (map_mono (Bornology.le_cofinite α)).trans toDual.injective.tendsto_cofinite
+
+-- Mathlib/Topology/Constructions.lean
+instance OrderDual.instTopologicalSpace : TopologicalSpace Xᵒᵈ := .coinduced toDual ‹_›
+```
+
+`coinduced toDual` was chosen over the propositionally equal `induced ofDual` because it makes
+`IsOpen (toDual ⁻¹' s) ↔ IsOpen s` (and hence the `IsClosed` version) hold by `Iff.rfl`; the
+`induced` form hides an existential and none of the block's lemmas would be definitional.  The
+cost of the transport is that everything downstream of the instance turns from `‹_›`/`.id` into a
+proof: `continuous_toDual := continuous_coinduced_rng`, `isOpenMap_ofDual` needs
+`Equiv.image_eq_preimage_symm`, and `nhds_toDual : 𝓝 (toDual x) = map toDual (𝓝 x)` — free when
+`Xᵒᵈ` was `X` — is now a two-step `le_antisymm` between the continuity of `toDual` and of
+`ofDual`.  The same happens for `𝓝[>] (toDual x)`, which is no longer *syntactically* `𝓝[<] x`:
+
+```lean
+instance OrderDual.instNeBotNhdsWithinIoi [h : (𝓝[<] x).NeBot] : (𝓝[>] toDual x).NeBot := by
+  have : 𝓝[>] toDual x = map toDual (𝓝[<] x) := by
+    rw [nhdsWithin, nhdsWithin, nhds_toDual, Filter.map_inf toDual.injective,
+      Filter.map_principal, Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq, Set.Ioi_toDual]
+  rw [this]; exact h.map _
+```
+
+Note the signature drift this forces: `nhds_ofDual` used to be stated for `x : X` (because
+`Xᵒᵈ = X`); it now has to take `x : Xᵒᵈ`.
+
+## 30. A file whose second half is its first half at `αᵒᵈ`
+
+`Mathlib/Order/LiminfLimsup.lean` derived every `liminf`/`bliminf`/`limsInf` statement from its
+`limsup` sibling by instantiating the lattice at `αᵒᵈ` — 31 sites, e.g.
+`bliminf_eq_liminf := blimsup_eq_limsup (α := αᵒᵈ)`.  None of these typecheck any more: the
+function `u : β → α` is not a function into `αᵒᵈ`.
+
+The cheap repair is *four definitional bridges*, one per operator, stated once at the top of the
+file — they are all `rfl`, because `sInf` on the dual is `sSup` on the nose:
+
+```lean
+private lemma limsup_toDual_comp :
+    limsup (fun b ↦ OrderDual.toDual (u b)) f = OrderDual.toDual (liminf u f) := rfl
+private lemma liminf_toDual_comp :
+    liminf (fun b ↦ OrderDual.toDual (u b)) f = OrderDual.toDual (limsup u f) := rfl
+-- and the two `blimsup`/`bliminf` versions
+```
+
+with the standard consumer being
+
+```lean
+theorem liminf_eq_iSup_iInf {f : Filter β} {u : β → α} : liminf u f = ⨆ s ∈ f, ⨅ a ∈ s, u a := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact limsup_eq_iInf_iSup
+```
+
+Two things the bridges do **not** cover:
+
+* **Boundedness side conditions.**  `IsBoundedUnder (· ≥ ·) f u` and
+  `IsBoundedUnder (· ≤ ·) f (toDual ∘ u)` quantify over `α` and `αᵒᵈ` respectively, so they are
+  *not* defeq — the `∃ b` ranges over a different type.  Two more private bridges are needed, and
+  every `by isBoundedDefault` autoParam then has to be passed explicitly:
+  ```lean
+  private lemma isBoundedUnder_le_toDual :
+      IsBoundedUnder (· ≤ ·) f (fun b ↦ OrderDual.toDual (u b)) ↔ IsBoundedUnder (· ≥ ·) f u :=
+    ⟨fun ⟨b, hb⟩ ↦ ⟨OrderDual.ofDual b, hb⟩, fun ⟨b, hb⟩ ↦ ⟨OrderDual.toDual b, hb⟩⟩
+  ```
+* **Quantifiers in the statement.**  `∀ y > x, …` at `αᵒᵈ` is a `∀` over `αᵒᵈ`, so the transported
+  statement needs an explicit shuttle, not `rfl`:
+  ```lean
+  (limsup_le_iff (β := βᵒᵈ) … ).trans
+    ⟨fun h y hy ↦ h (OrderDual.toDual y) hy, fun h y hy ↦ h (OrderDual.ofDual y) hy⟩
+  ```
+
+Where the primal proof was three lines, mirroring it (`sInf_le` → `le_sSup`, `csInf_lt` →
+`lt_csSup`, `iInf_split` → `iSup_split`, `left_eq_inf` → `left_eq_sup`) is shorter and more robust
+than transporting; where it was fifteen (`HasBasis.liminf_eq_ite`), transporting through the
+bridges plus `apply_ite OrderDual.toDual` wins.
