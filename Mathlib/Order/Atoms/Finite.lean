@@ -120,7 +120,10 @@ theorem exists_covby_infinite_Ici_of_infinite_Ici [IsStronglyAtomic α]
 theorem exists_covby_infinite_Iic_of_infinite_Iic [IsStronglyCoatomic α]
     (ha : (Set.Iic a).Infinite) (hfin : {x | x ⋖ a}.Finite) :
     ∃ b, b ⋖ a ∧ (Set.Iic b).Infinite := by
-  simp_rw [← toDual_covBy_toDual_iff (α := α)] at hfin ⊢
-  exact exists_covby_infinite_Ici_of_infinite_Ici (α := αᵒᵈ) ha hfin
+  by_contra! h
+  refine ((hfin.biUnion (t := Set.Iic) (by simpa using h)).subset (fun b hb ↦ ?_)).not_infinite
+    (ha.sdiff (Set.finite_singleton a))
+  obtain ⟨x, hxb, hxa⟩ := ((show b ≤ a from hb.1).lt_of_ne hb.2).exists_le_covby
+  exact Set.mem_biUnion hxa hxb
 
 end IsStronglyAtomic

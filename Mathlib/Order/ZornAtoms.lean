@@ -41,4 +41,10 @@ theorem IsAtomic.of_isChain_bounded {α : Type*} [PartialOrder α] [OrderBot α]
       ∀ c : Set α,
         IsChain (· ≤ ·) c → c.Nonempty → ⊥ ∉ c → ∃ x ≠ ⊥, x ∈ lowerBounds c) :
     IsAtomic α :=
-  isCoatomic_dual_iff_isAtomic.mp <| IsCoatomic.of_isChain_bounded fun c hc => h c hc.symm
+  isCoatomic_dual_iff_isAtomic.mp <| IsCoatomic.of_isChain_bounded fun c hc hne htop => by
+    obtain ⟨a, ha⟩ := hne
+    obtain ⟨x, hx, hxc⟩ := h (OrderDual.toDual ⁻¹' c)
+      (fun _ hu _ hv huv => (hc hu hv fun he => huv (OrderDual.toDual_inj.1 he)).symm)
+      ⟨OrderDual.ofDual a, ha⟩ htop
+    exact ⟨OrderDual.toDual x, fun he => hx (OrderDual.toDual_inj.1 he),
+      fun y hy => hxc (a := OrderDual.ofDual y) hy⟩

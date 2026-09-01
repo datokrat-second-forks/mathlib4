@@ -90,29 +90,42 @@ section PartialPred
 
 variable {α : Type*} [PartialOrder α] [PredOrder α] [IsPredArchimedean α]
 
+/-- `r` read on `αᵒᵈ`.  `αᵒᵈ` is a one-field structure over `α`, so a relation on `α` is not a
+relation on `αᵒᵈ` and has to be conjugated by hand. -/
+private def dualRel (r : α → α → Prop) : αᵒᵈ → αᵒᵈ → Prop :=
+  fun x y => r (OrderDual.ofDual x) (OrderDual.ofDual y)
+
 /-- For `m ≤ n`, `(n, m)` is in the reflexive-transitive closure of `~` if `i ~ pred i`
   for all `i` between `n` and `m`. -/
 theorem reflTransGen_of_pred_of_ge (r : α → α → Prop) {n m : α} (h : ∀ i ∈ Ioc m n, r i (pred i))
     (hnm : m ≤ n) : ReflTransGen r n m :=
-  reflTransGen_of_succ_of_le (α := αᵒᵈ) r (fun x hx => h x ⟨hx.2, hx.1⟩) hnm
+  Relation.ReflTransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (reflTransGen_of_succ_of_le (α := αᵒᵈ) (dualRel r)
+      (fun x hx => h (OrderDual.ofDual x) ⟨hx.2, hx.1⟩) hnm)
 
 /-- For `n ≤ m`, `(n, m)` is in the reflexive-transitive closure of `~` if `pred i ~ i`
   for all `i` between `n` and `m`. -/
 theorem reflTransGen_of_pred_of_le (r : α → α → Prop) {n m : α} (h : ∀ i ∈ Ioc n m, r (pred i) i)
     (hmn : n ≤ m) : ReflTransGen r n m :=
-  reflTransGen_of_succ_of_ge (α := αᵒᵈ) r (fun x hx => h x ⟨hx.2, hx.1⟩) hmn
+  Relation.ReflTransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (reflTransGen_of_succ_of_ge (α := αᵒᵈ) (dualRel r)
+      (fun x hx => h (OrderDual.ofDual x) ⟨hx.2, hx.1⟩) hmn)
 
 /-- For `m < n`, `(n, m)` is in the transitive closure of a relation `~` for `n ≠ m` if `i ~ pred i`
   for all `i` between `n` and `m`. -/
 theorem transGen_of_pred_of_gt (r : α → α → Prop) {n m : α} (h : ∀ i ∈ Ioc m n, r i (pred i))
     (hnm : m < n) : TransGen r n m :=
-  transGen_of_succ_of_lt (α := αᵒᵈ) r (fun x hx => h x ⟨hx.2, hx.1⟩) hnm
+  Relation.TransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (transGen_of_succ_of_lt (α := αᵒᵈ) (dualRel r)
+      (fun x hx => h (OrderDual.ofDual x) ⟨hx.2, hx.1⟩) hnm)
 
 /-- For `n < m`, `(n, m)` is in the transitive closure of a relation `~` for `n ≠ m` if `pred i ~ i`
   for all `i` between `n` and `m`. -/
 theorem transGen_of_pred_of_lt (r : α → α → Prop) {n m : α} (h : ∀ i ∈ Ioc n m, r (pred i) i)
     (hmn : n < m) : TransGen r n m :=
-  transGen_of_succ_of_gt (α := αᵒᵈ) r (fun x hx => h x ⟨hx.2, hx.1⟩) hmn
+  Relation.TransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (transGen_of_succ_of_gt (α := αᵒᵈ) (dualRel r)
+      (fun x hx => h (OrderDual.ofDual x) ⟨hx.2, hx.1⟩) hmn)
 
 end PartialPred
 
@@ -124,22 +137,29 @@ variable {α : Type*} [LinearOrder α] [PredOrder α] [IsPredArchimedean α]
   for all `i` between `n` and `m`. -/
 theorem reflTransGen_of_pred (r : α → α → Prop) {n m : α} (h1 : ∀ i ∈ Ioc m n, r i (pred i))
     (h2 : ∀ i ∈ Ioc n m, r (pred i) i) : ReflTransGen r n m :=
-  reflTransGen_of_succ (α := αᵒᵈ) r (fun x hx => h1 x ⟨hx.2, hx.1⟩) fun x hx =>
-    h2 x ⟨hx.2, hx.1⟩
+  Relation.ReflTransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (reflTransGen_of_succ (α := αᵒᵈ) (dualRel r)
+      (fun x hx => h1 (OrderDual.ofDual x) ⟨hx.2, hx.1⟩)
+      fun x hx => h2 (OrderDual.ofDual x) ⟨hx.2, hx.1⟩)
 
 /-- For `n ≠ m`, `(n, m)` is in the transitive closure of a relation `~` if `i ~ pred i` and
   `pred i ~ i` for all `i` between `n` and `m`. -/
 theorem transGen_of_pred_of_ne (r : α → α → Prop) {n m : α} (h1 : ∀ i ∈ Ioc m n, r i (pred i))
     (h2 : ∀ i ∈ Ioc n m, r (pred i) i) (hnm : n ≠ m) : TransGen r n m :=
-  transGen_of_succ_of_ne (α := αᵒᵈ) r (fun x hx => h1 x ⟨hx.2, hx.1⟩)
-    (fun x hx => h2 x ⟨hx.2, hx.1⟩) hnm
+  Relation.TransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (transGen_of_succ_of_ne (α := αᵒᵈ) (dualRel r)
+      (fun x hx => h1 (OrderDual.ofDual x) ⟨hx.2, hx.1⟩)
+      (fun x hx => h2 (OrderDual.ofDual x) ⟨hx.2, hx.1⟩) fun he => hnm (OrderDual.toDual_inj.1 he))
 
 /-- `(n, m)` is in the transitive closure of a reflexive relation `~` if `i ~ pred i` and
   `pred i ~ i` for all `i` between `n` and `m`. -/
 theorem transGen_of_pred_of_refl (r : α → α → Prop) {n m : α} [Std.Refl r]
     (h1 : ∀ i ∈ Ioc m n, r i (pred i)) (h2 : ∀ i ∈ Ioc n m, r (pred i) i) : TransGen r n m :=
-  @transGen_of_succ_of_refl αᵒᵈ _ _ _ r _ _ ‹_› (fun x hx ↦ h1 x ⟨hx.2, hx.1⟩)
-    fun x hx ↦ h2 x ⟨hx.2, hx.1⟩
+  haveI : Std.Refl (dualRel r) := ⟨fun x => Std.Refl.refl (r := r) (OrderDual.ofDual x)⟩
+  Relation.TransGen.lift OrderDual.ofDual (fun _ _ h => h) _ _
+    (transGen_of_succ_of_refl (α := αᵒᵈ) (dualRel r)
+      (fun x hx ↦ h1 (OrderDual.ofDual x) ⟨hx.2, hx.1⟩)
+      fun x hx ↦ h2 (OrderDual.ofDual x) ⟨hx.2, hx.1⟩)
 
 @[deprecated (since := "2026-03-27")]
 alias transGen_of_pred_of_reflexive := transGen_of_pred_of_refl

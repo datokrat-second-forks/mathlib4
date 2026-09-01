@@ -85,8 +85,24 @@ instance (priority := 100) isPredArchimedean_of_isSuccArchimedean [IsSuccArchime
       · rw [hn_eq]
         exact hn_lt_ne _ (Nat.lt_succ_self n)
 
-instance isSuccArchimedean_of_isPredArchimedean [IsPredArchimedean ι] : IsSuccArchimedean ι :=
-  inferInstanceAs (IsSuccArchimedean ιᵒᵈᵒᵈ)
+instance isSuccArchimedean_of_isPredArchimedean [IsPredArchimedean ι] : IsSuccArchimedean ι where
+  exists_succ_iterate_of_le {i j} hij := by
+    have h_exists := exists_pred_iterate_of_le hij
+    obtain ⟨n, hn_eq, hn_lt_ne⟩ : ∃ n, pred^[n] j = i ∧ ∀ m < n, pred^[m] j ≠ i :=
+      ⟨Nat.find h_exists, Nat.find_spec h_exists, fun m hmn ↦ Nat.find_min h_exists hmn⟩
+    refine ⟨n, ?_⟩
+    rw [← hn_eq]
+    cases n with
+    | zero => simp only [Function.iterate_zero, id]
+    | succ n =>
+      rw [succ_pred_iterate_of_not_isMin]
+      rw [Nat.succ_sub_succ_eq_sub, tsub_zero]
+      suffices pred^[n.succ] j < pred^[n] j from not_isMin_of_lt this
+      refine lt_of_le_of_ne ?_ ?_
+      · rw [Function.iterate_succ_apply']
+        exact pred_le _
+      · rw [hn_eq]
+        exact (hn_lt_ne _ (Nat.lt_succ_self n)).symm
 
 /-- In a linear `SuccOrder` that's also a `PredOrder`, `IsSuccArchimedean` and `IsPredArchimedean`
 are equivalent. -/
@@ -160,9 +176,11 @@ variable (ι) in
 This is not an instance, because its `succ` field conflicts with computable `PredOrder` structures
 on `ℕ` and `ℤ`. -/
 @[instance_reducible]
-noncomputable def predOrder [LocallyFiniteOrder ι] : PredOrder ι :=
-  letI := succOrder (ι := ιᵒᵈ)
-  inferInstanceAs (PredOrder ιᵒᵈᵒᵈ)
+noncomputable def predOrder [LocallyFiniteOrder ι] : PredOrder ι where
+  pred i := OrderDual.ofDual (succFn (OrderDual.toDual i))
+  pred_le i := le_succFn (ι := ιᵒᵈ) (OrderDual.toDual i)
+  min_of_le_pred {_} h := isMax_toDual_iff.1 (isMax_of_succFn_le (ι := ιᵒᵈ) _ h)
+  le_pred_of_lt {_ _} h := succFn_le_of_lt (ι := ιᵒᵈ) _ _ h
 
 instance (priority := 100) [LocallyFiniteOrder ι] [SuccOrder ι] : IsSuccArchimedean ι where
   exists_succ_iterate_of_le := by
@@ -194,7 +212,8 @@ instance (priority := 100) [LocallyFiniteOrder ι] [SuccOrder ι] : IsSuccArchim
     exact not_le.mpr (h_lt n) (h_max (h_lt n).le)
 
 instance (priority := 100) [LocallyFiniteOrder ι] [PredOrder ι] : IsPredArchimedean ι :=
-  inferInstanceAs (IsPredArchimedean ιᵒᵈᵒᵈ)
+  letI := succOrder ι
+  LinearOrder.isPredArchimedean_of_isSuccArchimedean
 
 end LinearLocallyFiniteOrder
 

@@ -695,3 +695,92 @@ in increasing order of pain:
 
 Also beware: `toDual_iSup` is a `simp` lemma, so a `simpa` after `rw [← toDual_iSup]` cheerfully
 rewrites your work back.
+
+## 26. `inferInstanceAs (C ιᵒᵈᵒᵈ)` — the double dual is a different type, and the kernel says so
+
+`Mathlib/Order/SuccPred/LinearLocallyFinite.lean` built three declarations out of the idiom
+
+```lean
+instance isSuccArchimedean_of_isPredArchimedean [IsPredArchimedean ι] : IsSuccArchimedean ι :=
+  inferInstanceAs (IsSuccArchimedean ιᵒᵈᵒᵈ)
+```
+
+which worked only because `ιᵒᵈᵒᵈ` *was* `ι`.  With a one-field structure it is a nested structure,
+and — worth noting — the elaborator lets these through: the errors arrive from the **kernel**,
+
+```
+error: (kernel) declaration type mismatch, '…isSuccArchimedean_of_isPredArchimedean._proof_1'
+has type   … IsSuccArchimedean ιᵒᵈᵒᵈ
+but it is expected to have type   … IsSuccArchimedean ι
+```
+
+so the failure is reported against an auto-generated `_proof_1`/`_aux_1` name and the source
+position is the whole declaration.  Do not go looking for a bad instance; look for `ᵒᵈᵒᵈ`.
+
+There is no cheap repair — the statement really has to be proved.  Three shapes worked:
+
+* mirror the primal proof (`isPredArchimedean_of_isSuccArchimedean` → its succ/pred mirror);
+* route through a *different* existing construction rather than through the double dual:
+  ```lean
+  instance [LocallyFiniteOrder ι] [PredOrder ι] : IsPredArchimedean ι :=
+    letI := succOrder ι                              -- not `succOrder ιᵒᵈ`
+    LinearOrder.isPredArchimedean_of_isSuccArchimedean
+  ```
+* build the structure by hand, conjugating each field through `toDual`/`ofDual`:
+  ```lean
+  noncomputable def predOrder [LocallyFiniteOrder ι] : PredOrder ι where
+    pred i := OrderDual.ofDual (succFn (OrderDual.toDual i))
+    pred_le i := le_succFn (ι := ιᵒᵈ) (OrderDual.toDual i)
+    min_of_le_pred {_} h := isMax_toDual_iff.1 (isMax_of_succFn_le (ι := ιᵒᵈ) _ h)
+    le_pred_of_lt {_ _} h := succFn_le_of_lt (ι := ιᵒᵈ) _ _ h
+  ```
+  Each field typechecks because `x ≤ y` in `ιᵒᵈ` *unfolds* to `ofDual y ≤ ofDual x`; only the
+  `IsMin`/`IsMax` conclusions need an explicit `isMax_toDual_iff`.
+
+## 27. Order isos that land in the dual (`α ≃o αᵒᵈ`) stop being usable as `α ≃o α`
+
+`OrderIso.inv G : G ≃o Gᵒᵈ` (and `OrderIso.smulRightDual`, `OrderIso.divLeft`, …) used to give
+statements about `G` for free, because the codomain `Gᵒᵈ` was `G`.  A whole block of
+`Mathlib/Order/Filter/AtTopBot/Group.lean` was built that way:
+
+```lean
+theorem map_inv_atBot : map (Inv.inv : G → G) atBot = atTop := (OrderIso.inv G).map_atBot
+```
+
+`(OrderIso.inv G).map_atBot : map ⇑(OrderIso.inv G) atBot = (atBot : Filter Gᵒᵈ)` — the two sides
+now live in `Filter Gᵒᵈ` and `Filter G`.  Every consequence (`map_inv_atTop`, `comap_inv_atBot`,
+`comap_inv_atTop`, `tendsto_inv_atTop_atBot`, `tendsto_inv_atTop_iff`, …) fails the same way.
+
+Two repairs, both used:
+
+1. **Re-found the block on a tendsto pair.**  Prove the two `Tendsto` facts directly from the
+   order-reversing lemmas of the theory itself, then get the filter equalities from involutivity:
+   ```lean
+   theorem tendsto_inv_atTop_atBot : Tendsto (Inv.inv : G → G) atTop atBot :=
+     tendsto_atBot.2 fun b => (eventually_ge_atTop b⁻¹).mono fun _ hx => inv_le'.2 hx
+
+   theorem map_inv_atBot : map (Inv.inv : G → G) atBot = atTop :=
+     le_antisymm tendsto_inv_atBot_atTop <|
+       calc (atTop : Filter G) = map ((Inv.inv : G → G) ∘ Inv.inv) atTop := by
+             rw [inv_involutive.comp_self, map_id]
+         _ = map Inv.inv (map Inv.inv atTop) := map_map.symm
+         _ ≤ map Inv.inv atBot := map_mono tendsto_inv_atTop_atBot
+   ```
+   `comap` then comes from `comap_map inv_injective`, and the `tendsto_inv_atTop_iff` family from
+   `tendsto_comap_iff`.
+2. **Keep the dual iso, cross back over with the preimage bridges.**  When the dual iso is the
+   actual content (`OrderIso.smulRightDual`, i.e. `x ↦ a • x` for `a < 0`), pair
+   `image_smulRightDual` with the `isLUB_preimage_ofDual` / `isGLB_preimage_ofDual` bridges:
+   ```lean
+   -- sInf (a • s) = a • sSup s, for a < 0
+   refine (?_ : IsGLB (a • s) (a • sSup s)).csInf_eq hs.smul_set
+   rw [← isLUB_preimage_ofDual, ← image_smulRightDual ha']
+   exact (OrderIso.smulRightDual ℝ ha').isLUB_image'.2 (isLUB_csSup hs h)
+   ```
+   This is much shorter than mirroring `Real.sSup_smul_of_nonneg`, and it keeps the antitone iso
+   where it belongs.
+
+Related, and cheap: in a `CategoryTheory.Equivalence` built from `dual`, the *counit* component is
+`(dual ⋙ dual).obj X ≅ X`, so `OrderIso.dualDual X` is now the wrong direction there and must be
+`(OrderIso.dualDual X).symm` (`Order/Category/DistLat.lean`, `LinOrd.lean`; `Lat.lean` and
+`Preord.lean` already carried the fix).

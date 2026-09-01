@@ -34,8 +34,10 @@ theorem ciSup_eq_ciSup_finset [OrderBot α] [Nonempty ι] {a : ι → α} (ha : 
 
 /-- Infimum of `a i`, `i : ι`, is equal to the infimum over finite infima of `a`. -/
 theorem ciInf_eq_ciInf_finset [OrderTop α] [Nonempty ι] {a : ι → α} (ha : BddBelow (range a)) :
-    ⨅ i, a i = ⨅ F : Finset ι, F.inf a :=
-  ciSup_eq_ciSup_finset (α := αᵒᵈ) ha
+    ⨅ i, a i = ⨅ F : Finset ι, F.inf a := by
+  refine le_antisymm ?_ ?_
+  · exact le_ciInf fun F => Finset.le_inf fun i _ => ciInf_le ha i
+  · exact le_ciInf fun i => (ciInf_le ha.range_finsetInf {i}).trans (Finset.inf_le (by simp))
 
 end ConditionallyCompleteLattice
 
@@ -47,21 +49,23 @@ theorem Finset.Nonempty.csSup_eq_max' {s : Finset α} (h : s.Nonempty) : sSup �
   eq_of_forall_ge_iff fun _ => (csSup_le_iff s.bddAbove h.to_set).trans (s.max'_le_iff h).symm
 
 theorem Finset.Nonempty.csInf_eq_min' {s : Finset α} (h : s.Nonempty) : sInf ↑s = s.min' h :=
-  @Finset.Nonempty.csSup_eq_max' αᵒᵈ _ s h
+  eq_of_forall_le_iff fun _ => (le_csInf_iff s.bddBelow h.to_set).trans (s.le_min'_iff h).symm
 
 theorem Finset.Nonempty.csSup_mem {s : Finset α} (h : s.Nonempty) : sSup (s : Set α) ∈ s := by
   rw [h.csSup_eq_max']
   exact s.max'_mem _
 
-theorem Finset.Nonempty.csInf_mem {s : Finset α} (h : s.Nonempty) : sInf (s : Set α) ∈ s :=
-  @Finset.Nonempty.csSup_mem αᵒᵈ _ _ h
+theorem Finset.Nonempty.csInf_mem {s : Finset α} (h : s.Nonempty) : sInf (s : Set α) ∈ s := by
+  rw [h.csInf_eq_min']
+  exact s.min'_mem _
 
 theorem Set.Nonempty.csSup_mem (h : s.Nonempty) (hs : s.Finite) : sSup s ∈ s := by
   lift s to Finset α using hs
   exact Finset.Nonempty.csSup_mem h
 
-theorem Set.Nonempty.csInf_mem (h : s.Nonempty) (hs : s.Finite) : sInf s ∈ s :=
-  @Set.Nonempty.csSup_mem αᵒᵈ _ _ h hs
+theorem Set.Nonempty.csInf_mem (h : s.Nonempty) (hs : s.Finite) : sInf s ∈ s := by
+  lift s to Finset α using hs
+  exact Finset.Nonempty.csInf_mem h
 
 attribute [to_dual existing] Set.Nonempty.csSup_mem
 
@@ -83,7 +87,7 @@ theorem Set.Finite.csSup_lt_iff (hs : s.Finite) (h : s.Nonempty) : sSup s < a �
   ⟨fun h _ hx => (le_csSup hs.bddAbove hx).trans_lt h, fun H => H _ <| h.csSup_mem hs⟩
 
 theorem Set.Finite.lt_csInf_iff (hs : s.Finite) (h : s.Nonempty) : a < sInf s ↔ ∀ x ∈ s, a < x :=
-  @Set.Finite.csSup_lt_iff αᵒᵈ _ _ _ hs h
+  ⟨fun h _ hx => h.trans_le (csInf_le hs.bddBelow hx), fun H => H _ <| h.csInf_mem hs⟩
 
 section ConditionallyCompleteLattice
 
@@ -240,14 +244,16 @@ theorem sSup_ne_of_notMem {s : Set α} (hfin : s.Finite) {a : α} (hne : a ≠ �
   exact (hmem <| · ▸ hnonempty.csSup_mem hfin)
 
 theorem sInf_ne_of_notMem {s : Set α} (hfin : s.Finite) {a : α} (hne : a ≠ ⊤) (hmem : a ∉ s) :
-    sInf s ≠ a :=
-  sSup_ne_of_notMem (α := αᵒᵈ) hfin hne hmem
+    sInf s ≠ a := by
+  rcases s.eq_empty_or_nonempty with rfl | hnonempty
+  · simp [eq_comm, hne]
+  exact (hmem <| · ▸ hnonempty.csInf_mem hfin)
 
 theorem sSup_ne_top [Nontrivial α] {s : Set α} (hfin : s.Finite) (htop : ⊤ ∉ s) : sSup s ≠ ⊤ :=
   sSup_ne_of_notMem hfin top_ne_bot htop
 
 theorem sInf_ne_bot [Nontrivial α] {s : Set α} (hfin : s.Finite) (hbot : ⊥ ∉ s) : sInf s ≠ ⊥ :=
-  sSup_ne_top (α := αᵒᵈ) hfin hbot
+  sInf_ne_of_notMem hfin bot_ne_top hbot
 
 theorem iSup_ne_of_notMem [Finite ι] {f : ι → α} {a : α} (hne : a ≠ ⊥) (h : ∀ x, f x ≠ a) :
     iSup f ≠ a :=
@@ -255,13 +261,13 @@ theorem iSup_ne_of_notMem [Finite ι] {f : ι → α} {a : α} (hne : a ≠ ⊥)
 
 theorem iInf_ne_of_notMem [Finite ι] {f : ι → α} {a : α} (hne : a ≠ ⊤) (h : ∀ x, f x ≠ a) :
     iInf f ≠ a :=
-  iSup_ne_of_notMem (α := αᵒᵈ) hne h
+  sInf_ne_of_notMem (Set.finite_range f) hne <| by grind
 
 theorem iSup_ne_top [Finite ι] [Nontrivial α] {f : ι → α} (h : ∀ x, f x ≠ ⊤) : iSup f ≠ ⊤ :=
   iSup_ne_of_notMem top_ne_bot h
 
 theorem iInf_ne_bot [Finite ι] [Nontrivial α] {f : ι → α} (h : ∀ x, f x ≠ ⊥) : iInf f ≠ ⊥ :=
-  iSup_ne_top (α := αᵒᵈ) h
+  iInf_ne_of_notMem bot_ne_top h
 
 end CompleteLinearOrder
 
@@ -284,13 +290,14 @@ theorem sup'_eq_csSup_image (s : Finset ι) (H : s.Nonempty) (f : ι → α) :
 
 theorem inf'_eq_csInf_image (s : Finset ι) (H : s.Nonempty) (f : ι → α) :
     s.inf' H f = sInf (f '' s) :=
-  sup'_eq_csSup_image (α := αᵒᵈ) _ H _
+  eq_of_forall_le_iff fun a => by
+    simp [le_csInf_iff (s.finite_toSet.image f).bddBelow (H.to_set.image f)]
 
 theorem sup'_id_eq_csSup (s : Finset α) (hs) : s.sup' hs id = sSup s := by
   rw [sup'_eq_csSup_image s hs, Set.image_id]
 
-theorem inf'_id_eq_csInf (s : Finset α) (hs) : s.inf' hs id = sInf s :=
-  sup'_id_eq_csSup (α := αᵒᵈ) _ hs
+theorem inf'_id_eq_csInf (s : Finset α) (hs) : s.inf' hs id = sInf s := by
+  rw [inf'_eq_csInf_image s hs, Set.image_id]
 
 variable [Fintype ι] [Nonempty ι]
 

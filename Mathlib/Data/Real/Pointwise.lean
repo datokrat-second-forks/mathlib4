@@ -79,7 +79,9 @@ theorem Real.sInf_smul_of_nonpos (ha : a ≤ 0) (s : Set ℝ) : sInf (a • s) =
   · rw [zero_smul_set hs, zero_smul]
     exact csInf_singleton 0
   by_cases h : BddAbove s
-  · exact ((OrderIso.smulRightDual ℝ ha').map_csSup' hs h).symm
+  · refine (?_ : IsGLB (a • s) (a • sSup s)).csInf_eq hs.smul_set
+    rw [← isLUB_preimage_ofDual, ← image_smulRightDual ha']
+    exact (OrderIso.smulRightDual ℝ ha').isLUB_image'.2 (isLUB_csSup hs h)
   · rw [Real.sInf_of_not_bddBelow (mt (bddBelow_smul_iff_of_neg ha').1 h),
         Real.sSup_of_not_bddAbove h, smul_zero]
 
@@ -93,7 +95,9 @@ theorem Real.sSup_smul_of_nonpos (ha : a ≤ 0) (s : Set ℝ) : sSup (a • s) =
   · rw [zero_smul_set hs, zero_smul]
     exact csSup_singleton 0
   by_cases h : BddBelow s
-  · exact ((OrderIso.smulRightDual ℝ ha').map_csInf' hs h).symm
+  · refine (?_ : IsLUB (a • s) (a • sInf s)).csSup_eq hs.smul_set
+    rw [← isGLB_preimage_ofDual, ← image_smulRightDual ha']
+    exact (OrderIso.smulRightDual ℝ ha').isGLB_image'.2 (isGLB_csInf hs h)
   · rw [Real.sSup_of_not_bddAbove (mt (bddAbove_smul_iff_of_neg ha').1 h),
         Real.sInf_of_not_bddBelow h, smul_zero]
 
