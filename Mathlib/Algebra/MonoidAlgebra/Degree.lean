@@ -71,6 +71,12 @@ section GeneralResultsAssumingSemilatticeSup
 
 variable [SemilatticeSup B] [OrderBot B] [SemilatticeInf T] [OrderTop T]
 
+/-- `Tᵒᵈ` is no longer the type `T`, so the `inf`-versions below cannot be their `sup`-counterparts
+read at `Tᵒᵈ`; they have to push `OrderDual.toDual` through by hand. -/
+private lemma toDual_support_inf (s : Finset A) (degt : A → T) :
+    OrderDual.toDual (s.inf degt) = s.sup fun a ↦ OrderDual.toDual (degt a) :=
+  Finset.toDual_inf s degt
+
 section Semiring
 
 variable [Semiring R]
@@ -94,8 +100,9 @@ theorem sup_support_coeff_add_le :
 @[deprecated (since := "2026-06-18")] alias sup_support_add_le := sup_support_coeff_add_le
 
 theorem le_inf_support_coeff_add :
-    f.coeff.support.inf degt ⊓ g.coeff.support.inf degt ≤ (f + g).coeff.support.inf degt :=
-  sup_support_coeff_add_le (fun a : A => OrderDual.toDual (degt a)) f g
+    f.coeff.support.inf degt ⊓ g.coeff.support.inf degt ≤ (f + g).coeff.support.inf degt := by
+  classical
+  exact Finset.inf_union.symm.trans_le (Finset.inf_mono Finsupp.support_add)
 
 @[deprecated (since := "2026-06-18")] alias le_inf_support_add := le_inf_support_coeff_add
 
@@ -118,8 +125,10 @@ theorem sup_support_coeff_mul_le {degb : A → B} (degbm : ∀ a b, degb (a + b)
 
 theorem le_inf_support_coeff_mul {degt : A → T} (degtm : ∀ a b, degt a + degt b ≤ degt (a + b))
     (f g : R[A]) :
-    f.coeff.support.inf degt + g.coeff.support.inf degt ≤ (f * g).coeff.support.inf degt :=
-  sup_support_coeff_mul_le (B := Tᵒᵈ) degtm f g
+    f.coeff.support.inf degt + g.coeff.support.inf degt ≤ (f * g).coeff.support.inf degt := by
+  have h := sup_support_coeff_mul_le (B := Tᵒᵈ)
+    (degb := fun a ↦ OrderDual.toDual (degt a)) degtm f g
+  simpa only [← toDual_support_inf, ← toDual_add, OrderDual.toDual_le_toDual] using h
 
 @[deprecated (since := "2026-06-18")] alias le_inf_support_mul := le_inf_support_coeff_mul
 
@@ -130,6 +139,14 @@ section AddMonoids
 variable [AddMonoid A] [AddMonoid B] [AddLeftMono B] [AddRightMono B]
   [AddMonoid T] [AddLeftMono T] [AddRightMono T]
   {degb : A → B} {degt : A → T}
+
+omit [SemilatticeInf T] [OrderTop T] in
+/-- Pushing `OrderDual.toDual` out of a `List.sum`. -/
+private lemma toDual_listSum {ι : Type*} (l : List ι) (F : ι → T) :
+    (l.map fun i ↦ OrderDual.toDual (F i)).sum = OrderDual.toDual (l.map F).sum := by
+  induction l with
+  | nil => rfl
+  | cons a l ih => rw [List.map_cons, List.sum_cons, List.map_cons, List.sum_cons, ih]; rfl
 
 theorem sup_support_list_prod_le (degb0 : degb 0 ≤ 0)
     (degbm : ∀ a b, degb (a + b) ≤ degb a + degb b) :
@@ -145,12 +162,9 @@ theorem sup_support_list_prod_le (degb0 : degb 0 ≤ 0)
 theorem le_inf_support_list_prod (degt0 : 0 ≤ degt 0)
     (degtm : ∀ a b, degt a + degt b ≤ degt (a + b)) (l : List R[A]) :
     (l.map fun f : R[A] => f.coeff.support.inf degt).sum ≤ l.prod.coeff.support.inf degt := by
-  refine OrderDual.ofDual_le_ofDual.mpr ?_
-  refine sup_support_list_prod_le ?_ ?_ l
-  · refine (OrderDual.ofDual_le_ofDual.mp ?_)
-    exact degt0
-  · refine (fun a b => OrderDual.ofDual_le_ofDual.mp ?_)
-    exact degtm a b
+  have h := sup_support_list_prod_le (B := Tᵒᵈ) (degb := fun a ↦ OrderDual.toDual (degt a))
+    degt0 degtm l
+  simpa only [← toDual_support_inf, toDual_listSum, OrderDual.toDual_le_toDual] using h
 
 theorem sup_support_pow_le (degb0 : degb 0 ≤ 0) (degbm : ∀ a b, degb (a + b) ≤ degb a + degb b)
     (n : ℕ) (f : R[A]) : (f ^ n).coeff.support.sup degb ≤ n • f.coeff.support.sup degb := by
@@ -160,10 +174,9 @@ theorem sup_support_pow_le (degb0 : degb 0 ≤ 0) (degbm : ∀ a b, degb (a + b)
 
 theorem le_inf_support_pow (degt0 : 0 ≤ degt 0) (degtm : ∀ a b, degt a + degt b ≤ degt (a + b))
     (n : ℕ) (f : R[A]) : n • f.coeff.support.inf degt ≤ (f ^ n).coeff.support.inf degt := by
-  refine OrderDual.ofDual_le_ofDual.mpr <| sup_support_pow_le (OrderDual.ofDual_le_ofDual.mp ?_)
-      (fun a b => OrderDual.ofDual_le_ofDual.mp ?_) n f
-  · exact degt0
-  · exact degtm _ _
+  have h := sup_support_pow_le (B := Tᵒᵈ) (degb := fun a ↦ OrderDual.toDual (degt a))
+    degt0 degtm n f
+  simpa only [← toDual_support_inf, ← toDual_smul, OrderDual.toDual_le_toDual] using h
 
 end AddMonoids
 
@@ -174,6 +187,14 @@ section CommutativeLemmas
 variable [CommSemiring R] [AddCommMonoid A] [AddCommMonoid B] [AddLeftMono B] [AddRightMono B]
   [AddCommMonoid T] [AddLeftMono T] [AddRightMono T]
   {degb : A → B} {degt : A → T}
+
+omit [SemilatticeInf T] [OrderTop T] [AddLeftMono T] [AddRightMono T] in
+/-- Pushing `OrderDual.toDual` out of a `Multiset.sum`. -/
+private lemma toDual_multisetSum {ι : Type*} (m : Multiset ι) (F : ι → T) :
+    (m.map fun i ↦ OrderDual.toDual (F i)).sum = OrderDual.toDual (m.map F).sum := by
+  refine Multiset.induction_on m rfl fun a m ih ↦ ?_
+  rw [Multiset.map_cons, Multiset.sum_cons, Multiset.map_cons, Multiset.sum_cons, ih]
+  rfl
 
 theorem sup_support_coeff_multisetProd_le (degb0 : degb 0 ≤ 0)
     (degbm : ∀ a b, degb (a + b) ≤ degb a + degb b) (m : Multiset R[A]) :
@@ -188,11 +209,9 @@ alias sup_support_multiset_prod_le := sup_support_coeff_multisetProd_le
 theorem le_inf_support_coeff_multisetProd (degt0 : 0 ≤ degt 0)
     (degtm : ∀ a b, degt a + degt b ≤ degt (a + b)) (m : Multiset R[A]) :
     (m.map fun f : R[A] => f.coeff.support.inf degt).sum ≤ m.prod.coeff.support.inf degt := by
-  refine OrderDual.ofDual_le_ofDual.mpr <|
-    sup_support_coeff_multisetProd_le (OrderDual.ofDual_le_ofDual.mp ?_)
-      (fun a b => OrderDual.ofDual_le_ofDual.mp ?_) m
-  · exact degt0
-  · exact degtm _ _
+  have h := sup_support_coeff_multisetProd_le (B := Tᵒᵈ)
+    (degb := fun a ↦ OrderDual.toDual (degt a)) degt0 degtm m
+  simpa only [← toDual_support_inf, toDual_multisetSum, OrderDual.toDual_le_toDual] using h
 
 @[deprecated (since := "2026-06-18")]
 alias le_inf_support_multiset_prod := le_inf_support_coeff_multisetProd

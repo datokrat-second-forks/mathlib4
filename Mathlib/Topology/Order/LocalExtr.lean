@@ -157,10 +157,12 @@ theorem IsLocalMinOn.not_nhds_le_map [TopologicalSpace β] (hf : IsLocalMinOn f 
   let ⟨_y, hy⟩ := (this.and self_mem_nhdsWithin).exists
   hy.1.not_gt hy.2
 
-set_option backward.isDefEq.respectTransparency false in
 theorem IsLocalMaxOn.not_nhds_le_map [TopologicalSpace β] (hf : IsLocalMaxOn f s a)
-    [NeBot (𝓝[>] f a)] : ¬𝓝 (f a) ≤ map f (𝓝[s] a) :=
-  @IsLocalMinOn.not_nhds_le_map α βᵒᵈ _ _ _ _ _ ‹_› hf ‹_›
+    [NeBot (𝓝[>] f a)] : ¬𝓝 (f a) ≤ map f (𝓝[s] a) := fun hle ↦ by
+  have h₁ : ∀ᶠ y in map f (𝓝[s] a), y ≤ f a := eventually_map.2 hf
+  have h₂ : ∀ᶠ y in 𝓝[>] f a, y ≤ f a := h₁.filter_mono (inf_le_left.trans hle)
+  obtain ⟨_y, hy⟩ := (h₂.and self_mem_nhdsWithin).exists
+  exact hy.1.not_gt hy.2
 
 theorem IsLocalExtrOn.not_nhds_le_map [TopologicalSpace β] (hf : IsLocalExtrOn f s a)
     [NeBot (𝓝[<] f a)] [NeBot (𝓝[>] f a)] : ¬𝓝 (f a) ≤ map f (𝓝[s] a) :=

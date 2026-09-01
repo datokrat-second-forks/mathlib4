@@ -53,6 +53,26 @@ variable [Semiring α] [LinearOrder α] [IsStrictOrderedRing α] [ExistsAddOfLE 
   [AddCommMonoid β] [LinearOrder β] [IsOrderedCancelAddMonoid β]
   [Module α β] [PosSMulMono α β] {s : Finset ι} {σ : Perm ι} {f : ι → α} {g : ι → β}
 
+-- Pushing `OrderDual.toDual` out of a sum.  Needed because `βᵒᵈ` is no longer the same type as
+-- `β`, so a statement proved at `βᵒᵈ` has to be transported back by hand.
+private lemma sum_toDual (t : Finset ι) (v : ι → β) :
+    ∑ i ∈ t, toDual (v i) = toDual (∑ i ∈ t, v i) := by
+  classical
+  induction t using Finset.cons_induction with
+  | empty => rfl
+  | cons a t ha ih => rw [Finset.sum_cons, Finset.sum_cons, ih]; rfl
+
+private lemma smul_toDual (a : α) (b : β) : a • toDual b = toDual (a • b) := rfl
+
+private lemma nsmul_toDual (n : ℕ) (b : β) : n • toDual b = toDual (n • b) := rfl
+
+private lemma sum_smul_toDual (t : Finset ι) (u : ι → α) (v : ι → β) :
+    ∑ i ∈ t, u i • toDual (v i) = toDual (∑ i ∈ t, u i • v i) := by
+  classical
+  induction t using Finset.cons_induction with
+  | empty => rfl
+  | cons a t ha ih => rw [Finset.sum_cons, Finset.sum_cons, ih]; rfl
+
 /-- **Chebyshev's Sum Inequality**: When `f` and `g` monovary together (e.g. they are both
 monotone/antitone), the scalar product of their sum is less than the size of the set times their
 scalar product. -/
@@ -67,8 +87,10 @@ theorem MonovaryOn.sum_smul_sum_le_card_smul_sum (hfg : MonovaryOn f g s) :
 other is antitone), the scalar product of their sum is less than the size of the set times their
 scalar product. -/
 theorem AntivaryOn.card_smul_sum_le_sum_smul_sum (hfg : AntivaryOn f g s) :
-    #s • ∑ i ∈ s, f i • g i ≤ (∑ i ∈ s, f i) • ∑ i ∈ s, g i :=
-  hfg.dual_right.sum_smul_sum_le_card_smul_sum
+    #s • ∑ i ∈ s, f i • g i ≤ (∑ i ∈ s, f i) • ∑ i ∈ s, g i := by
+  have h := hfg.dual_right.sum_smul_sum_le_card_smul_sum
+  simpa only [Function.comp_def, sum_toDual, sum_smul_toDual, smul_toDual, nsmul_toDual,
+    OrderDual.toDual_le_toDual] using h
 
 variable [Fintype ι]
 
@@ -83,8 +105,10 @@ theorem Monovary.sum_smul_sum_le_card_smul_sum (hfg : Monovary f g) :
 other is antitone), the scalar product of their sum is less than the size of the set times their
 scalar product. -/
 theorem Antivary.card_smul_sum_le_sum_smul_sum (hfg : Antivary f g) :
-    Fintype.card ι • ∑ i, f i • g i ≤ (∑ i, f i) • ∑ i, g i :=
-  (hfg.dual_right.monovaryOn _).sum_smul_sum_le_card_smul_sum
+    Fintype.card ι • ∑ i, f i • g i ≤ (∑ i, f i) • ∑ i, g i := by
+  have h := (hfg.dual_right.monovaryOn ↑(univ : Finset ι)).sum_smul_sum_le_card_smul_sum
+  simpa only [Function.comp_def, sum_toDual, sum_smul_toDual, smul_toDual, nsmul_toDual,
+    OrderDual.toDual_le_toDual, card_univ] using h
 
 end SMul
 

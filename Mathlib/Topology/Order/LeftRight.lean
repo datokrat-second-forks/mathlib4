@@ -67,9 +67,11 @@ lemma IsAntichain.interior_eq_empty [∀ x : α, (𝓝[<] x).NeBot] {s : Set α}
   exact hs hys (interior_subset hx) hyx.ne hyx.le
 
 lemma IsAntichain.interior_eq_empty' [∀ x : α, (𝓝[>] x).NeBot] {s : Set α}
-    (hs : IsAntichain (· ≤ ·) s) : interior s = ∅ :=
-  have : ∀ x : αᵒᵈ, NeBot (𝓝[<] x) := ‹_›
-  hs.to_dual.interior_eq_empty
+    (hs : IsAntichain (· ≤ ·) s) : interior s = ∅ := by
+  refine eq_empty_of_forall_notMem fun x hx ↦ ?_
+  have : ∀ᶠ y in 𝓝 x, y ∈ s := mem_interior_iff_mem_nhds.1 hx
+  rcases this.exists_gt with ⟨y, hxy, hys⟩
+  exact hs (interior_subset hx) hys hxy.ne hxy.le
 
 end Preorder
 

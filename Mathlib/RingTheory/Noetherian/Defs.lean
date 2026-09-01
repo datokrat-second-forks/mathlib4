@@ -134,7 +134,7 @@ theorem isNoetherian_iff_fg_wellFounded :
   constructor
   · intro H
     let f : α ↪o Submodule R M := OrderEmbedding.subtype _
-    exact OrderEmbedding.wellFoundedLT f.dual
+    exact (wellFoundedLT_dual_iff _).1 (OrderEmbedding.wellFoundedLT f.dual)
   · intro H
     constructor
     intro N
