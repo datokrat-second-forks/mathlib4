@@ -151,12 +151,15 @@ theorem IsMax.not_infIrred (ha : IsMax a) : ¬InfIrred a := fun h => h.1 ha
 theorem IsMax.not_infPrime (ha : IsMax a) : ¬InfPrime a := fun h => h.1 ha
 
 @[simp]
-theorem not_infIrred : ¬InfIrred a ↔ IsMax a ∨ ∃ b c, b ⊓ c = a ∧ a < b ∧ a < c :=
-  @not_supIrred αᵒᵈ _ _
+theorem not_infIrred : ¬InfIrred a ↔ IsMax a ∨ ∃ b c, b ⊓ c = a ∧ a < b ∧ a < c := by
+  rw [InfIrred, not_and_or]
+  push Not
+  rw [exists₂_congr]
+  simp +contextual [@eq_comm _ _ a]
 
 @[simp]
-theorem not_infPrime : ¬InfPrime a ↔ IsMax a ∨ ∃ b c, b ⊓ c ≤ a ∧ ¬b ≤ a ∧ ¬c ≤ a :=
-  @not_supPrime αᵒᵈ _ _
+theorem not_infPrime : ¬InfPrime a ↔ IsMax a ∨ ∃ b c, b ⊓ c ≤ a ∧ ¬b ≤ a ∧ ¬c ≤ a := by
+  rw [InfPrime, not_and_or]; push Not; rfl
 
 protected theorem InfPrime.infIrred : InfPrime a → InfIrred a :=
   And.imp_right fun h b c ha => by simpa [← ha] using h ha.le
@@ -176,19 +179,39 @@ theorem InfIrred.ne_top (ha : InfIrred a) : a ≠ ⊤ := by rintro rfl; exact no
 
 theorem InfPrime.ne_top (ha : InfPrime a) : a ≠ ⊤ := by rintro rfl; exact not_infPrime_top ha
 
-theorem InfIrred.finset_inf_eq : InfIrred a → s.inf f = a → ∃ i ∈ s, f i = a :=
-  @SupIrred.finset_sup_eq _ αᵒᵈ _ _ _ _ _
+theorem InfIrred.finset_inf_eq (ha : InfIrred a) (h : s.inf f = a) : ∃ i ∈ s, f i = a := by
+  classical
+  induction s using Finset.induction with
+  | empty => simpa [ha.ne_top] using h.symm
+  | insert i s _ ih =>
+    simp only [exists_mem_insert] at ih ⊢
+    rw [inf_insert] at h
+    exact (ha.2 h).imp_right ih
 
-theorem InfPrime.finset_inf_le (ha : InfPrime a) : s.inf f ≤ a ↔ ∃ i ∈ s, f i ≤ a :=
-  @SupPrime.le_finset_sup _ αᵒᵈ _ _ _ _ _ ha
+theorem InfPrime.finset_inf_le (ha : InfPrime a) : s.inf f ≤ a ↔ ∃ i ∈ s, f i ≤ a := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp [ha.ne_top]
+  | insert i s _ ih => simp only [exists_mem_insert, inf_insert, ha.inf_le, ih]
 
 variable [WellFoundedGT α]
 
 /-- In a cowell-founded lattice, any element is the infimum of finitely many inf-irreducible
 elements. This is the order-theoretic analogue of prime factorisation. -/
 theorem exists_infIrred_decomposition (a : α) :
-    ∃ s : Finset α, s.inf id = a ∧ ∀ ⦃b⦄, b ∈ s → InfIrred b :=
-  exists_supIrred_decomposition (α := αᵒᵈ) _
+    ∃ s : Finset α, s.inf id = a ∧ ∀ ⦃b⦄, b ∈ s → InfIrred b := by
+  classical
+  apply WellFoundedGT.induction a _
+  clear a
+  rintro a ih
+  by_cases ha : InfIrred a
+  · exact ⟨{a}, by simp [ha]⟩
+  rw [not_infIrred] at ha
+  obtain ha | ⟨b, c, rfl, hb, hc⟩ := ha
+  · exact ⟨∅, by simp [ha.eq_top]⟩
+  obtain ⟨s, rfl, hs⟩ := ih _ hb
+  obtain ⟨t, rfl, ht⟩ := ih _ hc
+  exact ⟨s ∪ t, inf_union, forall_mem_union.2 ⟨hs, ht⟩⟩
 
 end SemilatticeInf
 
@@ -198,19 +221,31 @@ variable [SemilatticeSup α]
 
 @[simp]
 theorem infIrred_toDual {a : α} : InfIrred (toDual a) ↔ SupIrred a :=
-  Iff.rfl
+  and_congr (not_congr isMax_toDual_iff)
+    ⟨fun h b c hbc => (h (b := toDual b) (c := toDual c) (congrArg toDual hbc)).imp
+        (congrArg ofDual) (congrArg ofDual),
+      fun h b c hbc => (h (b := ofDual b) (c := ofDual c) (congrArg ofDual hbc)).imp
+        (congrArg toDual) (congrArg toDual)⟩
 
 @[simp]
 theorem infPrime_toDual {a : α} : InfPrime (toDual a) ↔ SupPrime a :=
-  Iff.rfl
+  and_congr (not_congr isMax_toDual_iff)
+    ⟨fun h b c hbc => h (b := toDual b) (c := toDual c) hbc,
+      fun h b c hbc => h (b := ofDual b) (c := ofDual c) hbc⟩
 
 @[simp]
 theorem supIrred_ofDual {a : αᵒᵈ} : SupIrred (ofDual a) ↔ InfIrred a :=
-  Iff.rfl
+  and_congr (not_congr isMin_ofDual_iff)
+    ⟨fun h b c hbc => (h (b := ofDual b) (c := ofDual c) (congrArg ofDual hbc)).imp
+        (congrArg toDual) (congrArg toDual),
+      fun h b c hbc => (h (b := toDual b) (c := toDual c) (congrArg toDual hbc)).imp
+        (congrArg ofDual) (congrArg ofDual)⟩
 
 @[simp]
 theorem supPrime_ofDual {a : αᵒᵈ} : SupPrime (ofDual a) ↔ InfPrime a :=
-  Iff.rfl
+  and_congr (not_congr isMin_ofDual_iff)
+    ⟨fun h b c hbc => h (b := ofDual b) (c := ofDual c) hbc,
+      fun h b c hbc => h (b := toDual b) (c := toDual c) hbc⟩
 
 alias ⟨_, SupIrred.dual⟩ := infIrred_toDual
 
@@ -228,19 +263,31 @@ variable [SemilatticeInf α]
 
 @[simp]
 theorem supIrred_toDual {a : α} : SupIrred (toDual a) ↔ InfIrred a :=
-  Iff.rfl
+  and_congr (not_congr isMin_toDual_iff)
+    ⟨fun h b c hbc => (h (b := toDual b) (c := toDual c) (congrArg toDual hbc)).imp
+        (congrArg ofDual) (congrArg ofDual),
+      fun h b c hbc => (h (b := ofDual b) (c := ofDual c) (congrArg ofDual hbc)).imp
+        (congrArg toDual) (congrArg toDual)⟩
 
 @[simp]
 theorem supPrime_toDual {a : α} : SupPrime (toDual a) ↔ InfPrime a :=
-  Iff.rfl
+  and_congr (not_congr isMin_toDual_iff)
+    ⟨fun h b c hbc => h (b := toDual b) (c := toDual c) hbc,
+      fun h b c hbc => h (b := ofDual b) (c := ofDual c) hbc⟩
 
 @[simp]
 theorem infIrred_ofDual {a : αᵒᵈ} : InfIrred (ofDual a) ↔ SupIrred a :=
-  Iff.rfl
+  and_congr (not_congr isMax_ofDual_iff)
+    ⟨fun h b c hbc => (h (b := ofDual b) (c := ofDual c) (congrArg ofDual hbc)).imp
+        (congrArg toDual) (congrArg toDual),
+      fun h b c hbc => (h (b := toDual b) (c := toDual c) (congrArg toDual hbc)).imp
+        (congrArg ofDual) (congrArg ofDual)⟩
 
 @[simp]
 theorem infPrime_ofDual {a : αᵒᵈ} : InfPrime (ofDual a) ↔ SupPrime a :=
-  Iff.rfl
+  and_congr (not_congr isMax_ofDual_iff)
+    ⟨fun h b c hbc => h (b := ofDual b) (c := ofDual c) hbc,
+      fun h b c hbc => h (b := toDual b) (c := toDual c) hbc⟩
 
 alias ⟨_, InfIrred.dual⟩ := supIrred_toDual
 
