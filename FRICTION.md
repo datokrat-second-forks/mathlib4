@@ -366,3 +366,38 @@ theorem bot_lt_mul [LT α] (ha : ⊥ < a) (hb : ⊥ < b) : ⊥ < a * b := by
 The same holds for pointwise duals of a `Pi` family — `@le_cons _ (fun i ↦ (α i)ᵒᵈ) …` for
 `Fin.cons_le` — where re-running the original four-line proof is shorter than transporting a
 family of wrappers.
+
+## 16. Conversions that were identities can become *traversals*
+
+The wrapper itself is free. Compiling a map over a one-field structure's constructor shows
+the constructor erased to the identity:
+
+```
+def toWrapTree._lam_0 (x_1 : @& tobj) : tobj := inc x_1; ret x_1   -- this is `Wrap.mk`
+def toWrapTree (x_1 : tobj) : tobj := ... Tree.map._redArg x_2 x_1
+```
+
+But the `Tree.map` around it survives, and that is an O(n) rebuild of every node to apply
+the identity. So the cost of the conversion is not the wrapper — it is whatever structure
+has to be walked to push the wrapper inside.
+
+This is the one place where the conversion is not merely a proof-engineering cost. It bites
+wherever a *container* of `α` was silently reused as a container of `αᵒᵈ`:
+
+```lean
+-- Data/Ordmap/Invariants.lean, before: `Ordnode αᵒᵈ` and `Ordnode α` were the same type
+theorem dual_insert (x : α) : ∀ t : Ordnode α,
+    dual (Ordnode.insert x t) = @Ordnode.insert αᵒᵈ _ _ x (dual t)
+```
+
+`Ordnode.dual` mirrors the tree in place and stays in `Ordnode α`; only the *statement*
+crossed to `αᵒᵈ`, for free. Restating it with an element map (`(dual t).map toDual'`) keeps
+the statement recognizable but buys a second traversal at every use, in a data structure whose
+whole point is the constant factors. The alternative is to dualise the *instances* rather than
+the type (`@Ordnode.insert α ⟨fun a b ↦ b ≤ a⟩ _ x (dual t)`), or to generalize `Bounded`/
+`Valid'` over the order relation instead of over the type — both keep the runtime cost at zero
+and pay in statement noise instead.
+
+Worth checking, whenever a dual lemma mentions a container: is `αᵒᵈ` there because the *order*
+is reversed, or because the type synonym happened to be free? Only the first kind should
+survive as a type-level dual.

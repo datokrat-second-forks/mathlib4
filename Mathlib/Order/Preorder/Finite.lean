@@ -99,8 +99,12 @@ lemma infinite_of_forall_exists_gt (h : ∀ a, ∃ b ∈ s, a < b) : s.Infinite 
     (strictMono_nat_of_lt_succ fun n => (h _).choose_spec.2).injective hf
 
 @[to_dual existing infinite_of_forall_exists_gt]
-lemma infinite_of_forall_exists_lt (h : ∀ a, ∃ b ∈ s, b < a) : s.Infinite :=
-  infinite_of_forall_exists_gt (α := αᵒᵈ) h
+lemma infinite_of_forall_exists_lt (h : ∀ a, ∃ b ∈ s, b < a) : s.Infinite := by
+  inhabit α
+  let f (n : ℕ) : α := Nat.recOn n (h default).choose fun _ a ↦ (h a).choose
+  have hf : ∀ n, f n ∈ s := by rintro (_ | _) <;> exact (h _).choose_spec.1
+  exact infinite_of_injective_forall_mem
+    (strictAnti_nat_of_succ_lt fun n => (h _).choose_spec.2).injective hf
 
 end Preorder
 

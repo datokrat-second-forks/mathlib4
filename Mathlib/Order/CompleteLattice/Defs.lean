@@ -50,7 +50,7 @@ variable {α β : Type*} {ι : Sort*}
 
 @[to_dual]
 instance OrderDual.supSet (α) [h : InfSet α] : SupSet αᵒᵈ :=
-  ⟨fun s ↦ h.sInf s⟩
+  ⟨fun s ↦ toDual' (h.sInf (⇑toDual ⁻¹' s))⟩
 
 /-- Note that we rarely use `CompleteSemilatticeSup`
 (in fact, any such object is always a `CompleteLattice`, so it's usually best to start there).
@@ -131,7 +131,7 @@ end
 
 @[to_dual]
 instance {α : Type*} [CompleteSemilatticeInf α] : CompleteSemilatticeSup αᵒᵈ where
-  isLUB_sSup := isGLB_sInf (α := α)
+  isLUB_sSup s := (isGLB_sInf (α := α) (⇑toDual ⁻¹' s)).dual
 
 /-- A complete lattice is a bounded lattice which has suprema and infima for every subset. -/
 class CompleteLattice (α : Type*) extends Lattice α, CompleteSemilatticeSup α,
@@ -293,12 +293,20 @@ theorem ofDual_sSup [InfSet α] (s : Set αᵒᵈ) : ofDual (sSup s) = sInf (toD
   rfl
 
 @[to_dual (attr := simp)]
-theorem toDual_iSup [SupSet α] (f : ι → α) : toDual (⨆ i, f i) = ⨅ i, toDual (f i) :=
-  rfl
+theorem toDual_iSup [SupSet α] (f : ι → α) : toDual (⨆ i, f i) = ⨅ i, toDual (f i) := by
+  rw [iSup, iInf, toDual_sSup]
+  congr 1
+  ext x
+  simp only [Set.mem_preimage, Set.mem_range]
+  exact ⟨fun ⟨i, hi⟩ ↦ ⟨i, congrArg toDual hi⟩, fun ⟨i, hi⟩ ↦ ⟨i, congrArg ofDual hi⟩⟩
 
 @[to_dual (attr := simp)]
-theorem ofDual_iSup [InfSet α] (f : ι → αᵒᵈ) : ofDual (⨆ i, f i) = ⨅ i, ofDual (f i) :=
-  rfl
+theorem ofDual_iSup [InfSet α] (f : ι → αᵒᵈ) : ofDual (⨆ i, f i) = ⨅ i, ofDual (f i) := by
+  rw [iSup, iInf, ofDual_sSup]
+  congr 1
+  ext x
+  simp only [Set.mem_preimage, Set.mem_range]
+  exact ⟨fun ⟨i, hi⟩ ↦ ⟨i, congrArg ofDual hi⟩, fun ⟨i, hi⟩ ↦ ⟨i, congrArg toDual hi⟩⟩
 
 end OrderDual
 
