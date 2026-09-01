@@ -30,8 +30,10 @@ theorem _root_.MonotoneOn.congr (h₁ : MonotoneOn f₁ s) (h : s.EqOn f₁ f₂
   rw [← h ha, ← h hb]
   exact h₁ ha hb hab
 
-theorem _root_.AntitoneOn.congr (h₁ : AntitoneOn f₁ s) (h : s.EqOn f₁ f₂) : AntitoneOn f₂ s :=
-  h₁.dual_right.congr h
+theorem _root_.AntitoneOn.congr (h₁ : AntitoneOn f₁ s) (h : s.EqOn f₁ f₂) : AntitoneOn f₂ s := by
+  intro a ha b hb hab
+  rw [← h ha, ← h hb]
+  exact h₁ ha hb hab
 
 theorem _root_.StrictMonoOn.congr (h₁ : StrictMonoOn f₁ s) (h : s.EqOn f₁ f₂) :
     StrictMonoOn f₂ s := by
@@ -39,8 +41,11 @@ theorem _root_.StrictMonoOn.congr (h₁ : StrictMonoOn f₁ s) (h : s.EqOn f₁ 
   rw [← h ha, ← h hb]
   exact h₁ ha hb hab
 
-theorem _root_.StrictAntiOn.congr (h₁ : StrictAntiOn f₁ s) (h : s.EqOn f₁ f₂) : StrictAntiOn f₂ s :=
-  h₁.dual_right.congr h
+theorem _root_.StrictAntiOn.congr (h₁ : StrictAntiOn f₁ s) (h : s.EqOn f₁ f₂) :
+    StrictAntiOn f₂ s := by
+  intro a ha b hb hab
+  rw [← h ha, ← h hb]
+  exact h₁ ha hb hab
 
 theorem EqOn.congr_monotoneOn (h : s.EqOn f₁ f₂) : MonotoneOn f₁ s ↔ MonotoneOn f₂ s :=
   ⟨fun h₁ => h₁.congr h, fun h₂ => h₂.congr h.symm⟩
@@ -207,7 +212,13 @@ theorem monotoneOn_of_rightInvOn_of_mapsTo {α β : Type*} [PartialOrder α] [Li
 
 theorem antitoneOn_of_rightInvOn_of_mapsTo [PartialOrder α] [LinearOrder β]
     {φ : β → α} {ψ : α → β} {t : Set β} {s : Set α} (hφ : AntitoneOn φ t)
-    (φψs : Set.RightInvOn ψ φ s) (ψts : Set.MapsTo ψ s t) : AntitoneOn ψ s :=
-  (monotoneOn_of_rightInvOn_of_mapsTo hφ.dual_left φψs ψts).dual_right
+    (φψs : Set.RightInvOn ψ φ s) (ψts : Set.MapsTo ψ s t) : AntitoneOn ψ s := by
+  rintro x xs y ys l
+  rcases le_total (ψ y) (ψ x) with (ψyx | ψxy)
+  · exact ψyx
+  · have := hφ (ψts xs) (ψts ys) ψxy
+    rw [φψs.eq xs, φψs.eq ys] at this
+    induction le_antisymm l this
+    exact le_refl _
 
 end Function

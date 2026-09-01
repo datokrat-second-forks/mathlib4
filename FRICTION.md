@@ -304,3 +304,65 @@ Same conclusion in `Order/Interval/Set/LinearOrder.lean`, for a different reason
 Rule of thumb from waves 5–8: dualise when the dual statement is the *same
 formula* over `αᵒᵈ` (then §1's named arguments suffice); write the proof directly
 as soon as the dual notation differs.
+
+## 13. Instances that used to be `‹Fintype α›`
+
+`Fintype αᵒᵈ`, `Finite αᵒᵈ`, `Small.{v} αᵒᵈ` were all *the same instance*, written as
+`‹Fintype α›` or `h`. Each now needs an actual transport:
+
+```lean
+-- Data/Fintype/Defs.lean; `Fintype.ofEquiv` lives in a later file, so this is by hand
+instance OrderDual.fintype (α : Type*) [Fintype α] : Fintype αᵒᵈ where
+  elems := ⟨(Finset.univ : Finset α).1.map OrderDual.toDual',
+    Multiset.Nodup.map OrderDual.toDual.injective (Finset.univ : Finset α).2⟩
+  complete a := Multiset.mem_map.2 ⟨a.ofDual', Finset.mem_univ_val _, rfl⟩
+
+instance OrderDual.finite (α : Type*) [Finite α] : Finite αᵒᵈ := Finite.of_equiv α OrderDual.toDual
+instance small_orderDual [Small.{v} α] : Small.{v} αᵒᵈ :=
+  small_of_surjective OrderDual.toDual.surjective
+```
+
+Note the import ordering trap: the natural transport (`Fintype.ofEquiv`) is defined *downstream*
+of the file that needs it, so the instance has to be built at the `Multiset` level instead.
+
+## 14. Duals of *algebraic* synonyms: `Multiplicative αᵒᵈ`
+
+The sharpest edge in wave 9. `LinearOrderedCommMonoidWithZero (Multiplicative αᵒᵈ)` used to take
+its fields straight from the `⊤`/`+` lemmas of `α`, with the instance argument left to `(_)`:
+
+```lean
+  zero_mul := @top_add _ (_)                      -- before
+  zero_mul a := congrArg OrderDual.toDual' (top_add (OrderDual.ofDual' a.toAdd))   -- after
+```
+
+Two things to know here. First, `Multiplicative` is still a plain `def` synonym while `OrderDual`
+is a structure, so the two must be peeled in order: `a.toAdd` to leave `Multiplicative`, then
+`.ofDual'` to leave the dual.
+
+Second, and worse, *hypotheses* need transport too, and `Ne` does not transport definitionally:
+`ha : (0 : Multiplicative αᵒᵈ) < a` gives `ha.ne' : a ≠ 0`, an inequality between elements of
+`αᵒᵈ`, while the lemma wants `a.ofDual' ≠ ⊤` in `α`. `Eq` at the two types is not defeq (different
+types), so the transport has to be written out:
+
+```lean
+  mul_lt_mul_of_pos_left := @fun _ ha _ _ hbc ↦
+    add_right_strictMono_of_ne_top (fun h ↦ ha.ne' (congrArg OrderDual.toDual' h)) hbc
+```
+
+The `congrArg OrderDual.toDual'` here is doing the work `rfl` used to do silently.
+
+## 15. `WithBot` lemmas proved as `WithTop … (α := αᵒᵈ)`
+
+With `WithBot α` and `WithTop αᵒᵈ` no longer the same type, the cheapest repair is almost never
+the `WithBot.toDual` equiv — it is to mirror the two-line `WithTop` proof against the `WithBot`
+lemmas, which exist because `@[to_dual]` already generated them:
+
+```lean
+theorem mul_ne_bot (ha : a ≠ ⊥) (hb : b ≠ ⊥) : a * b ≠ ⊥ := by simp [mul_eq_bot_iff, *]
+theorem bot_lt_mul [LT α] (ha : ⊥ < a) (hb : ⊥ < b) : ⊥ < a * b := by
+  rw [WithBot.bot_lt_iff_ne_bot] at *; exact mul_ne_bot ha hb
+```
+
+The same holds for pointwise duals of a `Pi` family — `@le_cons _ (fun i ↦ (α i)ᵒᵈ) …` for
+`Fin.cons_le` — where re-running the original four-line proof is shorter than transporting a
+family of wrappers.
