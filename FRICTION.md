@@ -658,3 +658,40 @@ ofDual.toEmbedding`) is no longer `rfl`, because `map g (map f s)` does not redu
 
 and the docstring's `rfl` promise is now false and has been rewritten to say so.  Same story for
 `LocallyFiniteOrderBot` / `Iic` / `Iio`.
+
+## §25 — Antitone Galois connections encoded as `GaloisConnection (toDual ∘ l) (u ∘ ofDual)`
+
+`fixingSubmonoid_fixedPoints_gc`, `fixingSubgroup_fixedPoints_gc` and `dualAnnihilator_gc` are
+stated with the dual baked into the maps, and every consequence was then read off directly:
+
+```lean
+theorem fixingSubmonoid_union : fixingSubmonoid M (s ∪ t) = fixingSubmonoid M s ⊓ fixingSubmonoid M t :=
+  (fixingSubmonoid_fixedPoints_gc M α).l_sup
+```
+
+`l_sup` now proves an equation in `(Submonoid M)ᵒᵈ`, not in `Submonoid M`.  Three grades of repair,
+in increasing order of pain:
+
+1. **Binary operations are defeq**: `⊔` on `αᵒᵈ` unfolds to `⊓`, so only the wrapper is in the way:
+   `OrderDual.toDual_inj.mp (gc).l_sup`.  Same for `l_bot`, `u_top`, `u_inf`.
+2. **Indexed operations are not**: `⨆ i, toDual (f i)` and `toDual (⨅ i, f i)` are *equal* but not
+   defeq (`toDual_iSup` needs a `Set.ext`), so `l_iSup` needs the rewrite put in by hand:
+   ```lean
+   rw [← OrderDual.toDual_inj, toDual_iInf]
+   exact (fixingSubmonoid_fixedPoints_gc M α).l_iSup
+   ```
+   Left as-is, `u_iInf` does not merely fail — it spends 200000 heartbeats in `isDefEq` first.
+3. **`u_iInf` cannot even be `rw`n into place**: the `⨅` that `u_iInf` produces and the `⨅` you
+   write in a `have` differ in instance path, so `simp only [key]` / `rw [key]` silently fail to
+   match.  Move the mismatch onto a defeq check instead of a syntactic one:
+   ```lean
+   have key : OrderDual.ofDual (⨅ i, OrderDual.toDual (P i)) = ⨆ i, P i := by
+     rw [← toDual_iSup, OrderDual.ofDual_toDual]
+   have h := (gc M α).u_iInf (f := fun i => OrderDual.toDual (P i))
+   simp only [Function.comp_apply, OrderDual.ofDual_toDual] at h
+   exact (congrArg (fun Q : Submonoid M => fixedPoints Q α) key.symm).trans h
+   ```
+   `Eq.trans` unifies up to defeq, so the instance-path difference stops mattering.
+
+Also beware: `toDual_iSup` is a `simp` lemma, so a `simpa` after `rw [← toDual_iSup]` cheerfully
+rewrites your work back.
