@@ -73,22 +73,26 @@ theorem not_bddAbove_iff {α : Type*} [LinearOrder α] {s : Set α} :
   simp only [not_bddAbove_iff', not_le]
 
 @[to_dual (attr := simp)]
-lemma bddAbove_preimage_ofDual {s : Set α} : BddAbove (ofDual ⁻¹' s) ↔ BddBelow s := Iff.rfl
+lemma bddAbove_preimage_ofDual {s : Set α} : BddAbove (ofDual ⁻¹' s) ↔ BddBelow s :=
+  ⟨fun ⟨x, hx⟩ ↦ ⟨ofDual x, fun y hy ↦ hx (a := toDual y) hy⟩,
+    fun ⟨x, hx⟩ ↦ ⟨toDual x, fun _ hy ↦ hx hy⟩⟩
 
 @[to_dual (attr := simp)]
-lemma bddAbove_preimage_toDual {s : Set αᵒᵈ} : BddAbove (toDual ⁻¹' s) ↔ BddBelow s := Iff.rfl
+lemma bddAbove_preimage_toDual {s : Set αᵒᵈ} : BddAbove (toDual ⁻¹' s) ↔ BddBelow s :=
+  ⟨fun ⟨x, hx⟩ ↦ ⟨toDual x, fun y hy ↦ hx (a := ofDual y) hy⟩,
+    fun ⟨x, hx⟩ ↦ ⟨ofDual x, fun _ hy ↦ hx hy⟩⟩
 
 @[to_dual]
 theorem BddAbove.dual (h : BddAbove s) : BddBelow (ofDual ⁻¹' s) :=
-  h
+  h.elim fun x hx ↦ ⟨toDual x, fun _ hy ↦ hx hy⟩
 
 @[to_dual]
 theorem IsLeast.dual (h : IsLeast s a) : IsGreatest (ofDual ⁻¹' s) (toDual a) :=
-  h
+  ⟨h.1, fun _ hy ↦ h.2 hy⟩
 
 @[to_dual]
 theorem IsLUB.dual (h : IsLUB s a) : IsGLB (ofDual ⁻¹' s) (toDual a) :=
-  h
+  ⟨fun _ hy ↦ h.1 hy, fun _ hb ↦ h.2 fun y hy ↦ hb (a := toDual y) hy⟩
 
 /-- If `a` is the least element of a set `s`, then subtype `s` is an order with bottom element. -/
 @[to_dual
@@ -425,8 +429,9 @@ theorem bddAbove_iff_exists_ge [SemilatticeSup γ] {s : Set γ} (x₀ : γ) :
 
 @[to_dual existing bddAbove_iff_exists_ge]
 theorem bddBelow_iff_exists_le [SemilatticeInf γ] {s : Set γ} (x₀ : γ) :
-    BddBelow s ↔ ∃ x, x ≤ x₀ ∧ ∀ y ∈ s, x ≤ y :=
-  bddAbove_iff_exists_ge (toDual x₀)
+    BddBelow s ↔ ∃ x, x ≤ x₀ ∧ ∀ y ∈ s, x ≤ y := by
+  rw [bddBelow_def, exists_le_and_iff_exists]
+  exact Antitone.ball fun x _ => antitone_le
 
 @[to_dual exists_le]
 theorem BddAbove.exists_ge [SemilatticeSup γ] {s : Set γ} (hs : BddAbove s) (x₀ : γ) :

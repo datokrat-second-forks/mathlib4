@@ -32,8 +32,11 @@ This is the order iso form of `WithTop.ofDual`, as proven by `coe_toDualBotEquiv
 @[to_dual
 /-- Taking the dual then adding `⊥` is the same as adding `⊤` then taking the dual.
 This is the order iso form of `WithBot.ofDual`, as proven by `coe_toDualTopEquiv`. -/]
-protected def toDualBotEquiv [LE α] : WithTop αᵒᵈ ≃o (WithBot α)ᵒᵈ :=
-  OrderIso.refl _
+protected def toDualBotEquiv [LE α] : WithTop αᵒᵈ ≃o (WithBot α)ᵒᵈ where
+  toEquiv := WithTop.ofDual.trans OrderDual.toDual
+  map_rel_iff' := by
+    rintro a b
+    cases a <;> cases b <;> simp <;> exact fun h ↦ WithBot.not_coe_le_bot _ h
 
 @[to_dual (attr := simp)]
 theorem toDualBotEquiv_coe [LE α] (a : α) :
