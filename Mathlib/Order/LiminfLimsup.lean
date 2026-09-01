@@ -96,6 +96,36 @@ theorem blimsup_eq : blimsup u f p = sInf { a | ∀ᶠ x in f, p x → u x ≤ a
 theorem bliminf_eq : bliminf u f p = sSup { a | ∀ᶠ x in f, p x → a ≤ u x } :=
   rfl
 
+/-! `αᵒᵈ` is no longer the type `α`, so the `liminf` half of this file can no longer be read off
+from the `limsup` half by instantiating `α := αᵒᵈ`.  These four bridges do the transport; they are
+definitional, since `sInf` on the dual is `sSup` on the nose (`OrderDual.toDual_sSup`). -/
+
+private lemma limsup_toDual_comp :
+    limsup (fun b ↦ OrderDual.toDual (u b)) f = OrderDual.toDual (liminf u f) := rfl
+
+private lemma liminf_toDual_comp :
+    liminf (fun b ↦ OrderDual.toDual (u b)) f = OrderDual.toDual (limsup u f) := rfl
+
+private lemma blimsup_toDual_comp :
+    blimsup (fun b ↦ OrderDual.toDual (u b)) f p = OrderDual.toDual (bliminf u f p) := rfl
+
+private lemma bliminf_toDual_comp :
+    bliminf (fun b ↦ OrderDual.toDual (u b)) f p = OrderDual.toDual (blimsup u f p) := rfl
+
+private lemma isBoundedUnder_le_toDual :
+    IsBoundedUnder (· ≤ ·) f (fun b ↦ OrderDual.toDual (u b)) ↔ IsBoundedUnder (· ≥ ·) f u :=
+  ⟨fun ⟨b, hb⟩ ↦ ⟨OrderDual.ofDual b, hb⟩, fun ⟨b, hb⟩ ↦ ⟨OrderDual.toDual b, hb⟩⟩
+
+private lemma bddBelow_range_toDual {ι : Sort*} {g : ι → α} :
+    BddBelow (Set.range fun i ↦ OrderDual.toDual (g i)) ↔ BddAbove (Set.range g) :=
+  ⟨fun ⟨b, hb⟩ ↦ ⟨OrderDual.ofDual b, Set.forall_mem_range.2 fun i ↦ hb (Set.mem_range_self i)⟩,
+    fun ⟨b, hb⟩ ↦ ⟨OrderDual.toDual b, Set.forall_mem_range.2 fun i ↦ hb (Set.mem_range_self i)⟩⟩
+
+private lemma isCoboundedUnder_le_toDual :
+    IsCoboundedUnder (· ≤ ·) f (fun b ↦ OrderDual.toDual (u b)) ↔ IsCoboundedUnder (· ≥ ·) f u :=
+  ⟨fun ⟨b, hb⟩ ↦ ⟨OrderDual.ofDual b, fun a ha ↦ hb (OrderDual.toDual a) ha⟩,
+    fun ⟨b, hb⟩ ↦ ⟨OrderDual.toDual b, fun a ha ↦ hb (OrderDual.ofDual a) ha⟩⟩
+
 lemma liminf_comp (u : β → α) (v : γ → β) (f : Filter γ) :
     liminf (u ∘ v) f = liminf u (map v f) := rfl
 
@@ -117,16 +147,16 @@ lemma blimsup_eq_limsup {f : Filter β} {u : β → α} {p : β → Prop} :
   simp only [blimsup_eq, limsup_eq, eventually_inf_principal, mem_ofPred_eq]
 
 lemma bliminf_eq_liminf {f : Filter β} {u : β → α} {p : β → Prop} :
-    bliminf u f p = liminf u (f ⊓ 𝓟 {x | p x}) :=
-  blimsup_eq_limsup (α := αᵒᵈ)
+    bliminf u f p = liminf u (f ⊓ 𝓟 {x | p x}) := by
+  simp only [bliminf_eq, liminf_eq, eventually_inf_principal, mem_ofPred_eq]
 
 theorem blimsup_eq_limsup_subtype {f : Filter β} {u : β → α} {p : β → Prop} :
     blimsup u f p = limsup (u ∘ ((↑) : { x | p x } → β)) (comap (↑) f) := by
   rw [blimsup_eq_limsup, limsup, limsup, ← map_map, map_comap_setCoe_val]
 
 theorem bliminf_eq_liminf_subtype {f : Filter β} {u : β → α} {p : β → Prop} :
-    bliminf u f p = liminf (u ∘ ((↑) : { x | p x } → β)) (comap (↑) f) :=
-  blimsup_eq_limsup_subtype (α := αᵒᵈ)
+    bliminf u f p = liminf (u ∘ ((↑) : { x | p x } → β)) (comap (↑) f) := by
+  rw [bliminf_eq_liminf, liminf, liminf, ← map_map, map_comap_setCoe_val]
 
 theorem limsSup_le_of_le {f : Filter α} {a}
     (hf : f.IsCobounded (· ≤ ·) := by isBoundedDefault)
@@ -208,7 +238,8 @@ theorem liminf_le_liminf {α : Type*} [ConditionallyCompleteLattice β] {f : Fil
     (hu : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault)
     (hv : f.IsCoboundedUnder (· ≥ ·) v := by isBoundedDefault) :
     liminf u f ≤ liminf v f :=
-  limsup_le_limsup (β := βᵒᵈ) h hv hu
+  limsInf_le_limsInf hu hv fun a (ha : ∀ᶠ x in f, a ≤ u x) =>
+    (ha.and h).mono fun _ hx => hx.1.trans hx.2
 
 theorem limsSup_le_limsSup_of_le {f g : Filter α} (h : f ≤ g)
     (hf : f.IsCobounded (· ≤ ·) := by isBoundedDefault)
@@ -248,14 +279,15 @@ theorem Tendsto.liminf_le_liminf_comp {ι α β} [ConditionallyCompleteLattice �
     {u : α → β} {f : Filter ι} {g : Filter α} (hv : Tendsto v f g)
     (hvf : (map v f).IsCoboundedUnder (· ≥ ·) u := by isBoundedDefault)
     (hg : g.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault) :
-    liminf u g ≤ liminf (u ∘ v) f :=
-  hv.limsup_comp_le_limsup (β := βᵒᵈ)
+    liminf u g ≤ liminf (u ∘ v) f := by
+  rw [liminf_comp]
+  exact liminf_le_liminf_of_le hv hg hvf
 
 lemma limsSup_principal_eq_csSup (h : BddAbove s) (hs : s.Nonempty) : limsSup (𝓟 s) = sSup s := by
   simp only [limsSup, eventually_principal]; exact csInf_upperBounds_eq_csSup h hs
 
-lemma limsInf_principal_eq_csSup (h : BddBelow s) (hs : s.Nonempty) : limsInf (𝓟 s) = sInf s :=
-  limsSup_principal_eq_csSup (α := αᵒᵈ) h hs
+lemma limsInf_principal_eq_csSup (h : BddBelow s) (hs : s.Nonempty) : limsInf (𝓟 s) = sInf s := by
+  simp only [limsInf, eventually_principal]; exact csSup_lowerBounds_eq_csInf h hs
 
 lemma limsup_top_eq_ciSup [Nonempty β] (hu : BddAbove (range u)) : limsup u ⊤ = ⨆ i, u i := by
   rw [limsup, map_top, limsSup_principal_eq_csSup hu (range_nonempty _), sSup_range]
@@ -274,12 +306,14 @@ theorem blimsup_congr {f : Filter β} {u v : β → α} {p : β → Prop} (h : �
   simpa only [blimsup_eq_limsup] using! limsup_congr <| eventually_inf_principal.2 h
 
 theorem bliminf_congr {f : Filter β} {u v : β → α} {p : β → Prop} (h : ∀ᶠ a in f, p a → u a = v a) :
-    bliminf u f p = bliminf v f p :=
-  blimsup_congr (α := αᵒᵈ) h
+    bliminf u f p = bliminf v f p := by
+  rw [← OrderDual.toDual_inj, ← blimsup_toDual_comp, ← blimsup_toDual_comp]
+  exact blimsup_congr (h.mono fun _ ha hp => congrArg OrderDual.toDual (ha hp))
 
 theorem liminf_congr {α : Type*} [ConditionallyCompleteLattice β] {f : Filter α} {u v : α → β}
-    (h : ∀ᶠ a in f, u a = v a) : liminf u f = liminf v f :=
-  limsup_congr (β := βᵒᵈ) h
+    (h : ∀ᶠ a in f, u a = v a) : liminf u f = liminf v f := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp, ← limsup_toDual_comp]
+  exact limsup_congr (h.mono fun _ ha => congrArg OrderDual.toDual ha)
 
 @[simp]
 theorem limsup_const {α : Type*} [ConditionallyCompleteLattice β] {f : Filter α} [NeBot f]
@@ -288,8 +322,9 @@ theorem limsup_const {α : Type*} [ConditionallyCompleteLattice β] {f : Filter 
 
 @[simp]
 theorem liminf_const {α : Type*} [ConditionallyCompleteLattice β] {f : Filter α} [NeBot f]
-    (b : β) : liminf (fun _ => b) f = b :=
-  limsup_const (β := βᵒᵈ) b
+    (b : β) : liminf (fun _ => b) f = b := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp]
+  exact limsup_const _
 
 theorem HasBasis.liminf_eq_sSup_iUnion_iInter {ι ι' : Type*} {f : ι → α} {v : Filter ι}
     {p : ι' → Prop} {s : ι' → Set ι} (hv : v.HasBasis p s) :
@@ -307,13 +342,17 @@ theorem HasBasis.liminf_eq_sSup_univ_of_empty {f : ι → α} {v : Filter ι}
 
 theorem HasBasis.limsup_eq_sInf_iUnion_iInter {ι ι' : Type*} {f : ι → α} {v : Filter ι}
     {p : ι' → Prop} {s : ι' → Set ι} (hv : v.HasBasis p s) :
-    limsup f v = sInf (⋃ (j : Subtype p), ⋂ (i : s j), Ici (f i)) :=
-  HasBasis.liminf_eq_sSup_iUnion_iInter (α := αᵒᵈ) hv
+    limsup f v = sInf (⋃ (j : Subtype p), ⋂ (i : s j), Ici (f i)) := by
+  simp_rw [limsup_eq, hv.eventually_iff]
+  congr 1
+  ext x
+  simp only [mem_ofPred_eq, iInter_coe_set, mem_iUnion, mem_iInter, mem_Ici, Subtype.exists,
+    exists_prop]
 
 theorem HasBasis.limsup_eq_sInf_univ_of_empty {f : ι → α} {v : Filter ι}
     {p : ι' → Prop} {s : ι' → Set ι} (hv : v.HasBasis p s) (i : ι') (hi : p i) (h'i : s i = ∅) :
-    limsup f v = sInf univ :=
-  HasBasis.liminf_eq_sSup_univ_of_empty (α := αᵒᵈ) hv i hi h'i
+    limsup f v = sInf univ := by
+  simp [hv.eq_bot_iff.2 ⟨i, hi, h'i⟩, limsup_eq]
 
 @[simp]
 theorem liminf_nat_add (f : ℕ → α) (k : ℕ) :
@@ -321,8 +360,9 @@ theorem liminf_nat_add (f : ℕ → α) (k : ℕ) :
   rw [← Function.comp_def, liminf, liminf, ← map_map, map_add_atTop_eq_nat]
 
 @[simp]
-theorem limsup_nat_add (f : ℕ → α) (k : ℕ) : limsup (fun i => f (i + k)) atTop = limsup f atTop :=
-  @liminf_nat_add αᵒᵈ _ f k
+theorem limsup_nat_add (f : ℕ → α) (k : ℕ) :
+    limsup (fun i => f (i + k)) atTop = limsup f atTop := by
+  rw [← Function.comp_def, limsup, limsup, ← map_map, map_add_atTop_eq_nat]
 
 variable {f : Filter ι} {u : ι → α} {a : α}
 
@@ -380,8 +420,9 @@ theorem limsup_const_bot {f : Filter β} : limsup (fun _ : β => (⊥ : α)) f =
 
 /-- Same as `limsup_const` applied to `⊤` but without the `NeBot f` assumption -/
 @[simp]
-theorem liminf_const_top {f : Filter β} : liminf (fun _ : β => (⊤ : α)) f = (⊤ : α) :=
-  limsup_const_bot (α := αᵒᵈ)
+theorem liminf_const_top {f : Filter β} : liminf (fun _ : β => (⊤ : α)) f = (⊤ : α) := by
+  rw [liminf_eq, eq_top_iff]
+  exact le_sSup (Eventually.of_forall fun _ => le_rfl)
 
 theorem HasBasis.limsSup_eq_iInf_sSup {ι} {p : ι → Prop} {s} {f : Filter α} (h : f.HasBasis p s) :
     limsSup f = ⨅ (i) (_ : p i), sSup (s i) :=
@@ -392,13 +433,17 @@ theorem HasBasis.limsSup_eq_iInf_sSup {ι} {p : ι → Prop} {s} {f : Filter α}
 
 theorem HasBasis.limsInf_eq_iSup_sInf {p : ι → Prop} {s : ι → Set α} {f : Filter α}
     (h : f.HasBasis p s) : limsInf f = ⨆ (i) (_ : p i), sInf (s i) :=
-  HasBasis.limsSup_eq_iInf_sSup (α := αᵒᵈ) h
+  le_antisymm
+    (sSup_le fun _ ha =>
+      let ⟨_, hi, ha⟩ := h.eventually_iff.1 ha
+      le_iSup₂_of_le _ hi <| le_sInf ha)
+    (iSup₂_le fun i hi => le_sSup <| h.eventually_iff.2 ⟨i, hi, fun _ => sInf_le⟩)
 
 theorem limsSup_eq_iInf_sSup {f : Filter α} : limsSup f = ⨅ s ∈ f, sSup s :=
   f.basis_sets.limsSup_eq_iInf_sSup
 
 theorem limsInf_eq_iSup_sInf {f : Filter α} : limsInf f = ⨆ s ∈ f, sInf s :=
-  limsSup_eq_iInf_sSup (α := αᵒᵈ)
+  f.basis_sets.limsInf_eq_iSup_sInf
 
 theorem limsup_le_iSup {f : Filter β} {u : β → α} : limsup u f ≤ ⨆ n, u n :=
   limsup_le_of_le (by isBoundedDefault) (Eventually.of_forall (le_iSup u))
@@ -442,8 +487,12 @@ theorem blimsup_congr' {f : Filter β} {p q : β → Prop} {u : β → α}
   rw [hb hu]
 
 theorem bliminf_congr' {f : Filter β} {p q : β → Prop} {u : β → α}
-    (h : ∀ᶠ x in f, u x ≠ ⊤ → (p x ↔ q x)) : bliminf u f p = bliminf u f q :=
-  blimsup_congr' (α := αᵒᵈ) h
+    (h : ∀ᶠ x in f, u x ≠ ⊤ → (p x ↔ q x)) : bliminf u f p = bliminf u f q := by
+  simp only [bliminf_eq]
+  congr with a
+  refine eventually_congr (h.mono fun b hb => ?_)
+  rcases eq_or_ne (u b) ⊤ with hu | hu; · simp [hu]
+  rw [hb hu]
 
 lemma HasBasis.blimsup_eq_iInf_iSup {p : ι → Prop} {s : ι → Set β} {f : Filter β} {u : β → α}
     (hf : f.HasBasis p s) {q : β → Prop} :
@@ -461,26 +510,40 @@ theorem blimsup_eq_iInf_biSup_of_nat {p : ℕ → Prop} {u : ℕ → α} :
 
 /-- In a complete lattice, the liminf of a function is the infimum over sets `s` in the filter
 of the supremum of the function over `s` -/
-theorem liminf_eq_iSup_iInf {f : Filter β} {u : β → α} : liminf u f = ⨆ s ∈ f, ⨅ a ∈ s, u a :=
-  limsup_eq_iInf_iSup (α := αᵒᵈ)
+theorem liminf_eq_iSup_iInf {f : Filter β} {u : β → α} :
+    liminf u f = ⨆ s ∈ f, ⨅ a ∈ s, u a := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact limsup_eq_iInf_iSup
 
-theorem liminf_eq_iSup_iInf_of_nat {u : ℕ → α} : liminf u atTop = ⨆ n : ℕ, ⨅ i ≥ n, u i :=
-  @limsup_eq_iInf_iSup_of_nat αᵒᵈ _ u
+theorem liminf_eq_iSup_iInf_of_nat {u : ℕ → α} : liminf u atTop = ⨆ n : ℕ, ⨅ i ≥ n, u i := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact limsup_eq_iInf_iSup_of_nat
 
-theorem liminf_eq_iSup_iInf_of_nat' {u : ℕ → α} : liminf u atTop = ⨆ n : ℕ, ⨅ i : ℕ, u (i + n) :=
-  @limsup_eq_iInf_iSup_of_nat' αᵒᵈ _ _
+theorem liminf_eq_iSup_iInf_of_nat' {u : ℕ → α} :
+    liminf u atTop = ⨆ n : ℕ, ⨅ i : ℕ, u (i + n) := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact limsup_eq_iInf_iSup_of_nat'
 
 theorem HasBasis.liminf_eq_iSup_iInf {p : ι → Prop} {s : ι → Set β} {f : Filter β} {u : β → α}
-    (h : f.HasBasis p s) : liminf u f = ⨆ (i) (_ : p i), ⨅ a ∈ s i, u a :=
-  HasBasis.limsup_eq_iInf_iSup (α := αᵒᵈ) h
+    (h : f.HasBasis p s) : liminf u f = ⨆ (i) (_ : p i), ⨅ a ∈ s i, u a := by
+  rw [← OrderDual.toDual_inj, ← limsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact h.limsup_eq_iInf_iSup
 
 theorem bliminf_eq_iSup_biInf {f : Filter β} {p : β → Prop} {u : β → α} :
-    bliminf u f p = ⨆ s ∈ f, ⨅ (b) (_ : p b ∧ b ∈ s), u b :=
-  @blimsup_eq_iInf_biSup αᵒᵈ β _ f p u
+    bliminf u f p = ⨆ s ∈ f, ⨅ (b) (_ : p b ∧ b ∈ s), u b := by
+  rw [← OrderDual.toDual_inj, ← blimsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact blimsup_eq_iInf_biSup
 
 theorem bliminf_eq_iSup_biInf_of_nat {p : ℕ → Prop} {u : ℕ → α} :
-    bliminf u atTop p = ⨆ i, ⨅ (j) (_ : p j ∧ i ≤ j), u j :=
-  @blimsup_eq_iInf_biSup_of_nat αᵒᵈ _ p u
+    bliminf u atTop p = ⨆ i, ⨅ (j) (_ : p j ∧ i ≤ j), u j := by
+  rw [← OrderDual.toDual_inj, ← blimsup_toDual_comp]
+  simp only [toDual_iSup, toDual_iInf]
+  exact blimsup_eq_iInf_biSup_of_nat
 
 theorem iSup_liminf_le_liminf_iSup {f : Filter β} {u : ι → β → α} :
     ⨆ i, liminf (u i) f ≤ liminf (fun b ↦ ⨆ i, u i b) f :=
@@ -488,7 +551,7 @@ theorem iSup_liminf_le_liminf_iSup {f : Filter β} {u : ι → β → α} :
 
 theorem limsup_iInf_le_iInf_limsup {f : Filter β} {u : ι → β → α} :
     limsup (fun b ↦ ⨅ i, u i b) f ≤ ⨅ i, limsup (u i) f :=
-  iSup_liminf_le_liminf_iSup (α := αᵒᵈ)
+  le_iInf fun i ↦ limsup_le_limsup <| .of_forall fun b ↦ iInf_le (u · b) i
 
 theorem limsup_eq_sInf_sSup {ι R : Type*} (F : Filter ι) [CompleteLattice R] (a : ι → R) :
     limsup a F = sInf ((fun I => sSup (a '' I)) '' F.sets) := by
@@ -503,8 +566,18 @@ theorem limsup_eq_sInf_sSup {ι R : Type*} (F : Filter ι) [CompleteLattice R] (
     exact h
 
 theorem liminf_eq_sSup_sInf {ι R : Type*} (F : Filter ι) [CompleteLattice R] (a : ι → R) :
-    liminf a F = sSup ((fun I => sInf (a '' I)) '' F.sets) :=
-  @Filter.limsup_eq_sInf_sSup ι (OrderDual R) _ _ a
+    liminf a F = sSup ((fun I => sInf (a '' I)) '' F.sets) := by
+  apply le_antisymm
+  · rw [liminf_eq]
+    refine sSup_le fun b hb => le_sSup_of_le (mem_image_of_mem _ hb) <| le_sInf ?_
+    rintro _ ⟨_, h, rfl⟩
+    exact h
+  · refine sSup_le fun x hx => ?_
+    rcases (mem_image _ F.sets x).mp hx with ⟨I, ⟨I_mem_F, hI⟩⟩
+    rw [liminf_eq]
+    refine le_sSup ?_
+    filter_upwards [I_mem_F] with i hi
+    exact hI ▸ sInf_le (mem_image_of_mem _ hi)
 
 theorem liminf_le_of_frequently_le' {α β} [CompleteLattice β] {f : Filter α} {u : α → β} {x : β}
     (h : ∃ᶠ a in f, u a ≤ x) : liminf u f ≤ x := by
@@ -516,8 +589,13 @@ theorem liminf_le_of_frequently_le' {α β} [CompleteLattice β] {f : Filter α}
   exact hbx.exists.choose_spec
 
 theorem le_limsup_of_frequently_le' {α β} [CompleteLattice β] {f : Filter α} {u : α → β} {x : β}
-    (h : ∃ᶠ a in f, x ≤ u a) : x ≤ limsup u f :=
-  liminf_le_of_frequently_le' (β := βᵒᵈ) h
+    (h : ∃ᶠ a in f, x ≤ u a) : x ≤ limsup u f := by
+  rw [limsup_eq]
+  refine le_sInf fun b hb => ?_
+  have hbx : ∃ᶠ _ in f, x ≤ b := by
+    contrapose! h
+    exact hb.mp (h.mono fun a hxb hab hxa => hxb (hxa.trans hab))
+  exact hbx.exists.choose_spec
 
 /-- If `f : α → α` is a morphism of complete lattices, then the limsup of its iterates of any
 `a : α` is a fixed point. -/
@@ -536,8 +614,15 @@ theorem _root_.CompleteLatticeHom.apply_limsup_iterate (f : CompleteLatticeHom �
 /-- If `f : α → α` is a morphism of complete lattices, then the liminf of its iterates of any
 `a : α` is a fixed point. -/
 theorem _root_.CompleteLatticeHom.apply_liminf_iterate (f : CompleteLatticeHom α α) (a : α) :
-    f (liminf (fun n => f^[n] a) atTop) = liminf (fun n => f^[n] a) atTop :=
-  (CompleteLatticeHom.dual f).apply_limsup_iterate _
+    f (liminf (fun n => f^[n] a) atTop) = liminf (fun n => f^[n] a) atTop := by
+  rw [liminf_eq_iSup_iInf_of_nat', _root_.map_iSup]
+  simp_rw [_root_.map_iInf, ← Function.comp_apply (f := f), ← Function.iterate_succ' f,
+    ← Nat.add_succ]
+  conv_rhs => rw [iSup_split _ (0 < ·)]
+  simp only [not_lt, Nat.le_zero, iSup_iSup_eq_left, add_zero, iSup_nat_gt_zero_eq, left_eq_sup]
+  refine le_trans ?_ (le_iSup (fun i => ⨅ j, f^[j + (i + 1)] a) 0)
+  simp only [zero_add, le_iInf_iff]
+  exact fun i => iInf_le (fun i => f^[i] a) (i + 1)
 
 variable {f g : Filter β} {p q : β → Prop} {u v : β → α}
 
@@ -619,8 +704,9 @@ theorem _root_.OrderIso.apply_blimsup [CompleteLattice γ] (e : α ≃o γ) :
     Set.preimage_ofPred_eq, e.le_symm_apply]
 
 theorem _root_.OrderIso.apply_bliminf [CompleteLattice γ] (e : α ≃o γ) :
-    e (bliminf u f p) = bliminf (e ∘ u) f p :=
-  e.dual.apply_blimsup
+    e (bliminf u f p) = bliminf (e ∘ u) f p := by
+  simp only [bliminf_eq, map_sSup, Function.comp_apply, e.image_eq_preimage_symm,
+    Set.preimage_ofPred_eq, e.symm_apply_le]
 
 theorem _root_.sSupHom.apply_blimsup_le [CompleteLattice γ] (g : sSupHom α γ) :
     g (blimsup u f p) ≤ blimsup (g ∘ u) f p := by
@@ -645,32 +731,36 @@ lemma limsup_sup_filter {g} : limsup u (f ⊔ g) = limsup u f ⊔ limsup u g := 
   intro a ha b hb
   exact sInf_le ⟨ha.mono fun _ h ↦ h.trans le_sup_left, hb.mono fun _ h ↦ h.trans le_sup_right⟩
 
-lemma liminf_sup_filter {g} : liminf u (f ⊔ g) = liminf u f ⊓ liminf u g :=
-  limsup_sup_filter (α := αᵒᵈ)
+lemma liminf_sup_filter {g} : liminf u (f ⊔ g) = liminf u f ⊓ liminf u g := by
+  rw [← OrderDual.toDual_inj]
+  simp only [toDual_inf, ← limsup_toDual_comp]
+  exact limsup_sup_filter
 
 @[simp]
 theorem blimsup_or_eq_sup : (blimsup u f fun x => p x ∨ q x) = blimsup u f p ⊔ blimsup u f q := by
   simp only [blimsup_eq_limsup, ← limsup_sup_filter, ← inf_sup_left, sup_principal, ofPred_or]
 
 @[simp]
-theorem bliminf_or_eq_inf : (bliminf u f fun x => p x ∨ q x) = bliminf u f p ⊓ bliminf u f q :=
-  blimsup_or_eq_sup (α := αᵒᵈ)
+theorem bliminf_or_eq_inf : (bliminf u f fun x => p x ∨ q x) = bliminf u f p ⊓ bliminf u f q := by
+  rw [← OrderDual.toDual_inj]
+  simp only [toDual_inf, ← blimsup_toDual_comp]
+  exact blimsup_or_eq_sup
 
 @[simp]
 lemma blimsup_sup_not : blimsup u f p ⊔ blimsup u f (¬p ·) = limsup u f := by
   simp_rw [← blimsup_or_eq_sup, or_not, blimsup_true]
 
 @[simp]
-lemma bliminf_inf_not : bliminf u f p ⊓ bliminf u f (¬p ·) = liminf u f :=
-  blimsup_sup_not (α := αᵒᵈ)
+lemma bliminf_inf_not : bliminf u f p ⊓ bliminf u f (¬p ·) = liminf u f := by
+  simp_rw [← bliminf_or_eq_inf, or_not, bliminf_true]
 
 @[simp]
 lemma blimsup_not_sup : blimsup u f (¬p ·) ⊔ blimsup u f p = limsup u f := by
   simpa only [not_not] using blimsup_sup_not (p := (¬p ·))
 
 @[simp]
-lemma bliminf_not_inf : bliminf u f (¬p ·) ⊓ bliminf u f p = liminf u f :=
-  blimsup_not_sup (α := αᵒᵈ)
+lemma bliminf_not_inf : bliminf u f (¬p ·) ⊓ bliminf u f p = liminf u f := by
+  simpa only [not_not] using bliminf_inf_not (p := (¬p ·))
 
 lemma limsup_piecewise {s : Set β} [DecidablePred (· ∈ s)] {v} :
     limsup (s.piecewise u v) f = blimsup u f (· ∈ s) ⊔ blimsup v f (· ∉ s) := by
@@ -679,24 +769,30 @@ lemma limsup_piecewise {s : Set β} [DecidablePred (· ∈ s)] {v} :
     filter_upwards with _ h using by simp [h]
 
 lemma liminf_piecewise {s : Set β} [DecidablePred (· ∈ s)] {v} :
-    liminf (s.piecewise u v) f = bliminf u f (· ∈ s) ⊓ bliminf v f (· ∉ s) :=
-  limsup_piecewise (α := αᵒᵈ)
+    liminf (s.piecewise u v) f = bliminf u f (· ∈ s) ⊓ bliminf v f (· ∉ s) := by
+  rw [← bliminf_inf_not (p := (· ∈ s))]
+  refine congr_arg₂ _ (bliminf_congr ?_) (bliminf_congr ?_) <;>
+    filter_upwards with _ h using by simp [h]
 
 theorem sup_limsup [NeBot f] (a : α) : a ⊔ limsup u f = limsup (fun x => a ⊔ u x) f := by
   simp only [limsup_eq_iInf_iSup, iSup_sup_eq, sup_iInf₂_eq]
   congr; ext s; congr; ext hs; congr
   exact (biSup_const (nonempty_of_mem hs)).symm
 
-theorem inf_liminf [NeBot f] (a : α) : a ⊓ liminf u f = liminf (fun x => a ⊓ u x) f :=
-  sup_limsup (α := αᵒᵈ) a
+theorem inf_liminf [NeBot f] (a : α) : a ⊓ liminf u f = liminf (fun x => a ⊓ u x) f := by
+  simp only [liminf_eq_iSup_iInf, iInf_inf_eq, inf_iSup₂_eq]
+  congr; ext s; congr; ext hs; congr
+  exact (biInf_const (nonempty_of_mem hs)).symm
 
 theorem sup_liminf (a : α) : a ⊔ liminf u f = liminf (fun x => a ⊔ u x) f := by
   simp only [liminf_eq_iSup_iInf]
   rw [sup_comm, biSup_sup (⟨univ, univ_mem⟩ : ∃ i : Set β, i ∈ f)]
   simp_rw [iInf₂_sup_eq, sup_comm (a := a)]
 
-theorem inf_limsup (a : α) : a ⊓ limsup u f = limsup (fun x => a ⊓ u x) f :=
-  sup_liminf (α := αᵒᵈ) a
+theorem inf_limsup (a : α) : a ⊓ limsup u f = limsup (fun x => a ⊓ u x) f := by
+  simp only [limsup_eq_iInf_iSup]
+  rw [inf_comm, biInf_inf (⟨univ, univ_mem⟩ : ∃ i : Set β, i ∈ f)]
+  simp_rw [iSup₂_inf_eq, inf_comm (a := a)]
 
 end CompleteDistribLattice
 
@@ -793,8 +889,9 @@ theorem frequently_lt_of_lt_limsSup {f : Filter α} [ConditionallyCompleteLinear
 
 theorem frequently_lt_of_limsInf_lt {f : Filter α} [ConditionallyCompleteLinearOrder α] {a : α}
     (hf : f.IsCobounded (· ≥ ·) := by isBoundedDefault)
-    (h : limsInf f < a) : ∃ᶠ n in f, n < a :=
-  frequently_lt_of_lt_limsSup (α := OrderDual α) hf h
+    (h : limsInf f < a) : ∃ᶠ n in f, n < a := by
+  contrapose! h
+  exact le_limsInf_of_le hf h
 
 theorem eventually_lt_of_lt_liminf {f : Filter α} [ConditionallyCompleteLinearOrder β] {u : α → β}
     {b : β} (h : b < liminf u f)
@@ -808,8 +905,11 @@ theorem eventually_lt_of_lt_liminf {f : Filter α} [ConditionallyCompleteLinearO
 theorem eventually_lt_of_limsup_lt {f : Filter α} [ConditionallyCompleteLinearOrder β] {u : α → β}
     {b : β} (h : limsup u f < b)
     (hu : f.IsBoundedUnder (· ≤ ·) u := by isBoundedDefault) :
-    ∀ᶠ a in f, u a < b :=
-  eventually_lt_of_lt_liminf (β := βᵒᵈ) h hu
+    ∀ᶠ a in f, u a < b := by
+  obtain ⟨c, hc, hbc⟩ : ∃ (c : β) (_ : c ∈ { c : β | ∀ᶠ n : α in f, u n ≤ c }), c < b := by
+    simp_rw [exists_prop]
+    exact exists_lt_of_csInf_lt hu h
+  exact hc.mono fun x hx => lt_of_le_of_lt hx hbc
 
 section ConditionallyCompleteLinearOrder
 
@@ -861,8 +961,10 @@ theorem frequently_lt_of_lt_limsup {b : β}
 
 theorem frequently_lt_of_liminf_lt {b : β}
     (hu : f.IsCoboundedUnder (· ≥ ·) u := by isBoundedDefault)
-    (h : liminf u f < b) : ∃ᶠ x in f, u x < b :=
-  frequently_lt_of_lt_limsup (β := βᵒᵈ) hu h
+    (h : liminf u f < b) : ∃ᶠ x in f, u x < b := by
+  contrapose! h
+  apply le_limsInf_of_le hu
+  simpa using h
 
 theorem limsup_le_iff {x : β} (h₁ : f.IsCoboundedUnder (· ≤ ·) u := by isBoundedDefault)
     (h₂ : f.IsBoundedUnder (· ≤ ·) u := by isBoundedDefault) :
@@ -922,23 +1024,35 @@ lemma le_limsup_iff' [DenselyOrdered β] {x : β}
 
 theorem le_liminf_iff {x : β} (h₁ : f.IsCoboundedUnder (· ≥ ·) u := by isBoundedDefault)
     (h₂ : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault) :
-    x ≤ liminf u f ↔ ∀ y < x, ∀ᶠ a in f, y < u a := limsup_le_iff (β := βᵒᵈ) h₁ h₂
+    x ≤ liminf u f ↔ ∀ y < x, ∀ᶠ a in f, y < u a :=
+  (limsup_le_iff (β := βᵒᵈ) (u := fun a ↦ OrderDual.toDual (u a)) (x := OrderDual.toDual x)
+      (isCoboundedUnder_le_toDual.2 h₁) (isBoundedUnder_le_toDual.2 h₂)).trans
+    ⟨fun h y hy ↦ h (OrderDual.toDual y) hy, fun h y hy ↦ h (OrderDual.ofDual y) hy⟩
 
 /-- A version of `le_liminf_iff` with large inequalities in densely ordered spaces. -/
 theorem le_liminf_iff' [DenselyOrdered β] {x : β}
     (h₁ : f.IsCoboundedUnder (· ≥ ·) u := by isBoundedDefault)
     (h₂ : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault) :
-    x ≤ liminf u f ↔ ∀ y < x, ∀ᶠ a in f, y ≤ u a := limsup_le_iff' (β := βᵒᵈ) h₁ h₂
+    x ≤ liminf u f ↔ ∀ y < x, ∀ᶠ a in f, y ≤ u a :=
+  (limsup_le_iff' (β := βᵒᵈ) (u := fun a ↦ OrderDual.toDual (u a)) (x := OrderDual.toDual x)
+      (isCoboundedUnder_le_toDual.2 h₁) (isBoundedUnder_le_toDual.2 h₂)).trans
+    ⟨fun h y hy ↦ h (OrderDual.toDual y) hy, fun h y hy ↦ h (OrderDual.ofDual y) hy⟩
 
 theorem liminf_le_iff {x : β} (h₁ : f.IsCoboundedUnder (· ≥ ·) u := by isBoundedDefault)
     (h₂ : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault) :
-    liminf u f ≤ x ↔ ∀ y > x, ∃ᶠ a in f, u a < y := le_limsup_iff (β := βᵒᵈ) h₁ h₂
+    liminf u f ≤ x ↔ ∀ y > x, ∃ᶠ a in f, u a < y :=
+  (le_limsup_iff (β := βᵒᵈ) (u := fun a ↦ OrderDual.toDual (u a)) (x := OrderDual.toDual x)
+      (isCoboundedUnder_le_toDual.2 h₁) (isBoundedUnder_le_toDual.2 h₂)).trans
+    ⟨fun h y hy ↦ h (OrderDual.toDual y) hy, fun h y hy ↦ h (OrderDual.ofDual y) hy⟩
 
 /-- A version of `liminf_le_iff` with large inequalities in densely ordered spaces. -/
 theorem liminf_le_iff' [DenselyOrdered β] {x : β}
     (h₁ : f.IsCoboundedUnder (· ≥ ·) u := by isBoundedDefault)
     (h₂ : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault) :
-    liminf u f ≤ x ↔ ∀ y > x, ∃ᶠ a in f, u a ≤ y := le_limsup_iff' (β := βᵒᵈ) h₁ h₂
+    liminf u f ≤ x ↔ ∀ y > x, ∃ᶠ a in f, u a ≤ y :=
+  (le_limsup_iff' (β := βᵒᵈ) (u := fun a ↦ OrderDual.toDual (u a)) (x := OrderDual.toDual x)
+      (isCoboundedUnder_le_toDual.2 h₁) (isBoundedUnder_le_toDual.2 h₂)).trans
+    ⟨fun h y hy ↦ h (OrderDual.toDual y) hy, fun h y hy ↦ h (OrderDual.ofDual y) hy⟩
 
 lemma liminf_le_limsup_of_frequently_le {v : α → β} (h : ∃ᶠ x in f, u x ≤ v x)
     (h₁ : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault)
@@ -968,7 +1082,9 @@ theorem lt_mem_sets_of_limsSup_lt (h : f.IsBounded (· ≤ ·)) (l : f.limsSup <
   mem_of_superset h fun _a => hcb.trans_le'
 
 theorem gt_mem_sets_of_limsInf_gt : f.IsBounded (· ≥ ·) → b < f.limsInf → ∀ᶠ a in f, b < a :=
-  @lt_mem_sets_of_limsSup_lt αᵒᵈ _ _ _
+  fun h l =>
+  let ⟨_c, (h : ∀ᶠ a in f, _c ≤ a), hbc⟩ := exists_lt_of_lt_csSup h l
+  mem_of_superset h fun _a => hbc.trans_le
 
 section Classical
 
@@ -1069,7 +1185,7 @@ way, in `Filter.HasBasis.limsup_eq_ciInf_ciSup` and `Filter.HasBasis.limsup_eq_i
 noncomputable def limsupReparam
     (f : ι → α) (s : ι' → Set ι) (p : ι' → Prop) [Countable (Subtype p)] [Nonempty (Subtype p)]
     (j : Subtype p) : Subtype p :=
-  liminfReparam (α := αᵒᵈ) f s p j
+  liminfReparam (α := αᵒᵈ) (fun i ↦ OrderDual.toDual (f i)) s p j
 
 @[deprecated (since := "2026-07-18")]
 alias limsup_reparam := limsupReparam
@@ -1081,8 +1197,13 @@ theorem HasBasis.limsup_eq_ciInf_ciSup {v : Filter ι}
     {p : ι' → Prop} {s : ι' → Set ι} [Countable (Subtype p)] [Nonempty (Subtype p)]
     (hv : v.HasBasis p s) {f : ι → α} (hs : ∀ (j : Subtype p), (s j).Nonempty)
     (H : ∃ (j : Subtype p), BddAbove (range (fun (i : s j) ↦ f i))) :
-    limsup f v = ⨅ (j : Subtype p), ⨆ (i : s (limsupReparam f s p j)), f i :=
-  HasBasis.liminf_eq_ciSup_ciInf (α := αᵒᵈ) hv hs H
+    limsup f v = ⨅ (j : Subtype p), ⨆ (i : s (limsupReparam f s p j)), f i := by
+  have h := HasBasis.liminf_eq_ciSup_ciInf (α := αᵒᵈ) hv (f := fun i ↦ OrderDual.toDual (f i)) hs
+    (H.imp fun _ hj ↦ bddBelow_range_toDual.2 hj)
+  rw [liminf_toDual_comp] at h
+  rw [← OrderDual.toDual_inj, h]
+  simp only [toDual_iInf, toDual_iSup]
+  rfl
 
 open scoped Classical in
 /-- Writing a limsup as an infimum of supremum, in a (possibly non-complete) conditionally complete
@@ -1092,8 +1213,13 @@ theorem HasBasis.limsup_eq_ite {v : Filter ι} {p : ι' → Prop} {s : ι' → S
     [Countable (Subtype p)] [Nonempty (Subtype p)] (hv : v.HasBasis p s) (f : ι → α) :
     limsup f v = if ∃ (j : Subtype p), s j = ∅ then sInf univ else
       if ∀ (j : Subtype p), ¬BddAbove (range (fun (i : s j) ↦ f i)) then sInf ∅
-      else ⨅ (j : Subtype p), ⨆ (i : s (limsupReparam f s p j)), f i :=
-  HasBasis.liminf_eq_ite (α := αᵒᵈ) hv f
+      else ⨅ (j : Subtype p), ⨆ (i : s (limsupReparam f s p j)), f i := by
+  have h := HasBasis.liminf_eq_ite (α := αᵒᵈ) hv (fun i ↦ OrderDual.toDual (f i))
+  rw [liminf_toDual_comp] at h
+  rw [← OrderDual.toDual_inj, h]
+  simp only [bddBelow_range_toDual, apply_ite OrderDual.toDual, toDual_sInf, Set.preimage_univ,
+    Set.preimage_empty, toDual_iInf, toDual_iSup]
+  rfl
 
 end Classical
 
@@ -1137,7 +1263,10 @@ theorem OrderIso.liminf_apply {γ} [ConditionallyCompleteLattice β] [Conditiona
     (hgu : f.IsBoundedUnder (· ≥ ·) fun x => g (u x) := by isBoundedDefault)
     (hgu_co : f.IsCoboundedUnder (· ≥ ·) fun x => g (u x) := by isBoundedDefault) :
     g (liminf u f) = liminf (fun x => g (u x)) f :=
-  OrderIso.limsup_apply (β := βᵒᵈ) (γ := γᵒᵈ) g.dual hu hu_co hgu hgu_co
+  congrArg OrderDual.ofDual <|
+    OrderIso.limsup_apply (β := βᵒᵈ) (γ := γᵒᵈ) (u := fun x ↦ OrderDual.toDual (u x)) g.dual
+      (Filter.isBoundedUnder_le_toDual.2 hu) (Filter.isCoboundedUnder_le_toDual.2 hu_co)
+      (Filter.isBoundedUnder_le_toDual.2 hgu) (Filter.isCoboundedUnder_le_toDual.2 hgu_co)
 
 end Order
 
@@ -1167,8 +1296,21 @@ theorem liminf_min [ConditionallyCompleteLinearOrder β] {f : Filter α} {u v : 
     (h₂ : f.IsCoboundedUnder (· ≥ ·) v := by isBoundedDefault)
     (h₃ : f.IsBoundedUnder (· ≥ ·) u := by isBoundedDefault)
     (h₄ : f.IsBoundedUnder (· ≥ ·) v := by isBoundedDefault) :
-    liminf (fun a ↦ min (u a) (v a)) f = min (liminf u f) (liminf v f) :=
-  limsup_max (β := βᵒᵈ) h₁ h₂ h₃ h₄
+    liminf (fun a ↦ min (u a) (v a)) f = min (liminf u f) (liminf v f) := by
+  have bddmin := IsBoundedUnder.inf h₃ h₄
+  have cobddmin : f.IsCoboundedUnder (· ≥ ·) (fun a ↦ min (u a) (v a)) := by
+    obtain ⟨b, hb⟩ := h₁
+    refine ⟨b, fun c hc ↦ hb c ?_⟩
+    rw [eventually_map] at hc ⊢
+    exact hc.mono fun _ h ↦ (le_min_iff.1 h).1
+  apply le_antisymm
+  · exact le_min
+      (liminf_le_liminf (Eventually.of_forall (fun a : α ↦ min_le_left (u a) (v a))) bddmin h₁)
+      (liminf_le_liminf (Eventually.of_forall (fun a : α ↦ min_le_right (u a) (v a))) bddmin h₂)
+  · refine (le_liminf_iff cobddmin bddmin).2 (fun b hb ↦ ?_)
+    have hu := eventually_lt_of_lt_liminf (lt_of_lt_of_le hb (min_le_left _ _)) h₃
+    have hv := eventually_lt_of_lt_liminf (lt_of_lt_of_le hb (min_le_right _ _)) h₄
+    refine mem_of_superset (inter_mem hu hv) (fun _ ↦ by simp)
 
 open Finset
 
@@ -1210,14 +1352,27 @@ theorem liminf_finset_inf' [ConditionallyCompleteLinearOrder β] {f : Filter α}
     {F : ι → α → β} {s : Finset ι} (hs : s.Nonempty)
     (h₁ : ∀ i ∈ s, f.IsCoboundedUnder (· ≥ ·) (F i) := by exact fun _ _ ↦ by isBoundedDefault)
     (h₂ : ∀ i ∈ s, f.IsBoundedUnder (· ≥ ·) (F i) := by exact fun _ _ ↦ by isBoundedDefault) :
-    liminf (fun a ↦ inf' s hs (fun i ↦ F i a)) f = inf' s hs (fun i ↦ liminf (F i) f) :=
-  limsup_finset_sup' (β := βᵒᵈ) hs h₁ h₂
+    liminf (fun a ↦ inf' s hs (fun i ↦ F i a)) f = inf' s hs (fun i ↦ liminf (F i) f) := by
+  have e : ∀ G : ι → β, (s.sup' hs fun i ↦ OrderDual.toDual (G i))
+      = OrderDual.toDual (s.inf' hs G) := fun G ↦ (Finset.toDual_inf' hs G).symm
+  have h := limsup_finset_sup' (β := βᵒᵈ) hs (F := fun i a ↦ OrderDual.toDual (F i a))
+    (fun i hi ↦ Filter.isCoboundedUnder_le_toDual.2 (h₁ i hi))
+    (fun i hi ↦ Filter.isBoundedUnder_le_toDual.2 (h₂ i hi))
+  simp only [e, Filter.limsup_toDual_comp] at h
+  exact OrderDual.toDual_inj.1 h
 
 theorem liminf_finset_inf [ConditionallyCompleteLinearOrder β] [OrderTop β] {f : Filter α}
     {F : ι → α → β} {s : Finset ι}
     (h₁ : ∀ i ∈ s, f.IsCoboundedUnder (· ≥ ·) (F i) := by exact fun _ _ ↦ by isBoundedDefault)
     (h₂ : ∀ i ∈ s, f.IsBoundedUnder (· ≥ ·) (F i) := by exact fun _ _ ↦ by isBoundedDefault) :
-    liminf (fun a ↦ inf s (fun i ↦ F i a)) f = inf s (fun i ↦ liminf (F i) f) :=
-  limsup_finset_sup (β := βᵒᵈ) h₁ h₂
+    liminf (fun a ↦ inf s (fun i ↦ F i a)) f = inf s (fun i ↦ liminf (F i) f) := by
+  rcases eq_or_neBot f with (rfl | _)
+  · simp [liminf_eq, isGreatest_univ.csSup_eq]
+  rcases Finset.eq_empty_or_nonempty s with (rfl | s_nemp)
+  · simp only [inf_empty, liminf_const]
+  rw [← Finset.inf'_eq_inf s_nemp fun i ↦ liminf (F i) f, ← liminf_finset_inf' s_nemp h₁ h₂]
+  congr
+  ext a
+  exact Eq.symm (Finset.inf'_eq_inf s_nemp (fun i ↦ F i a))
 
 end MinMax
