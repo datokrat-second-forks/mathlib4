@@ -1154,3 +1154,102 @@ private lemma toDual_support_inf (s : Finset A) (degt : A → T) :
     OrderDual.toDual (s.inf degt) = s.sup fun a ↦ OrderDual.toDual (degt a) :=
   Finset.toDual_inf s degt
 ```
+
+## 37. A class whose *topology* is a parameter cannot be transported by `‹_›`
+
+`UniformSpace` carries its topology in a field (§33); `WeakPseudoEMetricSpace`/`WeakEMetricSpace`
+are the other shape — the topology is a *parameter*, and the class states `topology_le` and
+`topology_eq_on_restrict` relative to it.  Either way `instance : C Xᵒᵈ := ‹C X›` is now
+ill-typed, and the repair is the combinator Mathlib already has for pulling a structure back
+along a map:
+
+```lean
+instance OrderDual.instWeakPseudoEMetricSpace [TopologicalSpace X] [WeakPseudoEMetricSpace X] :
+    WeakPseudoEMetricSpace Xᵒᵈ :=
+  WeakPseudoEMetricSpace.IsInducing (f := ofDual)
+    ⟨by
+      refine TopologicalSpace.ext_iff.2 fun s ↦ ⟨fun hs ↦ ⟨_, hs, rfl⟩, ?_⟩
+      rintro ⟨u, hu, rfl⟩
+      exact hu⟩ ‹_›
+instance [PseudoEMetricSpace X] : PseudoEMetricSpace Xᵒᵈ :=
+  (PseudoEMetricSpace.induced ofDual ‹_›).replaceUniformity (by rfl)
+```
+
+The `⟨by …⟩` is `IsInducing (ofDual : Xᵒᵈ → X)`, i.e. the proof that the campaign's
+`OrderDual.instTopologicalSpace := .coinduced toDual` agrees with `.induced ofDual`.  It has to be
+written out *inline*: an `instance` is a public `def`, so a `private theorem` may not appear in its
+body (§34), and every topology-flavoured `Xᵒᵈ` instance needs this same three-line proof again.
+
+**Open design question.** Defining `OrderDual.instTopologicalSpace := .induced ofDual ‹_›` instead
+would make `IsInducing ofDual` literally `⟨rfl⟩`, would let `OrderDual.instUniformSpace` drop its
+`replaceTopology`, and matches Mathlib's convention for type synonyms (`ULift.down`,
+`Subtype.val`).  The cost is that `OrderDual.isOpen_preimage_toDual` stops being `Iff.rfl` and that
+every module downstream of `Mathlib/Topology/Constructions.lean` rebuilds; that file is also where
+any shared `isInducing_ofDual` lemma would have to live, at the same rebuild cost.
+
+## 38. `simpa … using h` finishes at reducible transparency
+
+`OrderDual` props are defeq at *default* transparency (`toDual x ≤ toDual y` ≡ `y ≤ x`), and
+`exact` accepts them.  `simpa … using h` does not: its final step is a reducible-transparency
+match, so a term that `exact` would take is rejected with "After simplification, term … has type".
+Split it:
+
+```lean
+  have hx := Set.ext_iff.1 h (OrderDual.toDual x)
+  simp only [Set.mem_iUnion, Set.mem_Iic, Set.mem_Iio] at hx
+  simp only [Set.mem_iUnion, Set.mem_Ici, Set.mem_Ioi]
+  exact hx
+```
+
+The simp lemmas have to be applied to the hypothesis and the goal *separately*, because they are
+different lemmas (`Iic`/`Iio` on `αᵒᵈ` against `Ici`/`Ioi` on `α`).  Note also that a `toDual`
+which the unifier produced comes back as the constructor `{ ofDual' := f i }`, so simp lemmas
+stated with `⇑toDual` do not fire on it.
+
+## 39. Antitone Galois connections into `(Set X)ᵒᵈ`
+
+`zeroLocus`/`vanishingIdeal` (and `orthogonalBilin`, `annihilator`/`torsionBySet`, …) are stated as
+a `GaloisConnection` whose right-hand order is `(Set X)ᵒᵈ`.  The two maps now have to say so:
+
+```lean
+theorem gc_ideal :
+    @GaloisConnection (Ideal A) (Set (ProjectiveSpectrum 𝒜))ᵒᵈ _ _
+      (fun I => OrderDual.toDual (zeroLocus 𝒜 I)) fun t =>
+      (vanishingIdeal (OrderDual.ofDual t)).toIdeal :=
+  fun I t => subset_zeroLocus_iff_le_vanishingIdeal (OrderDual.ofDual t) I
+```
+
+and then each consumer picks up one of three fixes: feed a `toDual` where a set was passed
+(`(gc_set _) s (OrderDual.toDual t)`), strip a `toDual` from a conclusion
+(`OrderDual.toDual_inj.1 (gc_ideal 𝒜).l_sup`), or — for the `iSup`/`iInf` forms, which are big
+operators (§36) — insert the bridge:
+
+```lean
+  OrderDual.toDual_inj.1 <| (gc_ideal 𝒜).l_iSup.trans (toDual_iInf _).symm
+```
+
+`l_bot`, `l_sup`, `u_inf` need no bridge: `⊥`, `⊔`, `⊓` on `αᵒᵈ` are `toDual ⊤`, `toDual ∘ ⊓`,
+`toDual ∘ ⊔` definitionally.  Named arguments are worth checking — `GaloisConnection.u_inf` binds
+`b₁`/`b₂`, not `a`/`b`.
+
+## 40. `(α := αᵒᵈ)` is only a transport when the *statement* stays at one type
+
+The wave-23 sweep separated two kinds of `(α := αᵒᵈ)` one-liners.  Where the statement is about
+elements and props only, the transport survives with a bridge for the data
+(`iSup_eq_of_forall_le_of_tendsto (α := αᵒᵈ) hle (tendsto_toDual_iff.2 hlim)`).  Where the
+statement mentions a *set*, a *function space* or an *order-indexed structure* at `α`, the dual
+statement is about `Set αᵒᵈ`/`β → αᵒᵈ`/`LTSeries αᵒᵈ` (§31) and there is nothing to transport —
+the proof has to be mirrored:
+
+```lean
+theorem convex_Ici (r : β) : Convex 𝕜 (Ici r) := fun x hx y hy a b ha hb hab =>
+  calc
+    r = a • r + b • r := (Convex.combo_self hab _).symm
+    _ ≤ a • x + b • y :=
+      add_le_add (smul_le_smul_of_nonneg_left hx ha) (smul_le_smul_of_nonneg_left hy hb)
+```
+
+Mirroring is mechanical but not free: `MonotoneOn.convex_ge` swaps `max_rec'`/`Convex.combo_le_max`
+for `min_rec'`/`Convex.min_le_combo`, `nhds_atBot` re-runs `nhds_atTop`'s `simp only` with `atBot`,
+and `DFinsupp.Colex.wellFoundedLT` re-runs `Lex.wellFounded'` at `r := (· > ·)` (which needs
+`Std.Trichotomous (· > ·)`, one line: `⟨fun a b h₁ h₂ ↦ Std.Trichotomous.trichotomous a b h₂ h₁⟩`).
