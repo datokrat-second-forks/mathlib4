@@ -624,3 +624,37 @@ refine OrderDual.toDual_inj.mpr ?_          -- strip the wrapper off the *goal*
 
 `Function.Surjective.forall.2` turns `∀ x : αᵒᵈ, p x` into `∀ a : α, p (toDual a)`, so the
 induction principle for `α` applies directly and every `ofDual (toDual _)` cancels by simp.
+
+## §24 — Instances that *deliberately* exploited `Finset αᵒᵈ = Finset α`
+
+`Order/Interval/Finset/Defs.lean` defined the dual `LocallyFiniteOrder` by handing back the
+primal interval **unmapped**, and said so in a docstring:
+
+> Note we define `Icc (toDual a) (toDual b)` as `Icc α _ _ b a` (which has type `Finset α` not
+> `Finset αᵒᵈ`!) instead of `(Icc b a).map toDual.toEmbedding` as this means the following is
+> defeq: `lemma this : (Icc (toDual (toDual a)) (toDual (toDual b)) :) = (Icc a b :) := rfl`
+
+That is exactly the identification the one-field structure removes, so the fence has to come
+down: the instance must map.
+
+```lean
+-- before
+finsetIcc a b := @Icc α _ _ (ofDual b) (ofDual a)
+finset_mem_Icc _ _ _ := (mem_Icc (α := α)).trans and_comm
+
+-- after
+finsetIcc a b := (@Icc α _ _ (ofDual b) (ofDual a)).map toDual.toEmbedding
+finset_mem_Icc _ _ _ := mem_map_equiv.trans <| (mem_Icc (α := α)).trans and_comm
+```
+
+What is gained: the twelve `Icc_orderDual_def` / `Icc_toDual` / `Icc_ofDual` bridge lemmas that
+used to be proved by `map_refl.symm` are now `rfl` in the `toDual` direction — the map *is* the
+definition.  What is lost: the `ofDual` direction (`Icc (ofDual a) (ofDual b) = (Icc b a).map
+ofDual.toEmbedding`) is no longer `rfl`, because `map g (map f s)` does not reduce; it needs
+
+```lean
+  ext x; rw [mem_map_equiv, mem_Icc, mem_Icc, and_comm]; exact Iff.rfl
+```
+
+and the docstring's `rfl` promise is now false and has been rewritten to say so.  Same story for
+`LocallyFiniteOrderBot` / `Iic` / `Iio`.

@@ -42,13 +42,28 @@ section Preorder
 
 variable [Preorder α]
 
+-- `αᵒᵈ` is a one-field structure over `α`, so the iterates have to be conjugated by hand.
+private lemma pred_iterate_ofDual [SuccOrder α] (n : ℕ) (x : αᵒᵈ) :
+    Order.pred^[n] x = OrderDual.toDual (Order.succ^[n] (OrderDual.ofDual x)) := by
+  induction n generalizing x with
+  | zero => rfl
+  | succ n ih => rw [Function.iterate_succ_apply, ih, Function.iterate_succ_apply]; rfl
+
+private lemma succ_iterate_ofDual [PredOrder α] (n : ℕ) (x : αᵒᵈ) :
+    Order.succ^[n] x = OrderDual.toDual (Order.pred^[n] (OrderDual.ofDual x)) := by
+  induction n generalizing x with
+  | zero => rfl
+  | succ n ih => rw [Function.iterate_succ_apply, ih, Function.iterate_succ_apply]; rfl
+
 -- `to_dual` cannot yet reorder arguments of arguments
 instance [SuccOrder α] [IsSuccArchimedean α] : IsPredArchimedean αᵒᵈ :=
-  ⟨fun {a b} h => by convert! exists_succ_iterate_of_le h.ofDual⟩
+  ⟨fun {a b} h => (exists_succ_iterate_of_le h.ofDual).imp fun n hn => by
+    rw [pred_iterate_ofDual]; exact congrArg OrderDual.toDual hn⟩
 
 @[to_dual existing]
 instance [PredOrder α] [IsPredArchimedean α] : IsSuccArchimedean αᵒᵈ :=
-  ⟨fun {a b} h => by convert! exists_pred_iterate_of_le h.ofDual⟩
+  ⟨fun {a b} h => (exists_pred_iterate_of_le h.ofDual).imp fun n hn => by
+    rw [succ_iterate_ofDual]; exact congrArg OrderDual.toDual hn⟩
 
 section SuccOrder
 
@@ -137,9 +152,13 @@ This isn't an instance due to a loop with `LinearOrder`.
 @[to_dual existing]
 abbrev IsPredArchimedean.linearOrder [PredOrder α] [IsPredArchimedean α]
      [DecidableEq α] [DecidableLE α] [DecidableLT α]
-     [IsDirectedOrder α] : LinearOrder α :=
-  letI : LinearOrder αᵒᵈ := IsSuccArchimedean.linearOrder
-  inferInstanceAs (LinearOrder αᵒᵈᵒᵈ)
+     [IsDirectedOrder α] : LinearOrder α where
+  le_total a b :=
+    have ⟨c, ha, hb⟩ := directed_of (· ≤ ·) a b
+    le_total_of_directed hb ha
+  toDecidableEq := inferInstance
+  toDecidableLE := inferInstance
+  toDecidableLT := inferInstance
 
 end PartialOrder
 
@@ -190,8 +209,18 @@ lemma StrictMono.not_bddAbove_range_of_isSuccArchimedean [NoMaxOrder α] [SuccOr
 
 @[to_dual]
 lemma StrictAnti.not_bddAbove_range_of_isSuccArchimedean [NoMinOrder α] [SuccOrder β]
-    [IsSuccArchimedean β] (hf : StrictAnti f) : ¬ BddAbove (Set.range f) :=
-  hf.dual_right.not_bddBelow_range_of_isPredArchimedean
+    [IsSuccArchimedean β] (hf : StrictAnti f) : ¬ BddAbove (Set.range f) := by
+  rintro ⟨m, hm⟩
+  have hm' : ∀ a, f a ≤ m := fun a ↦ hm <| Set.mem_range_self _
+  obtain ⟨a₀⟩ := ‹Nonempty α›
+  suffices ∀ b, f a₀ ≤ b → ∃ a, b < f a by
+    obtain ⟨a, ha⟩ : ∃ a, m < f a := this m (hm' a₀)
+    exact ha.not_ge (hm' a)
+  have h : ∀ a, ∃ a', f a < f a' := fun a ↦ (exists_lt a).imp (fun a' h ↦ hf h)
+  apply Succ.rec
+  · exact h a₀
+  rintro b _ ⟨a, hba⟩
+  exact (h a).imp (fun a' ↦ (succ_le_of_lt hba).trans_lt)
 
 @[deprecated (since := "2026-02-05")]
 alias StrictMono.not_bddBelow_range_of_isSuccArchimedean :=
@@ -222,8 +251,18 @@ instance (priority := 100) WellFoundedLT.toIsPredArchimedean [h : WellFoundedLT 
 @[to_dual existing]
 instance (priority := 100) WellFoundedGT.toIsSuccArchimedean [h : WellFoundedGT α]
     [SuccOrder α] : IsSuccArchimedean α :=
-  let h : IsPredArchimedean αᵒᵈ := by infer_instance
-  ⟨h.1⟩
+  ⟨fun {a b} => by
+    refine WellFounded.fix (C := fun a => a ≤ b → ∃ n, Nat.iterate succ n a = b)
+      h.wf ?_ a
+    intro a ih hab
+    replace hab := eq_or_lt_of_le hab
+    rcases hab with (rfl | hab)
+    · exact ⟨0, rfl⟩
+    rcases eq_or_lt_of_le (le_succ a) with ha | ha
+    · cases (max_of_succ_le ha.ge).not_lt hab
+    obtain ⟨k, hk⟩ := ih (succ a) ha (succ_le_of_lt hab)
+    refine ⟨k + 1, ?_⟩
+    rw [iterate_add_apply, iterate_one, hk]⟩
 
 end IsWellFounded
 
@@ -342,9 +381,29 @@ instance Set.OrdConnected.isPredArchimedean [PredOrder α] [IsPredArchimedean α
         · exact this
 
 instance Set.OrdConnected.isSuccArchimedean [SuccOrder α] [IsSuccArchimedean α]
-    (s : Set α) [s.OrdConnected] : IsSuccArchimedean s :=
-  letI : IsPredArchimedean sᵒᵈ := inferInstanceAs (IsPredArchimedean (OrderDual.ofDual ⁻¹' s))
-  inferInstanceAs (IsSuccArchimedean sᵒᵈᵒᵈ)
+    (s : Set α) [s.OrdConnected] : IsSuccArchimedean s where
+  exists_succ_iterate_of_le := @fun ⟨b, hb⟩ ⟨c, hc⟩ hbc ↦ by classical
+    simp only [Subtype.mk_le_mk] at hbc
+    obtain ⟨n, hn⟩ := hbc.exists_succ_iterate
+    use n
+    induction n generalizing b with
+    | zero => simp_all
+    | succ n hi =>
+      simp_all only [Function.iterate_succ, Function.comp_apply]
+      change Order.succ^[n] (dite ..) = _
+      split_ifs with h
+      · dsimp only at h ⊢
+        apply hi _ _ _ hn
+        · rw [← hn]
+          apply Order.le_succ_iterate
+      · have : Order.succ (⟨b, hb⟩ : s) = ⟨b, hb⟩ := by
+          change dite .. = _
+          simp [h]
+        rw [Function.iterate_fixed]
+        · simp only [Order.succ_eq_iff_isMax] at this
+          apply (this.eq_of_ge _).symm
+          exact hbc
+        · exact this
 
 end OrdConnected
 
