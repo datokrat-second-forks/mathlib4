@@ -332,14 +332,18 @@ Equivalently, `x ≤ y` can be defined as `∀ b : α, y = ↑b → ∃ a : α, 
 see `le_iff_forall`. The definition as an inductive predicate is preferred since it
 cannot be accidentally unfolded too far. -/
 @[to_dual existing]
-instance (priority := 10) WithTop.instLE : LE (WithTop α) where le a b := WithBot.LE (α := αᵒᵈ) b a
+instance (priority := 10) WithTop.instLE : LE (WithTop α) where
+  le a b := WithBot.LE (α := αᵒᵈ) (b.map OrderDual.toDual') (a.map OrderDual.toDual')
 
 lemma WithBot.le_def {x y : WithBot α} : x ≤ y ↔ x = ⊥ ∨ ∃ a b : α, a ≤ b ∧ x = a ∧ y = b :=
   le_def_aux ..
 
 @[to_dual existing le_def]
-lemma WithTop.le_def' {x y : WithTop α} : x ≤ y ↔ y = ⊤ ∨ ∃ b a : α, a ≤ b ∧ y = b ∧ x = a :=
-  WithBot.le_def
+lemma WithTop.le_def' {x y : WithTop α} : x ≤ y ↔ y = ⊤ ∨ ∃ b a : α, a ≤ b ∧ y = b ∧ x = a := by
+  cases x <;> cases y <;> simp <;> first
+    | exact WithBot.LE.bot_le _
+    | exact fun h ↦ nomatch h
+    | exact ⟨fun h ↦ by cases h; assumption, fun h ↦ WithBot.LE.coe_le_coe h⟩
 
 @[to_dual le_def']
 lemma WithTop.le_def {x y : WithTop α} : x ≤ y ↔ y = ⊤ ∨ ∃ a b : α, a ≤ b ∧ x = a ∧ y = b := by
@@ -369,7 +373,8 @@ Equivalently, `x < y` can be defined as `∃ a : α, x = ↑a ∧ ∀ b : α, y 
 see `le_if_forall`. The definition as an inductive predicate is preferred since it
 cannot be accidentally unfolded too far. -/
 @[to_dual existing]
-instance (priority := 10) WithTop.instLT : LT (WithTop α) where lt a b := WithBot.LT (α := αᵒᵈ) b a
+instance (priority := 10) WithTop.instLT : LT (WithTop α) where
+  lt a b := WithBot.LT (α := αᵒᵈ) (b.map OrderDual.toDual') (a.map OrderDual.toDual')
 
 lemma WithBot.lt_def {x y : WithBot α} :
     x < y ↔ (x = ⊥ ∧ ∃ b : α, y = b) ∨ ∃ a b : α, a < b ∧ x = a ∧ y = b :=
@@ -377,8 +382,11 @@ lemma WithBot.lt_def {x y : WithBot α} :
 
 @[to_dual existing lt_def]
 lemma WithTop.lt_def' {x y : WithTop α} :
-    x < y ↔ (y = ⊤ ∧ ∃ a : α, x = a) ∨ ∃ b a : α, a < b ∧ y = b ∧ x = a :=
-  WithBot.lt_def
+    x < y ↔ (y = ⊤ ∧ ∃ a : α, x = a) ∨ ∃ b a : α, a < b ∧ y = b ∧ x = a := by
+  cases x <;> cases y <;> simp <;> first
+    | exact WithBot.LT.bot_lt _
+    | exact fun h ↦ nomatch h
+    | exact ⟨fun h ↦ by cases h; assumption, fun h ↦ WithBot.LT.coe_lt_coe h⟩
 
 @[to_dual lt_def']
 lemma WithTop.lt_def {x y : WithTop α} :
@@ -899,8 +907,11 @@ See `WithBot.toDualTopEquiv` for the related order-iso. -/
 @[to_dual
 /-- `WithTop.toDual` is the equivalence sending `⊤` to `⊥` and any `a : α` to `toDual a : αᵒᵈ`.
 See `WithTop.toDualBotEquiv` for the related order-iso. -/]
-protected def toDual : WithBot α ≃ WithTop αᵒᵈ :=
-  Equiv.refl _
+protected def toDual : WithBot α ≃ WithTop αᵒᵈ where
+  toFun x := x.map OrderDual.toDual'
+  invFun x := x.map OrderDual.ofDual'
+  left_inv x := by cases x <;> rfl
+  right_inv x := by cases x <;> rfl
 
 /-- `WithBot.ofDual` is the equivalence sending `⊥` to `⊤` and any `a : αᵒᵈ` to `ofDual a : α`.
 See `WithBot.ofDualTopEquiv` for the related order-iso.
@@ -908,8 +919,11 @@ See `WithBot.ofDualTopEquiv` for the related order-iso.
 @[to_dual
 /-- `WithTop.ofDual` is the equivalence sending `⊤` to `⊥` and any `a : αᵒᵈ` to `ofDual a : α`.
 See `WithTop.toDualBotEquiv` for the related order-iso. -/]
-protected def ofDual : WithBot αᵒᵈ ≃ WithTop α :=
-  Equiv.refl _
+protected def ofDual : WithBot αᵒᵈ ≃ WithTop α where
+  toFun x := x.map OrderDual.ofDual'
+  invFun x := x.map OrderDual.toDual'
+  left_inv x := by cases x <;> rfl
+  right_inv x := by cases x <;> rfl
 
 @[to_dual (attr := simp)]
 theorem toDual_symm : WithBot.toDual.symm = WithTop.ofDual (α := α) := rfl
@@ -933,23 +947,23 @@ theorem ofDual_apply_coe (a : αᵒᵈ) : WithBot.ofDual (a : WithBot αᵒᵈ) 
 
 @[to_dual]
 theorem map_toDual (f : αᵒᵈ → βᵒᵈ) (a : WithBot α) :
-    map f (WithBot.toDual a) = a.map (toDual ∘ f) :=
-  rfl
+    map f (WithBot.toDual a) = a.map (f ∘ ⇑toDual) := by
+  cases a <;> rfl
 
 @[to_dual]
 theorem map_ofDual (f : α → β) (a : WithBot αᵒᵈ) :
-    map f (WithBot.ofDual a) = a.map (ofDual ∘ f) :=
-  rfl
+    map f (WithBot.ofDual a) = a.map (f ∘ ⇑ofDual) := by
+  cases a <;> rfl
 
 @[to_dual]
 theorem toDual_map (f : α → β) (a : WithBot α) :
-    WithBot.toDual (map f a) = WithTop.map (toDual ∘ f ∘ ofDual) (WithBot.toDual a) :=
-  rfl
+    WithBot.toDual (map f a) = WithTop.map (⇑toDual ∘ f ∘ ⇑ofDual) (WithBot.toDual a) := by
+  cases a <;> rfl
 
 @[to_dual]
 theorem ofDual_map (f : αᵒᵈ → βᵒᵈ) (a : WithBot αᵒᵈ) :
-    WithBot.ofDual (map f a) = WithTop.map (ofDual ∘ f ∘ toDual) (WithBot.ofDual a) :=
-  rfl
+    WithBot.ofDual (map f a) = WithTop.map (⇑ofDual ∘ f ∘ ⇑toDual) (WithBot.ofDual a) := by
+  cases a <;> rfl
 
 section LE
 variable [LE α]

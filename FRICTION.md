@@ -156,3 +156,45 @@ The rewrite let us delete backward-compatibility options that existed only to pa
 synonym: six `set_option backward.inferInstanceAs.wrap.instances false` in
 `Mathlib/Algebra/Order/Group/Synonym.lean` and four
 `set_option backward.isDefEq.respectTransparency false in` in `Mathlib/Order/Monotone/Basic.lean`.
+
+## 8. Type synonyms whose *duality* was the identity: `WithBot` / `WithTop`
+
+`Mathlib/Order/WithBot.lean` defined `WithTop`'s order as `WithBot`'s order at `αᵒᵈ`:
+
+```lean
+instance WithTop.instLE : LE (WithTop α) where le a b := WithBot.LE (α := αᵒᵈ) b a
+```
+
+`b : WithTop α` was accepted as a `WithBot αᵒᵈ` for two independent reasons: `WithTop α` and
+`WithBot α` are both `def … := Option α` (still true), and `αᵒᵈ` *was* `α` (no longer true). The
+file even carries a TODO asking whether that def-eq should be kept. It can be kept — the fix is a
+`map` bridge across the wrapper only:
+
+```lean
+instance (priority := 10) WithTop.instLE : LE (WithTop α) where
+  le a b := WithBot.LE (α := αᵒᵈ) (b.map OrderDual.toDual') (a.map OrderDual.toDual')
+```
+
+Measured cost for the whole 1000-line file: the two order instances above, the two dual
+equivalences (`WithBot.toDual`/`ofDual` stop being `Equiv.refl` and become genuine
+`Option.map`-based bijections), the four `map_*` lemmas next to them, and real proofs for
+`WithTop.le_def'` / `lt_def'`, which could no longer be `WithBot.le_def` / `WithBot.lt_def`:
+
+```lean
+lemma WithTop.le_def' {x y : WithTop α} : x ≤ y ↔ y = ⊤ ∨ ∃ b a : α, a ≤ b ∧ y = b ∧ x = a := by
+  cases x <;> cases y <;> simp <;> first
+    | exact WithBot.LE.bot_le _
+    | exact fun h ↦ nomatch h
+    | exact ⟨fun h ↦ by cases h; assumption, fun h ↦ WithBot.LE.coe_le_coe h⟩
+```
+
+Everything else in the file — including every `@[to_dual]`-generated `WithTop` lemma — stayed
+green. Two lessons:
+
+* **A `rfl` that crosses a wrapper needs a `cases` first.** `Option.map g (Option.map f a)` does
+  not reduce for a variable `a`, so the four `map_*` lemmas went from `rfl` to `by cases a <;> rfl`.
+* **Keep the statement on the side where the data already lives.** The obvious repair for
+  `map f (WithBot.toDual a) = a.map (toDual ∘ f)` is to conjugate both wrappers,
+  `= WithBot.toDual (a.map (ofDual ∘ f ∘ toDual))`. But since `WithBot`/`WithTop` are still the
+  same `Option`, the shorter `= a.map (f ∘ ⇑toDual)` typechecks and is still `rfl`-after-`cases`.
+  Prefer it.
