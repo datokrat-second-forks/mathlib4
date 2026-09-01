@@ -588,3 +588,39 @@ Attributes travel separately and must be carried over by hand:
 
 Verify them behaviourally, not by eye: `gcongr` must still fire the dual, `push_cast` must still
 use the generated `WithBot.coe_iSup`.
+
+## §23 — `rintro ⟨x⟩` gives the *constructor* spelling, which simp lemmas do not match
+
+Destructuring an `αᵒᵈ` with `rintro ⟨x⟩` is the cheapest way to get at the underlying element,
+but it puts `{ ofDual' := x }` into the goal — the raw structure literal.  `OrderDual.ofDual_toDual`
+is stated about the `Equiv` coercion `⇑ofDual (⇑toDual a)`, so it does **not** fire on
+`⇑ofDual { ofDual' := x }`, and `dsimp only` leaves the whole detour in place.  Everything
+downstream then fails to match too: in `CategoryTheory/Abelian/Subobject.lean` the goal after
+`dsimp only [..., Subobject.lift_mk, ...]` was still
+
+```
+⊢ Subobject.lift (fun _ f _ => Subobject.mk (cokernel.π f).op) ⋯
+      (Subobject.lift (fun _ f _ => Subobject.mk (kernel.ι f.unop)) ⋯
+        (OrderDual.ofDual { ofDual' := Subobject.mk f })) = OrderDual.ofDual { ofDual' := Subobject.mk f }
+```
+
+with `Subobject.lift_mk` never firing, and the *later* tactics failing on the unreduced
+`(MonoOver.mk (kernel.ι (MonoOver.mk f).arrow.unop)).arrow` spelling rather than at the dsimp.
+
+Use the surjectivity of the equiv instead, which introduces the element already wrapped in the
+coercion the simp set knows about:
+
+```lean
+-- before (worked when `αᵒᵈ` was `α`)
+refine OrderHom.ext _ _ (funext (Subobject.ind _ ?_))
+
+-- after
+refine OrderHom.ext _ _
+  (funext (OrderDual.toDual.surjective.forall.2 (Subobject.ind _ ?_)))
+...
+dsimp only [..., OrderDual.ofDual_toDual]   -- now fires
+refine OrderDual.toDual_inj.mpr ?_          -- strip the wrapper off the *goal*
+```
+
+`Function.Surjective.forall.2` turns `∀ x : αᵒᵈ, p x` into `∀ a : α, p (toDual a)`, so the
+induction principle for `α` applies directly and every `ofDual (toDual _)` cancels by simp.

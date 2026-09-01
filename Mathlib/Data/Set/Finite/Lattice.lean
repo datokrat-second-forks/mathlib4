@@ -313,8 +313,13 @@ theorem Finite.iSup_biInf_of_monotone {ι ι' α : Type*} [Preorder ι'] [Nonemp
 @[to_dual]
 theorem Finite.iSup_biInf_of_antitone {ι ι' α : Type*} [Preorder ι'] [Nonempty ι']
     [IsCodirectedOrder ι'] [Order.Frame α] {s : Set ι} (hs : s.Finite) {f : ι → ι' → α}
-    (hf : ∀ i ∈ s, Antitone (f i)) : ⨆ j, ⨅ i ∈ s, f i j = ⨅ i ∈ s, ⨆ j, f i j :=
-  @Finite.iSup_biInf_of_monotone ι ι'ᵒᵈ α _ _ _ _ _ hs _ fun i hi => (hf i hi).dual_left
+    (hf : ∀ i ∈ s, Antitone (f i)) : ⨆ j, ⨅ i ∈ s, f i j = ⨅ i ∈ s, ⨆ j, f i j := by
+  induction s, hs using Set.Finite.induction_on with
+  | empty => simp [iSup_const]
+  | insert _ _ ihs =>
+    rw [forall_mem_insert] at hf
+    simp only [iInf_insert, ← ihs hf.2]
+    exact iSup_inf_of_antitone hf.1 fun j₁ j₂ hj => iInf₂_mono fun i hi => hf.2 i hi hj
 
 @[to_dual]
 theorem _root_.iSup_iInf_of_monotone {ι ι' α : Type*} [Finite ι] [Preorder ι'] [Nonempty ι']
@@ -325,8 +330,8 @@ theorem _root_.iSup_iInf_of_monotone {ι ι' α : Type*} [Finite ι] [Preorder �
 @[to_dual]
 theorem _root_.iSup_iInf_of_antitone {ι ι' α : Type*} [Finite ι] [Preorder ι'] [Nonempty ι']
     [IsCodirectedOrder ι'] [Order.Frame α] {f : ι → ι' → α} (hf : ∀ i, Antitone (f i)) :
-    ⨆ j, ⨅ i, f i j = ⨅ i, ⨆ j, f i j :=
-  @iSup_iInf_of_monotone ι ι'ᵒᵈ α _ _ _ _ _ _ fun i => (hf i).dual_left
+    ⨆ j, ⨅ i, f i j = ⨅ i, ⨆ j, f i j := by
+  simpa only [iInf_univ] using finite_univ.iSup_biInf_of_antitone fun i _ => hf i
 
 @[deprecated (since := "2026-02-03")] protected alias iSup_iInf_of_monotone := iSup_iInf_of_monotone
 @[deprecated (since := "2026-02-03")] protected alias iSup_iInf_of_antitone := iSup_iInf_of_antitone
@@ -386,8 +391,10 @@ theorem _root_.iInf_iSup_eq_of_finite {ι : Sort v} {κ : ι → Sort w} [Order.
       Equiv.piOptionEquivProd_symm_apply, iSup_prod, ← inf_iSup_eq, ← iSup_inf_eq]
 
 theorem _root_.iSup_iInf_eq_of_finite {ι : Sort v} {κ : ι → Sort w} [Order.Coframe α] [Finite ι]
-    {f : ∀ a, κ a → α} : ⨆ a, ⨅ b, f a b = ⨅ g : ∀ a, κ a, ⨆ a, f a (g a) :=
-  iInf_iSup_eq_of_finite (α := αᵒᵈ)
+    {f : ∀ a, κ a → α} : ⨆ a, ⨅ b, f a b = ⨅ g : ∀ a, κ a, ⨆ a, f a (g a) := by
+  rw [← OrderDual.toDual_inj]
+  simpa only [toDual_iSup, toDual_iInf] using
+    iInf_iSup_eq_of_finite (α := αᵒᵈ) (f := fun a b => OrderDual.toDual (f a b))
 
 theorem Finite.biInf_iSup_eq {ι : Type v} {κ : ι → Sort w} [Nonempty (Π a, κ a)] [Order.Frame α]
     {s : Set ι} (hs : s.Finite) {f : Π a, κ a → α} :
@@ -406,8 +413,10 @@ theorem Finite.biInf_iSup_eq {ι : Type v} {κ : ι → Sort w} [Nonempty (Π a,
 
 theorem Finite.biSup_iInf_eq {ι : Type v} {κ : ι → Sort w} [Nonempty (∀ a, κ a)] [Order.Coframe α]
     {s : Set ι} (hs : s.Finite) {f : ∀ a, κ a → α} :
-    ⨆ a ∈ s, ⨅ b, f a b = ⨅ g : ∀ a, κ a, ⨆ a ∈ s, f a (g a) :=
-  hs.biInf_iSup_eq (α := αᵒᵈ)
+    ⨆ a ∈ s, ⨅ b, f a b = ⨅ g : ∀ a, κ a, ⨆ a ∈ s, f a (g a) := by
+  rw [← OrderDual.toDual_inj]
+  simpa only [toDual_iSup, toDual_iInf] using
+    hs.biInf_iSup_eq (α := αᵒᵈ) (f := fun a b => OrderDual.toDual (f a b))
 
 section
 

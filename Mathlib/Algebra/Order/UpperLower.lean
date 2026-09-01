@@ -63,10 +63,14 @@ theorem IsUpperSet.mul_right (hs : IsUpperSet s) : IsUpperSet (s * t) := by
   exact hs.mul_left
 
 @[to_additive]
-theorem IsLowerSet.mul_left (ht : IsLowerSet t) : IsLowerSet (s * t) := ht.toDual.mul_left
+theorem IsLowerSet.mul_left (ht : IsLowerSet t) : IsLowerSet (s * t) := by
+  rw [← smul_eq_mul, ← Set.iUnion_smul_set]
+  exact isLowerSet_iUnion₂ fun x _ ↦ ht.smul
 
 @[to_additive]
-theorem IsLowerSet.mul_right (hs : IsLowerSet s) : IsLowerSet (s * t) := hs.toDual.mul_right
+theorem IsLowerSet.mul_right (hs : IsLowerSet s) : IsLowerSet (s * t) := by
+  rw [mul_comm]
+  exact hs.mul_left
 
 @[to_additive]
 theorem IsUpperSet.inv {α : Type*} [CommGroup α] [PartialOrder α] [IsOrderedMonoid α]
@@ -89,10 +93,14 @@ theorem IsUpperSet.div_right (hs : IsUpperSet s) : IsUpperSet (s / t) := by
 
 @[to_additive]
 theorem IsLowerSet.div_left {α : Type*} [CommGroup α] [PartialOrder α] [IsOrderedMonoid α]
-  {s t : Set α} (ht : IsLowerSet t) : IsUpperSet (s / t) := ht.toDual.div_left
+  {s t : Set α} (ht : IsLowerSet t) : IsUpperSet (s / t) := by
+  rw [div_eq_mul_inv]
+  exact ht.inv.mul_left
 
 @[to_additive]
-theorem IsLowerSet.div_right (hs : IsLowerSet s) : IsLowerSet (s / t) := hs.toDual.div_right
+theorem IsLowerSet.div_right (hs : IsLowerSet s) : IsLowerSet (s / t) := by
+  rw [div_eq_mul_inv]
+  exact hs.mul_right
 
 namespace UpperSet
 

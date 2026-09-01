@@ -65,6 +65,17 @@ section SMul
 section weak_inequality
 variable [PosSMulMono α β] {s : Finset ι} {σ : Perm ι} {f : ι → α} {g : ι → β}
 
+-- Pushing `OrderDual.toDual` out of a scalar-weighted sum.  Needed because `βᵒᵈ` is no longer
+-- the same type as `β`, so a statement proved at `βᵒᵈ` has to be transported back by hand.
+omit [LinearOrder α] [IsStrictOrderedRing α] [ExistsAddOfLE α] [LinearOrder β]
+  [IsOrderedCancelAddMonoid β] [PosSMulMono α β] in
+private lemma sum_smul_toDual (t : Finset ι) (u : ι → α) (v : ι → β) :
+    ∑ i ∈ t, u i • toDual (v i) = toDual (∑ i ∈ t, u i • v i) := by
+  classical
+  induction t using Finset.cons_induction with
+  | empty => rfl
+  | cons a t ha ih => rw [Finset.sum_cons, Finset.sum_cons, ih]; rfl
+
 /-- **Rearrangement Inequality**: Pointwise scalar multiplication of `f` and `g` is maximized when
 `f` and `g` monovary together on `s`. Stated by permuting the entries of `g`. -/
 theorem MonovaryOn.sum_smul_comp_perm_le_sum_smul (hfg : MonovaryOn f g s)
@@ -114,8 +125,10 @@ theorem MonovaryOn.sum_smul_comp_perm_le_sum_smul (hfg : MonovaryOn f g s)
 /-- **Rearrangement Inequality**: Pointwise scalar multiplication of `f` and `g` is minimized when
 `f` and `g` antivary together on `s`. Stated by permuting the entries of `g`. -/
 theorem AntivaryOn.sum_smul_le_sum_smul_comp_perm (hfg : AntivaryOn f g s)
-    (hσ : {x | σ x ≠ x} ⊆ s) : ∑ i ∈ s, f i • g i ≤ ∑ i ∈ s, f i • g (σ i) :=
-  hfg.dual_right.sum_smul_comp_perm_le_sum_smul hσ
+    (hσ : {x | σ x ≠ x} ⊆ s) : ∑ i ∈ s, f i • g i ≤ ∑ i ∈ s, f i • g (σ i) := by
+  have h := hfg.dual_right.sum_smul_comp_perm_le_sum_smul hσ
+  simp only [Function.comp_apply] at h
+  rwa [sum_smul_toDual, sum_smul_toDual] at h
 
 /-- **Rearrangement Inequality**: Pointwise scalar multiplication of `f` and `g` is maximized when
 `f` and `g` monovary together on `s`. Stated by permuting the entries of `f`. -/
@@ -129,8 +142,10 @@ theorem MonovaryOn.sum_comp_perm_smul_le_sum_smul (hfg : MonovaryOn f g s)
 /-- **Rearrangement Inequality**: Pointwise scalar multiplication of `f` and `g` is minimized when
 `f` and `g` antivary together on `s`. Stated by permuting the entries of `f`. -/
 theorem AntivaryOn.sum_smul_le_sum_comp_perm_smul (hfg : AntivaryOn f g s)
-    (hσ : {x | σ x ≠ x} ⊆ s) : ∑ i ∈ s, f i • g i ≤ ∑ i ∈ s, f (σ i) • g i :=
-  hfg.dual_right.sum_comp_perm_smul_le_sum_smul hσ
+    (hσ : {x | σ x ≠ x} ⊆ s) : ∑ i ∈ s, f i • g i ≤ ∑ i ∈ s, f (σ i) • g i := by
+  have h := hfg.dual_right.sum_comp_perm_smul_le_sum_smul hσ
+  simp only [Function.comp_apply] at h
+  rwa [sum_smul_toDual, sum_smul_toDual] at h
 
 variable [Fintype ι]
 
@@ -197,8 +212,10 @@ theorem MonovaryOn.sum_smul_comp_perm_eq_sum_smul_iff (hfg : MonovaryOn f g s)
 antivary together on `s`. Stated by permuting the entries of `g`. -/
 theorem AntivaryOn.sum_smul_comp_perm_eq_sum_smul_iff (hfg : AntivaryOn f g s)
     (hσ : {x | σ x ≠ x} ⊆ s) :
-    ∑ i ∈ s, f i • g (σ i) = ∑ i ∈ s, f i • g i ↔ AntivaryOn f (g ∘ σ) s :=
-  (hfg.dual_right.sum_smul_comp_perm_eq_sum_smul_iff hσ).trans monovaryOn_toDual_right
+    ∑ i ∈ s, f i • g (σ i) = ∑ i ∈ s, f i • g i ↔ AntivaryOn f (g ∘ σ) s := by
+  have h := (hfg.dual_right.sum_smul_comp_perm_eq_sum_smul_iff hσ).trans monovaryOn_toDual_right
+  simp only [Function.comp_apply] at h
+  rwa [sum_smul_toDual, sum_smul_toDual, OrderDual.toDual_inj] at h
 
 /-- **Equality case of the Rearrangement Inequality**: Pointwise scalar multiplication of `f` and
 `g`, which monovary together on `s`, is unchanged by a permutation if and only if `f ∘ σ` and `g`
@@ -225,8 +242,10 @@ theorem MonovaryOn.sum_comp_perm_smul_eq_sum_smul_iff (hfg : MonovaryOn f g s)
 antivary together on `s`. Stated by permuting the entries of `f`. -/
 theorem AntivaryOn.sum_comp_perm_smul_eq_sum_smul_iff (hfg : AntivaryOn f g s)
     (hσ : {x | σ x ≠ x} ⊆ s) :
-    ∑ i ∈ s, f (σ i) • g i = ∑ i ∈ s, f i • g i ↔ AntivaryOn (f ∘ σ) g s :=
-  (hfg.dual_right.sum_comp_perm_smul_eq_sum_smul_iff hσ).trans monovaryOn_toDual_right
+    ∑ i ∈ s, f (σ i) • g i = ∑ i ∈ s, f i • g i ↔ AntivaryOn (f ∘ σ) g s := by
+  have h := (hfg.dual_right.sum_comp_perm_smul_eq_sum_smul_iff hσ).trans monovaryOn_toDual_right
+  simp only [Function.comp_apply] at h
+  rwa [sum_smul_toDual, sum_smul_toDual, OrderDual.toDual_inj] at h
 
 variable [Fintype ι]
 

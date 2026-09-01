@@ -38,7 +38,10 @@ theorem atTop_basis [Nonempty α] : (@atTop α _).HasBasis (fun _ => True) Ici :
 
 @[to_dual existing]
 lemma atBot_basis {α : Type*} [Preorder α] [IsCodirectedOrder α] [Nonempty α] :
-    (@atBot α _).HasBasis (fun _ => True) Iic := atTop_basis (α := αᵒᵈ)
+    (@atBot α _).HasBasis (fun _ => True) Iic :=
+  hasBasis_iInf_principal fun a b ↦
+    let ⟨c, hca, hcb⟩ := directed_of (· ≥ ·) a b
+    ⟨c, Iic_subset_Iic.2 hca, Iic_subset_Iic.2 hcb⟩
 
 @[to_dual]
 lemma atTop_basis_Ioi [Nonempty α] [NoMaxOrder α] : (@atTop α _).HasBasis (fun _ => True) Ioi :=
@@ -94,8 +97,10 @@ lemma exists_eventually_atTop {r : α → β → Prop} :
 
 @[to_dual existing]
 lemma exists_eventually_atBot {α : Type*} [Preorder α] [IsCodirectedOrder α] [Nonempty α]
-    {r : α → β → Prop} : (∃ b, ∀ᶠ a in atBot, r a b) ↔ ∀ᶠ a₀ in atBot, ∃ b, ∀ a ≤ a₀, r a b :=
-  exists_eventually_atTop (α := αᵒᵈ)
+    {r : α → β → Prop} : (∃ b, ∀ᶠ a in atBot, r a b) ↔ ∀ᶠ a₀ in atBot, ∃ b, ∀ a ≤ a₀, r a b := by
+  simp_rw [eventually_atBot, ← exists_comm (α := α)]
+  exact exists_congr fun a ↦ .symm <| forall_le_iff <| Antitone.exists fun _ _ _ hb H n hn ↦
+    H n (hn.trans hb)
 
 @[to_dual]
 theorem map_atTop_eq {f : α → β} : atTop.map f = ⨅ a, 𝓟 (f '' { a' | a ≤ a' }) :=
@@ -187,7 +192,7 @@ theorem tendsto_atTop_atTop : Tendsto f atTop atTop ↔ ∀ b : β, ∃ i : α, 
 
 @[to_dual]
 theorem tendsto_atTop_atBot : Tendsto f atTop atBot ↔ ∀ b : β, ∃ i : α, ∀ a : α, i ≤ a → f a ≤ b :=
-  tendsto_atTop_atTop (β := βᵒᵈ)
+  tendsto_iInf.trans <| forall_congr' fun _ => tendsto_atTop_principal
 
 @[to_dual]
 theorem tendsto_atTop_atTop_iff_of_monotone (hf : Monotone f) :
@@ -201,7 +206,8 @@ alias _root_.Monotone.tendsto_atTop_atTop_iff := tendsto_atTop_atTop_iff_of_mono
 @[to_dual]
 theorem tendsto_atTop_atBot_iff_of_antitone (hf : Antitone f) :
     Tendsto f atTop atBot ↔ ∀ b : β, ∃ a, f a ≤ b :=
-  tendsto_atTop_atTop_iff_of_monotone (β := βᵒᵈ) hf
+  tendsto_atTop_atBot.trans <| forall_congr' fun _ => exists_congr fun a =>
+    ⟨fun h => h a (le_refl a), fun h _a' ha' => le_trans (hf ha') h⟩
 
 end IsDirected
 
