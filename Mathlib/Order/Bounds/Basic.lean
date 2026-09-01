@@ -73,6 +73,18 @@ theorem not_bddAbove_iff {α : Type*} [LinearOrder α] {s : Set α} :
   simp only [not_bddAbove_iff', not_le]
 
 @[to_dual (attr := simp)]
+lemma upperBounds_preimage_ofDual {s : Set α} :
+    upperBounds (ofDual ⁻¹' s) = ofDual ⁻¹' lowerBounds s :=
+  Set.ext fun _ ↦
+    ⟨fun h _ hy ↦ h (show toDual _ ∈ ofDual ⁻¹' s from hy), fun h _ hy ↦ h hy⟩
+
+@[to_dual (attr := simp)]
+lemma upperBounds_preimage_toDual {s : Set αᵒᵈ} :
+    upperBounds (toDual ⁻¹' s) = toDual ⁻¹' lowerBounds s :=
+  Set.ext fun _ ↦
+    ⟨fun h _ hy ↦ h (show ofDual _ ∈ toDual ⁻¹' s from hy), fun h _ hy ↦ h hy⟩
+
+@[to_dual (attr := simp)]
 lemma bddAbove_preimage_ofDual {s : Set α} : BddAbove (ofDual ⁻¹' s) ↔ BddBelow s :=
   ⟨fun ⟨x, hx⟩ ↦ ⟨ofDual x, fun y hy ↦ hx (a := toDual y) hy⟩,
     fun ⟨x, hx⟩ ↦ ⟨toDual x, fun _ hy ↦ hx hy⟩⟩
@@ -93,6 +105,19 @@ theorem IsLeast.dual (h : IsLeast s a) : IsGreatest (ofDual ⁻¹' s) (toDual a)
 @[to_dual]
 theorem IsLUB.dual (h : IsLUB s a) : IsGLB (ofDual ⁻¹' s) (toDual a) :=
   ⟨fun _ hy ↦ h.1 hy, fun _ hb ↦ h.2 fun y hy ↦ hb (a := toDual y) hy⟩
+
+@[to_dual (attr := simp)]
+lemma isLUB_preimage_ofDual {s : Set α} {a : α} : IsLUB (ofDual ⁻¹' s) (toDual a) ↔ IsGLB s a :=
+  ⟨fun h ↦ ⟨fun y hy ↦ h.1 (show toDual y ∈ ofDual ⁻¹' s from hy),
+      fun b hb ↦ h.2 (show toDual b ∈ upperBounds (ofDual ⁻¹' s) from fun _ hc ↦ hb hc)⟩,
+    IsGLB.dual⟩
+
+@[to_dual (attr := simp)]
+lemma isLUB_preimage_toDual {s : Set αᵒᵈ} {a : αᵒᵈ} :
+    IsLUB (toDual ⁻¹' s) (ofDual a) ↔ IsGLB s a :=
+  ⟨fun h ↦ ⟨fun y hy ↦ h.1 (show ofDual y ∈ toDual ⁻¹' s from hy),
+      fun b hb ↦ h.2 (show ofDual b ∈ upperBounds (toDual ⁻¹' s) from fun _ hc ↦ hb hc)⟩,
+    fun h ↦ ⟨fun _ hy ↦ h.1 hy, fun _ hb ↦ h.2 fun y hy ↦ hb (a := ofDual y) hy⟩⟩
 
 /-- If `a` is the least element of a set `s`, then subtype `s` is an order with bottom element. -/
 @[to_dual

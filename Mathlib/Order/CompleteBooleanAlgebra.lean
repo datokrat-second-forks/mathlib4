@@ -134,7 +134,7 @@ theorem le_iInf_iSup [CompleteLattice α] {f : ∀ a, κ a → α} :
 
 lemma iSup_iInf_le [CompleteLattice α] {f : ∀ a, κ a → α} :
     ⨆ a, ⨅ b, f a b ≤ ⨅ g : ∀ a, κ a, ⨆ a, f a (g a) :=
-  le_iInf_iSup (α := αᵒᵈ)
+  iSup_le fun a => le_iInf fun g => le_trans (iInf_le _ (g a)) (le_iSup (fun a => f a (g a)) a)
 
 namespace Order.Frame.MinimalAxioms
 variable (s : Set α) (a b : α)
@@ -455,8 +455,12 @@ theorem iSup_inf_of_monotone {ι : Type*} [Preorder ι] [IsDirectedOrder ι] {f 
 
 @[to_dual]
 theorem iSup_inf_of_antitone {ι : Type*} [Preorder ι] [IsCodirectedOrder ι] {f g : ι → α}
-    (hf : Antitone f) (hg : Antitone g) : ⨆ i, f i ⊓ g i = (⨆ i, f i) ⊓ ⨆ i, g i :=
-  @iSup_inf_of_monotone α _ ιᵒᵈ _ _ f g hf.dual_left hg.dual_left
+    (hf : Antitone f) (hg : Antitone g) : ⨆ i, f i ⊓ g i = (⨆ i, f i) ⊓ ⨆ i, g i := by
+  refine (le_iSup_inf_iSup f g).antisymm ?_
+  rw [iSup_inf_iSup]
+  refine iSup_mono' fun i => ?_
+  rcases directed_of (· ≥ ·) i.1 i.2 with ⟨j, h₁, h₂⟩
+  exact ⟨j, inf_le_inf (hf h₁) (hg h₂)⟩
 
 theorem himp_eq_sSup : a ⇨ b = sSup {w | w ⊓ a ≤ b} :=
   (isGreatest_himp a b).isLUB.sSup_eq.symm
@@ -536,7 +540,9 @@ instance OrderDual.instCompletelyDistribLattice [CompletelyDistribLattice α] :
     CompletelyDistribLattice αᵒᵈ where
   __ := instFrame
   __ := instCoframe
-  iInf_iSup_eq _ := iSup_iInf_eq (α := α)
+  iInf_iSup_eq f := OrderDual.ofDual_inj.mp <| by
+    simp only [ofDual_iInf, ofDual_iSup]
+    exact iSup_iInf_eq (α := α) (f := fun a b => OrderDual.ofDual (f a b))
 
 instance Prod.instCompletelyDistribLattice [CompletelyDistribLattice α]
     [CompletelyDistribLattice β] : CompletelyDistribLattice (α × β) where

@@ -401,3 +401,107 @@ and pay in statement noise instead.
 Worth checking, whenever a dual lemma mentions a container: is `αᵒᵈ` there because the *order*
 is reversed, or because the type synonym happened to be free? Only the first kind should
 survive as a type-level dual.
+
+## 17. `(α := αᵒᵈ)` as a *proof* is not a proof any more
+
+The single most common idiom in the order library was to prove the dual statement by
+re-instantiating the primal one at `αᵒᵈ`:
+
+```lean
+lemma mul_mem_lowerBounds_mul (ha : a ∈ lowerBounds s) (hb : b ∈ lowerBounds t) :
+    a * b ∈ lowerBounds (s * t) := mul_mem_upperBounds_mul (M := Mᵒᵈ) ha hb
+```
+
+With `Mᵒᵈ` a structure this stops elaborating: `upperBounds (s : Set Mᵒᵈ)` and
+`lowerBounds (s : Set M)` are sets of *different types*. There are three repairs, in order of
+preference:
+
+1. **Mirror the proof.** Very often the primal proof is literally self-dual once the statement
+   is dualized, because the underlying lemma (`mul_le_mul'`, `image2_subset_iff`) is symmetric:
+   ```lean
+   lemma mul_mem_lowerBounds_mul … := forall_mem_image2.2 fun _ hx _ hy => mul_le_mul' (ha hx) (hb hy)
+   ```
+   The cost is a duplicated proof, not a harder one.
+2. **Go through a bridge lemma** (§18) when the statement genuinely is the primal one
+   transported, e.g. `bddAbove_inv`.
+3. **Let `@[to_dual]` generate it** where the declaration is tagged — this is the only repair
+   that does not duplicate text, and it is why the attribute is worth keeping healthy.
+
+`Mathlib/Algebra/Order/Group/Pointwise/Bounds.lean` alone had 13 such sites
+(`mul_mem_lowerBounds_mul`, `subset_lowerBounds_mul`, `BddBelow.range_mul`, `bddAbove_inv`,
+`bddBelow_inv`, `isLUB_inv`, `isLUB_inv'`, `isGLB_inv`, `isGLB_inv'`, `BddBelow.range_inv`,
+`BddAbove.range_inv`, `IsGLB.mul`, `IsGLB.div`).
+
+## 18. The dual-preimage bridge family
+
+Repairs kept needing "the same bound, one side wrapped", so `Mathlib/Order/Bounds/Basic.lean`
+now carries a small family, all stated with `ofDual ⁻¹'` / `toDual ⁻¹'` and all `@[simp]`:
+
+```lean
+lemma bddAbove_preimage_ofDual  {s : Set α}            : BddAbove (ofDual ⁻¹' s) ↔ BddBelow s
+lemma isLUB_preimage_ofDual     {s : Set α} {a : α}    : IsLUB (ofDual ⁻¹' s) (toDual a) ↔ IsGLB s a
+lemma upperBounds_preimage_ofDual {s : Set α}          : upperBounds (ofDual ⁻¹' s) = ofDual ⁻¹' lowerBounds s
+```
+(plus the `toDual` variants and the `@[to_dual]`-generated `bddBelow_`/`isGLB_`/`lowerBounds_`
+partners). Before the conversion all six were `Iff.rfl`/`rfl`; they are the *price of the
+wrapper*, paid once, so that downstream sites stay one-liners:
+
+```lean
+theorem bddAbove_inv : BddAbove s⁻¹ ↔ BddBelow s :=
+  ((OrderIso.inv G).bddAbove_preimage (s := ofDual ⁻¹' s)).trans bddAbove_preimage_ofDual
+```
+
+The pattern is worth naming: an `e : α ≃o αᵒᵈ` produces a statement about `Set αᵒᵈ`; the
+bridge converts it back. `(inv G) ⁻¹' (ofDual ⁻¹' s)` is still *definitionally* `s⁻¹`, so only
+the outer bound predicate needs a lemma.
+
+## 19. An `OrderIso α βᵒᵈ` needs its image transported by hand
+
+`OrderIso.smulRightDual β ha : β ≃o βᵒᵈ` (multiplication by a negative scalar). The generic
+`e.upperBounds_image` now speaks about `e '' s : Set βᵒᵈ`, and nothing connects that to the
+pointwise `a • s : Set β` any more. The image has to be identified explicitly:
+
+```lean
+lemma image_smulRightDual (ha : a < 0) (t : Set β) :
+    OrderIso.smulRightDual β ha '' t = ⇑OrderDual.ofDual ⁻¹' (a • t) := by
+  ext x
+  constructor
+  · rintro ⟨y, hy, rfl⟩; exact ⟨y, hy, rfl⟩
+  · rintro ⟨y, hy, hxy⟩; exact ⟨y, hy, congrArg OrderDual.toDual hxy⟩
+```
+
+and then each bound lemma is "state it in `Set βᵒᵈ`, then apply `toDual ⁻¹'`":
+
+```lean
+@[simp] lemma lowerBounds_smul_of_neg (ha : a < 0) : lowerBounds (a • s) = a • upperBounds s := by
+  have h : ⇑ofDual ⁻¹' lowerBounds (a • s) = ⇑ofDual ⁻¹' (a • upperBounds s) := by
+    rw [← upperBounds_preimage_ofDual]
+    simp only [← image_smulRightDual ha]
+    exact (OrderIso.smulRightDual β ha).upperBounds_image
+  exact congrArg (⇑toDual ⁻¹' ·) h
+```
+
+Note the shape: `congrArg (toDual ⁻¹' ·)` is the *un*-wrapping step, and it works only because
+`toDual ⁻¹' (ofDual ⁻¹' X)` is still definitionally `X`. Writing it as a term
+(`congrArg _ <| by …`) fails — the expected type does not reach the `by` block and the rewrite
+has nothing to fire on; the equation has to be stated in a `have` first.
+
+## 20. `And.left`'s implicit binder is called `a`, and so is `upperBounds`'
+
+Named-argument pinning (§8) collides with anonymous constructor projections:
+
+```lean
+h.1 (a := toDual y) hy
+-- Application type mismatch: the argument `toDual ?m` … expected `Prop`
+--   in the application `@And.left (toDual ?m)`
+```
+
+`h.1` is `@And.left {a b : Prop}`, so `(a := …)` binds *there*, not on the membership proof.
+The fix is to force the strict-implicit by giving its argument an explicit type instead:
+
+```lean
+h.1 (show toDual y ∈ ofDual ⁻¹' s from hy)
+```
+
+`(a := …)` stays fine on a plain hypothesis (`hb (a := toDual y) hy`), which is why the idiom
+works in some proofs of the same file and not others.
