@@ -329,15 +329,17 @@ theorem SemilatticeSup.ext {α} {A B : SemilatticeSup α}
 
 @[to_dual]
 instance OrderDual.instSemilatticeSup (α) [h : SemilatticeInf α] : SemilatticeSup αᵒᵈ where
-  sup a b := h.inf a b
-  le_sup_left := h.inf_le_left
-  le_sup_right := h.inf_le_right
-  sup_le _ _ _ := h.le_inf _ _ _
+  sup a b := OrderDual.toDual' (h.inf a.ofDual' b.ofDual')
+  le_sup_left a b := h.inf_le_left a.ofDual' b.ofDual'
+  le_sup_right a b := h.inf_le_right a.ofDual' b.ofDual'
+  sup_le _ _ _ hac hbc := h.le_inf _ _ _ hac hbc
 
 @[to_dual]
 theorem SemilatticeSup.dual_dual (α : Type*) [H : SemilatticeSup α] :
-    OrderDual.instSemilatticeSup αᵒᵈ = H :=
-  SemilatticeSup.ext fun _ _ => Iff.rfl
+    (OrderDual.instSemilatticeSup αᵒᵈ).sup = fun a b ↦
+      OrderDual.toDual (OrderDual.toDual
+        (H.sup (OrderDual.ofDual (OrderDual.ofDual a)) (OrderDual.ofDual (OrderDual.ofDual b)))) :=
+  rfl
 
 end SemilatticeSup
 
@@ -546,8 +548,11 @@ end DistribLattice
 @[to_dual existing mk]
 abbrev DistribLattice.ofInfSupLe
     [Lattice α] (inf_sup_le : ∀ a b c : α, a ⊓ (b ⊔ c) ≤ a ⊓ b ⊔ a ⊓ c) : DistribLattice α where
-  le_sup_inf := (@OrderDual.instDistribLattice αᵒᵈ { (inferInstance : Lattice αᵒᵈ) with
-      le_sup_inf := inf_sup_le }).le_sup_inf
+  le_sup_inf a b c := (@OrderDual.instDistribLattice αᵒᵈ { (inferInstance : Lattice αᵒᵈ) with
+      le_sup_inf := fun x y z ↦
+        inf_sup_le (OrderDual.ofDual x) (OrderDual.ofDual y) (OrderDual.ofDual z) }).le_sup_inf
+    (OrderDual.toDual (OrderDual.toDual a)) (OrderDual.toDual (OrderDual.toDual b))
+    (OrderDual.toDual (OrderDual.toDual c))
 
 /-!
 ### Lattices derived from linear orders
@@ -808,20 +813,22 @@ protected theorem max [Preorder α] [LinearOrder β] {f g : α → β} (hf : Ant
 @[to_dual le_map_inf]
 theorem map_sup_le [SemilatticeSup α] [SemilatticeInf β] {f : α → β} (h : Antitone f) (x y : α) :
     f (x ⊔ y) ≤ f x ⊓ f y :=
-  h.dual_right.le_map_sup x y
+  (h.dual_right.le_map_sup (f := ⇑OrderDual.toDual ∘ f) x y :)
 
 variable [LinearOrder α]
 
 @[to_dual]
 theorem map_sup [SemilatticeInf β] {f : α → β} (hf : Antitone f) (x y : α) :
     f (x ⊔ y) = f x ⊓ f y :=
-  hf.dual_right.map_sup x y
+  OrderDual.toDual_inj.1 (hf.dual_right.map_sup (f := ⇑OrderDual.toDual ∘ f) x y)
 
 end Antitone
 
 theorem exists_le_and_iff_exists [SemilatticeInf α] {P : α → Prop} {x₀ : α} (hP : Antitone P) :
     (∃ x, x ≤ x₀ ∧ P x) ↔ ∃ x, P x :=
-  exists_ge_and_iff_exists <| hP.dual_left
+  (OrderDual.exists (p := fun x ↦ OrderDual.toDual x₀ ≤ x ∧ (P ∘ ⇑OrderDual.ofDual) x)).symm.trans
+    (((exists_ge_and_iff_exists (x₀ := OrderDual.toDual x₀) hP.dual_left)).trans
+      OrderDual.exists)
 
 theorem exists_and_iff_of_antitone [SemilatticeInf α] {P Q : α → Prop}
     (hP : Antitone P) (hQ : Antitone Q) : ((∃ x, P x) ∧ ∃ x, Q x) ↔ (∃ x, P x ∧ Q x) :=

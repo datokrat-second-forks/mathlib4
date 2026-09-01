@@ -232,17 +232,19 @@ variable (α)
 
 @[to_dual]
 instance [h : Bot α] : Top αᵒᵈ :=
-  ⟨h.bot⟩
+  ⟨toDual' h.bot⟩
 
 @[to_dual]
 instance [LE α] [h : OrderBot α] : OrderTop αᵒᵈ where
-  le_top := h.bot_le
+  le_top a := h.bot_le a.ofDual'
 
 @[to_dual (attr := simp)] lemma ofDual_top [Bot α] : ofDual ⊤ = (⊥ : α) := rfl
 @[to_dual (attr := simp)] lemma toDual_top [Top α] : toDual (⊤ : α) = ⊥ := rfl
 
-@[to_dual (attr := simp)] lemma ofDual_eq_top [Top α] {a : αᵒᵈ} : ofDual a = ⊤ ↔ a = ⊥ := .rfl
-@[to_dual (attr := simp)] lemma toDual_eq_top [Bot α] {a : α} : toDual a = ⊤ ↔ a = ⊥ := .rfl
+@[to_dual (attr := simp)]
+lemma ofDual_eq_top [Top α] {a : αᵒᵈ} : ofDual a = ⊤ ↔ a = ⊥ := ofDual_inj (b := ⊥)
+@[to_dual (attr := simp)]
+lemma toDual_eq_top [Bot α] {a : α} : toDual a = ⊤ ↔ a = ⊥ := toDual_inj (b := ⊥)
 
 end OrderDual
 

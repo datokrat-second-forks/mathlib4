@@ -50,10 +50,10 @@ section OrderBot
 variable [PartialOrder α] [OrderBot α] [Preorder β] {f : α → β} {a : α}
 
 theorem StrictMono.apply_eq_bot_iff (hf : StrictMono f) : f a = f ⊥ ↔ a = ⊥ :=
-  hf.dual.apply_eq_top_iff
+  (toDual_inj.symm.trans (hf.dual.apply_eq_top_iff (a := toDual a))).trans (toDual_inj (b := ⊥))
 
 theorem StrictAnti.apply_eq_bot_iff (hf : StrictAnti f) : f a = f ⊥ ↔ a = ⊥ :=
-  hf.dual.apply_eq_top_iff
+  (toDual_inj.symm.trans (hf.dual.apply_eq_top_iff (a := toDual a))).trans (toDual_inj (b := ⊥))
 
 end OrderBot
 
