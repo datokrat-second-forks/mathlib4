@@ -1017,3 +1017,140 @@ by the induction that the defeq was hiding, and derive its partner by complement
 One tactic note that recurs whenever a `Finset` is rewritten under `sup'`/`inf'`: the nonemptiness
 proof is a dependent argument, so `rw [hfilter]` fails with "motive is not type correct".
 `Finset.inf'_congr _ hfilter (fun _ _ ↦ rfl)` rewrites the index set and carries the proof along.
+
+## 33. Instances that were `‹C α›` and carry a *field* that must agree with another instance
+
+§29 collected the instances that were literally `instance : C Xᵒᵈ := ‹C X›`.  `UniformSpace` is the
+same shape but with a twist: a `UniformSpace` carries its own `toTopologicalSpace` field, and `Xᵒᵈ`
+already has a topology instance from `Mathlib/Topology/Constructions.lean`.  Transporting the
+uniformity naively,
+
+```lean
+instance OrderDual.instUniformSpace [UniformSpace α] : UniformSpace αᵒᵈ :=
+  UniformSpace.comap OrderDual.ofDual ‹_›     -- topology := induced ofDual
+```
+
+would put a *second*, only propositionally equal, topology on `αᵒᵈ` (`induced ofDual` versus the
+`coinduced toDual` instance) — a genuine diamond, and the kind that only bites three files later.
+Mathlib's tool for exactly this is `replaceTopology`, which keeps the ambient instance as the
+structure field:
+
+```lean
+instance OrderDual.instUniformSpace [UniformSpace α] : UniformSpace (αᵒᵈ) :=
+  (UniformSpace.comap OrderDual.ofDual ‹_›).replaceTopology <| by
+    refine TopologicalSpace.ext_iff.2 fun s ↦ ⟨fun hs ↦ ⟨_, hs, rfl⟩, ?_⟩
+    rintro ⟨u, hu, rfl⟩
+    exact hu
+```
+
+The two preimage round-trips in that proof (`ofDual ⁻¹' (toDual ⁻¹' s) = s`) are `rfl` by structure
+eta, so the whole obligation is four lines.  **Rule of thumb for the rest of the campaign:** when a
+class carries another class as a field, transport it with the `replace…` combinator, never with a
+bare `comap`/`induced`.
+
+## 34. A type synonym whose entire API rested on a chain of identifications
+
+`AddValuation R Γ₀` is *defined* as `Valuation R (Multiplicative Γ₀ᵒᵈ)`, and the whole 300-line API
+was written as if `Multiplicative Γ₀ᵒᵈ` were `Γ₀`:
+
+```lean
+instance : FunLike (AddValuation R Γ₀) R Γ₀ :=
+  inferInstanceAs <| FunLike (Valuation R <| Multiplicative Γ₀ᵒᵈ) R <| Multiplicative Γ₀ᵒᵈ
+
+@[simp] theorem map_zero : v 0 = (⊤ : Γ₀) := Valuation.map_zero v
+```
+
+42 errors, but only *one* real decision: how the coercion reads values back.  Composing it with the
+two inverse wrappers keeps everything else definitional —
+
+```lean
+instance : FunLike (AddValuation R Γ₀) R Γ₀ where
+  coe v r := OrderDual.ofDual (Multiplicative.toAdd
+    (DFunLike.coe (F := Valuation R (Multiplicative Γ₀ᵒᵈ)) v r))
+  coe_injective _ _ h := …
+```
+
+because `Multiplicative` and `OrderDual` are both one-field structures, so
+`toValuation v r ≡ Multiplicative.ofAdd (OrderDual.toDual (v r))` by eta, in both directions.  That
+is what makes `⊤ ↔ 0`, `+ ↔ *`, `min ↔ max` and the reversed `≤` all pass through untouched: every
+*inequality* lemma (`map_le_add`, `map_lt_sum'`, `map_sub`) went through unchanged.
+
+What does **not** pass through is an `Eq`: `a = b` in `Multiplicative Γ₀ᵒᵈ` and its image in `Γ₀`
+are equations *at different types*, so they need a transport.  Two private one-liners cover all of
+them:
+
+```lean
+private lemma val_congr {Γ : Type*} {a b : Multiplicative Γᵒᵈ} (h : a = b) :
+    OrderDual.ofDual (Multiplicative.toAdd a) = OrderDual.ofDual (Multiplicative.toAdd b) :=
+  congrArg _ h
+private lemma addVal_congr {Γ : Type*} {a b : Γ} (h : a = b) :
+    Multiplicative.ofAdd (OrderDual.toDual a) = Multiplicative.ofAdd (OrderDual.toDual b) :=
+  congrArg (fun x ↦ Multiplicative.ofAdd (OrderDual.toDual x)) h
+```
+
+`map_zero := val_congr (Valuation.map_zero v)`, `ext := Valuation.ext fun r ↦ addVal_congr (h r)`,
+and so on down the file.  Note the second one's proof: `congrArg _ h` guesses the *wrong* function
+(`⇑Multiplicative.ofAdd` alone) — the composite has to be spelled out.
+
+One module-system trap: a `private` lemma may not appear in the body of a **public `def`**
+(`AddValuation.map`), only inside proofs.  Either inline the `congrArg` there or turn on
+`backward.privateInPublic`.
+
+## 35. Parallel synonyms: `Colex` was `Lex` read at `ιᵒᵈ`
+
+`Mathlib/Data/DFinsupp/Lex.lean` derives the entire colexicographic order from the lexicographic
+one by dualising the *index*: `instance Colex.total_le := Lex.total_le (ι := ιᵒᵈ)`, twelve times.
+That worked because `Π₀ i : ιᵒᵈ, α i` was `Π₀ i : ι, α i`; now the index type genuinely differs and
+no equiv rescues an *instance* cheaply.
+
+Each one has to be proved again, which is short because the underlying `Pi.Colex` API already
+exists in parallel — with one real piece of work, the case split, which for `Lex` looks at the
+*smallest* index where two functions differ and for `Colex` at the *largest*:
+
+| `Lex`                        | `Colex`                        |
+|------------------------------|--------------------------------|
+| `(f.neLocus g).min`          | `(f.neLocus g).max`            |
+| `Finset.min_eq_top`          | `Finset.max_eq_bot`            |
+| `Finset.notMem_of_lt_min`    | `Finset.notMem_of_max_lt`      |
+| `Finset.min'` / `min'_le`    | `Finset.max'` / `le_max'`      |
+
+The one gap this exposed upstream: `Pi.Lex` has an `IsOrderedCancelMonoid` instance and `Pi.Colex`
+did not (it never needed one — `Colex` was `Lex` at `ιᵒᵈ`).  Its mirror is now next to it in
+`Mathlib/Algebra/Order/Group/PiLex.lean`.
+
+## 36. `toDual` does not commute with a big operator definitionally
+
+`Finset.sum`, `List.sum`, `Multiset.sum`, `Finset.sup`/`inf` are folds, so
+`toDual (∑ i ∈ s, f i)` and `∑ i ∈ s, toDual (f i)` are *not* defeq — the fold would have to
+commute with the map, which is exactly the content of an induction.  Wherever a lemma used to be
+"the same statement at `βᵒᵈ`", the transport now needs one bridge per operator:
+
+```lean
+private lemma sum_smul_toDual (t : Finset ι) (u : ι → α) (v : ι → β) :
+    ∑ i ∈ t, u i • toDual (v i) = toDual (∑ i ∈ t, u i • v i) := by
+  classical
+  induction t using Finset.cons_induction with
+  | empty => rfl
+  | cons a t ha ih => rw [Finset.sum_cons, Finset.sum_cons, ih]; rfl
+```
+
+with which `AntivaryOn.card_smul_sum_le_sum_smul_sum` is again a one-liner:
+
+```lean
+  have h := hfg.dual_right.sum_smul_sum_le_card_smul_sum
+  simpa only [Function.comp_def, sum_toDual, sum_smul_toDual, smul_toDual, nsmul_toDual,
+    OrderDual.toDual_le_toDual] using h
+```
+
+Pointwise operations are the opposite: `a • toDual b = toDual (a • b)` and
+`toDual a + toDual b = toDual (a + b)` are `rfl`, so they only ever need to be *named* to be used
+as rewrite rules (`toDual_add`, `toDual_smul` at root already exist; `smul_toDual`/`nsmul_toDual`
+were local one-liners).  For `Finset.sup`/`inf` the named lemmas exist too — `Finset.toDual_inf`,
+`Finset.toDual_sup'` — but their statements use `⇑toDual ∘ f`, so a lambda-shaped restatement is
+worth a line when you want to `rw` with them:
+
+```lean
+private lemma toDual_support_inf (s : Finset A) (degt : A → T) :
+    OrderDual.toDual (s.inf degt) = s.sup fun a ↦ OrderDual.toDual (degt a) :=
+  Finset.toDual_inf s degt
+```
