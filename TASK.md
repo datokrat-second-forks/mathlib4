@@ -22,3 +22,12 @@ Repair Mathlib wave by wave until the build is green. Branch `orderdual`.
 3. **Interview me about design decisions.** Anything that changes the shape of a definition,
    an instance, or an API — not just the proof of one lemma — is a question for me, asked with
    the alternatives and their costs. Do not decide it silently.
+
+## Parked by explicit decision (do not fix)
+
+- `Mathlib/Data/Ordmap/Invariants.lean` — "Leave it broken" (wave ~12)
+- `Mathlib/Order/CompleteLattice/PiLex.lean` — "Leave PiLex broken" (wave 17)
+- `Mathlib/Order/Category/BddOrd.lean` — "Keep the file broken for now" (wave 17).
+  The remaining error is `bddOrd_dual_comp_forget_to_bipointed`, which is now genuinely false:
+  the LHS functor has carrier `Xᵒᵈ`, the RHS carrier `X`.  Options were: restate as a natural
+  isomorphism, delete, or add a `Bipointed`-level dual.
