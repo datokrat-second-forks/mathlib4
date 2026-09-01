@@ -384,13 +384,15 @@ theorem _root_.OrderIso.isBoundedUnder_le_comp [LE α] [LE β] (e : α ≃o β) 
 theorem isBoundedUnder_le_inv [CommGroup α] [Preorder α] [IsOrderedMonoid α]
     {l : Filter β} {u : β → α} :
     (IsBoundedUnder (· ≤ ·) l fun x => (u x)⁻¹) ↔ IsBoundedUnder (· ≥ ·) l u :=
-  (OrderIso.inv α).isBoundedUnder_ge_comp
+  (Function.Surjective.exists inv_surjective).trans <|
+    exists_congr fun a => by simp only [eventually_map, ge_iff_le, inv_le_inv_iff]
 
 @[to_additive (attr := simp)]
 theorem isBoundedUnder_ge_inv [CommGroup α] [Preorder α] [IsOrderedMonoid α]
     {l : Filter β} {u : β → α} :
     (IsBoundedUnder (· ≥ ·) l fun x => (u x)⁻¹) ↔ IsBoundedUnder (· ≤ ·) l u :=
-  (OrderIso.inv α).isBoundedUnder_le_comp
+  (Function.Surjective.exists inv_surjective).trans <|
+    exists_congr fun a => by simp only [eventually_map, ge_iff_le, inv_le_inv_iff]
 
 @[to_dual]
 theorem IsBoundedUnder.sup [SemilatticeSup α] {f : Filter β} {u v : β → α} :
@@ -445,8 +447,11 @@ theorem Monotone.isBoundedUnder_le_comp_iff [Nonempty β] [LinearOrder β] [Preo
 @[to_dual isBoundedUnder_ge_comp_iff]
 theorem Antitone.isBoundedUnder_le_comp_iff [Nonempty β] [LinearOrder β] [Preorder γ] [NoMaxOrder γ]
     {g : β → γ} {f : α → β} {l : Filter α} (hg : Antitone g) (hg' : Tendsto g atBot atTop) :
-    IsBoundedUnder (· ≤ ·) l (g ∘ f) ↔ IsBoundedUnder (fun x1 x2 ↦ x2 ≤ x1) l f :=
-  hg.dual_right.isBoundedUnder_ge_comp_iff hg'
+    IsBoundedUnder (· ≤ ·) l (g ∘ f) ↔ IsBoundedUnder (fun x1 x2 ↦ x2 ≤ x1) l f := by
+  refine ⟨?_, fun h => h.isBoundedUnder (α := β) fun _ _ h => hg h⟩
+  rintro ⟨c, hc⟩; rw [eventually_map] at hc
+  obtain ⟨b, hb⟩ : ∃ b, ∀ a ≤ b, c < g a := eventually_atBot.1 (hg'.eventually_gt_atTop c)
+  exact ⟨b, hc.mono fun x hx => not_lt.1 fun h => (hb _ h.le).not_ge hx⟩
 
 end Order
 

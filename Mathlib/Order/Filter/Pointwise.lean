@@ -259,8 +259,17 @@ end InvolutiveInv
 
 @[to_additive (attr := simp)]
 lemma inv_atTop {G : Type*} [CommGroup G] [Preorder G] [IsOrderedMonoid G] :
-    (atTop : Filter G)⁻¹ = atBot :=
-  (OrderIso.inv G).map_atTop
+    (atTop : Filter G)⁻¹ = atBot := by
+  -- `OrderIso.inv G : G ≃o Gᵒᵈ` no longer lands in `G`, so the two directions are proved by hand
+  have h₁ : map (Inv.inv : G → G) atTop ≤ atBot := le_iInf fun b => le_principal_iff.2 <|
+    mem_map.2 <| mem_of_superset (eventually_ge_atTop b⁻¹) fun _ hx => inv_le'.2 hx
+  have h₂ : map (Inv.inv : G → G) atBot ≤ atTop := le_iInf fun b => le_principal_iff.2 <|
+    mem_map.2 <| mem_of_superset (eventually_le_atBot b⁻¹) fun _ hx => le_inv'.1 hx
+  refine le_antisymm h₁ ?_
+  calc (atBot : Filter G) = map ((Inv.inv : G → G) ∘ Inv.inv) atBot := by
+        rw [inv_involutive.comp_self, map_id]
+    _ = map Inv.inv (map Inv.inv atBot) := map_map.symm
+    _ ≤ map Inv.inv atTop := map_mono h₂
 
 /-! ### Filter addition/multiplication -/
 

@@ -286,7 +286,7 @@ lemma le_ciSup (f : ι → α) (i : ι) : f i ≤ ⨆ j, f j :=
   le_ciSup_of_le i le_rfl
 
 lemma ciInf_le (f : ι → α) (i : ι) : ⨅ j, f j ≤ f i :=
-  le_ciSup (α := αᵒᵈ) f i
+  ciInf_le_of_le i le_rfl
 
 lemma ciSup_sup [Nonempty ι] {f : ι → α} {a : α} :
     (⨆ i, f i) ⊔ a = ⨆ i, f i ⊔ a := by
@@ -295,8 +295,10 @@ lemma ciSup_sup [Nonempty ι] {f : ι → α} {a : α} :
   · exact le_ciSup_of_le (Classical.arbitrary ι) le_sup_right
 
 lemma ciInf_inf [Nonempty ι] {f : ι → α} {a : α} :
-    (⨅ i, f i) ⊓ a = ⨅ i, f i ⊓ a :=
-  ciSup_sup (α := αᵒᵈ) ..
+    (⨅ i, f i) ⊓ a = ⨅ i, f i ⊓ a := by
+  refine le_antisymm (le_ciInf fun i ↦ inf_le_inf_right a (ciInf_le f i)) <| le_inf ?_ ?_
+  · exact le_ciInf fun i ↦ ciInf_le_of_le i inf_le_left
+  · exact ciInf_le_of_le (Classical.arbitrary ι) inf_le_right
 
 lemma ciSup_prod (f : ι × ι' → α) :
     ⨆ a, f a = ⨆ i, ⨆ i', f (i, i') :=
@@ -304,7 +306,7 @@ lemma ciSup_prod (f : ι × ι' → α) :
 
 lemma ciInf_prod (f : ι × ι' → α) :
     ⨅ a, f a = ⨅ i, ⨅ i', f (i, i') :=
-  ciSup_prod (α := αᵒᵈ) f
+  _root_.ciInf_prod (bddBelow_range f)
 
 end CCL
 
@@ -323,18 +325,27 @@ lemma map_iSup_of_monotoneOn {s : Set α} {f : ι → α} {g : α → β} (hg : 
 
 lemma map_iInf_of_monotoneOn {s : Set α} {f : ι → α} {g : α → β} (hg : MonotoneOn g s)
     (hs : ∀ i, f i ∈ s) :
-    g (⨅ i, f i) = ⨅ i, g (f i) :=
-  map_iSup_of_monotoneOn (α := αᵒᵈ) (β := βᵒᵈ) (fun _ hi _ hj h ↦ hg hj hi h) hs
+    g (⨅ i, f i) = ⨅ i, g (f i) := by
+  obtain ⟨j, hj⟩ : ∃ j, f j = ⨅ i, f i := exists_eq_ciInf_of_finite
+  rw [← hj]
+  exact le_antisymm (le_ciInf fun i ↦ hg (hs j) (hs i) (hj ▸ ciInf_le f i))
+    (ciInf_le_of_le j le_rfl)
 
 lemma map_iSup_of_antitoneOn {s : Set α} {f : ι → α} {g : α → β} (hg : AntitoneOn g s)
     (hs : ∀ i, f i ∈ s) :
-    g (⨆ i, f i) = ⨅ i, g (f i) :=
-  map_iSup_of_monotoneOn (β := βᵒᵈ) hg hs
+    g (⨆ i, f i) = ⨅ i, g (f i) := by
+  obtain ⟨j, hj⟩ : ∃ j, f j = ⨆ i, f i := exists_eq_ciSup_of_finite
+  rw [← hj]
+  exact le_antisymm (le_ciInf fun i ↦ hg (hs i) (hs j) (hj ▸ le_ciSup f i))
+    (ciInf_le_of_le j le_rfl)
 
 lemma map_iInf_of_antitoneOn {s : Set α} {f : ι → α} {g : α → β} (hg : AntitoneOn g s)
     (hs : ∀ i, f i ∈ s) :
-    g (⨅ i, f i) = ⨆ i, g (f i) :=
-  map_iInf_of_monotoneOn (β := βᵒᵈ) hg hs
+    g (⨅ i, f i) = ⨆ i, g (f i) := by
+  obtain ⟨j, hj⟩ : ∃ j, f j = ⨅ i, f i := exists_eq_ciInf_of_finite
+  rw [← hj]
+  exact le_antisymm (le_ciSup_of_le j le_rfl) <|
+    ciSup_le fun i ↦ hg (hs j) (hs i) (hj ▸ ciInf_le f i)
 
 lemma map_iSup_of_monotone (f : ι → α) {g : α → β} (hg : Monotone g) :
     g (⨆ i, f i) = ⨆ i, g (f i) :=
@@ -342,15 +353,15 @@ lemma map_iSup_of_monotone (f : ι → α) {g : α → β} (hg : Monotone g) :
 
 lemma map_iInf_of_monotone (f : ι → α) {g : α → β} (hg : Monotone g) :
     g (⨅ i, f i) = ⨅ i, g (f i) :=
-  map_iSup_of_monotone (α := αᵒᵈ) (β := βᵒᵈ) f fun _ _ h ↦ hg h
+  map_iInf_of_monotoneOn (monotoneOn_univ.mpr hg) (fun i ↦ Set.mem_univ (f i))
 
 lemma map_iSup_of_antitone (f : ι → α) {g : α → β} (hg : Antitone g) :
     g (⨆ i, f i) = ⨅ i, g (f i) :=
-  map_iSup_of_monotone (β := βᵒᵈ) f hg
+  map_iSup_of_antitoneOn (antitoneOn_univ.mpr hg) (fun i ↦ Set.mem_univ (f i))
 
 lemma map_iInf_of_antitone (f : ι → α) {g : α → β} (hg : Antitone g) :
     g (⨅ i, f i) = ⨆ i, g (f i) :=
-  map_iInf_of_monotone (β := βᵒᵈ) f hg
+  map_iInf_of_antitoneOn (antitoneOn_univ.mpr hg) (fun i ↦ Set.mem_univ (f i))
 
 @[to_dual ciInf_le_iff]
 theorem le_ciSup_iff {a : α} {f : ι → α} : a ≤ ⨆ i, f i ↔ ∃ x, a ≤ f x := by

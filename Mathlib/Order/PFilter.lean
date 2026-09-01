@@ -53,8 +53,11 @@ def IsPFilter [Preorder P] (F : Set P) : Prop :=
 
 theorem IsPFilter.of_def [Preorder P] {F : Set P} (nonempty : F.Nonempty)
     (directed : DirectedOn (· ≥ ·) F) (mem_of_le : ∀ {x y : P}, x ≤ y → x ∈ F → y ∈ F) :
-    IsPFilter F :=
-  ⟨fun _ _ _ _ => mem_of_le ‹_› ‹_›, nonempty, directed⟩
+    IsPFilter F := by
+  obtain ⟨a, ha⟩ := nonempty
+  refine ⟨fun _ _ _ _ => mem_of_le ‹_› ‹_›, ⟨toDual a, ha⟩, fun x hx y hy => ?_⟩
+  obtain ⟨z, hz, hxz, hyz⟩ := directed (ofDual x) hx (ofDual y) hy
+  exact ⟨toDual z, hz, hxz, hyz⟩
 
 /-- Create an element of type `Order.PFilter` from a set satisfying the predicate
 `Order.IsPFilter`. -/
@@ -72,15 +75,19 @@ instance [Inhabited P] : Inhabited (PFilter P) := ⟨⟨default⟩⟩
 /-- A filter on `P` is a subset of `P`. -/
 instance : SetLike (PFilter P) P where
   coe F := toDual ⁻¹' F.dual.carrier
-  coe_injective := fun ⟨_⟩ ⟨_⟩ h => congr_arg mk <| Ideal.ext h
+  coe_injective := fun ⟨_⟩ ⟨_⟩ h => congr_arg mk <| Ideal.ext <| congrArg (⇑ofDual ⁻¹' ·) h
 
 instance : PartialOrder (PFilter P) := .ofSetLike (PFilter P) P
 
 theorem isPFilter : IsPFilter (F : Set P) := F.dual.isIdeal
 
-protected theorem nonempty : (F : Set P).Nonempty := F.dual.nonempty
+protected theorem nonempty : (F : Set P).Nonempty :=
+  let ⟨x, hx⟩ := F.dual.nonempty
+  ⟨ofDual x, hx⟩
 
-theorem directed : DirectedOn (· ≥ ·) (F : Set P) := F.dual.directed
+theorem directed : DirectedOn (· ≥ ·) (F : Set P) := fun x hx y hy =>
+  let ⟨z, hz, hxz, hyz⟩ := F.dual.directed (toDual x) hx (toDual y) hy
+  ⟨ofDual z, hz, hxz, hyz⟩
 
 theorem mem_of_le {F : PFilter P} : x ≤ y → x ∈ F → y ∈ F := fun h => F.dual.lower h
 
@@ -101,8 +108,9 @@ theorem mem_mk (x : P) (I : Ideal Pᵒᵈ) : x ∈ (⟨I⟩ : PFilter P) ↔ toD
   Iff.rfl
 
 @[simp]
-theorem principal_le_iff {F : PFilter P} : principal x ≤ F ↔ x ∈ F :=
-  Ideal.principal_le_iff (x := toDual x)
+theorem principal_le_iff {F : PFilter P} : principal x ≤ F ↔ x ∈ F := by
+  -- `mem_principal` below is `Iff.rfl`, so the memberships are used definitionally here
+  exact ⟨fun h => h (le_rfl : x ≤ x), fun h _ hy => mem_of_le hy h⟩
 
 @[simp] theorem mem_principal : x ∈ principal y ↔ y ≤ x := Iff.rfl
 
@@ -124,14 +132,14 @@ variable [Preorder P] [OrderTop P] {F : PFilter P}
 /-- There is a bottom filter when `P` has a top element. -/
 instance : OrderBot (PFilter P) where
   bot := ⟨⊥⟩
-  bot_le F := (bot_le : ⊥ ≤ F.dual)
+  bot_le _ _ hx := (bot_le : (⊥ : Ideal Pᵒᵈ) ≤ _) hx
 
 end OrderTop
 
 /-- There is a top filter when `P` has a bottom element. -/
 instance {P} [Preorder P] [OrderBot P] : OrderTop (PFilter P) where
   top := ⟨⊤⟩
-  le_top F := (le_top : F.dual ≤ ⊤)
+  le_top F _ hx := (le_top : F.dual ≤ (⊤ : Ideal Pᵒᵈ)) hx
 
 section SemilatticeInf
 

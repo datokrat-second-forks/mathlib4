@@ -257,93 +257,172 @@ def gfpApprox (a : Ordinal.{u}) : α :=
 termination_by a
 
 -- By unsealing these recursive definitions we can relate them
--- by definitional equality
 unseal gfpApprox lfpApprox
 
-theorem gfpApprox_zero : gfpApprox f x 0 = x := by
-  exact lfpApprox_zero f.dual
+private lemma dual_apply_toDual (y : α) :
+    OrderHom.dual f (OrderDual.toDual y) = OrderDual.toDual (f y) := rfl
 
-theorem gfpApprox_anti_right : Antitone (gfpApprox f x) :=
-  lfpApprox_mono_right f.dual
+/-- `gfpApprox` at `f` is `lfpApprox` at the dual of `f`, read back through `OrderDual`.
+`αᵒᵈ` is no longer the type `α`, so this is an equation rather than a definitional identity. -/
+private theorem lfpApprox_dual (a : Ordinal.{u}) :
+    lfpApprox (OrderHom.dual f) (OrderDual.toDual x) a = OrderDual.toDual (gfpApprox f x a) := by
+  induction a using WellFoundedLT.induction with
+  | ind a ih =>
+    rw [lfpApprox, gfpApprox]
+    simp only [toDual_inf, toDual_iInf]
+    congr 1
+    exact iSup_congr fun b => iSup_congr fun hb => by rw [ih b hb]; rfl
+
+theorem gfpApprox_zero : gfpApprox f x 0 = x := by
+  have h := lfpApprox_zero (OrderHom.dual f) (x := OrderDual.toDual x)
+  rw [lfpApprox_dual, OrderDual.toDual_inj] at h
+  exact h
+
+theorem gfpApprox_anti_right : Antitone (gfpApprox f x) := by
+  intro a b hab
+  have h := lfpApprox_mono_right (OrderHom.dual f) (x := OrderDual.toDual x) hab
+  rw [lfpApprox_dual, lfpApprox_dual] at h
+  exact h
 
 @[deprecated (since := "2026-03-30")] alias gfpApprox_antitone := gfpApprox_anti_right
 
-theorem gfpApprox_le {a : Ordinal} : gfpApprox f x a ≤ x :=
-  le_lfpApprox f.dual
+theorem gfpApprox_le {a : Ordinal} : gfpApprox f x a ≤ x := by
+  have h := le_lfpApprox (f := OrderHom.dual f) (x := OrderDual.toDual x) (a := a)
+  rw [lfpApprox_dual] at h
+  exact h
 
 theorem gfpApprox_add_one (hx : f x ≤ x) (a : Ordinal) :
-    gfpApprox f x (a + 1) = f (gfpApprox f x a) :=
-  lfpApprox_add_one f.dual hx a
+    gfpApprox f x (a + 1) = f (gfpApprox f x a) := by
+  have h := lfpApprox_add_one (OrderHom.dual f) (x := OrderDual.toDual x) hx a
+  rw [lfpApprox_dual, lfpApprox_dual, dual_apply_toDual, OrderDual.toDual_inj] at h
+  exact h
 
 theorem gfpApprox_le_apply_gfpApprox_of_lt {a b : Ordinal} (h : a < b) :
-    gfpApprox f x b ≤ f (gfpApprox f x a) :=
-  apply_lfpApprox_le_lfpApprox_of_lt f.dual h
+    gfpApprox f x b ≤ f (gfpApprox f x a) := by
+  have h' := apply_lfpApprox_le_lfpApprox_of_lt (f := OrderHom.dual f)
+    (x := OrderDual.toDual x) h
+  rw [lfpApprox_dual, lfpApprox_dual, dual_apply_toDual] at h'
+  exact h'
 
 theorem gfpApprox_of_isSuccLimit {a : Ordinal} (ha : Order.IsSuccLimit a) :
-    gfpApprox f x a = ⨅ b : Set.Iio a, gfpApprox f x b :=
-  lfpApprox_of_isSuccLimit f.dual ha
+    gfpApprox f x a = ⨅ b : Set.Iio a, gfpApprox f x b := by
+  have h := lfpApprox_of_isSuccLimit (OrderHom.dual f) (x := OrderDual.toDual x) ha
+  simp only [lfpApprox_dual] at h
+  rw [← OrderDual.toDual_inj, toDual_iInf]
+  exact h
 
 theorem gfpApprox_mono_left : Monotone (gfpApprox : (α →o α) → _) := by
-  intro f g h
-  have : g.dual ≤ f.dual := h
-  exact lfpApprox_mono_left this
+  intro f g hfg x a
+  have hd : OrderHom.dual g ≤ OrderHom.dual f := fun z => hfg (OrderDual.ofDual z)
+  have h := lfpApprox_mono_left hd (OrderDual.toDual x) a
+  rw [lfpApprox_dual, lfpApprox_dual] at h
+  exact h
 
-theorem gfpApprox_mono_mid : Monotone (gfpApprox f) :=
-  fun _ _ h => lfpApprox_mono_mid f.dual h
+theorem gfpApprox_mono_mid : Monotone (gfpApprox f) := by
+  intro x y hxy a
+  have h := lfpApprox_mono_mid (f := OrderHom.dual f)
+    (show OrderDual.toDual y ≤ OrderDual.toDual x from hxy) a
+  rw [lfpApprox_dual, lfpApprox_dual] at h
+  exact h
 
 /-- The approximations of the greatest fixed point stabilize at a fixed point of `f` -/
 theorem gfpApprox_eq_of_mem_fixedPoints {a b : Ordinal} (h_ab : a ≤ b)
-    (h : gfpApprox f x a ∈ fixedPoints f) : gfpApprox f x b = gfpApprox f x a :=
-  lfpApprox_eq_of_mem_fixedPoints f.dual h_ab h
+    (h : gfpApprox f x a ∈ fixedPoints f) : gfpApprox f x b = gfpApprox f x a := by
+  have hmem : lfpApprox (OrderHom.dual f) (OrderDual.toDual x) a ∈
+      fixedPoints (OrderHom.dual f) := by
+    rw [lfpApprox_dual]
+    exact congrArg OrderDual.toDual h
+  have h' := lfpApprox_eq_of_mem_fixedPoints (OrderHom.dual f) h_ab hmem
+  rw [lfpApprox_dual, lfpApprox_dual, OrderDual.toDual_inj] at h'
+  exact h'
 
 theorem gfpApprox_eq_all_of_fixedPoint (hx : f x ≤ x) :
-    (∀ o, gfpApprox f x o = x) ↔ f x = x :=
-  lfpApprox_eq_all_of_fixedPoint f.dual hx
+    (∀ o, gfpApprox f x o = x) ↔ f x = x := by
+  have h := lfpApprox_eq_all_of_fixedPoint (OrderHom.dual f) (x := OrderDual.toDual x) hx
+  simp only [lfpApprox_dual, dual_apply_toDual, OrderDual.toDual_inj] at h
+  exact h
 
 lemma gfpApprox_mem_fixedPoints_of_eq (hx : f x ≤ x) (hab : a < b) (hac : a ≤ c)
-    (hf : gfpApprox f x a = gfpApprox f x b) : gfpApprox f x c ∈ fixedPoints f :=
-  lfpApprox_mem_fixedPoints_of_eq f.dual hx hab hac hf
+    (hf : gfpApprox f x a = gfpApprox f x b) : gfpApprox f x c ∈ fixedPoints f := by
+  have hf' : lfpApprox (OrderHom.dual f) (OrderDual.toDual x) a =
+      lfpApprox (OrderHom.dual f) (OrderDual.toDual x) b := by
+    rw [lfpApprox_dual, lfpApprox_dual, OrderDual.toDual_inj]
+    exact hf
+  have h := lfpApprox_mem_fixedPoints_of_eq (OrderHom.dual f) hx hab hac hf'
+  show f (gfpApprox f x c) = gfpApprox f x c
+  rw [← OrderDual.toDual_inj, ← dual_apply_toDual, ← lfpApprox_dual]
+  exact h
 
 theorem gfpApprox_eq_of_fixedPoint_or_zero (hx : f x ≤ x) (o : Ordinal) :
-    gfpApprox f x o = x ↔ f x = x ∨ o = 0 :=
-  lfpApprox_eq_of_fixedPoint_or_zero f.dual hx o
+    gfpApprox f x o = x ↔ f x = x ∨ o = 0 := by
+  have h := lfpApprox_eq_of_fixedPoint_or_zero (OrderHom.dual f) (x := OrderDual.toDual x) hx o
+  rw [lfpApprox_dual, OrderDual.toDual_inj, dual_apply_toDual, OrderDual.toDual_inj] at h
+  exact h
 
 /-- There are distinct indices smaller than the successor of the domain's cardinality
 yielding the same value -/
 theorem exists_gfpApprox_eq_gfpApprox : ∃ a < ord <| succ #α, ∃ b < ord <| succ #α,
-    a ≠ b ∧ gfpApprox f x a = gfpApprox f x b :=
-  exists_lfpApprox_eq_lfpApprox f.dual x
+    a ≠ b ∧ gfpApprox f x a = gfpApprox f x b := by
+  have h := exists_lfpApprox_eq_lfpApprox (OrderHom.dual f) (OrderDual.toDual x)
+  rw [Cardinal.mk_congr (OrderDual.ofDual : αᵒᵈ ≃ α)] at h
+  simp only [lfpApprox_dual, OrderDual.toDual_inj] at h
+  exact h
 
 /-- The approximation at the index of the successor of the domain's cardinality is a fixed point -/
 lemma gfpApprox_ord_mem_fixedPoint (hx : f x ≤ x) :
-    gfpApprox f x (ord <| succ #α) ∈ fixedPoints f :=
-  lfpApprox_ord_mem_fixedPoint f.dual hx
+    gfpApprox f x (ord <| succ #α) ∈ fixedPoints f := by
+  have h := lfpApprox_ord_mem_fixedPoint (OrderHom.dual f) (x := OrderDual.toDual x) hx
+  rw [Cardinal.mk_congr (OrderDual.ofDual : αᵒᵈ ≃ α), lfpApprox_dual] at h
+  exact OrderDual.toDual_inj.1 h
 
 /-- Every value of the approximation is greater or equal than every fixed point of `f`
 less or equal than the initial value -/
 lemma le_gfpApprox_of_mem_fixedPoints {a : α}
-    (ha : a ∈ fixedPoints f) (hax : a ≤ x) (i : Ordinal) : a ≤ gfpApprox f x i :=
-  lfpApprox_le_of_mem_fixedPoints f.dual ha hax i
+    (ha : a ∈ fixedPoints f) (hax : a ≤ x) (i : Ordinal) : a ≤ gfpApprox f x i := by
+  have h := lfpApprox_le_of_mem_fixedPoints (OrderHom.dual f) (x := OrderDual.toDual x)
+    (a := OrderDual.toDual a) (congrArg OrderDual.toDual ha) hax i
+  rw [lfpApprox_dual] at h
+  exact h
 
 /-- The approximation sequence converges at the successor of the domain's cardinality
 to the greatest fixed point if starting from `⊥` -/
-theorem gfpApprox_ord_eq_gfp : gfpApprox f ⊤ (ord <| succ #α) = f.gfp :=
-  lfpApprox_ord_eq_lfp f.dual
+theorem gfpApprox_ord_eq_gfp : gfpApprox f ⊤ (ord <| succ #α) = f.gfp := by
+  have hlfp : (OrderHom.dual f).lfp = OrderDual.toDual f.gfp := rfl
+  have h := lfpApprox_ord_eq_lfp (OrderHom.dual f)
+  rw [Cardinal.mk_congr (OrderDual.ofDual : αᵒᵈ ≃ α), ← OrderDual.toDual_top, lfpApprox_dual, hlfp,
+    OrderDual.toDual_inj] at h
+  exact h
 
 /-- Some approximation of the least fixed point starting from `⊤` is the greatest fixed point. -/
-theorem gfp_mem_range_gfpApprox : f.gfp ∈ Set.range (gfpApprox f ⊤) :=
-  lfp_mem_range_lfpApprox f.dual
+theorem gfp_mem_range_gfpApprox : f.gfp ∈ Set.range (gfpApprox f ⊤) := by
+  have hlfp : (OrderHom.dual f).lfp = OrderDual.toDual f.gfp := rfl
+  obtain ⟨a, ha⟩ := lfp_mem_range_lfpApprox (OrderHom.dual f)
+  rw [← OrderDual.toDual_top, lfpApprox_dual, hlfp, OrderDual.toDual_inj] at ha
+  exact ⟨a, ha⟩
 
 /-- If `gfpApprox f x a` is a fixed point, then the infimum of the whole
 ordinal-indexed sequence equals the value at `a`. -/
 lemma iInf_gfpApprox_eq_of_mem_fixedPoints (hf : gfpApprox f x a ∈ fixedPoints f) :
-    ⨅ i : Ordinal, gfpApprox f x i = gfpApprox f x a :=
-  iSup_lfpApprox_eq_of_mem_fixedPoints f.dual hf
+    ⨅ i : Ordinal, gfpApprox f x i = gfpApprox f x a := by
+  have hmem : lfpApprox (OrderHom.dual f) (OrderDual.toDual x) a ∈
+      fixedPoints (OrderHom.dual f) := by
+    rw [lfpApprox_dual]
+    exact congrArg OrderDual.toDual hf
+  have h := iSup_lfpApprox_eq_of_mem_fixedPoints (OrderHom.dual f) hmem
+  simp only [lfpApprox_dual] at h
+  rw [← OrderDual.toDual_inj, toDual_iInf]
+  exact h
 
 /-- The ordinal-indexed infimum of `gfpApprox` equals `prevFixed`: the greatest fixed point
 less than or equal to `x`. -/
 theorem prevFixed_eq_iInf_gfpApprox (hx : f x ≤ x) :
-    (f.prevFixed x hx).val = ⨅ a : Ordinal, gfpApprox f x a :=
-  nextFixed_eq_iSup_lfpApprox f.dual hx
+    (f.prevFixed x hx).val = ⨅ a : Ordinal, gfpApprox f x a := by
+  have hnext : ((OrderHom.dual f).nextFixed (OrderDual.toDual x) hx).val =
+      OrderDual.toDual (f.prevFixed x hx).val := rfl
+  have h := nextFixed_eq_iSup_lfpApprox (OrderHom.dual f) (x := OrderDual.toDual x) hx
+  simp only [lfpApprox_dual] at h
+  rw [hnext] at h
+  rw [← OrderDual.toDual_inj, toDual_iInf]
+  exact h
 
 end OrdinalApprox

@@ -329,8 +329,13 @@ theorem mk_Iic_lt {α : Type*} [LinearOrder α] [WellFoundedLT α] (i : α)
   exact add_one_lt_of_lt hα (mk_Iio_lt i h)
 
 theorem mk_Ici_lt {α : Type*} [LinearOrder α] [WellFoundedGT α] (i : α)
-    (h : ord #α = typeLT αᵒᵈ) (hα : ℵ₀ ≤ #α) : #(Ici i) < #α :=
-  mk_Iic_lt (OrderDual.toDual i) h hα
+    (h : ord #α = typeLT αᵒᵈ) (hα : ℵ₀ ≤ #α) : #(Ici i) < #α := by
+  have e : Ici i ≃ Iic (OrderDual.toDual i) :=
+    ⟨fun x => ⟨OrderDual.toDual x.1, x.2⟩, fun x => ⟨OrderDual.ofDual x.1, x.2⟩,
+      fun _ => rfl, fun _ => rfl⟩
+  have hd : #αᵒᵈ = #α := Cardinal.mk_congr OrderDual.ofDual
+  rw [Cardinal.mk_congr e, ← hd]
+  exact mk_Iic_lt (α := αᵒᵈ) _ (by rw [hd]; exact h) (by rwa [hd])
 
 protected theorem eq_of_add_eq_add_left {a b c : Cardinal} (h : a + b = a + c) (ha : a < ℵ₀) :
     b = c := by

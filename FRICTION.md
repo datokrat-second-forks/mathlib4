@@ -784,3 +784,56 @@ Related, and cheap: in a `CategoryTheory.Equivalence` built from `dual`, the *co
 `(dual ⋙ dual).obj X ≅ X`, so `OrderIso.dualDual X` is now the wrong direction there and must be
 `(OrderIso.dualDual X).symm` (`Order/Category/DistLat.lean`, `LinOrd.lean`; `Lat.lean` and
 `Preord.lean` already carried the fix).
+
+## 28. Definitions that were *two* definitions related by "unseal and it's `rfl`"
+
+`Mathlib/SetTheory/Ordinal/FixedPointApproximants.lean` defined `lfpApprox` and `gfpApprox` as two
+separate well-founded recursions and then proved every `gfpApprox` lemma from its `lfpApprox`
+sibling by definitional equality, under an explicit comment:
+
+```lean
+-- By unsealing these recursive definitions we can relate them by definitional equality
+unseal gfpApprox lfpApprox
+theorem gfpApprox_le {a : Ordinal} : gfpApprox f x a ≤ x := le_lfpApprox (α := αᵒᵈ)
+```
+
+That worked because `αᵒᵈ` *was* `α`, so `lfpApprox (OrderHom.dual f) x a` and
+`gfpApprox f x a` were literally the same term after unfolding. With `OrderDual` a structure the
+two are terms of different types, and the identity has to become a theorem:
+
+```lean
+private theorem lfpApprox_dual (a : Ordinal.{u}) :
+    lfpApprox (OrderHom.dual f) (OrderDual.toDual x) a = OrderDual.toDual (gfpApprox f x a) := by
+  induction a using WellFoundedLT.induction with
+  | ind a ih =>
+    rw [lfpApprox, gfpApprox]
+    simp only [toDual_inf, toDual_iInf]
+    congr 1
+    exact iSup_congr fun b => iSup_congr fun hb => by rw [ih b hb]; rfl
+```
+
+and each of the 18 downstream lemmas becomes "take the `lfpApprox` lemma at `OrderHom.dual f` with
+`x := toDual x`, `rw [lfpApprox_dual]`, strip `toDual` with `OrderDual.toDual_inj`":
+
+```lean
+theorem gfpApprox_add_one (hx : f x ≤ x) (a : Ordinal) :
+    gfpApprox f x (a + 1) = f (gfpApprox f x a) := by
+  have h := lfpApprox_add_one (OrderHom.dual f) (x := OrderDual.toDual x) hx a
+  rw [lfpApprox_dual, lfpApprox_dual, dual_apply_toDual, OrderDual.toDual_inj] at h
+  exact h
+```
+
+Three sub-frictions worth noting.
+
+* `rw` does not fire on a `Set` membership whose unfolding is the equation you want to rewrite in:
+  `gfpApprox f x c ∈ fixedPoints f` needs an explicit
+  `show f (gfpApprox f x c) = gfpApprox f x c` first.
+* A hypothesis obtained by instantiating a lemma at `OrderDual.toDual x` can come back displayed as
+  the constructor `{ ofDual' := x }`, and then `rw [lfpApprox_dual] at h` finds no occurrence of the
+  pattern `lfpApprox _ (OrderDual.toDual ?x) ?a`. Rewriting the *goal* backwards
+  (`rw [← OrderDual.toDual_inj, ← dual_apply_toDual, ← lfpApprox_dual]; exact h`) and letting
+  `exact` do the defeq check works where rewriting the hypothesis does not. Same phenomenon as §23.
+* `lfp`/`gfp` themselves are still related by `rfl`
+  (`(OrderHom.dual f).lfp = OrderDual.toDual f.gfp`), but unification cannot *invert* that, so
+  `OrderDual.toDual_inj.1` on a goal whose RHS is `(OrderHom.dual f).lfp` fails. Introduce the
+  identity as a named `have hlfp : … := rfl` and `rw [hlfp]` instead of relying on it silently.

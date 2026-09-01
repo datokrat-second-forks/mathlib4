@@ -316,7 +316,11 @@ end Bornology
 namespace OrderDual
 variable [Bornology α]
 
-instance instBornology : Bornology αᵒᵈ := ‹Bornology α›
+-- `αᵒᵈ` is no longer the type `α`, so the bornology is transported along `toDual` by hand.
+instance instBornology : Bornology αᵒᵈ where
+  cobounded := (Bornology.cobounded α).map toDual
+  le_cofinite :=
+    (map_mono (Bornology.le_cofinite α)).trans toDual.injective.tendsto_cofinite
 
 @[simp] lemma isCobounded_preimage_ofDual {s : Set α} :
     IsCobounded (ofDual ⁻¹' s) ↔ IsCobounded s := Iff.rfl
