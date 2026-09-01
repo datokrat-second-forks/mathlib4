@@ -162,7 +162,7 @@ theorem sup_mono (h : s₁ ⊆ s₂) : s₁.sup f ≤ s₂.sup f :=
 theorem monotone_sup (f : β → α) : Monotone fun s : Finset β => s.sup f := fun _ _ h => sup_mono h
 
 theorem antitone_inf {α} [SemilatticeInf α] [OrderTop α] (f : β → α) :
-  Antitone fun s : Finset β => s.inf f := monotone_sup (α := αᵒᵈ) f
+  Antitone fun s : Finset β => s.inf f := fun _ _ h => inf_mono h
 
 @[to_dual]
 protected theorem sup_comm (s : Finset β) (t : Finset γ) (f : β → γ → α) :
@@ -345,13 +345,17 @@ theorem exists_sup_eq_iSup [CompleteLattice β] [WellFoundedGT β] (f : α → �
 
 @[to_dual (attr := simp)]
 theorem toDual_sup [SemilatticeSup α] [OrderBot α] (s : Finset β) (f : β → α) :
-    toDual (s.sup f) = s.inf (toDual ∘ f) :=
-  rfl
+    toDual (s.sup f) = s.inf (toDual ∘ f) := by
+  induction s using Finset.cons_induction with
+  | empty => rfl
+  | cons _ _ _ ih => rw [sup_cons, inf_cons, ← ih]; rfl
 
 @[to_dual (attr := simp)]
 theorem ofDual_sup [SemilatticeInf α] [OrderTop α] (s : Finset β) (f : β → αᵒᵈ) :
-    ofDual (s.sup f) = s.inf (ofDual ∘ f) :=
-  rfl
+    ofDual (s.sup f) = s.inf (ofDual ∘ f) := by
+  induction s using Finset.cons_induction with
+  | empty => rfl
+  | cons _ _ _ ih => rw [sup_cons, inf_cons, ← ih]; rfl
 
 section DistribLattice
 
@@ -409,24 +413,34 @@ theorem inf_sdiff_right (hs : s.Nonempty) (f : ι → α) (a : α) :
   | cons _ _ _ _ ih => rw [inf_cons, inf_cons, ih, inf_sdiff]
 
 theorem inf_himp_right (s : Finset ι) (f : ι → α) (a : α) :
-    (s.inf fun b => f b ⇨ a) = s.sup f ⇨ a :=
-  @sup_sdiff_left αᵒᵈ _ _ _ _ _
+    (s.inf fun b => f b ⇨ a) = s.sup f ⇨ a := by
+  induction s using Finset.cons_induction with
+  | empty => rw [inf_empty, sup_empty, bot_himp]
+  | cons _ _ _ h => rw [inf_cons, sup_cons, h, sup_himp_distrib]
 
 theorem sup_himp_right (hs : s.Nonempty) (f : ι → α) (a : α) :
-    (s.sup fun b => f b ⇨ a) = s.inf f ⇨ a :=
-  @inf_sdiff_left αᵒᵈ _ _ _ hs _ _
+    (s.sup fun b => f b ⇨ a) = s.inf f ⇨ a := by
+  induction hs using Finset.Nonempty.cons_induction with
+  | singleton => rw [inf_singleton, sup_singleton]
+  | cons _ _ _ _ ih => rw [inf_cons, sup_cons, ih]; simp [himp_eq, ← sup_sup_distrib_left]
 
 theorem sup_himp_left (hs : s.Nonempty) (f : ι → α) (a : α) :
-    (s.sup fun b => a ⇨ f b) = a ⇨ s.sup f :=
-  @inf_sdiff_right αᵒᵈ _ _ _ hs _ _
+    (s.sup fun b => a ⇨ f b) = a ⇨ s.sup f := by
+  induction hs using Finset.Nonempty.cons_induction with
+  | singleton => rw [sup_singleton, sup_singleton]
+  | cons _ _ _ _ ih => rw [sup_cons, sup_cons, ih]; simp [himp_eq, ← sup_sup_distrib_right]
 
 @[simp]
-protected theorem compl_sup (s : Finset ι) (f : ι → α) : (s.sup f)ᶜ = s.inf fun i => (f i)ᶜ :=
-  map_finset_sup (OrderIso.compl α) _ _
+protected theorem compl_sup (s : Finset ι) (f : ι → α) : (s.sup f)ᶜ = s.inf fun i => (f i)ᶜ := by
+  induction s using Finset.cons_induction with
+  | empty => simp
+  | cons _ _ _ ih => rw [sup_cons, inf_cons, _root_.compl_sup, ih]
 
 @[simp]
-protected theorem compl_inf (s : Finset ι) (f : ι → α) : (s.inf f)ᶜ = s.sup fun i => (f i)ᶜ :=
-  map_finset_inf (OrderIso.compl α) _ _
+protected theorem compl_inf (s : Finset ι) (f : ι → α) : (s.inf f)ᶜ = s.sup fun i => (f i)ᶜ := by
+  induction s using Finset.cons_induction with
+  | empty => simp
+  | cons _ _ _ ih => rw [inf_cons, sup_cons, _root_.compl_inf, ih]
 
 end BooleanAlgebra
 
@@ -706,13 +720,17 @@ protected theorem sup'_apply {C : β → Type*} [∀ b : β, SemilatticeSup (C b
 
 @[to_dual (attr := simp)]
 theorem toDual_sup' [SemilatticeSup α] {s : Finset ι} (hs : s.Nonempty) (f : ι → α) :
-    toDual (s.sup' hs f) = s.inf' hs (toDual ∘ f) :=
-  rfl
+    toDual (s.sup' hs f) = s.inf' hs (toDual ∘ f) := by
+  induction hs using Finset.Nonempty.cons_induction with
+  | singleton => rfl
+  | cons _ _ _ ht ih => rw [sup'_cons, inf'_cons, ← ih] <;> first | rfl | exact ht
 
 @[to_dual (attr := simp)]
 theorem ofDual_sup' [SemilatticeInf α] {s : Finset ι} (hs : s.Nonempty) (f : ι → αᵒᵈ) :
-    ofDual (s.sup' hs f) = s.inf' hs (ofDual ∘ f) :=
-  rfl
+    ofDual (s.sup' hs f) = s.inf' hs (ofDual ∘ f) := by
+  induction hs using Finset.Nonempty.cons_induction with
+  | singleton => rfl
+  | cons _ _ _ ht ih => rw [sup'_cons, inf'_cons, ← ih] <;> first | rfl | exact ht
 
 section DistribLattice
 variable [DistribLattice α] {s : Finset ι} (hs : s.Nonempty)

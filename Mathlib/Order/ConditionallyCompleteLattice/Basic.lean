@@ -173,13 +173,21 @@ namespace OrderDual
 
 instance instConditionallyCompleteLattice (α : Type*) [ConditionallyCompleteLattice α] :
     ConditionallyCompleteLattice αᵒᵈ where
-  isLUB_csSup := ConditionallyCompleteLattice.isGLB_csInf (α := α)
-  isGLB_csInf := ConditionallyCompleteLattice.isLUB_csSup (α := α)
+  isLUB_csSup s hs hb := isGLB_preimage_toDual.1 <|
+    ConditionallyCompleteLattice.isGLB_csInf (⇑toDual ⁻¹' s)
+      (hs.elim fun x hx ↦ ⟨ofDual x, hx⟩) (bddBelow_preimage_toDual.2 hb)
+  isGLB_csInf s hs hb := isLUB_preimage_toDual.1 <|
+    ConditionallyCompleteLattice.isLUB_csSup (⇑toDual ⁻¹' s)
+      (hs.elim fun x hx ↦ ⟨ofDual x, hx⟩) (bddAbove_preimage_toDual.2 hb)
 
 instance (α : Type*) [ConditionallyCompleteLinearOrder α] :
     ConditionallyCompleteLinearOrder αᵒᵈ where
-  csSup_of_not_bddAbove := ConditionallyCompleteLinearOrder.csInf_of_not_bddBelow (α := α)
-  csInf_of_not_bddBelow := ConditionallyCompleteLinearOrder.csSup_of_not_bddAbove (α := α)
+  csSup_of_not_bddAbove s H := congrArg OrderDual.toDual'
+    (ConditionallyCompleteLinearOrder.csInf_of_not_bddBelow (⇑toDual ⁻¹' s)
+      fun h ↦ H (bddBelow_preimage_toDual.1 h))
+  csInf_of_not_bddBelow s H := congrArg OrderDual.toDual'
+    (ConditionallyCompleteLinearOrder.csSup_of_not_bddAbove (⇑toDual ⁻¹' s)
+      fun h ↦ H (bddAbove_preimage_toDual.1 h))
   __ := OrderDual.instConditionallyCompleteLattice α
   __ := OrderDual.instLinearOrder α
 
@@ -744,9 +752,12 @@ theorem MonotoneOn.sInf_image_Icc [Preorder α] [ConditionallyCompleteLattice β
 theorem AntitoneOn.sInf_image_Icc [Preorder α] [ConditionallyCompleteLattice β]
     {f : α → β} {a b : α} (hab : a ≤ b)
     (h' : AntitoneOn f (Icc a b)) : sInf (f '' Icc a b) = f b := by
-  have : Icc a b = Icc (α := αᵒᵈ) (toDual b) (toDual a) := by rw [Icc_toDual]; rfl
-  rw [this] at h' ⊢
-  exact h'.dual_left.sInf_image_Icc (α := αᵒᵈ) hab
+  refine IsGLB.csInf_eq ?_ ((nonempty_Icc.mpr hab).image f)
+  refine isGLB_iff_le_iff.mpr (fun b' ↦ ⟨?_, ?_⟩)
+  · intro hb'
+    rintro _ ⟨x, hx, rfl⟩
+    exact hb'.trans <| h' hx (right_mem_Icc.mpr hab) hx.2
+  · exact fun hb' ↦ hb' ⟨b, by simp [hab]⟩
 
 /-!
 ### Supremum/infimum of `Set.image2`
@@ -774,19 +785,25 @@ theorem csSup_image2_eq_csSup_csSup (h₁ : ∀ b, GaloisConnection (swap l b) (
 theorem csSup_image2_eq_csSup_csInf (h₁ : ∀ b, GaloisConnection (swap l b) (u₁ b))
     (h₂ : ∀ a, GaloisConnection (l a ∘ ofDual) (toDual ∘ u₂ a)) :
     s.Nonempty → BddAbove s → t.Nonempty → BddBelow t → sSup (image2 l s t) = l (sSup s) (sInf t) :=
-  csSup_image2_eq_csSup_csSup (β := βᵒᵈ) h₁ h₂
+  fun hs₀ hs₁ ht₀ ht₁ ↦
+    isLUB_image2_of_isLUB_isGLB h₁ h₂ (isLUB_csSup hs₀ hs₁) (isGLB_csInf ht₀ ht₁)
+      |>.csSup_eq (hs₀.image2 ht₀)
 
 @[to_dual]
 theorem csSup_image2_eq_csInf_csSup (h₁ : ∀ b, GaloisConnection (swap l b ∘ ofDual) (toDual ∘ u₁ b))
     (h₂ : ∀ a, GaloisConnection (l a) (u₂ a)) :
     s.Nonempty → BddBelow s → t.Nonempty → BddAbove t → sSup (image2 l s t) = l (sInf s) (sSup t) :=
-  csSup_image2_eq_csSup_csSup (α := αᵒᵈ) h₁ h₂
+  fun hs₀ hs₁ ht₀ ht₁ ↦
+    isLUB_image2_of_isGLB_isLUB h₁ h₂ (isGLB_csInf hs₀ hs₁) (isLUB_csSup ht₀ ht₁)
+      |>.csSup_eq (hs₀.image2 ht₀)
 
 @[to_dual]
 theorem csSup_image2_eq_csInf_csInf (h₁ : ∀ b, GaloisConnection (swap l b ∘ ofDual) (toDual ∘ u₁ b))
     (h₂ : ∀ a, GaloisConnection (l a ∘ ofDual) (toDual ∘ u₂ a)) :
     s.Nonempty → BddBelow s → t.Nonempty → BddBelow t → sSup (image2 l s t) = l (sInf s) (sInf t) :=
-  csSup_image2_eq_csSup_csSup (α := αᵒᵈ) (β := βᵒᵈ) h₁ h₂
+  fun hs₀ hs₁ ht₀ ht₁ ↦
+    isLUB_image2_of_isGLB_isGLB h₁ h₂ (isGLB_csInf hs₀ hs₁) (isGLB_csInf ht₀ ht₁)
+      |>.csSup_eq (hs₀.image2 ht₀)
 
 end
 

@@ -551,8 +551,18 @@ variable [SupSet α] [SupSet β] [SupSet γ]
 @[to_dual (attr := simps)
 /-- Reinterpret an `⨅`-homomorphism as a `⨆`-homomorphism between the dual orders. -/]
 protected def dual : sSupHom α β ≃ sInfHom αᵒᵈ βᵒᵈ where
-  toFun f := ⟨toDual ∘ f ∘ ofDual, f.map_sSup'⟩
-  invFun f := ⟨ofDual ∘ f ∘ toDual, f.map_sInf'⟩
+  toFun f := ⟨toDual ∘ f ∘ ofDual, fun s ↦ congrArg toDual <|
+    (f.map_sSup' (⇑toDual ⁻¹' s)).trans <| congrArg sSup <| by
+      ext y
+      simp only [Set.mem_image, Set.mem_preimage, Function.comp_apply]
+      exact ⟨fun ⟨x, hx, hxy⟩ ↦ ⟨toDual x, hx, congrArg toDual hxy⟩,
+        fun ⟨x, hx, hxy⟩ ↦ ⟨ofDual x, hx, congrArg ofDual hxy⟩⟩⟩
+  invFun f := ⟨ofDual ∘ f ∘ toDual, fun s ↦ congrArg ofDual <|
+    (f.map_sInf' (⇑ofDual ⁻¹' s)).trans <| congrArg toDual <| congrArg sSup <| by
+      ext y
+      simp only [Set.mem_image, Set.mem_preimage, Function.comp_apply]
+      exact ⟨fun ⟨x, hx, hxy⟩ ↦ ⟨ofDual x, hx, congrArg ofDual hxy⟩,
+        fun ⟨x, hx, hxy⟩ ↦ ⟨toDual x, hx, congrArg toDual hxy⟩⟩⟩
 
 @[to_dual (attr := simp)]
 theorem dual_id : sSupHom.dual (sSupHom.id α) = sInfHom.id _ :=
@@ -582,8 +592,10 @@ variable [CompleteLattice α] [CompleteLattice β] [CompleteLattice γ]
 lattices. -/
 @[simps!]
 protected def dual : CompleteLatticeHom α β ≃ CompleteLatticeHom αᵒᵈ βᵒᵈ where
-  toFun f := ⟨sSupHom.dual f.tosSupHom, fun s ↦ f.map_sInf' s⟩
-  invFun f := ⟨sSupHom.dual f.tosSupHom, fun s ↦ f.map_sInf' s⟩
+  toFun f := ⟨sSupHom.dual f.tosSupHom, fun s ↦ (sInfHom.dual f.tosInfHom).map_sSup' s⟩
+  invFun f := ⟨sInfHom.dual.symm f.tosSupHom, fun s ↦ (sSupHom.dual.symm f.tosInfHom).map_sSup' s⟩
+  left_inv _ := rfl
+  right_inv _ := rfl
 
 @[simp]
 theorem dual_id : CompleteLatticeHom.dual (CompleteLatticeHom.id α) = CompleteLatticeHom.id _ :=
