@@ -931,3 +931,89 @@ Where the primal proof was three lines, mirroring it (`sInf_le` → `le_sSup`, `
 `lt_csSup`, `iInf_split` → `iSup_split`, `left_eq_inf` → `left_eq_sup`) is shorter and more robust
 than transporting; where it was fifteen (`HasBasis.liminf_eq_ite`), transporting through the
 bridges plus `apply_ite OrderDual.toDual` wins.
+
+## 31. Data structures indexed by the order: `LTSeries αᵒᵈ` is not `LTSeries α`
+
+`Mathlib/Order/KrullDimension.lean` is the sharpest case so far of §30 raised to *data*.  The whole
+`coheight` half of the file was written as "`height` at `αᵒᵈ`", and it worked because the
+reversal of a series, `RelSeries.reverse`, produced a term that was *literally* a `LTSeries αᵒᵈ`:
+
+```lean
+lemma length_le_coheight {x : α} {p : LTSeries α} (hhead : x ≤ p.head) : p.length ≤ coheight x :=
+  length_le_height (α := αᵒᵈ) (p := p.reverse) (by simpa)
+```
+
+Now `LTSeries α = RelSeries ((· < ·) : Rel α α)` and `LTSeries αᵒᵈ = RelSeries ((· < ·) : Rel αᵒᵈ αᵒᵈ)`
+are series over *different types*, and `p.reverse : RelSeries (SetRel.inv (· < ·))` is a third thing
+again.  Every one of the ~30 `coheight` lemmas broke at once.
+
+The repair is a transport written out by hand, kept private to the file:
+
+```lean
+private def LTSeries.dual (p : LTSeries α) : LTSeries αᵒᵈ where
+  length := p.length
+  toFun i := OrderDual.toDual (p i.rev)
+  step _ := p.strictMono (Fin.rev_lt_rev.2 Fin.castSucc_lt_succ)
+
+private def LTSeries.dualEquiv : LTSeries α ≃ LTSeries αᵒᵈ where
+  toFun := LTSeries.dual
+  invFun := LTSeries.ofDual
+  left_inv p := RelSeries.ext rfl (funext fun i ↦ congrArg p (Fin.rev_rev i))
+  right_inv q := RelSeries.ext rfl (funext fun i ↦ congrArg q (Fin.rev_rev i))
+```
+
+plus the four `simp` lemmas `dual_length`, `dual_apply`, `dual_head`, `dual_last` (and their
+`ofDual` mirrors) that say reversal swaps head and last.  With those, the site above becomes
+
+```lean
+  length_le_height (α := αᵒᵈ) (p := LTSeries.dual p) (by simpa using hhead)
+```
+
+Three lessons:
+
+* **`coheight` had to be redefined**, not just reproved: `coheight a := height (OrderDual.toDual a)`.
+  It was previously `height (α := αᵒᵈ) a`, which no longer typechecks.  Once it is *definitionally*
+  `height (toDual a)`, the four bridge lemmas `height_toDual`, `coheight_ofDual` are `rfl`, and only
+  the two that cross the double dual (`height_ofDual`, `coheight_toDual`) need the reindexing
+  argument `height_toDual_toDual`, proved by `Equiv.iSup_congr (dualEquiv.trans dualEquiv)`.
+* **Dot notation does not survive.**  `p.dual` fails: `LTSeries` is an `abbrev` for `RelSeries`, so
+  the resolver looks for `RelSeries.dual`.  All uses have to be spelled `LTSeries.dual p`.
+* **Higher-order unification needs help.**  Bridging a bounded quantifier with `Iff.trans` puts the
+  shuttle's predicate in a non-pattern position, so it must be supplied:
+  `(coe_lt_height_iff (α := αᵒᵈ) (x := toDual x) hfin).trans (exists_lt_toDual_iff (p := fun y ↦ height y = n))`.
+
+## 32. `α ≃o αᵒᵈ` used to be an automorphism (`OrderIso.compl`)
+
+`Mathlib/Combinatorics/SetFamily/AhlswedeZhang.lean`:
+
+```lean
+@[simp] lemma compl_truncatedSup (s : Finset α) (a : α) :
+    (truncatedSup s a)ᶜ = truncatedInf sᶜˢ aᶜ := map_truncatedSup (OrderIso.compl α) _ _
+```
+
+`map_truncatedSup (e : α ≃o β)` transports `truncatedSup` along `e`.  Instantiated at
+`e := OrderIso.compl α : α ≃o αᵒᵈ` it produces a statement about `truncatedSup` **in `αᵒᵈ`**, which
+used to *be* `truncatedInf` in `α` — same type, and `sup'` at `αᵒᵈ` is `inf'` by unfolding the
+`OrderDual` instance.  It is now a genuinely different statement about a different type, and no
+amount of `simp` closes the gap (`Finset αᵒᵈ` vs `Finset α`, `lowerClosure` vs `upperClosure`,
+`sup'` vs `inf'`).
+
+Cheaper than building a `truncatedSup`-on-the-dual bridge: prove the complement lemma directly,
+by the induction that the defeq was hiding, and derive its partner by complementing both sides.
+
+```lean
+  have key : ∀ (t : Finset α) (H : t.Nonempty), (t.sup' H id)ᶜ = t.inf' H compl := by
+    intro t H
+    induction H using Finset.Nonempty.cons_induction with
+    | singleton b => simp
+    | cons b t hb ht ih =>
+      rw [Finset.sup'_cons (H := ht), Finset.inf'_cons (H := ht), compl_sup, ih]; rfl
+  …
+@[simp] lemma compl_truncatedInf (s : Finset α) (a : α) :
+    (truncatedInf s a)ᶜ = truncatedSup sᶜˢ aᶜ := by
+  rw [← compl_inj_iff, compl_compl, compl_truncatedSup, compls_compls, compl_compl]
+```
+
+One tactic note that recurs whenever a `Finset` is rewritten under `sup'`/`inf'`: the nonemptiness
+proof is a dependent argument, so `rw [hfilter]` fails with "motive is not type correct".
+`Finset.inf'_congr _ hfilter (fun _ _ ↦ rfl)` rewrites the index set and carries the proof along.
