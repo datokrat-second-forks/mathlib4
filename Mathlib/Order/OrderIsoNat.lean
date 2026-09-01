@@ -87,8 +87,8 @@ theorem not_strictAnti_of_wellFoundedLT [Preorder α] [WellFoundedLT α] (f : �
   (RelEmbedding.natGT f (fun n ↦ hf (by simp))).not_wellFounded wellFounded_lt
 
 theorem not_strictMono_of_wellFoundedGT [Preorder α] [WellFoundedGT α] (f : ℕ → α) :
-    ¬ StrictMono f :=
-  not_strictAnti_of_wellFoundedLT (α := αᵒᵈ) f
+    ¬ StrictMono f := fun hf ↦
+  not_strictAnti_of_wellFoundedLT (α := αᵒᵈ) (OrderDual.toDual ∘ f) fun _ _ h ↦ hf h
 
 namespace Nat
 
@@ -254,8 +254,10 @@ well-founded `<` is eventually constant.
 This is the dual of `WellFoundedGT.monotone_chain_condition`. It is provided for convenience,
 since it unbundles the antitone property from the order homomorphism. -/
 theorem WellFoundedLT.antitone_chain_condition [PartialOrder α] [WellFoundedLT α]
-    {f : ℕ → α} (hf : Antitone f) : ∃ n, ∀ m, n ≤ m → f n = f m :=
-  WellFoundedGT.monotone_chain_condition ⟨OrderDual.toDual ∘ f, hf⟩
+    {f : ℕ → α} (hf : Antitone f) : ∃ n, ∀ m, n ≤ m → f n = f m := by
+  obtain ⟨n, hn⟩ :=
+    WellFoundedGT.monotone_chain_condition (α := αᵒᵈ) ⟨OrderDual.toDual ∘ f, hf⟩
+  exact ⟨n, fun m hm ↦ congrArg OrderDual.ofDual (hn m hm)⟩
 
 /-- Given an eventually-constant monotone sequence `a₀ ≤ a₁ ≤ a₂ ≤ ...` in a partially-ordered
 type, `monotonicSequenceLimitIndex a` is the least natural number `n` for which `aₙ` reaches the

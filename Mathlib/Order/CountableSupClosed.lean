@@ -161,12 +161,28 @@ end Finset
 open OrderDual
 
 @[to_dual (attr := simp)] lemma countableSupClosed_preimage_toDual [LE α] {s : Set αᵒᵈ} :
-    CountableSupClosed (toDual ⁻¹' s) ↔ CountableInfClosed s :=
-  ⟨fun h ↦ ⟨h.isLUB_mem⟩, fun h ↦ ⟨h.isGLB_mem⟩⟩
+    CountableSupClosed (toDual ⁻¹' s) ↔ CountableInfClosed s := by
+  constructor
+  · refine fun h ↦ ⟨fun t ht ⟨y, hy⟩ htc x hx ↦ ?_⟩
+    exact h.isLUB_mem (toDual ⁻¹' t) (fun _ ha ↦ ht ha) ⟨ofDual y, hy⟩
+      (htc.preimage toDual.injective) (ofDual x)
+      ⟨fun _ hz ↦ hx.1 hz, fun c hc ↦ hx.2 (show toDual c ∈ _ from fun _ hz ↦ hc hz)⟩
+  · refine fun h ↦ ⟨fun t ht ⟨y, hy⟩ htc x hx ↦ ?_⟩
+    exact h.isGLB_mem (ofDual ⁻¹' t) (fun _ ha ↦ ht ha) ⟨toDual y, hy⟩
+      (htc.preimage ofDual.injective) (toDual x)
+      ⟨fun _ hz ↦ hx.1 hz, fun c hc ↦ hx.2 (show ofDual c ∈ _ from fun _ hz ↦ hc hz)⟩
 
 @[to_dual (attr := simp)] lemma countableSupClosed_preimage_ofDual [LE α] {s : Set α} :
-    CountableSupClosed (ofDual ⁻¹' s) ↔ CountableInfClosed s :=
-  ⟨fun h ↦ ⟨h.isLUB_mem⟩, fun h ↦ ⟨h.isGLB_mem⟩⟩
+    CountableSupClosed (ofDual ⁻¹' s) ↔ CountableInfClosed s := by
+  constructor
+  · refine fun h ↦ ⟨fun t ht ⟨y, hy⟩ htc x hx ↦ ?_⟩
+    exact h.isLUB_mem (ofDual ⁻¹' t) (fun _ ha ↦ ht ha) ⟨toDual y, hy⟩
+      (htc.preimage ofDual.injective) (toDual x)
+      ⟨fun _ hz ↦ hx.1 hz, fun c hc ↦ hx.2 (show ofDual c ∈ _ from fun _ hz ↦ hc hz)⟩
+  · refine fun h ↦ ⟨fun t ht ⟨y, hy⟩ htc x hx ↦ ?_⟩
+    exact h.isGLB_mem (toDual ⁻¹' t) (fun _ ha ↦ ht ha) ⟨ofDual y, hy⟩
+      (htc.preimage toDual.injective) (ofDual x)
+      ⟨fun _ hz ↦ hx.1 hz, fun c hc ↦ hx.2 (show toDual c ∈ _ from fun _ hz ↦ hc hz)⟩
 
 @[to_dual] alias ⟨_, CountableSupClosed.dual⟩ := countableInfClosed_preimage_ofDual
 

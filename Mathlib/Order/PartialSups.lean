@@ -64,12 +64,12 @@ lemma partialSups_apply (f : ι → α) (i : ι) :
 lemma partialSups_iff_forall {f : ι → α} (p : α → Prop)
     (hp : ∀ {a b}, p (a ⊔ b) ↔ p a ∧ p b) {i : ι} :
     p (partialSups f i) ↔ ∀ j ≤ i, p (f j) := by
-  rw [partialSups_apply, apply_sup'_eq_sup'_comp (γ := Propᵒᵈ) _ p, sup'_eq_sup]
-  · change (Iic i).inf (p ∘ f) ↔ _
-    simp [Finset.inf_eq_iInf]
-  · intro x y
-    rw [hp]
-    rfl
+  have key : ∀ (s : Finset ι) (H : s.Nonempty), p (s.sup' H f) ↔ ∀ j ∈ s, p (f j) := by
+    intro s H
+    induction H using Finset.Nonempty.cons_induction with
+    | singleton a => simp
+    | cons a s ha hs ih => rw [Finset.sup'_cons (H := hs), hp, ih]; simp
+  simpa [partialSups_apply] using key (Iic i) nonempty_Iic
 
 @[simp]
 lemma partialSups_le_iff {f : ι → α} {i : ι} {a : α} :
