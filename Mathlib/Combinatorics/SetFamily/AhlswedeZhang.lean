@@ -301,10 +301,31 @@ section BooleanAlgebra
 variable [BooleanAlgebra α] [DecidableLE α]
 
 @[simp] lemma compl_truncatedSup (s : Finset α) (a : α) :
-    (truncatedSup s a)ᶜ = truncatedInf sᶜˢ aᶜ := map_truncatedSup (OrderIso.compl α) _ _
+    (truncatedSup s a)ᶜ = truncatedInf sᶜˢ aᶜ := by
+  have key : ∀ (t : Finset α) (H : t.Nonempty), (t.sup' H id)ᶜ = t.inf' H compl := by
+    intro t H
+    induction H using Finset.Nonempty.cons_induction with
+    | singleton b => simp
+    | cons b t hb ht ih =>
+      rw [Finset.sup'_cons (H := ht), Finset.inf'_cons (H := ht), compl_sup, ih]
+      rfl
+  have hfilter : {b ∈ sᶜˢ | b ≤ aᶜ} = {b ∈ s | a ≤ b}.map ⟨compl, compl_injective⟩ := by
+    ext b
+    simp only [Finset.mem_filter, mem_compls, le_compl_iff_le_compl, Finset.mem_map,
+      Function.Embedding.coeFn_mk, and_comm]
+    exact ⟨fun ⟨h₁, h₂⟩ ↦ ⟨bᶜ, compl_compl b, h₁, h₂⟩,
+      fun ⟨c, hcb, h₁, h₂⟩ ↦ by subst hcb; exact ⟨by simpa using h₁, by simpa using h₂⟩⟩
+  have hmem : aᶜ ∈ upperClosure (sᶜˢ : Set α) ↔ a ∈ lowerClosure (s : Set α) := by
+    simp [coe_compls]
+  by_cases h : a ∈ lowerClosure (s : Set α)
+  · rw [truncatedSup_of_mem h, truncatedInf_of_mem (hmem.2 h),
+      Finset.inf'_congr _ hfilter (fun _ _ ↦ rfl), Finset.inf'_map, key]
+    rfl
+  · rw [truncatedSup_of_notMem h, truncatedInf_of_notMem (fun h' ↦ h (hmem.1 h')), compl_top]
 
 @[simp] lemma compl_truncatedInf (s : Finset α) (a : α) :
-    (truncatedInf s a)ᶜ = truncatedSup sᶜˢ aᶜ := map_truncatedInf (OrderIso.compl α) _ _
+    (truncatedInf s a)ᶜ = truncatedSup sᶜˢ aᶜ := by
+  rw [← compl_inj_iff, compl_compl, compl_truncatedSup, compls_compls, compl_compl]
 
 end BooleanAlgebra
 

@@ -105,8 +105,8 @@ lemma Nonempty.of_isOrderBornology : Nonempty α := Bornology.isBounded_empty.bd
 instance IsOrderBornology.neBot_cobounded_of_noBotOrder [NoBotOrder α] : (cobounded α).NeBot := by
   simp [Filter.neBot_iff, cobounded_eq_bot_iff, ← isBounded_univ, isBounded_iff_bddBelow_bddAbove]
 
-instance IsOrderBornology.neBot_cobounded_of_noTopOrder [NoTopOrder α] : (cobounded α).NeBot :=
-  neBot_cobounded_of_noBotOrder (α := αᵒᵈ)
+instance IsOrderBornology.neBot_cobounded_of_noTopOrder [NoTopOrder α] : (cobounded α).NeBot := by
+  simp [Filter.neBot_iff, cobounded_eq_bot_iff, ← isBounded_univ, isBounded_iff_bddBelow_bddAbove]
 
 lemma IsOrderBornology.atTop_le_cobounded [NoMaxOrder α] : .atTop ≤ Bornology.cobounded α := by
   intro s hs
@@ -119,8 +119,14 @@ lemma IsOrderBornology.atTop_le_cobounded [NoMaxOrder α] : .atTop ≤ Bornology
 
 -- TODO (khw): Generate this in the future with `to_dual`
 -- See https://github.com/leanprover-community/mathlib4/pull/37738
-lemma IsOrderBornology.atBot_le_cobounded [NoMinOrder α] : .atBot ≤ Bornology.cobounded α :=
-  atTop_le_cobounded (α := αᵒᵈ)
+lemma IsOrderBornology.atBot_le_cobounded [NoMinOrder α] : .atBot ≤ Bornology.cobounded α := by
+  intro s hs
+  rw [← compl_compl s, ← isBounded_def, isBounded_iff_bddBelow_bddAbove] at hs
+  obtain ⟨b, hb⟩ := hs.1
+  obtain ⟨c, hcb⟩ := exists_lt b
+  refine Filter.mem_of_superset (Filter.mem_atBot c) fun x hx ↦ ?_
+  by_contra hx'
+  exact hcb.not_ge <| (hb <| mem_compl hx').trans hx
 
 end Preorder
 
@@ -157,7 +163,13 @@ lemma IsOrderBornology.cobounded_eq_atTop [NoMaxOrder α] [OrderBot α] :
 -- See https://github.com/leanprover-community/mathlib4/pull/37738
 @[to_dual existing]
 lemma IsOrderBornology.cobounded_eq_atBot [NoMinOrder α] [OrderTop α] :
-    Bornology.cobounded α = .atBot := cobounded_eq_atTop (α := αᵒᵈ)
+    Bornology.cobounded α = .atBot := by
+  refine atBot_le_cobounded.antisymm' fun s ↦ ?_
+  rw [Filter.atBot_basis.mem_iff,
+    ← compl_compl s, ← isBounded_def, isBounded_iff_bddBelow_bddAbove, compl_compl s]
+  refine fun ⟨b, _, hb⟩ ↦ ⟨⟨b, fun x hx ↦ ?_⟩, ⟨⊤, fun x hx ↦ by simp⟩⟩
+  by_contra! hx'
+  exact hx (hb hx'.le)
 
 end LinearOrder
 
