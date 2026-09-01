@@ -505,3 +505,86 @@ h.1 (show toDual y ∈ ofDual ⁻¹' s from hy)
 
 `(a := …)` stays fine on a plain hypothesis (`hb (a := toDual y) hy`), which is why the idiom
 works in some proofs of the same file and not others.
+
+## 21. Duality that depended on a *choice* is simply lost
+
+`Set.ordConnectedSection s` is the range of `ordConnectedProj s`, which picks one point of each
+order connected component with `Nonempty.some` — i.e. with `Classical.choice`. Before the
+conversion `αᵒᵈ` *was* `α`, so the choice made for the dual set was literally the same choice,
+and
+
+```lean
+theorem dual_ordConnectedSection (s : Set α) :
+    ordConnectedSection (ofDual ⁻¹' s) = ofDual ⁻¹' ordConnectedSection s
+```
+
+held (by `tauto` after unfolding). With `αᵒᵈ` a structure, `(ofDual ⁻¹' s).Nonempty` is a
+*different proposition over a different type*, so `Classical.choice` answers it independently:
+the dual section need not be the image of the primal one. The statement is no longer true, and
+no proof effort can recover it.
+
+This is the one category of casualty that is not a repair problem but a genuine loss: a lemma
+whose content was "the dual construction is the same construction", where "same" meant
+definitional identity of the types. The repair is to delete the lemma and mirror its single
+consumer — here `compl_ordConnectedSection_ordSeparatingSet_mem_nhdsLE` in
+`Mathlib/Topology/Order/T5.lean`, which was one `simpa … using!` line and is now the ~25-line
+mirror image of the `nhdsGE` proof, carrying a note saying why it cannot be derived by duality.
+
+Worth checking for the same shape elsewhere: any `dual_foo` lemma about a construction that
+makes an arbitrary choice (`Nonempty.some`, `Classical.choose`, `Exists.choose`, a chosen
+basis, a chosen section) is suspect. Constructions defined by a *property* (`ordConnectedComponent`,
+`upperBounds`, `lfp`) dualize fine; constructions defined by a *choice* do not.
+
+## §22 — `(α := αᵒᵈ)` at scale: convert to `@[to_dual]`, but check the fence first
+
+`Mathlib/Order/ConditionallyCompleteLattice/Indexed.lean` had 22 hand-written duals of the
+form `ciInf_le := le_ciSup (α := αᵒᵈ) H c`, plus 8 more spelled `gc.dual.l_csSup` /
+`e.dual.map_csSup`.  Every one of them broke for the §17 reason.  The file *already* used
+`@[to_dual]` for some of its pairs, so the systemic repair is to delete the hand-written dual
+and tag the primal:
+
+```lean
+-- before
+theorem ciInf_le {f : ι → α} (H : BddBelow (range f)) (c : ι) : iInf f ≤ f c :=
+  le_ciSup (α := αᵒᵈ) H c
+-- after: on the primal, and the dual is deleted
+@[to_dual ciInf_le /-- … -/]
+theorem le_ciSup {f : ι → α} (H : BddAbove (range f)) (c : ι) : f c ≤ iSup f :=
+  le_csSup H (mem_range_self _)
+```
+
+**But the fence is real.**  14 of the 22 converted on the first try; 8 did not, and the reason
+is informative: `to_dual` translates a proof by replacing each constant with its registered
+dual partner, and these proofs used supporting lemmas that had *no registered partner* —
+`ciSup_le_iff`/`le_ciInf_iff`, `le_ciSup₂`/`ciInf₂_le`, `ciSup_subtype_fun`/`ciInf_subtype_fun`,
+`cbiSup_of_not_bddAbove`/`cbiInf_of_not_bddBelow`, `IsLUB.ciSup_set_eq`/`IsGLB.ciInf_set_eq`.
+Each of those pairs already existed as two hand-written declarations; they were simply never
+introduced to each other.  So the fix is *registration*, not regeneration:
+
+```lean
+attribute [to_dual existing] ciSup_le_iff   -- placed after `le_ciInf_iff` is declared
+```
+
+`to_dual existing` adds no declaration and changes no statement — it only records the pairing,
+so it is the zero-risk half of this conversion.  Note it must come **after** the dual is
+declared (`@[to_dual existing]` on the primal fails with "the translated declaration doesn't
+exist" when the partner is further down the file).
+
+**What to verify before deleting a hand-written dual.**  A generated dual is not textually the
+old one; `to_dual` flips `≤` in place and keeps the binder names, so e.g. `ciSup_mono`'s
+`(B : BddAbove (range g)) (H : ∀ x, f x ≤ g x) : iSup f ≤ iSup g` generates
+`(B : BddBelow (range g)) (H : ∀ x, g x ≤ f x) : iInf g ≤ iInf f`, whereas the hand-written
+`ciInf_mono` said `(B : BddBelow (range f)) (H : ∀ x, f x ≤ g x) : iInf f ≤ iInf g`.  These are
+the *same* lemma — unification against a goal `iInf a ≤ iInf b` binds the two spellings
+identically — but that has to be checked, not assumed, and it is the one place where a silent
+downstream break could hide.  `#check @<dual>` for every generated name and compare positionally.
+
+Attributes travel separately and must be carried over by hand:
+
+```lean
+@[gcongr low, to_dual (attr := gcongr low) /-- … -/]   -- both the primal and the dual need it
+@[to_dual (attr := norm_cast)]                          -- was @[norm_cast] on both members
+```
+
+Verify them behaviourally, not by eye: `gcongr` must still fire the dual, `push_cast` must still
+use the generated `WithBot.coe_iSup`.

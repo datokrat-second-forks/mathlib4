@@ -58,8 +58,15 @@ variable {α}
 
 @[to_dual]
 protected theorem dual :
-    LeftOrdContinuous f → RightOrdContinuous (toDual ∘ f ∘ ofDual) :=
-  id
+    LeftOrdContinuous f → RightOrdContinuous (toDual ∘ f ∘ ofDual) := by
+  intro hf s x hne h
+  have himg : (⇑toDual ∘ f ∘ ⇑ofDual) '' s = ⇑ofDual ⁻¹' (f '' (⇑toDual ⁻¹' s)) := by
+    ext y
+    simp only [Set.mem_preimage, Set.mem_image, Function.comp_apply]
+    exact ⟨fun ⟨z, hz, hzy⟩ ↦ ⟨ofDual z, hz, congrArg ofDual hzy⟩,
+      fun ⟨z, hz, hzy⟩ ↦ ⟨toDual z, hz, congrArg toDual hzy⟩⟩
+  rw [himg]
+  exact (hf (hne.elim fun y hy ↦ ⟨ofDual y, hy⟩) (isLUB_preimage_toDual.2 h)).dual
 
 @[deprecated (since := "2026-04-08")] alias rightOrdContinuous_dual := LeftOrdContinuous.dual
 

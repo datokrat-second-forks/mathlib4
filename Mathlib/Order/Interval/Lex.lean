@@ -36,11 +36,11 @@ instance : LT (Lex (NonemptyInterval α)) where
 
 theorem toLex_le_toLex {x y : NonemptyInterval α} :
     toLex x ≤ toLex y ↔ y.fst < x.fst ∨ x.fst = y.fst ∧ x.snd ≤ y.snd :=
-  Prod.lex_def
+  Prod.lex_def.trans (or_congr_right (and_congr_left' OrderDual.toDual_inj))
 
 theorem toLex_lt_toLex {x y : NonemptyInterval α} :
     toLex x < toLex y ↔ y.fst < x.fst ∨ x.fst = y.fst ∧ x.snd < y.snd :=
-  Prod.lex_def
+  Prod.lex_def.trans (or_congr_right (and_congr_left' OrderDual.toDual_inj))
 
 instance [DecidableEq α] [DecidableLT α] [DecidableLE α] : DecidableLE (Lex (NonemptyInterval α)) :=
   fun _ _ => decidable_of_iff' _ toLex_le_toLex
@@ -75,10 +75,19 @@ instance [PartialOrder α] : PartialOrder (Lex (NonemptyInterval α)) := fast_in
     toLex.injective.comp <| toDualProd_injective.comp ofLex.injective
 
 instance [LinearOrder α] : LinearOrder (Lex (NonemptyInterval α)) := fast_instance%
-  { LinearOrder.lift' (fun x : Lex (NonemptyInterval α) => toLex (ofLex x).toDualProd) <|
-      toLex.injective.comp <| toDualProd_injective.comp ofLex.injective with
+  let base : LinearOrder (Lex (NonemptyInterval α)) :=
+    LinearOrder.lift' (fun x : Lex (NonemptyInterval α) => toLex (ofLex x).toDualProd) <|
+      toLex.injective.comp <| toDualProd_injective.comp ofLex.injective
+  { base with
     toDecidableEq := inferInstance
     toDecidableLT := inferInstance
-    toDecidableLE := inferInstance }
+    toDecidableLE := inferInstance
+    min_def a b := (base.min_def a b).trans
+      (congrArg (fun d => @ite _ (a ≤ b) d a b) (Subsingleton.elim _ _))
+    max_def a b := (base.max_def a b).trans
+      (congrArg (fun d => @ite _ (a ≤ b) d b a) (Subsingleton.elim _ _))
+    compare_eq_compareOfLessAndEq a b := by
+      rw [base.compare_eq_compareOfLessAndEq]
+      congr 1 }
 
 end NonemptyInterval

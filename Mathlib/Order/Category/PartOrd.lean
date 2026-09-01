@@ -158,7 +158,7 @@ def dualEquiv : PartOrd ≌ PartOrd where
   functor := dual
   inverse := dual
   unitIso := NatIso.ofComponents fun X => Iso.mk <| OrderIso.dualDual X
-  counitIso := NatIso.ofComponents fun X => Iso.mk <| OrderIso.dualDual X
+  counitIso := NatIso.ofComponents fun X => Iso.mk <| (OrderIso.dualDual X).symm
 
 /-- The ulift functor `PartOrd.{u} ⥤ PartOrd.{max u v}`. -/
 @[simps]
@@ -209,7 +209,9 @@ def preordToPartOrdForgetAdjunction :
 def preordToPartOrdCompToDualIsoToDualCompPreordToPartOrd :
     preordToPartOrd.{u} ⋙ PartOrd.dual ≅ Preord.dual ⋙ preordToPartOrd :=
   NatIso.ofComponents (fun _ => PartOrd.Iso.mk <| OrderIso.dualAntisymmetrization _)
-    (fun _ => PartOrd.ext fun x => Quotient.inductionOn' x fun _ => rfl)
+    (fun _ => PartOrd.ext fun x => by
+      obtain ⟨x⟩ := x
+      exact Quotient.inductionOn' x fun _ => rfl)
 
 -- `simp`-normal form for `preordToPartOrdCompToDualIsoToDualCompPreordToPartOrd_inv_app_hom_coe`
 @[simp]
