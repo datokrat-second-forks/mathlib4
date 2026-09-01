@@ -91,7 +91,10 @@ theorem exists_lower_bound_image [Nonempty α] [LinearOrder β] (s : Set α) (f 
     exact ⟨x₀, fun x hx => hx₀ x hx⟩
 
 theorem exists_upper_bound_image [Nonempty α] [LinearOrder β] (s : Set α) (f : α → β)
-    (h : s.Finite) : ∃ a : α, ∀ b ∈ s, f b ≤ f a :=
-  exists_lower_bound_image (β := βᵒᵈ) s f h
+    (h : s.Finite) : ∃ a : α, ∀ b ∈ s, f b ≤ f a := by
+  rcases s.eq_empty_or_nonempty with rfl | hs
+  · exact ‹Nonempty α›.elim fun a => ⟨a, fun _ => False.elim⟩
+  · rcases Set.exists_max_image s f h hs with ⟨x₀, _, hx₀⟩
+    exact ⟨x₀, fun x hx => hx₀ x hx⟩
 
 end Set

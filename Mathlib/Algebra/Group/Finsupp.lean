@@ -307,8 +307,16 @@ lemma induction_on_max (f : ι →₀ M) (zero : motive 0)
 The lemma `induction_on_min₂` swaps the argument order in the sum. -/
 lemma induction_on_min (f : ι →₀ M) (zero : motive 0)
     (single_add : ∀ a b (f : ι →₀ M), (∀ c ∈ f.support, a < c) → b ≠ 0 →
-      motive f → motive (single a b + f)) : motive f :=
-  induction_on_max (ι := ιᵒᵈ) f zero single_add
+      motive f → motive (single a b + f)) : motive f := by
+  suffices ∀ (s) (f : ι →₀ M), f.support = s → motive f from this _ _ rfl
+  refine fun s => s.induction_on_min (fun f h => ?_) (fun a s hm hf f hs => ?_)
+  · rwa [support_eq_empty.1 h]
+  · have hs' : (erase a f).support = s := by
+      rw [support_erase, hs, erase_insert (fun ha => (hm a ha).false)]
+    rw [← single_add_erase a f]
+    refine single_add _ _ _ (fun c hc => hm _ <| hs'.symm ▸ hc) ?_ (hf _ hs')
+    rw [← mem_support_iff, hs]
+    exact mem_insert_self a s
 
 /-- A finitely supported function can be built by adding up `single a b` for increasing `a`.
 
@@ -327,8 +335,12 @@ lemma induction_on_max₂ (f : ι →₀ M) (zero : motive 0)
 The lemma `induction_on_min` swaps the argument order in the sum. -/
 lemma induction_on_min₂ (f : ι →₀ M) (zero : motive 0)
     (add_single : ∀ a b (f : ι →₀ M), (∀ c ∈ f.support, a < c) → b ≠ 0 →
-      motive f → motive (f + single a b)) : motive f :=
-  induction_on_max₂ (ι := ιᵒᵈ) f zero add_single
+      motive f → motive (f + single a b)) : motive f := by
+  refine f.induction_on_min zero ?_
+  convert! add_single using 7 with _ _ _ H
+  have := fun c hc ↦ (H c hc).ne'
+  apply (addCommute_of_disjoint _).eq
+  simp_all [not_imp_not]
 
 end LinearOrder
 
