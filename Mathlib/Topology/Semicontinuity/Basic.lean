@@ -1095,7 +1095,8 @@ theorem ContinuousAt.comp_upperSemicontinuousWithinAt {g : γ → δ} {f : α �
   lowerSemicontinuousWithinAt_toDual_iff.1
     (ContinuousAt.comp_lowerSemicontinuousWithinAt (γ := γᵒᵈ) (δ := δᵒᵈ)
       (g := ⇑OrderDual.toDual ∘ g ∘ ⇑OrderDual.ofDual)
-      (continuous_toDual.continuousAt.comp (hg.comp (f := ⇑OrderDual.ofDual) (x := OrderDual.toDual (f x))
+      (continuous_toDual.continuousAt.comp (hg.comp (f := ⇑OrderDual.ofDual)
+        (x := OrderDual.toDual (f x))
         continuous_ofDual.continuousAt))
       (lowerSemicontinuousWithinAt_toDual_iff.2 hf) gmon.dual)
 
@@ -1104,7 +1105,8 @@ theorem ContinuousAt.comp_upperSemicontinuousAt {g : γ → δ} {f : α → γ} 
   lowerSemicontinuousAt_toDual_iff.1
     (ContinuousAt.comp_lowerSemicontinuousAt (γ := γᵒᵈ) (δ := δᵒᵈ)
       (g := ⇑OrderDual.toDual ∘ g ∘ ⇑OrderDual.ofDual)
-      (continuous_toDual.continuousAt.comp (hg.comp (f := ⇑OrderDual.ofDual) (x := OrderDual.toDual (f x))
+      (continuous_toDual.continuousAt.comp (hg.comp (f := ⇑OrderDual.ofDual)
+        (x := OrderDual.toDual (f x))
         continuous_ofDual.continuousAt))
       (lowerSemicontinuousAt_toDual_iff.2 hf) gmon.dual)
 

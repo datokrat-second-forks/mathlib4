@@ -76,7 +76,8 @@ theorem Ideal.exists_minimalPrimes_le [J.IsPrime] (e : I ≤ J) : ∃ p ∈ I.mi
   set S := { p : (Ideal R)ᵒᵈ | Ideal.IsPrime (OrderDual.ofDual p) ∧ I ≤ OrderDual.ofDual p }
   suffices h : ∃ m, OrderDual.toDual J ≤ m ∧ Maximal (· ∈ S) m by
     obtain ⟨p, hJp, hp⟩ := h
-    exact ⟨OrderDual.ofDual p, ⟨hp.prop, fun q hq hle ↦ hp.le_of_ge (y := OrderDual.toDual q) hq hle⟩,
+    exact ⟨OrderDual.ofDual p,
+      ⟨hp.prop, fun q hq hle ↦ hp.le_of_ge (y := OrderDual.toDual q) hq hle⟩,
       hJp⟩
   apply zorn_le_nonempty₀
   swap

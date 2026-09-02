@@ -135,7 +135,8 @@ theorem upperClosure_union (s t : Set α) : upperClosure (s ∪ t) = upperClosur
 theorem lowerClosure_union (s t : Set α) : lowerClosure (s ∪ t) = lowerClosure s ⊔ lowerClosure t :=
   (@gc_lowerClosure_coe α _).l_sup
 
-theorem upperClosure_iUnion (f : ι → Set α) : upperClosure (⋃ i, f i) = ⨅ i, upperClosure (f i) := by
+theorem upperClosure_iUnion (f : ι → Set α) :
+    upperClosure (⋃ i, f i) = ⨅ i, upperClosure (f i) := by
   simpa using congrArg OrderDual.ofDual ((@gc_upperClosure_coe α _).l_iSup (f := f))
 
 @[to_dual existing (attr := simp)]

@@ -55,6 +55,7 @@ variable [Semiring α] [LinearOrder α] [IsStrictOrderedRing α] [ExistsAddOfLE 
 
 -- Pushing `OrderDual.toDual` out of a sum.  Needed because `βᵒᵈ` is no longer the same type as
 -- `β`, so a statement proved at `βᵒᵈ` has to be transported back by hand.
+omit [LinearOrder β] [IsOrderedCancelAddMonoid β] in
 private lemma sum_toDual (t : Finset ι) (v : ι → β) :
     ∑ i ∈ t, toDual (v i) = toDual (∑ i ∈ t, v i) := by
   classical
@@ -62,10 +63,15 @@ private lemma sum_toDual (t : Finset ι) (v : ι → β) :
   | empty => rfl
   | cons a t ha ih => rw [Finset.sum_cons, Finset.sum_cons, ih]; rfl
 
+omit [LinearOrder α] [IsStrictOrderedRing α] [ExistsAddOfLE α] [LinearOrder β]
+  [IsOrderedCancelAddMonoid β] [PosSMulMono α β] in
 private lemma smul_toDual (a : α) (b : β) : a • toDual b = toDual (a • b) := rfl
 
+omit [LinearOrder β] [IsOrderedCancelAddMonoid β] in
 private lemma nsmul_toDual (n : ℕ) (b : β) : n • toDual b = toDual (n • b) := rfl
 
+omit [LinearOrder α] [IsStrictOrderedRing α] [ExistsAddOfLE α] [LinearOrder β]
+  [IsOrderedCancelAddMonoid β] [PosSMulMono α β] in
 private lemma sum_smul_toDual (t : Finset ι) (u : ι → α) (v : ι → β) :
     ∑ i ∈ t, u i • toDual (v i) = toDual (∑ i ∈ t, u i • v i) := by
   classical

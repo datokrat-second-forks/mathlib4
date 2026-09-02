@@ -328,7 +328,7 @@ protected lemma IsClosed.upperClosure {s : Set α} (hs : IsClosed s) :
 
 protected lemma IsClosed.lowerClosure {s : Set α} (hs : IsClosed s) :
     IsClosed (lowerClosure s).1 := by
-  show IsClosed (lowerClosure s : Set α)
+  change IsClosed (lowerClosure s : Set α)
   obtain rfl | h₁ := s.eq_empty_or_nonempty
   · simp
   by_cases h₂ : BddAbove s

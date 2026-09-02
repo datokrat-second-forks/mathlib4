@@ -340,7 +340,11 @@ lemma WithBot.le_def {x y : WithBot α} : x ≤ y ↔ x = ⊥ ∨ ∃ a b : α, 
 
 @[to_dual existing le_def]
 lemma WithTop.le_def' {x y : WithTop α} : x ≤ y ↔ y = ⊤ ∨ ∃ b a : α, a ≤ b ∧ y = b ∧ x = a := by
-  cases x <;> cases y <;> simp <;> first
+  cases x <;> cases y <;>
+    simp only [top_ne_coe, coe_ne_top, coe_inj, and_self, and_false, false_and, exists_false,
+      exists_eq_right_right', exists_eq_right', or_false, or_self, false_or, iff_true,
+      iff_false] <;>
+    first
     | exact WithBot.LE.bot_le _
     | exact fun h ↦ nomatch h
     | exact ⟨fun h ↦ by cases h; assumption, fun h ↦ WithBot.LE.coe_le_coe h⟩
@@ -383,7 +387,11 @@ lemma WithBot.lt_def {x y : WithBot α} :
 @[to_dual existing lt_def]
 lemma WithTop.lt_def' {x y : WithTop α} :
     x < y ↔ (y = ⊤ ∧ ∃ a : α, x = a) ∨ ∃ b a : α, a < b ∧ y = b ∧ x = a := by
-  cases x <;> cases y <;> simp <;> first
+  cases x <;> cases y <;>
+    simp only [top_ne_coe, coe_ne_top, coe_inj, and_self, and_true, and_false, false_and,
+      exists_false, exists_eq', exists_eq_right_right', exists_eq_right', or_false, or_self,
+      false_or, iff_true, iff_false] <;>
+    first
     | exact WithBot.LT.bot_lt _
     | exact fun h ↦ nomatch h
     | exact ⟨fun h ↦ by cases h; assumption, fun h ↦ WithBot.LT.coe_lt_coe h⟩

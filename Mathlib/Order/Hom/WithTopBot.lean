@@ -36,7 +36,11 @@ protected def toDualBotEquiv [LE α] : WithTop αᵒᵈ ≃o (WithBot α)ᵒᵈ 
   toEquiv := WithTop.ofDual.trans OrderDual.toDual
   map_rel_iff' := by
     rintro a b
-    cases a <;> cases b <;> simp <;> exact fun h ↦ WithBot.not_coe_le_bot _ h
+    cases a <;> cases b <;>
+      simp only [Equiv.trans_apply, ofDual_top, toDual_bot, ofDual_apply_coe, le_top,
+        WithTop.top_le_iff, coe_ne_top, iff_false, toDual_le_toDual, WithBot.coe_le_coe,
+        ofDual_le_ofDual, coe_le_coe]
+    exact fun h ↦ WithBot.not_coe_le_bot _ h
 
 @[to_dual (attr := simp)]
 theorem toDualBotEquiv_coe [LE α] (a : α) :

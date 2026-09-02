@@ -190,7 +190,7 @@ def gi (hG : OrderGenerates T) : GaloisInsertion (α := Set T) (β := αᵒᵈ)
     (hull T ∘ OrderDual.ofDual) :=
   gc.toGaloisInsertion fun a ↦ by
     obtain ⟨S, hS⟩ := hG (OrderDual.ofDual a)
-    show kernel (hull T (OrderDual.ofDual a)) ≤ OrderDual.ofDual a
+    change kernel (hull T (OrderDual.ofDual a)) ≤ OrderDual.ofDual a
     rw [hS, kernel, kernel]
     exact sInf_le_sInf <| image_val_mono fun c hcS => by
       rw [hull, mem_preimage, mem_Ici]

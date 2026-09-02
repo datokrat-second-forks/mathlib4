@@ -155,7 +155,8 @@ variable (𝕜 E)
 `Submodule 𝕜 E` and its `OrderDual`. -/
 theorem orthogonal_gc :
     @GaloisConnection (Submodule 𝕜 E) (Submodule 𝕜 E)ᵒᵈ _ _
-      (fun K ↦ OrderDual.toDual (orthogonal K)) (fun K ↦ orthogonal (OrderDual.ofDual K)) := fun _K₁ _K₂ =>
+      (fun K ↦ OrderDual.toDual (orthogonal K)) (fun K ↦ orthogonal (OrderDual.ofDual K)) :=
+  fun _K₁ _K₂ =>
   ⟨fun h _v hv _u hu => inner_left_of_mem_orthogonal hv (h hu), fun h _v hv _u hu =>
     inner_left_of_mem_orthogonal hv (h hu)⟩
 

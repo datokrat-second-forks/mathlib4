@@ -126,12 +126,14 @@ theorem strictAnti_toDual_comp_iff : StrictAnti (toDual ∘ f : α → βᵒᵈ)
   Iff.rfl
 
 @[simp]
-theorem strictMonoOn_comp_ofDual_iff : StrictMonoOn (f ∘ ofDual) t ↔ StrictAntiOn f (⇑toDual ⁻¹' t) :=
+theorem strictMonoOn_comp_ofDual_iff :
+    StrictMonoOn (f ∘ ofDual) t ↔ StrictAntiOn f (⇑toDual ⁻¹' t) :=
   ⟨fun h _ ha _ hb hab ↦ h (a := toDual _) hb (b := toDual _) ha hab,
     fun h _ ha _ hb hab ↦ h hb ha hab⟩
 
 @[simp]
-theorem strictAntiOn_comp_ofDual_iff : StrictAntiOn (f ∘ ofDual) t ↔ StrictMonoOn f (⇑toDual ⁻¹' t) :=
+theorem strictAntiOn_comp_ofDual_iff :
+    StrictAntiOn (f ∘ ofDual) t ↔ StrictMonoOn f (⇑toDual ⁻¹' t) :=
   ⟨fun h _ ha _ hb hab ↦ h (a := toDual _) hb (b := toDual _) ha hab,
     fun h _ ha _ hb hab ↦ h hb ha hab⟩
 

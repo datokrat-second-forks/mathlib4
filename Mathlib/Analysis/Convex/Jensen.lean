@@ -197,8 +197,9 @@ lemma StrictConcaveOn.eq_of_map_sum_eq (hf : StrictConcaveOn 𝕜 s f) (h₀ : �
     (h₁ : ∑ i ∈ t, w i = 1) (hmem : ∀ i ∈ t, p i ∈ s)
     (h_eq : f (∑ i ∈ t, w i • p i) ≤ ∑ i ∈ t, w i • f (p i)) :
     ∀ ⦃j⦄, j ∈ t → ∀ ⦃k⦄, k ∈ t → p j = p k :=
-  hf.dual.eq_of_le_map_sum h₀ h₁ hmem (by simpa only [Function.comp_apply, smul_toDual, sum_toDual, OrderDual.toDual_le_toDual,
-    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using h_eq)
+  hf.dual.eq_of_le_map_sum h₀ h₁ hmem (by
+    simpa only [Function.comp_apply, smul_toDual, sum_toDual, OrderDual.toDual_le_toDual,
+      OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using h_eq)
 
 /-- A form of the **equality case of Jensen's equality** for the case of strict convex and positive
 weights. -/
@@ -239,7 +240,8 @@ theorem StrictConcaveOn.map_sum_eq_iff_of_nonneg (hf : StrictConcaveOn 𝕜 s f)
     f (∑ i ∈ t, w i • p i) = ∑ i ∈ t, w i • f (p i) ↔
       ∀ ⦃j⦄, j ∈ t → w j ≠ 0 → ∀ ⦃k⦄, k ∈ t → w k ≠ 0 → p j = p k :=
   by simpa only [Function.comp_apply, smul_toDual, sum_toDual, OrderDual.toDual_le_toDual,
-    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using hf.dual.map_sum_eq_iff_of_nonneg h₀ h₁ hmem
+    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj]
+      using hf.dual.map_sum_eq_iff_of_nonneg h₀ h₁ hmem
 
 theorem StrictConvexOn.map_sum_lt_iff_of_pos (hf : StrictConvexOn 𝕜 s f) (h₀ : ∀ i ∈ t, 0 < w i)
     (h₁ : ∑ i ∈ t, w i = 1) (hmem : ∀ i ∈ t, p i ∈ s) :
@@ -265,7 +267,8 @@ theorem StrictConcaveOn.lt_map_sum_iff_of_nonneg (hf : StrictConcaveOn 𝕜 s f)
     ∑ i ∈ t, w i • f (p i) < f (∑ i ∈ t, w i • p i) ↔
       ∃ j ∈ t, ∃ k ∈ t, w j ≠ 0 ∧ w k ≠ 0 ∧ p j ≠ p k :=
   by simpa only [Function.comp_apply, smul_toDual, sum_toDual, OrderDual.toDual_le_toDual,
-    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using hf.dual.map_sum_lt_iff_of_nonneg h₀ h₁ hmem
+    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj]
+      using hf.dual.map_sum_lt_iff_of_nonneg h₀ h₁ hmem
 
 /-- Canonical form of the **equality case of Jensen's equality**.
 
@@ -340,7 +343,8 @@ theorem StrictConcaveOn.lt_map_sum_iff_of_pos' (hf : StrictConcaveOn 𝕜 s f) (
     (h₁ : ∑ i ∈ t, w i = 1) (hmem : ∀ i ∈ t, p i ∈ s) :
     ∑ i ∈ t, w i • f (p i) < f (∑ i ∈ t, w i • p i) ↔ ∃ j ∈ t, p j ≠ ∑ i ∈ t, w i • p i :=
   by simpa only [Function.comp_apply, smul_toDual, sum_toDual, OrderDual.toDual_le_toDual,
-    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using hf.dual.map_sum_lt_iff_of_pos' h₀ h₁ hmem
+    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj]
+      using hf.dual.map_sum_lt_iff_of_pos' h₀ h₁ hmem
 
 /-- Canonical form of the **strict Jensen's inequality**. -/
 theorem StrictConvexOn.map_sum_lt_iff_of_nonneg' (hf : StrictConvexOn 𝕜 s f) (h₀ : ∀ i ∈ t, 0 ≤ w i)
@@ -359,7 +363,8 @@ theorem StrictConcaveOn.lt_map_sum_iff_of_nonneg' (hf : StrictConcaveOn 𝕜 s f
     (h₀ : ∀ i ∈ t, 0 ≤ w i) (h₁ : ∑ i ∈ t, w i = 1) (hmem : ∀ i ∈ t, p i ∈ s) :
     ∑ i ∈ t, w i • f (p i) < f (∑ i ∈ t, w i • p i) ↔ ∃ j ∈ t, w j ≠ 0 ∧ p j ≠ ∑ i ∈ t, w i • p i :=
   by simpa only [Function.comp_apply, smul_toDual, sum_toDual, OrderDual.toDual_le_toDual,
-    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using hf.dual.map_sum_lt_iff_of_nonneg' h₀ h₁ hmem
+    OrderDual.toDual_lt_toDual, OrderDual.toDual_inj]
+      using hf.dual.map_sum_lt_iff_of_nonneg' h₀ h₁ hmem
 
 end Jensen
 

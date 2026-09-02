@@ -349,7 +349,7 @@ lemma gfpApprox_mem_fixedPoints_of_eq (hx : f x ≤ x) (hab : a < b) (hac : a �
     rw [lfpApprox_dual, lfpApprox_dual, OrderDual.toDual_inj]
     exact hf
   have h := lfpApprox_mem_fixedPoints_of_eq (OrderHom.dual f) hx hab hac hf'
-  show f (gfpApprox f x c) = gfpApprox f x c
+  change f (gfpApprox f x c) = gfpApprox f x c
   rw [← OrderDual.toDual_inj, ← dual_apply_toDual, ← lfpApprox_dual]
   exact h
 

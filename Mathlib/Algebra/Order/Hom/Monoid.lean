@@ -250,11 +250,13 @@ theorem antitone_iff_map_nonpos : Antitone (f : α → β) ↔ ∀ a, 0 ≤ a �
 
 theorem monotone_iff_map_nonpos : Monotone (f : α → β) ↔ ∀ a ≤ 0, f a ≤ 0 :=
   antitone_comp_ofDual_iff.symm.trans <|
-    (antitone_iff_map_nonpos (F := αᵒᵈ →+ β) ((f : α →+ β).comp ofDualAddHom)).trans OrderDual.forall
+    (antitone_iff_map_nonpos (F := αᵒᵈ →+ β)
+      ((f : α →+ β).comp ofDualAddHom)).trans OrderDual.forall
 
 theorem antitone_iff_map_nonneg : Antitone (f : α → β) ↔ ∀ a ≤ 0, 0 ≤ f a :=
   monotone_comp_ofDual_iff.symm.trans <|
-    (monotone_iff_map_nonneg (F := αᵒᵈ →+ β) ((f : α →+ β).comp ofDualAddHom)).trans OrderDual.forall
+    (monotone_iff_map_nonneg (F := αᵒᵈ →+ β)
+      ((f : α →+ β).comp ofDualAddHom)).trans OrderDual.forall
 
 theorem strictMono_iff_map_pos :
     StrictMono (f : α → β) ↔ ∀ a, 0 < a → 0 < f a := by

@@ -107,7 +107,8 @@ theorem exists_countable_lowerSemicontinuous_isLUB {s : X → E} {𝓕 : Set (X 
       fun g hg ↦ h.2 (show Φ g ∈ lowerBounds (Φ '' 𝓖) by
         rintro _ ⟨f, hf, rfl⟩; exact hg hf)⟩
   obtain ⟨𝓖, 𝓖_sub, 𝓖_count, h𝓖⟩ := exists_countable_upperSemicontinuous_isGLB (E := Eᵒᵈ)
-    (𝓕 := Φ '' 𝓕) (by rintro _ ⟨f, hf, rfl⟩ x y hy; exact h𝓕_cont f hf x (OrderDual.ofDual y) hy) (hGLB h𝓕)
+    (𝓕 := Φ '' 𝓕)
+    (by rintro _ ⟨f, hf, rfl⟩ x y hy; exact h𝓕_cont f hf x (OrderDual.ofDual y) hy) (hGLB h𝓕)
   refine ⟨Ψ '' 𝓖, ?_, 𝓖_count.image _, hLUB ?_⟩
   · rintro _ ⟨g, hg, rfl⟩
     obtain ⟨f, hf, rfl⟩ := 𝓖_sub hg

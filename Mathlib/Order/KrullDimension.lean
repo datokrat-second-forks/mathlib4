@@ -135,22 +135,22 @@ private def LTSeries.ofDual (q : LTSeries αᵒᵈ) : LTSeries α where
 
 @[simp] private lemma LTSeries.dual_head (p : LTSeries α) :
     (LTSeries.dual p).head = OrderDual.toDual p.last := by
-  show OrderDual.toDual (p (Fin.rev 0)) = OrderDual.toDual (p (Fin.last _))
+  change OrderDual.toDual (p (Fin.rev 0)) = OrderDual.toDual (p (Fin.last _))
   rw [Fin.rev_zero]
 
 @[simp] private lemma LTSeries.dual_last (p : LTSeries α) :
     (LTSeries.dual p).last = OrderDual.toDual p.head := by
-  show OrderDual.toDual (p (Fin.rev (Fin.last _))) = OrderDual.toDual (p 0)
+  change OrderDual.toDual (p (Fin.rev (Fin.last _))) = OrderDual.toDual (p 0)
   rw [Fin.rev_last]
 
 @[simp] private lemma LTSeries.ofDual_head (q : LTSeries αᵒᵈ) :
     (LTSeries.ofDual q).head = OrderDual.ofDual q.last := by
-  show OrderDual.ofDual (q (Fin.rev 0)) = OrderDual.ofDual (q (Fin.last _))
+  change OrderDual.ofDual (q (Fin.rev 0)) = OrderDual.ofDual (q (Fin.last _))
   rw [Fin.rev_zero]
 
 @[simp] private lemma LTSeries.ofDual_last (q : LTSeries αᵒᵈ) :
     (LTSeries.ofDual q).last = OrderDual.ofDual q.head := by
-  show OrderDual.ofDual (q (Fin.rev (Fin.last _))) = OrderDual.ofDual (q 0)
+  change OrderDual.ofDual (q (Fin.rev (Fin.last _))) = OrderDual.ofDual (q 0)
   rw [Fin.rev_last]
 
 /-- Shuttling a bounded universal quantifier through `OrderDual`. -/
@@ -545,8 +545,9 @@ element.
 lemma coheight_eq_top_iff {x : α} :
     coheight x = ⊤ ↔ ∀ n, ∃ p : LTSeries α, p.head = x ∧ p.length = n := by
   rw [coheight, height_eq_top_iff]
-  refine forall_congr' fun n ↦ ⟨fun ⟨p, hp, hl⟩ ↦ ⟨LTSeries.ofDual p, by simp [hp], by simpa using hl⟩,
-    fun ⟨p, hp, hl⟩ ↦ ⟨LTSeries.dual p, by simp [hp], by simpa using hl⟩⟩
+  refine forall_congr' fun n ↦
+    ⟨fun ⟨p, hp, hl⟩ ↦ ⟨LTSeries.ofDual p, by simp [hp], by simpa using hl⟩,
+      fun ⟨p, hp, hl⟩ ↦ ⟨LTSeries.dual p, by simp [hp], by simpa using hl⟩⟩
 
 /-- The elements of height zero are the minimal elements. -/
 @[simp] lemma height_eq_zero {x : α} : height x = 0 ↔ IsMin x := by
