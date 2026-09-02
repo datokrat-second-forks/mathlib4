@@ -182,9 +182,13 @@ theorem antitone_lowerCentralSeries : Antitone <| lowerCentralSeries R L M := by
 theorem eventually_iInf_lowerCentralSeries_eq [IsArtinian R M] :
     ∀ᶠ l in Filter.atTop, ⨅ k, lowerCentralSeries R L M k = lowerCentralSeries R L M l := by
   have h_wf : WellFoundedGT (LieSubmodule R L M)ᵒᵈ :=
-    LieSubmodule.wellFoundedLT_of_isArtinian R L M
-  obtain ⟨n, hn : ∀ m, n ≤ m → lowerCentralSeries R L M n = lowerCentralSeries R L M m⟩ :=
-    h_wf.monotone_chain_condition ⟨_, antitone_lowerCentralSeries R L M⟩
+    (wellFoundedGT_dual_iff _).2 (LieSubmodule.wellFoundedLT_of_isArtinian R L M)
+  obtain ⟨n, hn'⟩ := h_wf.monotone_chain_condition
+    (⟨fun k ↦ OrderDual.toDual (lowerCentralSeries R L M k),
+      fun _ _ e ↦ OrderDual.toDual_le_toDual.2 (antitone_lowerCentralSeries R L M e)⟩ :
+        ℕ →o (LieSubmodule R L M)ᵒᵈ)
+  have hn : ∀ m, n ≤ m → lowerCentralSeries R L M n = lowerCentralSeries R L M m :=
+    fun m hm ↦ OrderDual.toDual_inj.1 (hn' m hm)
   refine Filter.eventually_atTop.mpr ⟨n, fun l hl ↦ le_antisymm (iInf_le _ _) (le_iInf fun m ↦ ?_)⟩
   rcases le_or_gt l m with h | h
   · rw [← hn _ hl, ← hn _ (hl.trans h)]

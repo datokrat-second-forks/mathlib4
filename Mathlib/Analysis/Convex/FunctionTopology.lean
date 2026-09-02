@@ -44,7 +44,8 @@ public alias isClosed_setOf_convexOn := isClosed_setOfPred_convexOn
 /-- The set of concave functions on a set `s` is closed. -/
 public theorem isClosed_setOfPred_concaveOn {s : Set α} :
     IsClosed {f : α → β | ConcaveOn 𝕜 s f} :=
-  isClosed_setOfPred_convexOn (α := α) (β := βᵒᵈ)
+  isClosed_setOfPred_convexOn (α := α) (β := βᵒᵈ) (s := s) |>.preimage
+    (continuous_pi fun i ↦ continuous_toDual.comp (continuous_apply i))
 
 @[deprecated (since := "2026-07-09")]
 public alias isClosed_setOf_concaveOn := isClosed_setOfPred_concaveOn
