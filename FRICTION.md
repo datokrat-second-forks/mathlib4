@@ -2210,3 +2210,28 @@ Four observations that cost time and are not obvious:
 * **`Measurable.comp` leaves `(⇑toDual ∘ f i) b` where the goal says `toDual (f i b)`** — add
   `Function.comp_apply` to every `simpa only [toDual_iInf, …]` in this family, or half of them fail
   on a difference that prints identically at a glance.
+
+## 74. The cheap tail: when the dual sibling's *proof* is one line, mirror without thinking
+
+Waves 38 and 39 were four one-line sites, and they are worth recording only as a calibration of
+§65's rule. In each case the transport had been the shorter text and the mirror is now shorter
+*and* clearer:
+
+| was | now |
+| --- | --- |
+| `essInf_congr_ae := @essSup_congr_ae α βᵒᵈ _ _ _ _ _ hfg` | `liminf_congr hfg` |
+| `essInf_measure_zero := @essSup_measure_zero α βᵒᵈ _ _ _` | `top_le_iff.mp (le_sSup (by simp))` |
+| `ae_le_const_iff_… := ae_const_le_iff_… (β := βᵒᵈ) _ _` | `simp_rw [eventually_le_const_iff_forall_gt_eventually_lt_const, ae_iff, not_lt]` |
+| `MeasurableSet.image_of_antitoneOn := (ht.image_of_monotoneOn hg.dual_right :)` | `rw [Set.image_comp, Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq] at H; exact H` |
+
+The tell in the first three is the `@f α βᵒᵈ _ _ _ _ _` spelling with a wall of underscores: a
+transport that needed *no* translation of the data was only ever a re-reading of the same term at a
+type synonym. Once the synonym is a structure, the honest proof is the one the original author
+would have written had `@[to_dual]` not been available — and it is usually already there in the
+library, one `@[to_dual]`-generated name away (`limsup_congr` → `liminf_congr`,
+`eventually_const_le_iff_…` → `eventually_le_const_iff_…`).
+
+The fourth is the exception that proves §65's rule: the data (`g '' t`) does move, and the repair is
+the image/preimage rewrite `(⇑toDual ∘ g) '' t = ⇑ofDual ⁻¹' (g '' t)` — after which
+`MeasurableSet[βᵒᵈ] (⇑ofDual ⁻¹' S)` is *definitionally* `MeasurableSet[β] S` by §70, so a bare
+`exact` closes it. Two lines, and the only place in the wave where anything was actually proved.
