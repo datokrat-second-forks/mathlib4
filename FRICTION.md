@@ -1328,3 +1328,114 @@ theorem countable_image_gt_image_Ioi_within … := by
 
 `Set.Countable.mono` wants the subset proof in tactic position: as a term argument the target set
 is still a metavariable when the `⟨…⟩` is elaborated, and the anonymous constructor fails.
+
+## 44. `𝓝[<]` / `𝓝[≤]` dualization needs a `nhdsWithin` transport lemma
+
+Every `s ∈ 𝓝[<] a ↔ …` result in `Topology/Order/LeftRightNhds.lean` used to be
+`… (α := αᵒᵈ)` plus a `simpa`, because `𝓝[<] a` and `𝓝[>] (toDual a)` were the same filter on
+the same type.  They are now different filters on different types, and the `simp` set contains
+nothing that relates them: the interval simp lemmas rewrite `Ioi (toDual b)` to
+`ofDual ⁻¹' Iio b`, and there the rewriting stops.
+
+Two private lemmas restore all of it at once:
+
+```lean
+private theorem nhdsWithin_toDual (x : X) (t : Set X) :
+    𝓝[ofDual ⁻¹' t] (toDual x) = map toDual (𝓝[t] x) := by
+  rw [nhdsWithin, nhdsWithin, nhds_toDual, Filter.map_inf OrderDual.toDual.injective,
+    Filter.map_principal, Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq]
+
+@[simp]
+private theorem mem_nhdsWithin_toDual {x : X} {s t : Set X} :
+    ofDual ⁻¹' s ∈ 𝓝[ofDual ⁻¹' t] (toDual x) ↔ s ∈ 𝓝[t] x := by
+  rw [nhdsWithin_toDual, Filter.mem_map]; rfl
+```
+
+With `mem_nhdsWithin_toDual` in the simp set, `simpa using! TFAE_mem_nhdsGT h.dual (ofDual ⁻¹' s)`
+works again unchanged — the existential and interval parts of those statements were already
+handled by the interval `to_dual` simp lemmas.  The `= ⊥` variants need the filter form plus
+`Filter.map_eq_bot_iff`.
+
+The same three-line `rw` chain now appears in `Topology/Constructions.lean` (twice),
+`Topology/Order/Basic.lean` and here; it is the strongest argument so far for promoting this
+vocabulary to `Topology/Constructions.lean` next to `nhds_toDual`.
+
+## 45. Big operators do not commute with `toDual` — the `Finset.sum` case
+
+Known for `iSup`/`iInf` (§ earlier); `Finset.sum` is the same story and has no library lemma.
+`Analysis/Convex/Jensen.lean` derives every concave statement from the convex one at
+`toDual ∘ f`, which produces `∑ i ∈ t, w i • toDual (f (p i))` where the goal wants
+`toDual (∑ i ∈ t, w i • f (p i))`.  Note the direction: the library simp lemma
+`OrderDual.toDual_smul` pushes `toDual` *inward*, which is exactly the wrong way, so the
+collecting lemmas must be given explicitly:
+
+```lean
+private lemma smul_toDual (c : 𝕜) (b : β) : c • toDual b = toDual (c • b) := rfl
+private lemma sum_toDual (t : Finset ι) (g : ι → β) :
+    ∑ i ∈ t, toDual (g i) = toDual (∑ i ∈ t, g i) := by
+  induction t using Finset.cons_induction with
+  | empty => rfl
+  | cons a t ha ih => rw [Finset.sum_cons, Finset.sum_cons, ih]; rfl
+```
+
+and then every site is `simpa only [Function.comp_apply, smul_toDual, sum_toDual,
+OrderDual.toDual_le_toDual, OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] using hf.dual.foo …`.
+`Finset.sup'`/`inf'` and `BddAbove`/`BddBelow` already have their bridges in the library
+(`Finset.toDual_inf'`, `bddAbove_preimage_ofDual`).
+
+Also: a transport written as `Foo (β := βᵒᵈ) hf` makes the *unifier* produce the function
+`fun x ↦ { ofDual' := f x }`, on which no `toDual` simp lemma fires.  Rewriting the site to use
+the explicit `hf.dual` (`ConcaveOn.dual : ConcaveOn 𝕜 s f → ConvexOn 𝕜 s (toDual ∘ f)`) gives
+`⇑toDual ∘ f` instead, and the simp set applies.
+
+## 46. A class whose field mentions the type's own order: `IsLower`/`IsUpper`
+
+`IsUpper α` is `t = upper α`, so `IsUpper αᵒᵈ` is a statement about `coinduced toDual t`, and
+`topology_eq_lowerTopology (α := α)` no longer proves it.  What carries the whole file is three
+private lemmas:
+
+```lean
+private lemma coinduced_toDual_eq (t : TopologicalSpace α) :
+    TopologicalSpace.coinduced toDual t = TopologicalSpace.induced ofDual t
+private lemma induced_ofDual_injective {t₁ t₂ : TopologicalSpace α}
+    (h : TopologicalSpace.induced ofDual t₁ = TopologicalSpace.induced ofDual t₂) : t₁ = t₂
+private lemma induced_ofDual_lower [Preorder α] :
+    TopologicalSpace.induced ofDual (lower α) = upper αᵒᵈ
+```
+
+the last by `rw [lower, upper, induced_generateFrom_eq]` and a two-way `rintro` on the generating
+family, where both directions are `rfl` (`ofDual ⁻¹' (Ici a)ᶜ` *is* `(Iic (toDual a))ᶜ`).
+`induced_ofDual_injective` is what makes the `IsUpper αᵒᵈ ↔ IsLower α` direction work, which no
+instance can give you.
+
+For the twenty-odd *statements* in the `IsUpper` namespace the honest fix is to mirror the
+`IsLower` proof rather than transport it: they are two to five lines each and dualize
+mechanically (`Ici`↔`Iic`, `sup'`↔`inf'`, `⊥`↔`⊤`, `Ioi_inter_Ioi` for `Iio_inter_Iio`).
+Transport is only worth it for the two long ones, and there it goes through
+`ofDual ⁻¹' U` plus `Set.preimage_eq_preimage OrderDual.ofDual.surjective`.
+
+## 47. `atTop`/`atBot` on a dual, and on a *subtype* of a dual
+
+`atTop : Filter αᵒᵈ` is no longer `atBot : Filter α`; the transports need
+`Tendsto toDual atBot atTop` and friends, which are one-liners but have to exist:
+
+```lean
+private lemma tendsto_toDual_atBot [Preorder ι] : Tendsto (toDual : ι → ιᵒᵈ) atBot atTop :=
+  tendsto_atTop.2 fun b ↦ mem_of_superset (Iic_mem_atBot (ofDual b)) fun _ hx ↦ hx
+```
+
+The subtype version is what `SupConvergenceClass`/`InfConvergenceClass` need, because their field
+quantifies over `s → α` for `s : Set α`:
+
+```lean
+private lemma tendsto_subtype_ofDual [Preorder α] {s : Set αᵒᵈ} :
+    Tendsto (fun y : s ↦ (⟨ofDual y.1, y.2⟩ : ↥(toDual ⁻¹' s))) atTop atBot :=
+  tendsto_atBot.2 fun b ↦ mem_of_superset (Ici_mem_atTop (⟨toDual b.1, b.2⟩ : ↥s)) fun _ hx ↦ hx
+```
+
+Both the membership proof and the order comparison go through unchanged (`fun _ hx ↦ hx`) because
+subtype `≤` unfolds to the carrier's `≤`, which unfolds through `toDual`; only the *types* differ.
+
+One `rw` trap: `iSup_comp_ofDual : ⨆ i : ιᵒᵈ, g (ofDual i) = ⨆ i, g i` fires for `g := f` but not
+for `g := fun i ↦ toDual (f i)` — `?g (ofDual i)` is not a Miller pattern, so `rw` needs the
+function supplied explicitly, `rw [iSup_comp_ofDual (fun i ↦ OrderDual.toDual (f i))]`.

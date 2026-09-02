@@ -48,8 +48,25 @@ instance range_Iio : HasCountableSeparatingOn X (· ∈ range Iio) s := by
       rcases hsd.inter_open_nonempty _ isOpen_Ioo hne with ⟨z, ⟨hxz, hzy⟩, hzs⟩
       simpa [hxz, hzy.not_gt] using h (Iio z) (mem_image_of_mem _ (.inl hzs))
 
-instance range_Ioi : HasCountableSeparatingOn X (· ∈ range Ioi) s :=
-  .range_Iio (X := Xᵒᵈ)
+instance range_Ioi : HasCountableSeparatingOn X (· ∈ range Ioi) s := by
+  constructor
+  rcases TopologicalSpace.exists_countable_dense X with ⟨s, hsc, hsd⟩
+  set t := s ∪ {x | ∃ y, x ⋖ y}
+  refine ⟨Ioi '' t, .image ?_ _, ?_, ?_⟩
+  · exact hsc.union countable_setOfPred_covBy_right
+  · exact image_subset_range _ _
+  · rintro x - y - h
+    by_contra! hne
+    wlog hlt : x < y generalizing x y
+    · refine this y x ?_ hne.symm (hne.lt_or_gt.resolve_left hlt)
+      simpa only [iff_comm] using h
+    cases (Ioo x y).eq_empty_or_nonempty with
+    | inl he =>
+      specialize h (Ioi x) (mem_image_of_mem _ (.inr ⟨y, hlt, by simpa using Set.ext_iff.mp he⟩))
+      simp [hlt] at h
+    | inr hne =>
+      rcases hsd.inter_open_nonempty _ isOpen_Ioo hne with ⟨z, ⟨hxz, hzy⟩, hzs⟩
+      simpa [hxz.not_gt, hzy] using h (Ioi z) (mem_image_of_mem _ (.inl hzs))
 
 instance range_Iic : HasCountableSeparatingOn X (· ∈ range Iic) s :=
   let ⟨t, htc, ht_sub, ht⟩ := (range_Ioi (X := X) (s := s)).1
@@ -57,7 +74,9 @@ instance range_Iic : HasCountableSeparatingOn X (· ∈ range Iic) s :=
     by simpa [not_iff_not]⟩
 
 instance range_Ici : HasCountableSeparatingOn X (· ∈ range Ici) s :=
-  range_Iic (X := Xᵒᵈ)
+  let ⟨t, htc, ht_sub, ht⟩ := (range_Iio (X := X) (s := s)).1
+  ⟨compl '' t, htc.image _, by simpa [← compl_inj_iff (x := Iio _)] using ht_sub,
+    by simpa [not_iff_not]⟩
 
 end HasCountableSeparatingOn
 
@@ -72,9 +91,9 @@ lemma of_forall_eventually_le_iff (h : ∀ x, ∀ᶠ a in l, f a ≤ x ↔ g a �
   of_forall_separating_preimage (· ∈ range Iic) <| forall_mem_range.2 <| fun x ↦ .set_eq (h x)
 
 lemma of_forall_eventually_gt_iff (h : ∀ x, ∀ᶠ a in l, x < f a ↔ x < g a) : f =ᶠ[l] g :=
-  of_forall_eventually_lt_iff (X := Xᵒᵈ) h
+  of_forall_separating_preimage (· ∈ range Ioi) <| forall_mem_range.2 <| fun x ↦ .set_eq (h x)
 
 lemma of_forall_eventually_ge_iff (h : ∀ x, ∀ᶠ a in l, x ≤ f a ↔ x ≤ g a) : f =ᶠ[l] g :=
-  of_forall_eventually_le_iff (X := Xᵒᵈ) h
+  of_forall_separating_preimage (· ∈ range Ici) <| forall_mem_range.2 <| fun x ↦ .set_eq (h x)
 
 end Filter.EventuallyEq

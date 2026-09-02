@@ -97,7 +97,7 @@ theorem compl_ordConnectedSection_ordSeparatingSet_mem_nhdsLE (hd : Disjoint s (
         exact ⟨this.le, hx.1.le⟩
       refine lt_of_not_ge fun hcy => ?_
       have hay : a < y := not_le.1 fun hya => hsub ⟨hbc.trans hcy, hya⟩ hyt
-      exact hxy (Icc_subset_uIcc ⟨hx.2, hay.le⟩) ha
+      exact hxy (Icc_subset_uIcc' ⟨hx.2, hay.le⟩) ha
 
 theorem compl_ordConnectedSection_ordSeparatingSet_mem_nhds (hd : Disjoint s (closure t))
     (ha : a ∈ s) : (ordConnectedSection <| ordSeparatingSet s t)ᶜ ∈ 𝓝 a := by

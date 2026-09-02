@@ -75,6 +75,45 @@ def WithLower (α : Type*) := α
 
 variable {α β : Type*}
 
+open OrderDual in
+private lemma coinduced_toDual_eq (t : TopologicalSpace α) :
+    TopologicalSpace.coinduced (toDual : α → αᵒᵈ) t = TopologicalSpace.induced ofDual t := by
+  refine TopologicalSpace.ext_iff.2 fun s ↦ ⟨fun hs ↦ ⟨toDual ⁻¹' s, hs, rfl⟩, ?_⟩
+  rintro ⟨u, hu, rfl⟩
+  exact hu
+
+open OrderDual in
+private lemma induced_ofDual_injective {t₁ t₂ : TopologicalSpace α}
+    (h : TopologicalSpace.induced (ofDual : αᵒᵈ → α) t₁ =
+      TopologicalSpace.induced ofDual t₂) : t₁ = t₂ := by
+  have := congrArg (TopologicalSpace.induced (toDual : α → αᵒᵈ)) h
+  rwa [induced_compose, induced_compose, show (ofDual : αᵒᵈ → α) ∘ toDual = id from rfl,
+    induced_id (t := t₁), induced_id (t := t₂)] at this
+
+open OrderDual in
+private lemma induced_ofDual_lower [Preorder α] :
+    TopologicalSpace.induced (ofDual : αᵒᵈ → α) (lower α) = upper αᵒᵈ := by
+  rw [lower, upper, induced_generateFrom_eq]
+  congr 1
+  ext s
+  constructor
+  · rintro ⟨u, ⟨a, rfl⟩, rfl⟩
+    exact ⟨toDual a, rfl⟩
+  · rintro ⟨a, rfl⟩
+    exact ⟨(Set.Ici (ofDual a))ᶜ, ⟨ofDual a, rfl⟩, rfl⟩
+
+open OrderDual in
+private lemma induced_ofDual_upper [Preorder α] :
+    TopologicalSpace.induced (ofDual : αᵒᵈ → α) (upper α) = lower αᵒᵈ := by
+  rw [lower, upper, induced_generateFrom_eq]
+  congr 1
+  ext s
+  constructor
+  · rintro ⟨u, ⟨a, rfl⟩, rfl⟩
+    exact ⟨toDual a, rfl⟩
+  · rintro ⟨a, rfl⟩
+    exact ⟨(Set.Iic (ofDual a))ᶜ, ⟨ofDual a, rfl⟩, rfl⟩
+
 namespace WithLower
 
 /-- `toLower` is the identity function to the `WithLower` of a type. -/
@@ -210,10 +249,14 @@ The lower topology is homeomorphic to the upper topology on the dual order
 def WithLower.toDualHomeomorph [Preorder α] : WithLower α ≃ₜ WithUpper αᵒᵈ where
   toFun := OrderDual.toDual
   invFun := OrderDual.ofDual
-  left_inv := OrderDual.toDual_ofDual
-  right_inv := OrderDual.ofDual_toDual
-  continuous_toFun := continuous_coinduced_rng
-  continuous_invFun := continuous_coinduced_rng
+  left_inv := OrderDual.ofDual_toDual
+  right_inv := OrderDual.toDual_ofDual
+  continuous_toFun := continuous_generateFrom_iff.2 <| by
+    rintro _ ⟨a, rfl⟩
+    exact GenerateOpen.basic _ ⟨OrderDual.ofDual a, rfl⟩
+  continuous_invFun := continuous_generateFrom_iff.2 <| by
+    rintro _ ⟨a, rfl⟩
+    exact GenerateOpen.basic _ ⟨OrderDual.toDual a, rfl⟩
 
 namespace IsLower
 
@@ -240,7 +283,9 @@ theorem isOpen_iff_generate_Ici_compl : IsOpen s ↔ GenerateOpen { t | ∃ a, (
   rw [topology_eq α]; rfl
 
 instance _root_.OrderDual.instIsUpper : IsUpper αᵒᵈ where
-  topology_eq_upperTopology := topology_eq_lowerTopology (α := α)
+  topology_eq_upperTopology := by
+    rw [topology_eq α]
+    exact (coinduced_toDual_eq _).trans induced_ofDual_lower
 
 /-- Left-closed right-infinite intervals $[a, ∞)$ are closed in the lower topology. -/
 instance : ClosedIciTopology α :=
@@ -400,26 +445,35 @@ theorem isOpen_iff_generate_Iic_compl : IsOpen s ↔ GenerateOpen { t | ∃ a, (
   rw [topology_eq α]; rfl
 
 instance _root_.OrderDual.instIsLower : IsLower αᵒᵈ where
-  topology_eq_lowerTopology := topology_eq_upperTopology (α := α)
+  topology_eq_lowerTopology := by
+    rw [topology_eq α]
+    exact (coinduced_toDual_eq _).trans induced_ofDual_upper
 
 /-- Left-infinite right-closed intervals $(-∞,a]$ are closed in the upper topology. -/
 instance : ClosedIicTopology α :=
   ⟨fun a ↦ isOpen_compl_iff.1 <| isOpen_iff_generate_Iic_compl.2 <| GenerateOpen.basic _ ⟨a, rfl⟩⟩
 
 /-- The lower closure of a finite set is closed in the upper topology. -/
-theorem isClosed_lowerClosure (h : s.Finite) : IsClosed (lowerClosure s : Set α) :=
-  IsLower.isClosed_upperClosure (α := αᵒᵈ) h
+theorem isClosed_lowerClosure (h : s.Finite) : IsClosed (lowerClosure s : Set α) := by
+  simp only [← LowerSet.iSup_Iic, LowerSet.coe_iSup]
+  exact h.isClosed_biUnion fun _ _ => isClosed_Iic
 
 /-- Every set open in the upper topology is an upper set. -/
-theorem isUpperSet_of_isOpen (h : IsOpen s) : IsUpperSet s :=
-  IsLower.isLowerSet_of_isOpen (α := αᵒᵈ) h
+theorem isUpperSet_of_isOpen (h : IsOpen s) : IsUpperSet s := by
+  replace h := isOpen_iff_generate_Iic_compl.1 h
+  induction h with
+  | basic u h' => obtain ⟨a, rfl⟩ := h'; exact (isLowerSet_Iic a).compl
+  | univ => exact isUpperSet_univ
+  | inter u v _ _ hu2 hv2 => exact hu2.inter hv2
+  | sUnion _ _ ih => exact isUpperSet_sUnion ih
 
 theorem isLowerSet_of_isClosed (h : IsClosed s) : IsLowerSet s :=
   isUpperSet_compl.1 <| isUpperSet_of_isOpen h.isOpen_compl
 
 theorem tendsto_nhds_iff_not_le {β : Type*} {f : β → α} {l : Filter β} {x : α} :
-    Filter.Tendsto f l (𝓝 x) ↔ ∀ y, ¬x ≤ y → ∀ᶠ z in l, ¬f z ≤ y :=
-  IsLower.tendsto_nhds_iff_not_le (α := αᵒᵈ)
+    Filter.Tendsto f l (𝓝 x) ↔ ∀ y, ¬x ≤ y → ∀ᶠ z in l, ¬f z ≤ y := by
+  simp +instances [topology_eq_upperTopology, tendsto_nhds_generateFrom_iff, Filter.Eventually,
+    Iic, compl_ofPred]
 
 /--
 The closure of a singleton `{a}` in the upper topology is the left-infinite right-closed interval
@@ -427,16 +481,29 @@ $(-∞,a]$.
 -/
 @[simp]
 theorem closure_singleton (a : α) : closure {a} = Iic a :=
-  IsLower.closure_singleton (α := αᵒᵈ) _
+  Subset.antisymm ((closure_minimal fun _ h => h.le) <| isClosed_Iic) <|
+    (isLowerSet_of_isClosed isClosed_closure).Iic_subset <| subset_closure rfl
 
-protected theorem isTopologicalBasis : IsTopologicalBasis (upperBasis α) :=
-  IsLower.isTopologicalBasis (α := αᵒᵈ)
+protected theorem isTopologicalBasis : IsTopologicalBasis (upperBasis α) := by
+  convert! isTopologicalBasis_of_subbasis (topology_eq α)
+  simp_rw [upperBasis, coe_lowerClosure, compl_iUnion]
+  ext s
+  constructor
+  · rintro ⟨F, hF, rfl⟩
+    refine ⟨(fun a => (Iic a)ᶜ) '' F, ⟨hF.image _, image_subset_iff.2 fun _ _ => ⟨_, rfl⟩⟩, ?_⟩
+    simp only [sInter_image]
+  · rintro ⟨F, ⟨hF, hs⟩, rfl⟩
+    have := hF.to_subtype
+    rw [subset_def, Subtype.forall'] at hs
+    choose f hf using hs
+    exact ⟨_, finite_range f, by simp_rw [biInter_range, hf, sInter_eq_iInter]⟩
 
 /-- A function `f : β → α` with upper topology in the codomain is continuous
 if and only if the preimage of every interval `Set.Iic a` is a closed set. -/
 lemma continuous_iff_Iic [TopologicalSpace β] {f : β → α} :
-    Continuous f ↔ ∀ a, IsClosed (f ⁻¹' (Iic a)) :=
-  IsLower.continuous_iff_Ici (α := αᵒᵈ)
+    Continuous f ↔ ∀ a, IsClosed (f ⁻¹' (Iic a)) := by
+  obtain rfl := IsUpper.topology_eq α
+  simp [continuous_generateFrom_iff]
 
 end Preorder
 
@@ -448,7 +515,8 @@ variable [PartialOrder α] [TopologicalSpace α] [IsUpper α]
 -- see Note [lower instance priority]
 /-- The upper topology on a partial order is T₀. -/
 instance (priority := 90) t0Space : T0Space α :=
-  IsLower.t0Space (α := αᵒᵈ)
+  (t0Space_iff_inseparable α).2 fun x y h =>
+    Iic_injective <| by simpa only [inseparable_iff_closure_eq, closure_singleton] using h
 
 end PartialOrder
 
@@ -458,11 +526,14 @@ variable [LinearOrder α] [TopologicalSpace α] [IsUpper α]
 
 lemma isTopologicalBasis_insert_univ_subbasis :
     IsTopologicalBasis (insert univ {s : Set α | ∃ a, (Iic a)ᶜ = s}) :=
-  IsLower.isTopologicalBasis_insert_univ_subbasis (α := αᵒᵈ)
+  isTopologicalBasis_of_subbasis_of_inter (by rw [topology_eq α, upper]) (by
+    rintro _ ⟨b, rfl⟩ _ ⟨c, rfl⟩
+    use b ⊔ c
+    rw [compl_Iic, compl_Iic, compl_Iic, Ioi_inter_Ioi])
 
 theorem tendsto_nhds_iff_lt {β : Type*} {f : β → α} {l : Filter β} {x : α} :
-    Filter.Tendsto f l (𝓝 x) ↔ ∀ y < x, ∀ᶠ z in l, y < f z :=
-  IsLower.tendsto_nhds_iff_lt (α := αᵒᵈ)
+    Filter.Tendsto f l (𝓝 x) ↔ ∀ y < x, ∀ᶠ z in l, y < f z := by
+  simp only [tendsto_nhds_iff_not_le, not_le]
 
 end LinearOrder
 
@@ -470,8 +541,15 @@ section CompleteLinearOrder
 
 variable [CompleteLinearOrder α] [t : TopologicalSpace α] [IsUpper α]
 
-lemma isTopologicalSpace_basis (U : Set α) : IsOpen U ↔ U = univ ∨ ∃ a, (Iic a)ᶜ = U :=
-  IsLower.isTopologicalSpace_basis (α := αᵒᵈ) U
+lemma isTopologicalSpace_basis (U : Set α) : IsOpen U ↔ U = univ ∨ ∃ a, (Iic a)ᶜ = U := by
+  refine (IsLower.isTopologicalSpace_basis (α := αᵒᵈ) (OrderDual.ofDual ⁻¹' U)).trans ⟨?_, ?_⟩
+  · rintro (hU | ⟨a, ha⟩)
+    · exact Or.inl <| (Set.preimage_eq_preimage OrderDual.ofDual.surjective).1 hU
+    · exact Or.inr ⟨OrderDual.ofDual a,
+        (Set.preimage_eq_preimage OrderDual.ofDual.surjective).1 ha⟩
+  · rintro (rfl | ⟨a, rfl⟩)
+    · exact Or.inl rfl
+    · exact Or.inr ⟨OrderDual.toDual a, rfl⟩
 
 end CompleteLinearOrder
 
@@ -500,8 +578,20 @@ instance instIsUpperProd [Preorder α] [TopologicalSpace α] [IsUpper α]
     [OrderTop α] [Preorder β] [TopologicalSpace β] [IsUpper β] [OrderTop β] :
     IsUpper (α × β) where
   topology_eq_upperTopology := by
-    suffices IsLower (α × β)ᵒᵈ from IsLower.topology_eq_lowerTopology (α := (α × β)ᵒᵈ)
-    exact instIsLowerProd (α := αᵒᵈ) (β := βᵒᵈ)
+    refine le_antisymm (le_generateFrom ?_) ?_
+    · rintro _ ⟨x, rfl⟩
+      exact (isClosed_Iic.prod isClosed_Iic).isOpen_compl
+    rw [(IsUpper.isTopologicalBasis.prod
+      IsUpper.isTopologicalBasis).eq_generateFrom, le_generateFrom_iff_subset_isOpen,
+      image2_subset_iff]
+    rintro _ ⟨s, hs, rfl⟩ _ ⟨t, ht, rfl⟩
+    dsimp
+    simp_rw [coe_lowerClosure, compl_iUnion, prod_eq, preimage_iInter, preimage_compl]
+    -- without `let`, `refine` tries to use the product topology and fails
+    let _ : TopologicalSpace (α × β) := upper (α × β)
+    refine (hs.isOpen_biInter fun a _ => ?_).inter (ht.isOpen_biInter fun b _ => ?_)
+    · exact GenerateOpen.basic _ ⟨(a, ⊤), by simp [Iic_prod_eq, prod_univ]⟩
+    · exact GenerateOpen.basic _ ⟨(⊤, b), by simp [Iic_prod_eq, univ_prod]⟩
 
 section CompleteLattice_IsLower
 
@@ -527,8 +617,9 @@ section CompleteLattice_IsUpper
 variable [CompleteLattice α] [CompleteLattice β] [TopologicalSpace α] [IsUpper α]
   [TopologicalSpace β] [IsUpper β]
 
-protected lemma _root_.sSupHom.continuous (f : sSupHom α β) : Continuous f :=
-  sInfHom.continuous (α := αᵒᵈ) (β := βᵒᵈ) (sSupHom.dual.toFun f)
+protected lemma _root_.sSupHom.continuous (f : sSupHom α β) : Continuous f := by
+  have h := sInfHom.continuous (α := αᵒᵈ) (β := βᵒᵈ) (sSupHom.dual.toFun f)
+  exact continuous_ofDual.comp (h.comp continuous_toDual)
 
 -- see Note [lower instance priority]
 instance (priority := 90) IsUpper.toContinuousInf : ContinuousSup α :=
@@ -536,13 +627,21 @@ instance (priority := 90) IsUpper.toContinuousInf : ContinuousSup α :=
 
 end CompleteLattice_IsUpper
 
-lemma isUpper_orderDual [Preorder α] [TopologicalSpace α] : IsUpper αᵒᵈ ↔ IsLower α := by
-  constructor
-  · apply OrderDual.instIsLower
-  · apply OrderDual.instIsUpper
+lemma isUpper_orderDual [Preorder α] [t : TopologicalSpace α] : IsUpper αᵒᵈ ↔ IsLower α := by
+  refine ⟨fun h ↦ ⟨?_⟩, fun _ ↦ OrderDual.instIsUpper⟩
+  have h := h.topology_eq_upperTopology
+  rw [show (OrderDual.instTopologicalSpace : TopologicalSpace αᵒᵈ) =
+    TopologicalSpace.coinduced OrderDual.toDual t from rfl, coinduced_toDual_eq,
+    ← induced_ofDual_lower] at h
+  exact induced_ofDual_injective h
 
-lemma isLower_orderDual [Preorder α] [TopologicalSpace α] : IsLower αᵒᵈ ↔ IsUpper α :=
-  isUpper_orderDual.symm
+lemma isLower_orderDual [Preorder α] [t : TopologicalSpace α] : IsLower αᵒᵈ ↔ IsUpper α := by
+  refine ⟨fun h ↦ ⟨?_⟩, fun _ ↦ OrderDual.instIsLower⟩
+  have h := h.topology_eq_lowerTopology
+  rw [show (OrderDual.instTopologicalSpace : TopologicalSpace αᵒᵈ) =
+    TopologicalSpace.coinduced OrderDual.toDual t from rfl, coinduced_toDual_eq,
+    ← induced_ofDual_upper] at h
+  exact induced_ofDual_injective h
 
 end Topology
 
