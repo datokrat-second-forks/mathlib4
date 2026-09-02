@@ -179,6 +179,8 @@ theorem natTrans_app_f_app (P : Karoubi (SimplicialObject C)) :
         (Γ₂N₂ToKaroubiIso.hom ≫ Γ₂N₁.natTrans).app P.X ≫ P.decompId_p := by
   dsimp only [natTrans]
   simp only [whiskeringLeft_obj_preimage_app, Functor.id_map]
+  -- Quick fix: the two sides differ only in implicit arguments below default transparency.
+  rfl
 
 end Γ₂N₂
 

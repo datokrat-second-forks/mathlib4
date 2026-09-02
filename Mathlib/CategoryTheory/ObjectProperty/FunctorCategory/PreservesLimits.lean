@@ -143,6 +143,7 @@ instance : (preservesFiniteColimits (J := J) (C := C)).IsClosedUnderIsomorphisms
 lemma preservesFiniteColimits_iff (F : J ⥤ C) :
     preservesFiniteColimits F ↔ PreservesFiniteColimits F := Iff.rfl
 
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 instance [HasColimitsOfShape K' C]
     [PreservesLimitsOfShape K (colim (J := K') (C := C))] :

@@ -531,7 +531,6 @@ lemma colimitsOfShape_monotone {W₁ W₂ : MorphismProperty C} (h : W₁ ≤ W�
   rintro _ _ _ ⟨_, _, _, _, _, h₂, f, hf⟩
   exact ⟨_, _, _, _, _, h₂, f, fun j ↦ h _ (hf j)⟩
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 variable {J} in
 lemma colimitsOfShape_le_of_final {J' : Type*} [Category* J'] (F : J ⥤ J') [F.Final] :
@@ -542,7 +541,7 @@ lemma colimitsOfShape_le_of_final {J' : Type*} [Category* J'] (F : J ⥤ J') [F.
   have : h₁.desc (Cocone.mk c₂.pt (f ≫ c₂.ι)) =
       h₁'.desc (Cocone.mk c₂.pt (Functor.whiskerLeft _ f ≫ (c₂.whisker F).ι)) :=
     h₁'.hom_ext (fun j ↦ by
-      have := h₁'.fac (Cocone.mk c₂.pt (Functor.whiskerLeft F f ≫ Functor.whiskerLeft F c₂.ι)) j
+      have := h₁'.fac (Cocone.mk c₂.pt (Functor.whiskerLeft F f ≫ (c₂.whisker F).ι)) j
       dsimp at this ⊢
       simp [this])
   rw [this]

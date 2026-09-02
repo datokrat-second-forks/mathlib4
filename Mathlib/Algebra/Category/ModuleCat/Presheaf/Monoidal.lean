@@ -112,12 +112,16 @@ noncomputable instance monoidalCategoryStruct :
     (fun _ _ _ ↦ ModuleCat.MonoidalCategory.tensor_ext₃' (by intros; rfl))
   leftUnitor M := Iso.symm (isoMk (fun _ ↦ (λ_ _).symm) (fun X Y f ↦ by
     ext m
-    dsimp [CommRingCat.forgetToRingCat_obj]
+    -- `Functor.comp_map` is a bad rfl lemma (only definitional at default transparency): `dsimp`
+    -- would rewrite `(R ⋙ forget₂ _ _).map f` in explicit positions but not inside the instance
+    -- arguments of `∘ₗ`, leaving a goal that is ill-typed at `implicit`.
+    dsimp [CommRingCat.forgetToRingCat_obj, -Functor.comp_map]
     erw [leftUnitor_inv_apply, leftUnitor_inv_apply, tensorObj_map_tmul, (R.map f).hom.map_one]
     rfl))
   rightUnitor M := Iso.symm (isoMk (fun _ ↦ (ρ_ _).symm) (fun X Y f ↦ by
     ext m
-    dsimp [CommRingCat.forgetToRingCat_obj]
+    -- See the note in `leftUnitor`.
+    dsimp [CommRingCat.forgetToRingCat_obj, -Functor.comp_map]
     erw [rightUnitor_inv_apply, rightUnitor_inv_apply, tensorObj_map_tmul, (R.map f).hom.map_one]
     rfl))
 

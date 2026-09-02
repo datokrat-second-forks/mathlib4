@@ -94,6 +94,7 @@ lemma Limits.exists_eq_isLimitMap_of_preservesColimit_yoneda
   rw [IsLimit.map_π]
   exact (Under.w A.hom).symm
 
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- A morphism `f` between filtered colimits, where every object of the source diagram is
 presentable relative to the target diagram, is finally induced by a natural transformation of

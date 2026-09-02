@@ -437,15 +437,19 @@ end
 
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
+-- The unitors below (and in `mapIsoMap₂`, `map₂IsoPreEquivalenceInverseCompProj`) replace `𝟙 _`
+-- used at a type that is only correct after unfolding `Functor.comp`; needed by
+-- `CategoryTheory.Filtered.Final`, where instance synthesis consumes these statements.
 /-- `StructuredArrow.post` is a special case of `StructuredArrow.map₂` up to natural isomorphism. -/
 def postIsoMap₂ (S : C) (F : B ⥤ C) (G : C ⥤ D) :
-    post S F G ≅ map₂ (F := 𝟭 _) (𝟙 _) (𝟙 (F ⋙ G)) :=
+    post S F G ≅ map₂ (F := 𝟭 _) (𝟙 _) (F ⋙ G).leftUnitor.inv :=
   NatIso.ofComponents fun _ => isoMk <| Iso.refl _
 
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `StructuredArrow.map` is a special case of `StructuredArrow.map₂` up to natural isomorphism. -/
-def mapIsoMap₂ {S S' : D} (f : S ⟶ S') : map (T := T) f ≅ map₂ (F := 𝟭 _) (G := 𝟭 _) f (𝟙 T) :=
+def mapIsoMap₂ {S S' : D} (f : S ⟶ S') :
+    map (T := T) f ≅ map₂ (F := 𝟭 _) (G := 𝟭 _) f (T.rightUnitor.hom ≫ T.leftUnitor.inv) :=
   NatIso.ofComponents fun _ => isoMk <| Iso.refl _
 
 set_option backward.isDefEq.respectTransparency false in
@@ -1140,9 +1144,9 @@ set_option backward.defeqAttrib.useBackward true in
 induces via `StructuredArrow.map₂` can be expressed up to isomorphism by
 `StructuredArrow.preEquivalence` and `StructuredArrow.proj`. -/
 def StructuredArrow.map₂IsoPreEquivalenceInverseCompProj {T : C ⥤ D} {S : D ⥤ E} {T' : C ⥤ E}
-    (d : D) (e : E) (u : e ⟶ S.obj d) (α : T ⋙ S ⟶ T') :
-    map₂ (F := 𝟭 _) u α ≅ (preEquivalence T (mk u)).inverse ⋙ proj (mk u) (pre _ T S) ⋙
-      map₂ (F := 𝟭 _) (G := 𝟭 _) (𝟙 _) α :=
+    (d : D) (e : E) (u : e ⟶ S.obj d) (β : T ⋙ S ⟶ 𝟭 C ⋙ T') :
+    map₂ (F := 𝟭 _) u β ≅ (preEquivalence T (mk u)).inverse ⋙ proj (mk u) (pre _ T S) ⋙
+      map₂ (F := 𝟭 _) (G := 𝟭 _) (𝟙 _) ((T ⋙ S).rightUnitor.hom ≫ β) :=
   NatIso.ofComponents fun _ => isoMk (Iso.refl _)
 
 set_option backward.defeqAttrib.useBackward true in

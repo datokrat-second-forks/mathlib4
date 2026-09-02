@@ -398,6 +398,7 @@ lemma pullbackComparison_forget_surjective {X Y S : Scheme.{u}} (f : X ⟶ S) (g
   · simp only [Function.comp_apply, Types.pullbackIsoPullback_hom_snd]
     rwa [← types_comp_apply (g := pullback.snd _ _), pullbackComparison_comp_snd]
 
+set_option backward.isDefEq.respectTransparency.types false in
 instance {X Y S : Scheme.{u}} (f : X ⟶ S) (g : Y ⟶ S) :
     Epi (pullbackComparison Scheme.forgetToTop f g) := by
   refine (CategoryTheory.forget TopCat).epi_of_epi_map ?_
