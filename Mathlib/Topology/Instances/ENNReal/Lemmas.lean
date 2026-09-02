@@ -455,11 +455,13 @@ theorem le_of_forall_lt_one_mul_le {x y : ℝ≥0∞} (h : ∀ a < 1, a * x ≤ 
 
 theorem inv_limsup {ι : Sort _} {x : ι → ℝ≥0∞} {l : Filter ι} :
     (limsup x l)⁻¹ = liminf (fun i => (x i)⁻¹) l :=
-  OrderIso.invENNReal.limsup_apply
+  (OrderDual.toDual_inj (a := (limsup x l)⁻¹) (b := liminf (fun i => (x i)⁻¹) l)).1
+    OrderIso.invENNReal.limsup_apply
 
 theorem inv_liminf {ι : Sort _} {x : ι → ℝ≥0∞} {l : Filter ι} :
     (liminf x l)⁻¹ = limsup (fun i => (x i)⁻¹) l :=
-  OrderIso.invENNReal.liminf_apply
+  (OrderDual.toDual_inj (a := (liminf x l)⁻¹) (b := limsup (fun i => (x i)⁻¹) l)).1
+    OrderIso.invENNReal.liminf_apply
 
 @[fun_prop]
 protected theorem continuous_zpow : ∀ n : ℤ, Continuous (· ^ n : ℝ≥0∞ → ℝ≥0∞)
