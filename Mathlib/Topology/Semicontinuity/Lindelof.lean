@@ -94,7 +94,24 @@ This is implication a) ⇒ b) in
 See the module docstring for a discussion of the assumptions on `E`. -/
 theorem exists_countable_lowerSemicontinuous_isLUB {s : X → E} {𝓕 : Set (X → E)}
     (h𝓕_cont : ∀ f ∈ 𝓕, LowerSemicontinuous f) (h𝓕 : IsLUB 𝓕 s) :
-    ∃ 𝓕' ⊆ 𝓕, 𝓕'.Countable ∧ IsLUB 𝓕' s :=
-  exists_countable_upperSemicontinuous_isGLB (E := Eᵒᵈ) h𝓕_cont h𝓕
+    ∃ 𝓕' ⊆ 𝓕, 𝓕'.Countable ∧ IsLUB 𝓕' s := by
+  -- `X → Eᵒᵈ` is not `X → E`, so the transport goes through the image of `(⇑toDual ∘ ·)`.
+  set Φ : (X → E) → (X → Eᵒᵈ) := fun f ↦ ⇑OrderDual.toDual ∘ f with hΦ
+  set Ψ : (X → Eᵒᵈ) → (X → E) := fun g ↦ ⇑OrderDual.ofDual ∘ g with hΨ
+  have hΦΨ : ∀ g, Φ (Ψ g) = g := fun _ ↦ rfl
+  have hGLB : ∀ {𝓖 : Set (X → E)} {t : X → E}, IsLUB 𝓖 t → IsGLB (Φ '' 𝓖) (Φ t) := fun {𝓖 t} h ↦
+    ⟨by rintro _ ⟨f, hf, rfl⟩; exact h.1 hf,
+      fun g hg ↦ h.2 (show Ψ g ∈ upperBounds 𝓖 from fun f hf ↦ hg ⟨f, hf, rfl⟩)⟩
+  have hLUB : ∀ {𝓖 : Set (X → E)} {t : X → E}, IsGLB (Φ '' 𝓖) (Φ t) → IsLUB 𝓖 t := fun {𝓖 t} h ↦
+    ⟨fun f hf ↦ h.1 ⟨f, hf, rfl⟩,
+      fun g hg ↦ h.2 (show Φ g ∈ lowerBounds (Φ '' 𝓖) by
+        rintro _ ⟨f, hf, rfl⟩; exact hg hf)⟩
+  obtain ⟨𝓖, 𝓖_sub, 𝓖_count, h𝓖⟩ := exists_countable_upperSemicontinuous_isGLB (E := Eᵒᵈ)
+    (𝓕 := Φ '' 𝓕) (by rintro _ ⟨f, hf, rfl⟩ x y hy; exact h𝓕_cont f hf x (OrderDual.ofDual y) hy) (hGLB h𝓕)
+  refine ⟨Ψ '' 𝓖, ?_, 𝓖_count.image _, hLUB ?_⟩
+  · rintro _ ⟨g, hg, rfl⟩
+    obtain ⟨f, hf, rfl⟩ := 𝓖_sub hg
+    exact hf
+  · rwa [Set.image_image, show (fun g ↦ Φ (Ψ g)) = id from funext hΦΨ, Set.image_id]
 
 end
