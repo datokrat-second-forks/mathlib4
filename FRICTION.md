@@ -1253,3 +1253,78 @@ Mirroring is mechanical but not free: `MonotoneOn.convex_ge` swaps `max_rec'`/`C
 for `min_rec'`/`Convex.min_le_combo`, `nhds_atBot` re-runs `nhds_atTop`'s `simp only` with `atBot`,
 and `DFinsupp.Colex.wellFoundedLT` re-runs `Lex.wellFounded'` at `r := (· > ·)` (which needs
 `Std.Trichotomous (· > ·)`, one line: `⟨fun a b h₁ h₂ ↦ Std.Trichotomous.trichotomous a b h₂ h₁⟩`).
+
+## 41. A class carrying *two* structures, with no `induced` combinator in scope
+
+`PseudoMetricSpace` bundles a uniformity **and** a bornology, and `PseudoMetricSpace.induced` lives
+in `Pseudo/Constructions.lean`, i.e. downstream of the file where the `αᵒᵈ` instance has to be
+declared.  So the instance is written out, with both carried fields pinned to the `OrderDual`
+instances that already exist (`OrderDual.instUniformSpace`, `OrderDual.instBornology`) and their
+two coherence fields proved by hand:
+
+```lean
+instance : PseudoMetricSpace αᵒᵈ where
+  dist x y := dist (ofDual x) (ofDual y)
+  dist_self _ := dist_self _
+  dist_comm _ _ := dist_comm _ _
+  dist_triangle _ _ _ := dist_triangle _ _ _
+  edist x y := edist (ofDual x) (ofDual y)
+  edist_dist _ _ := edist_dist _ _
+  toUniformSpace := inferInstance
+  uniformity_dist := (Metric.uniformity_basis_dist.comap _).eq_biInf
+  toBornology := inferInstance
+  cobounded_sets := Set.ext fun s ↦ by
+    show (OrderDual.toDual ⁻¹' s) ∈ Bornology.cobounded α ↔ _
+    rw [← Filter.mem_sets, PseudoMetricSpace.cobounded_sets (α := α)]
+    exact ⟨fun ⟨C, hC⟩ ↦ ⟨C, fun x hx y hy ↦ hC (OrderDual.ofDual x) hx (OrderDual.ofDual y) hy⟩,
+      fun ⟨C, hC⟩ ↦ ⟨C, fun x hx y hy ↦ hC (OrderDual.toDual x) hx (OrderDual.toDual y) hy⟩⟩
+```
+
+The `show` is the whole trick for the bornology: `cobounded αᵒᵈ` is `(cobounded α).map toDual`, so
+`s ∈ cobounded αᵒᵈ` is *definitionally* `toDual ⁻¹' s ∈ cobounded α`, and after that the two
+`∃ C` statements only differ by where `ofDual` sits.
+
+## 42. `OrderTopology αᵒᵈ`
+
+The old proof was `rcases …; simp_rw [Preorder.topology, or_comm]; rfl`: with `αᵒᵈ = α` the two
+generated topologies were literally the same term up to `or_comm`.  Now the instance is
+`.coinduced toDual`, and the bridge is `induced_generateFrom_eq` plus the interval table
+(`Set.Iic_toDual : Iic (toDual a) = ofDual ⁻¹' Ici a`, and `Ioi`/`Iio`/`Ici` likewise):
+
+```lean
+instance [t : OrderTopology α] : OrderTopology αᵒᵈ := by
+  have hind : (OrderDual.instTopologicalSpace : TopologicalSpace αᵒᵈ) =
+      TopologicalSpace.induced OrderDual.ofDual ts := by
+    refine TopologicalSpace.ext_iff.2 fun s ↦
+      ⟨fun hs ↦ ⟨OrderDual.toDual ⁻¹' s, hs, rfl⟩, ?_⟩
+    rintro ⟨u, hu, rfl⟩
+    exact hu
+  constructor
+  rw [hind, t.topology_eq_generate_intervals]
+  simp only [Preorder.topology]
+  rw [induced_generateFrom_eq]
+  congr 1
+  ext s
+  …
+```
+
+Two things to know when writing this: the instance argument has to be named (`ts` from the file's
+`variable` line) — an `inferInstance` in the `have` will not match the goal — and the witness in
+`⟨toDual ⁻¹' s, hs, rfl⟩` has to be given explicitly, or the elaborator cannot see which set to
+take the preimage of.
+
+## 43. An existential over `αᵒᵈ` is not an existential over `α`
+
+`∃ z : αᵒᵈ, p z` and `∃ z : α, q z` are never defeq — the binder types differ — even when `p` and
+`q` agree pointwise under `toDual`.  So `countable_image_gt_image_Ioi (α := αᵒᵈ) f` no longer
+typechecks, and the transport goes through the subset relation instead of an equality of sets:
+
+```lean
+theorem countable_image_gt_image_Ioi_within … := by
+  refine (countable_image_lt_image_Ioi_within (α := αᵒᵈ) t fun x ↦ OrderDual.toDual (f x)).mono ?_
+  rintro x ⟨hx, z, hz, hz'⟩
+  exact ⟨hx, OrderDual.toDual z, hz, hz'⟩
+```
+
+`Set.Countable.mono` wants the subset proof in tactic position: as a term argument the target set
+is still a metavariable when the `⟨…⟩` is elaborated, and the anonymous constructor fails.
