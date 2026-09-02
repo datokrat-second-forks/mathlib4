@@ -2235,3 +2235,82 @@ The fourth is the exception that proves §65's rule: the data (`g '' t`) does mo
 the image/preimage rewrite `(⇑toDual ∘ g) '' t = ⇑ofDual ⁻¹' (g '' t)` — after which
 `MeasurableSet[βᵒᵈ] (⇑ofDual ⁻¹' S)` is *definitionally* `MeasurableSet[β] S` by §70, so a bare
 `exact` closes it. Two lines, and the only place in the wave where anything was actually proved.
+
+## 75. `dual_right` on a *hypothesis* changes the *conclusion*: the `AntitoneOn` tail
+
+Waves 41–42 closed the last live frontier (`MeasureTheory/Function/LocallyIntegrable.lean`,
+`MeasureTheory/Integral/IntervalIntegral/Basic.lean`) and every one of the seven sites had the same
+shape and the same repair. It is worth stating precisely because it is the single most common
+pattern in the whole campaign, and because it explains why so many
+`set_option backward.isDefEq.respectTransparency.types false in` lines were sitting in the tree:
+
+```lean
+theorem AntitoneOn.intervalIntegrable (hu : AntitoneOn u (uIcc a b)) :
+    IntervalIntegrable u μ a b :=
+  hu.dual_right.intervalIntegrable          -- was: fine when αᵒᵈ was a def
+```
+
+`hu.dual_right : MonotoneOn (⇑toDual ∘ u) (uIcc a b)`, so `MonotoneOn.intervalIntegrable` returns
+`IntervalIntegrable (⇑toDual ∘ u) μ a b`. Under the old `def OrderDual α := α` that *was*
+`IntervalIntegrable u μ a b` up to unfolding — which is exactly what the `respectTransparency.types`
+escape hatch was buying. With a structure there is nothing to unfold: `E` and `Eᵒᵈ` are different
+types, `IntervalIntegrable` is a `Prop` about a function into one of them, and no amount of
+transparency will identify them.
+
+The rule that came out of it, and which held for all seven sites:
+
+> When `dual_right`/`dual` is applied to a **hypothesis** in order to reuse a sibling theorem, the
+> dual leaks into the **conclusion**. Transport is only available when the conclusion has an
+> honest bridge (`IntervalIntegrable (⇑toDual ∘ u)` has none). Mirror instead — and the mirror is
+> the sibling's own proof body verbatim, because the sibling's proof never mentions the dual.
+
+```lean
+theorem MonotoneOn.intervalIntegrable (hu : MonotoneOn u (uIcc a b)) :
+    IntervalIntegrable u μ a b := by
+  rw [intervalIntegrable_iff]
+  exact (hu.integrableOn_isCompact isCompact_uIcc).mono_set Ioc_subset_Icc_self
+
+theorem AntitoneOn.intervalIntegrable (hu : AntitoneOn u (uIcc a b)) :
+    IntervalIntegrable u μ a b := by
+  rw [intervalIntegrable_iff]
+  exact (hu.integrableOn_isCompact isCompact_uIcc).mono_set Ioc_subset_Icc_self
+```
+
+The two proofs are character-for-character identical because `AntitoneOn.integrableOn_isCompact`
+already exists next to `MonotoneOn.integrableOn_isCompact` — the `@[to_dual]` pair was there one
+level down all along, and the transport at this level was pure redundancy. Where the mirror needs a
+genuinely different auxiliary (`Antitone.locallyIntegrable`, `AntitoneOn.memLp_top`), it is a
+copy of the `Monotone` body with `BddAbove`/`BddBelow` and `IsLeast`/`IsGreatest` exchanged — six
+lines, no dual anywhere.
+
+Four `respectTransparency.types` options in `LocallyIntegrable.lean` and one in
+`IntervalIntegral/Basic.lean` were removed as a side effect. Read backwards, every such option in
+the tree was a marker saying *"a dual is being crossed here by unfolding, not by proof"* — they
+made a serviceable to-do list.
+
+## 76. Style debt is a campaign artefact, and it batches
+
+41 over-long lines and 16 other style warnings accumulated over 42 waves, all blamed to campaign
+commits. Two shapes account for 23 of the 41:
+
+```lean
+-- Order/Bounded.lean, ×12
+    ((bounded_le_inter_le (α := αᵒᵈ) (s := ⇑OrderDual.ofDual ⁻¹' s) (OrderDual.toDual a)).trans
+      (bounded_dual_iff (r := (· ≥ ·))))
+-- Order/SymmDiff.lean, ×11
+  (OrderDual.toDual_inj (b := a ⊔ b)).1
+    (sup_sdiff_symmDiff (α := αᵒᵈ) (OrderDual.toDual a) (OrderDual.toDual b))
+```
+
+Both are the *price of the type distinction printed in source*: where the old proof was
+`bounded_le_inter_le a` or `sup_sdiff_symmDiff a b`, the new one must name the type (`α := αᵒᵈ`),
+re-spell the set through the equivalence (`s := ⇑ofDual ⁻¹' s`), inject each argument
+(`toDual a`), and strip the result (`toDual_inj … |>.1`). Four explicit steps that a type synonym
+performed silently, and each of them costs about twenty columns.
+
+Practical note: fix these in **one batch at the very end**. `Order/Bounded.lean` and
+`Order/SymmDiff.lean` sit near the root of the import graph, so any edit to them triggers a
+near-full rebuild — doing it wave by wave would have cost a dozen full builds for pure whitespace.
+Also: `awk 'length > 100'` counts *bytes*, and this campaign's lines are full of `ᵒᵈ`, `⇑`, `↦`,
+`𝓕`. The authoritative list is the build log's own
+`warning: … This line exceeds the 100 character limit`.
