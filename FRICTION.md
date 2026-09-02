@@ -2147,3 +2147,66 @@ and confirms it on a second, unrelated example:
 Both the `Submodule` and the `ClosedSubmodule` copy in that file take the identical patch — a hint
 that the three-line fix could be packaged, if the campaign ever wants an `antitone Galois
 connection` API rather than the dual-encoded one.
+
+## 73. The full dual toolkit for one file: `BorelSpace/Order.lean`
+
+Wave 37's single file needed 31 errors' worth of repair across 18 `ᵒᵈ` sites, and in doing so it
+exercised every layer of the dual dictionary at once. The five private bridges it needed are worth
+listing together, because they are the *complete* set for a measure-theoretic file — anything else
+composes out of these.
+
+```lean
+-- 1. the σ-algebra correspondence (cf. §70)
+private lemma measurable_toDual : Measurable (OrderDual.toDual : α → αᵒᵈ) := fun _ hs ↦ hs
+private lemma measurable_ofDual : Measurable (OrderDual.ofDual : αᵒᵈ → α) := fun _ hs ↦ hs
+private lemma measurable_of_toDual_comp {f : δ → α}
+    (h : Measurable fun b ↦ OrderDual.toDual (f b)) : Measurable f := measurable_ofDual.comp h
+
+-- 2. the topology correspondence: `borel` comaps
+private lemma induced_toDual (α) [t : TopologicalSpace α] :
+    TopologicalSpace.induced (OrderDual.toDual : α → αᵒᵈ) inferInstance = t := …
+private lemma borel_comap_toDual (α) [TopologicalSpace α] :
+    MeasurableSpace.comap (OrderDual.toDual : α → αᵒᵈ) (borel αᵒᵈ) = borel α := by
+  rw [← borel_comap (f := (OrderDual.toDual : α → αᵒᵈ))]; congr 1; exact induced_toDual α
+
+-- 3. measures move by `map`, and the map is injective because `toDual` is a measurable equiv
+private def toDualMeasurableEquiv (α) [MeasurableSpace α] : α ≃ᵐ αᵒᵈ where
+  toEquiv := OrderDual.toDual
+  measurable_toFun := fun _ hs ↦ hs
+  measurable_invFun := fun _ hs ↦ hs
+private lemma map_toDual_apply (μ : Measure α) (s : Set αᵒᵈ) :
+    μ.map OrderDual.toDual s = μ (⇑OrderDual.toDual ⁻¹' s) :=
+  MeasurableEquiv.map_apply (toDualMeasurableEquiv α) s
+private lemma eq_of_map_toDual_eq (h : μ.map OrderDual.toDual = ν.map OrderDual.toDual) : μ = ν
+
+-- 4. bounds: an equation in `αᵒᵈ` is not an equation in `α`
+private lemma isLUB_toDual_range_iff {f : ι → α} {x : α} :
+    IsLUB {a : αᵒᵈ | ∃ i, OrderDual.toDual (f i) = a} (OrderDual.toDual x) ↔
+      IsGLB {a | ∃ i, f i = a} x
+
+-- 5. and the two set-level rewrites of §64/§68
+private lemma preimage_toDual_Ico (l u : αᵒᵈ) :
+    ⇑OrderDual.toDual ⁻¹' Ico l u = Ioc (OrderDual.ofDual u) (OrderDual.ofDual l) := by
+  ext y; exact and_comm
+```
+
+Four observations that cost time and are not obvious:
+
+* **`borel_eq_generateFrom_Ioi` was `@borel_eq_generateFrom_Iio αᵒᵈ _ (…: SecondCountableTopology α) _ _`**
+  — an explicit instance argument passed *for the dual slot*, which is the loudest possible signal
+  that the old proof was a type-pun. The honest proof is
+  `rw [← borel_comap_toDual α, borel_eq_generateFrom_Iio αᵒᵈ, comap_generateFrom]` followed by a
+  `Set.ext` matching `⇑toDual ⁻¹' Iio (toDual a)` against `Ioi a`. Every dual instance it needs
+  (`SecondCountableTopology αᵒᵈ`, `OrderTopology αᵒᵈ`, `BorelSpace αᵒᵈ`) does in fact exist.
+* **`⇑toDual ⁻¹' Ico l u = Ioc (ofDual u) (ofDual l)` is *not* `rfl`** — the two sides are
+  `{y | y ≤ ofDual l ∧ ofDual u < y}` and `{y | ofDual u < y ∧ y ≤ ofDual l}`. The proof is
+  `ext y; exact and_comm`. The conjunction order of the interval definitions is the last place one
+  expects a dual to stop being definitional.
+* **`(⨆ i, g i)` and `fun b ↦ ⨆ i, g i b` differ** (`iSup_apply` is a real lemma: `Pi.sSup` goes
+  through an image, the pointwise one through a range). So `simpa only [iSup_apply] using H` does
+  nothing when `H`'s type has no *application* to rewrite. The way through is to rewrite the goal
+  into the un-applied shape first:
+  `have hfun : (fun b ↦ toDual ((⨅ i, f i) b)) = ⨆ i, fun x ↦ toDual (f i x) := by funext b; simp …`
+* **`Measurable.comp` leaves `(⇑toDual ∘ f i) b` where the goal says `toDual (f i b)`** — add
+  `Function.comp_apply` to every `simpa only [toDual_iInf, …]` in this family, or half of them fail
+  on a difference that prints identically at a glance.
