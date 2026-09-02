@@ -111,6 +111,9 @@ def opSpan {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z) :
 
 namespace PushoutCocone
 
+set_option linter.tacticCheckInstances true
+
+set_option trace.Meta.Tactic.simp true in
 /-- The obvious map `PushoutCocone f g → PullbackCone f.unop g.unop` -/
 @[simps!]
 def unop {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
@@ -118,9 +121,41 @@ def unop {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
   Cocone.unop ((Cocone.precompose (opCospan f.unop g.unop).hom).obj
     (Cocone.whisker walkingCospanOpEquiv.functor c))
 
+#print unop_π_app
+
+example {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) {x} : c.unop.π.app x = c.unop.π.app x := by
+  conv =>
+    lhs
+    simp only [unop]
+    simp only [op_unop]
+    simp only [Quiver.Hom.op_unop]
+    simp only [Cocone.unop_pt]
+    simp only [Cocone.precompose_obj_pt]
+    simp only [Cocone.whisker_pt]
+    simp only [Cocone.unop_π]
+    simp only [Cocone.precompose_obj_ι]
+    simp only [Cocone.whisker_ι]
+    -- simp only [NatTrans.removeOp_app, op_obj, const_obj_obj]
+    -- simp only [op_unop, Cocone.whisker_pt]
+    -- simp?
+  simp only
+
+
+#discr_tree_simp_key unop_π_app
+
+#print Cocone.precompose_obj_ι
+
 set_option backward.isDefEq.respectTransparency.types false in
 theorem unop_fst {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
-    c.unop.fst = c.inl.unop := by simp
+    c.unop.fst = c.inl.unop := by
+      set_option trace.Meta.isDefEq true in
+      set_option trace.Meta.Tactic.simp true in
+      simp only [unop_π_app]
+      simp only [span_left]
+      simp only [cospan_left]
+      simp only [op_unop]
+      simp only [Iso.refl_inv]
+      simp only [unop_id, Category.comp_id]
 
 set_option backward.isDefEq.respectTransparency.types false in
 theorem unop_snd {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
@@ -177,6 +212,7 @@ set_option backward.isDefEq.respectTransparency.types false in
 theorem op_inr {X Y Z : C} {f : X ⟶ Z} {g : Y ⟶ Z} (c : PullbackCone f g) :
     c.op.inr = c.snd.op := by simp
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- If `c` is a pullback cone, then `c.op.unop` is isomorphic to `c`. -/
 def opUnopIso {X Y Z : C} {f : X ⟶ Z} {g : Y ⟶ Z} (c : PullbackCone f g) : c.op.unop ≅ c :=
@@ -196,6 +232,7 @@ set_option backward.defeqAttrib.useBackward true in
 def opUnopIso {X Y Z : C} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) : c.op.unop ≅ c :=
   PushoutCocone.ext (Iso.refl _) (by simp) (by simp)
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- If `c` is a pushout cocone in `Cᵒᵖ`, then `c.unop.op` is isomorphic to `c`. -/
 def unopOpIso {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) : c.unop.op ≅ c :=

@@ -426,6 +426,7 @@ def extendIsoEquiv {s : Cone F} {X : C} (i : X ⟶ s.pt) [IsIso i] :
     IsLimit s ≃ IsLimit (s.extend i) :=
   equivOfSubsingletonOfSubsingleton (extendIso i) (ofExtendIso i)
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 set_option linter.translate.warnInvalid false in
 /-- We can prove two cone points `(s : Cone F).pt` and `(t : Cone G).pt` are isomorphic if

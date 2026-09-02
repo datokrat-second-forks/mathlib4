@@ -51,6 +51,7 @@ noncomputable def ε : 𝟭 D₁ ⟶ G' ⋙ F' := by
   exact Localization.liftNatTrans L₁ W₁ L₁ ((G ⋙ F) ⋙ L₁) (𝟭 D₁) (G' ⋙ F')
     (whiskerRight adj.unit L₁)
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma ε_app (X₁ : C₁) :
     (ε adj L₁ W₁ L₂ G' F').app (L₁.obj X₁) =
@@ -68,6 +69,7 @@ noncomputable def η : F' ⋙ G' ⟶ 𝟭 D₂ := by
     Lifting.mk (CatCommSq.hComp F G L₂ L₁ L₂ F' G').iso.symm
   exact liftNatTrans L₂ W₂ ((F ⋙ G) ⋙ L₂) L₂ (F' ⋙ G') (𝟭 D₂) (whiskerRight adj.counit L₂)
 
+set_option backward.isDefEq.respectTransparency false in
 lemma η_app (X₂ : C₂) :
     (η adj L₁ L₂ W₂ G' F').app (L₂.obj X₂) =
       G'.map ((CatCommSq.iso F L₂ L₁ F').inv.app X₂) ≫
@@ -131,6 +133,7 @@ lemma localization_counit_app (X₂ : C₂) :
 
 end
 
+set_option backward.isDefEq.respectTransparency false in
 include adj in
 lemma isLocalization [F.Full] [F.Faithful] :
     G.IsLocalization ((MorphismProperty.isomorphisms C₂).inverseImage G) := by

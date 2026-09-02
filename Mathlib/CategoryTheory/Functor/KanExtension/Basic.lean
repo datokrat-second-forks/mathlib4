@@ -337,10 +337,12 @@ def RightExtension.postcomp₁ (f : L ⋙ G ⟶ L') (F : C ⥤ H) :
 
 variable [IsEquivalence G]
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable instance (f : L' ⟶ L ⋙ G) [IsIso f] (F : C ⥤ H) :
     IsEquivalence (LeftExtension.postcomp₁ G f F) := by
   apply StructuredArrow.isEquivalenceMap₂
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable instance (f : L ⋙ G ⟶ L') [IsIso f] (F : C ⥤ H) :
     IsEquivalence (RightExtension.postcomp₁ G f F) := by
   apply CostructuredArrow.isEquivalenceMap₂
@@ -475,9 +477,11 @@ def RightExtension.precomp : RightExtension L F ⥤ RightExtension (G ⋙ L) (G 
 
 variable [IsEquivalence G]
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable instance : IsEquivalence (LeftExtension.precomp L F G) := by
   apply StructuredArrow.isEquivalenceMap₂
 
+set_option backward.isDefEq.respectTransparency false in
 noncomputable instance : IsEquivalence (RightExtension.precomp L F G) := by
   apply CostructuredArrow.isEquivalenceMap₂
 
@@ -495,6 +499,7 @@ noncomputable def RightExtension.isUniversalPrecompEquiv (e : RightExtension L F
 
 variable {F L}
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma isLeftKanExtension_iff_precomp (α : F ⟶ L ⋙ F') :
     F'.IsLeftKanExtension α ↔ F'.IsLeftKanExtension
@@ -793,6 +798,7 @@ lemma isRightKanExtension_postcompose₂_iff
 
 end postcompose₂
 
+set_option backward.isDefEq.respectTransparency false in
 lemma isLeftKanExtension_iff_precomp_equivalence
     {F₁' : D ⥤ H} {L₁ : C ⥤ D} {F₁ : C ⥤ H} (α₁ : F₁ ⟶ L₁ ⋙ F₁')
     {F₂' : D' ⥤ H} {L₂ : C' ⥤ D'} {F₂ : C' ⥤ H} (α₂ : F₂ ⟶ L₂ ⋙ F₂')
@@ -810,6 +816,7 @@ lemma isLeftKanExtension_iff_precomp_equivalence
   exact Equiv.nonempty_congr ((IsInitial.isInitialIffObj Φ _).trans
     (IsInitial.equivOfIso (StructuredArrow.isoMk e')))
 
+set_option backward.isDefEq.respectTransparency false in
 lemma isRightKanExtension_iff_precomp_equivalence
     {F₁' : D ⥤ H} {L₁ : C ⥤ D} {F₁ : C ⥤ H} (α₁ : L₁ ⋙ F₁' ⟶ F₁)
     {F₂' : D' ⥤ H} {L₂ : C' ⥤ D'} {F₂ : C' ⥤ H} (α₂ : L₂ ⋙ F₂' ⟶ F₂)
@@ -890,6 +897,7 @@ noncomputable def coneOfIsRightKanExtension (c : Cone F) : Cone F' where
   pt := c.pt
   π := F'.liftOfIsRightKanExtension α _ c.π
 
+set_option backward.isDefEq.respectTransparency false in
 /-- If `c` is a limit cone for a functor `F : C ⥤ H` and `α : L ⋙ F' ⟶ F` is the counit of any
 right Kan extension `F' : D ⥤ H` of `F` along `L : C ⥤ D`, then `coneOfIsRightKanExtension α c` is
 a limit cone, too. -/
@@ -916,6 +924,7 @@ noncomputable def limitIsoOfIsRightKanExtension : limit F' ≅ limit F :=
   IsLimit.conePointUniqueUpToIso (limit.isLimit F')
     (F'.isLimitConeOfIsRightKanExtension α (limit.isLimit F))
 
+set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma limitIsoOfIsRightKanExtension_inv_π (i : C) :
     (F'.limitIsoOfIsRightKanExtension α).inv ≫ limit.π F' (L.obj i) ≫ α.app i = limit.π F i := by

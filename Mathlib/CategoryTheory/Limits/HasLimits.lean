@@ -410,6 +410,7 @@ def HasLimit.isoOfEquivalence {F : J ⥤ C} [HasLimit F] {G : K ⥤ C} [HasLimit
     (w : e.functor ⋙ G ≅ F) : limit F ≅ limit G :=
   IsLimit.conePointsIsoOfEquivalence (limit.isLimit F) (limit.isLimit G) e w
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
 theorem HasLimit.isoOfEquivalence_hom_π {F : J ⥤ C} [HasLimit F] {G : K ⥤ C} [HasLimit G]
@@ -419,6 +420,7 @@ theorem HasLimit.isoOfEquivalence_hom_π {F : J ⥤ C} [HasLimit F] {G : K ⥤ C
   simp only [HasLimit.isoOfEquivalence, IsLimit.conePointsIsoOfEquivalence_hom]
   simp
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
 theorem HasLimit.isoOfEquivalence_inv_π {F : J ⥤ C} [HasLimit F] {G : K ⥤ C} [HasLimit G]
@@ -758,6 +760,7 @@ def HasColimit.isoOfEquivalence {F : J ⥤ C} [HasColimit F] {G : K ⥤ C} [HasC
     (w : e.functor ⋙ G ≅ F) : colimit F ≅ colimit G :=
   IsColimit.coconePointsIsoOfEquivalence (colimit.isColimit F) (colimit.isColimit G) e w
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
 theorem HasColimit.ι_isoOfEquivalence_hom {F : J ⥤ C} [HasColimit F] {G : K ⥤ C} [HasColimit G]
@@ -766,6 +769,7 @@ theorem HasColimit.ι_isoOfEquivalence_hom {F : J ⥤ C} [HasColimit F] {G : K �
       F.map (e.unit.app j) ≫ w.inv.app _ ≫ colimit.ι G _ := by
   simp [HasColimit.isoOfEquivalence]
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
 theorem HasColimit.ι_isoOfEquivalence_inv {F : J ⥤ C} [HasColimit F] {G : K ⥤ C} [HasColimit G]
@@ -868,6 +872,7 @@ theorem colimit.post_post {E : Type u''} [Category.{v''} E] (H : D ⥤ E)
 
 end Post
 
+set_option backward.isDefEq.respectTransparency false in
 theorem colimit.pre_post {D : Type u'} [Category.{v'} D] (E : K ⥤ J) (F : J ⥤ C) (G : C ⥤ D)
     [HasColimit F] [HasColimit (E ⋙ F)] [HasColimit (F ⋙ G)] [h : HasColimit ((E ⋙ F) ⋙ G)] :
     -- G (colimit F) ⟶ G (colimit (E ⋙ F)) ⟶ colimit ((E ⋙ F) ⋙ G) vs

@@ -72,6 +72,7 @@ private lemma adjRetraction_is_retraction (c : C) (d : D)
 
 attribute [local simp] Adjunction.homEquiv_unit Adjunction.homEquiv_counit
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /--
 Day's reflection theorem.

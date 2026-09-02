@@ -87,6 +87,7 @@ noncomputable def preservesLimit'
       (isColimitOfPreserves ((evaluation _ _).obj j) hc) x
     simp [← hm]
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma preservesLimit
     [HasColimitsOfShape Kᵒᵖ (Type w)]

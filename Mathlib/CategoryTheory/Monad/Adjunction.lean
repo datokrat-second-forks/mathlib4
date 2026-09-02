@@ -314,10 +314,12 @@ noncomputable instance (G : Comonad C) : ComonadicLeftAdjoint G.forget where
 
 set_option backward.defeqAttrib.useBackward true in
 -- TODO: This holds more generally for idempotent adjunctions, not just reflective adjunctions.
+set_option backward.isDefEq.respectTransparency false in
 instance μ_iso_of_reflective [Reflective R] : IsIso (reflectorAdjunction R).toMonad.μ := by
   dsimp
   infer_instance
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 instance δ_iso_of_coreflective [Coreflective R] : IsIso (coreflectorAdjunction R).toComonad.δ := by
   dsimp

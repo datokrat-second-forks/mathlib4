@@ -208,7 +208,11 @@ version.
 -/]
 def whisker (E : K ⥤ J) (c : Cone F) : Cone (E ⋙ F) where
   pt := c.pt
-  π := whiskerLeft E c.π
+  /-
+  The precomposed natural transformation is required to fix `unop_fst` in `Opposites.Pullbacks`.
+  There was hidden defeq abuse happening here.
+  -/
+  π := sorry ≫ whiskerLeft E c.π
 
 end Cone
 

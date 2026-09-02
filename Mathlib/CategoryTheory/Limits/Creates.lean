@@ -534,6 +534,7 @@ def createsLimitsOfNatIso {F G : C ⥤ D} (h : F ≅ G) [CreatesLimitsOfSize.{w,
     CreatesLimitsOfSize.{w, w'} G where
   CreatesLimitsOfShape := createsLimitsOfShapeOfNatIso h
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- If `F` creates limits of shape `J` and `J ≌ J'`, then `F` creates limits of shape `J'`. -/
 @[instance_reducible]
@@ -589,6 +590,7 @@ def createsColimitsOfNatIso {F G : C ⥤ D} (h : F ≅ G) [CreatesColimitsOfSize
     CreatesColimitsOfSize.{w, w'} G where
   CreatesColimitsOfShape := createsColimitsOfShapeOfNatIso h
 
+set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- If `F` creates colimits of shape `J` and `J ≌ J'`, then `F` creates colimits of shape `J'`. -/
 @[instance_reducible]
