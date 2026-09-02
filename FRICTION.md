@@ -1529,3 +1529,115 @@ None of these are hard, but all three used to be invisible: the `toDual`/`ofDual
 `toFun A := A.nonunits` and `fun V ↦ vanishingIdeal k V` typechecked directly. The cost is one
 `toDual`/`ofDual` per field and one `toDual_inj.1` per injectivity obligation — mechanical, but it
 touches the *definition*, not a proof, so it is API-visible churn.
+
+## 52. The codomain-dual toolkit: five one-liners buy back twenty transports
+
+§48 says mirror rather than transport. That verdict is about the *domain* dual. When only the
+codomain is dualized — the `AntitoneOn f s → MonotoneOn (⇑toDual ∘ f) s` idiom, spelled
+`Af.dual_right` — transport wins, because the obstruction is always one of the same five, and each
+is a one-liner (`Topology/Order/Monotone.lean`, twenty sites):
+
+```lean
+private lemma image_toDual_comp {f : α → β} {s : Set α} :
+    (⇑toDual ∘ f) '' s = ⇑ofDual ⁻¹' (f '' s) := by
+  rw [Set.image_comp, Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq]
+
+private lemma sSup_image_toDual [InfSet β] {f : α → β} {s : Set α} :
+    sSup ((⇑toDual ∘ f) '' s) = toDual (sInf (f '' s)) := by
+  rw [image_toDual_comp, toDual_sInf]
+
+private lemma tendsto_toDual_comp_nhds_iff [TopologicalSpace β] {l : Filter α} {f : α → β} {b : β} :
+    Tendsto (⇑toDual ∘ f) l (𝓝 (toDual b)) ↔ Tendsto f l (𝓝 b) :=
+  ⟨fun h ↦ (continuous_ofDual.tendsto _).comp h, fun h ↦ (continuous_toDual.tendsto _).comp h⟩
+
+private lemma continuousWithinAt_toDual_comp_iff [TopologicalSpace α] [TopologicalSpace β]
+    {f : α → β} {s : Set α} {x : α} :
+    ContinuousWithinAt (⇑toDual ∘ f) s x ↔ ContinuousWithinAt f s x :=
+  tendsto_toDual_comp_nhds_iff
+```
+
+(plus `sInf_image_toDual` and `continuousAt_toDual_comp_iff`.) With those, a transport is two lines:
+
+```lean
+lemma AntitoneOn.tendsto_nhdsLT (Af : AntitoneOn f (Iio x)) (h_bdd : BddBelow (f '' Iio x)) :
+    Tendsto f (𝓝[<] x) (𝓝 (sInf (f '' Iio x))) := by
+  have h := MonotoneOn.tendsto_nhdsLT Af.dual_right
+    (by rw [image_toDual_comp]; exact bddAbove_preimage_ofDual.2 h_bdd)
+  rwa [sSup_image_toDual, tendsto_toDual_comp_nhds_iff] at h
+```
+
+Why this direction is the cheap one: `toDual_sSup : toDual (sSup s) = sInf (⇑ofDual ⁻¹' s)` is still
+`rfl`, and the preimage/image dictionary (`image_toDual_comp`, `bddAbove_preimage_ofDual`,
+`upperBounds_preimage_ofDual`) is already in the library. The domain dual has no such dictionary —
+it needs a `nhdsWithin` transport per site (§44), which is why mirroring wins there.
+
+Two spelling traps in the toolkit. `AntitoneOn.dual_right` produces `⇑toDual ∘ f` with an honest
+`Function.comp`, so every bridge must be stated with `⇑toDual ∘ f`, not `fun y ↦ toDual (f y)` —
+`rw` will not cross that gap. And `Set.Countable.preimage toDual.injective` lands on
+`toDual (f x) = toDual b`, which is *not* defeq to `f x = b` for a structure; a
+`simpa only [Set.preimage_ofPred_eq, Function.comp_apply, OrderDual.toDual_inj]` is required where
+the synonym needed nothing.
+
+## 53. `show P (toDual ∘ f) from h` — the retyping idiom is gone
+
+Six sites in `Topology/Order/Monotone.lean` read
+
+```lean
+theorem AntitoneOn.map_sSup_of_continuousWithinAt (Cf : ContinuousWithinAt f s (sSup s)) … :
+    f (sSup s) = sInf (f '' s) :=
+  MonotoneOn.map_sSup_of_continuousWithinAt
+    (show ContinuousWithinAt (OrderDual.toDual ∘ f) s (sSup s) from Cf) Af fbot
+```
+
+`show … from Cf` was pure notation: under the type synonym the two statements were the same term.
+Now it is a real coercion. Either §52's `continuousWithinAt_toDual_comp_iff.2 Cf`, or — better here,
+because the file already proves the conditionally-complete versions — drop the transport and mirror
+through them:
+
+```lean
+  rcases s.eq_empty_or_nonempty with h | h
+  · simp [h, fbot]
+  · exact Af.map_csSup_of_continuousWithinAt Cf h
+```
+
+The whole `map_csSup`/`map_csInf` block, in turn, mirrors onto the four `IsLUB`/`IsGLB`-of-tendsto
+lemmas repaired in §48's file — `IsGLB.isLUB_of_tendsto` for the antitone-at-an-infimum case, and so
+on. One file's honest proofs are the next file's transport-free ingredients; this is the pattern the
+whole campaign keeps rewarding.
+
+## 54. `to_dual` does not flip `lt`/`gt` in names — only the intervals
+
+A trap that costs a compile and reads as a mysterious `hm : m < f x` vs. expected `f x < m`.
+`Topology/Order/Basic.lean` has both
+
+```lean
+@[to_dual] theorem countable_image_lt_image_Ioi_within (t : Set β) (f : β → α) :
+    Set.Countable {x ∈ t | ∃ z, f x < z ∧ ∀ y ∈ t, x < y → z ≤ f y}
+@[to_dual] theorem countable_image_gt_image_Ioi_within (t : Set β) (f : β → α) :
+    Set.Countable {x ∈ t | ∃ z, z < f x ∧ ∀ y ∈ t, x < y → f y ≤ z}
+```
+
+The generated duals are `countable_image_lt_image_Iio_within` and
+`countable_image_gt_image_Iio_within` — the `lt`/`gt` part of the name stays put while the
+*statement's* inequality flips. So the dual of the `lt`-named lemma is the `lt`-named one over
+`Iio`, and it states `∃ z, z < f x ∧ …`. Both names exist and both typecheck where you need one, so
+the wrong pick fails several lines later, inside the proof, not at the reference.
+
+## 55. Instances that were `‹C G›` or `inferInstanceAs (C αᵒᵈ)`
+
+Two idioms for "the dual has the same structure", both now unavailable:
+
+```lean
+-- Topology/Algebra/Group/ContinuousInv: was ‹ContinuousInv G›
+instance OrderDual.instContinuousInv : ContinuousInv Gᵒᵈ :=
+  ⟨continuous_toDual.comp (continuous_inv.comp continuous_ofDual)⟩
+
+-- Topology/Separation/LinearUpperLowerSetTopology: was inferInstanceAs (CompletelyNormalSpace αᵒᵈ)
+-- now the ten-line IsUpperSet proof, mirrored, with the two `conv … equals` targets swapped
+```
+
+The first repair is the general shape for any *structural* class carried along the equivalence:
+sandwich the underlying operation between `continuous_toDual` and `continuous_ofDual`. It survives
+`@[to_additive]` unchanged, since the two bridges say nothing about the order. The second has no
+such shape — `CompletelyNormalSpace` is a `Prop`-valued class whose field quantifies over sets, so
+transporting it would need the set-level dictionary; mirroring the proof is much shorter.
