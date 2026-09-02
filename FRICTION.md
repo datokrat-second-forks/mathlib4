@@ -2052,3 +2052,98 @@ Two sites in wave 35 were mirrored rather than transported, on a sharper criteri
 Rule of thumb after three waves of this: transport when the dualised type appears only as the
 *codomain of an unbundled function*; mirror when it appears inside a bundled structure (§65), in a
 dependent argument, or behind a filter whose dual bridge does not exist (§61).
+
+## 70. `MeasurableSpace αᵒᵈ` is a preimage σ-algebra, so both directions are measurable by `rfl`
+
+```lean
+instance [h : MeasurableSpace α] : MeasurableSpace αᵒᵈ where
+  MeasurableSet' s := h.MeasurableSet' (⇑OrderDual.toDual ⁻¹' s)
+```
+
+so `Measurable toDual` and `Measurable ofDual` are literally the identity function on proofs:
+
+```lean
+private lemma measurable_toDual : Measurable (OrderDual.toDual : M → Mᵒᵈ) := fun _ hs ↦ hs
+private lemma measurable_ofDual : Measurable (OrderDual.ofDual : Mᵒᵈ → M) := fun _ hs ↦ hs
+```
+
+(the second uses structure eta: `⇑toDual ⁻¹' (⇑ofDual ⁻¹' t)` *is* `t`). With those, the four
+`MeasurableSup`/`MeasurableInf` dual instances in `MeasureTheory/Order/Lattice.lean`, which were
+
+```lean
+instance OrderDual.instMeasurableSup [Min M] [MeasurableInf M] : MeasurableSup Mᵒᵈ :=
+  ⟨@measurable_const_inf M _ _ _, @measurable_inf_const M _ _ _⟩
+```
+
+— a pure type-pun, the `@… _ _ _ _` being the tell — become honest compositions:
+
+```lean
+instance OrderDual.instMeasurableSup [Min M] [MeasurableInf M] : MeasurableSup Mᵒᵈ where
+  measurable_const_sup c :=
+    measurable_toDual.comp ((measurable_const_inf (OrderDual.ofDual c)).comp measurable_ofDual)
+```
+
+and the `₂` versions need the product split
+`(measurable_ofDual.comp measurable_fst).prodMk (measurable_ofDual.comp measurable_snd)`.
+No content is added; what the pun hid is exactly the two `rfl` lemmas above.
+
+## 71. `BorelSpace αᵒᵈ`: a `where borel_le := h.borel_le` that was never a proof
+
+The same shape, one level up:
+
+```lean
+instance OrderDual.opensMeasurableSpace [h : OpensMeasurableSpace α] : OpensMeasurableSpace αᵒᵈ where
+  borel_le := h.borel_le
+```
+
+`borel αᵒᵈ ≤ inst` and `borel α ≤ inst` were the *same statement*. Now the proof has to say why:
+the topology of `αᵒᵈ` is `.coinduced toDual`, so `IsOpen[αᵒᵈ] s` unfolds to `IsOpen (⇑toDual ⁻¹' s)`,
+and the σ-algebra is the preimage one of §70, so
+
+```lean
+  borel_le := generateFrom_le fun _s hs ↦
+    OpensMeasurableSpace.borel_le (α := α) _ <|
+      GenerateMeasurable.basic _ (IsOpen.preimage continuous_toDual hs)
+```
+
+Two traps in those four lines:
+
+* `IsOpen.measurableSet` — the obvious spelling — is declared *later in the same file* than these
+  instances, so the proof must use its body, `OpensMeasurableSpace.borel_le _ <| .basic _ h`,
+  directly. A dual instance sitting early in a file cannot use that file's own convenience API.
+* `OpensMeasurableSpace.borel_le _` inside an `OpensMeasurableSpace αᵒᵈ` declaration resolves its
+  instance argument to `αᵒᵈ` — the very instance being defined — and fails with
+  `failed to synthesize OpensMeasurableSpace αᵒᵈ`. Pin `(α := α)`.
+
+`BorelSpace αᵒᵈ` then needs a genuine `le_antisymm`, whose non-trivial half is
+`continuous_ofDual.borel_measurable`: `MeasurableSet[borel α] (⇑toDual ⁻¹' s)` gives
+`MeasurableSet[borel αᵒᵈ] (⇑ofDual ⁻¹' (⇑toDual ⁻¹' s))`, and that set *is* `s`.
+
+## 72. §25's Galois connection, met again in `InnerProductSpace/Orthogonal`
+
+```lean
+theorem orthogonal_gc :
+    @GaloisConnection (Submodule 𝕜 E) (Submodule 𝕜 E)ᵒᵈ _ _ orthogonal orthogonal
+```
+
+`orthogonal` cannot be both `α → αᵒᵈ` and `αᵒᵈ → α` any more; it becomes
+
+```lean
+      (fun K ↦ OrderDual.toDual (orthogonal K)) (fun K ↦ orthogonal (OrderDual.ofDual K))
+```
+
+What is worth recording is the *split* among the five consequences, which is exactly §25's grading
+and confirms it on a second, unrelated example:
+
+* `monotone_l` and `le_u_l` need **no change at all** — `toDual K₁ᗮ ≤ toDual K₂ᗮ` is `K₂ᗮ ≤ K₁ᗮ`
+  and `u (l K)` is `Kᗮᗮ`, both by `rfl`.
+* `l_sup` needs the wrapper stripped, and the named arguments must be given so the defeq check has
+  two rigid sides:
+  `(OrderDual.toDual_inj (a := K₁ᗮ ⊓ K₂ᗮ) (b := (K₁ ⊔ K₂)ᗮ)).1 (orthogonal_gc 𝕜 E).l_sup.symm`.
+* `l_iSup` and `l_sSup` need the genuine rewrite, because the indexed operations are not defeq:
+  `rw [← OrderDual.toDual_inj, toDual_iInf]` (and `simp only [toDual_iInf]` for the `⨅ K ∈ s` of
+  `l_sSup`, where the binder is nested).
+
+Both the `Submodule` and the `ClosedSubmodule` copy in that file take the identical patch — a hint
+that the three-line fix could be packaged, if the campaign ever wants an `antitone Galois
+connection` API rather than the dual-encoded one.
