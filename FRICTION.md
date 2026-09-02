@@ -1857,3 +1857,106 @@ and it must be `ι : Sort*`. Written with `Type*` it fails with the unsolvable u
 index variable really is a `Sort*`. The error surfaces as a type mismatch between two `range`
 applications that print identically apart from their universe arguments, which is worth
 recognising on sight.
+
+## 64. `X → Eᵒᵈ` is not `X → E`: the Pi-dual transport has to go through an image
+
+`Topology/Semicontinuity/Lindelof.lean` derives the lower-semicontinuous statement from the upper
+one by `exists_countable_upperSemicontinuous_isGLB (E := Eᵒᵈ) h𝓕_cont h𝓕`. That one-liner depended
+on `X → Eᵒᵈ` *being* `X → E`, so that a `𝓕 : Set (X → E)` could be re-read as a family of dual-valued
+functions without moving. It cannot survive.
+
+The repair is the general shape for any dual transport whose data is a *function into* the dualised
+type: conjugate by `Φ f = ⇑toDual ∘ f`, apply the theorem to `Φ '' 𝓕`, and pull the answer back
+along `Ψ g = ⇑ofDual ∘ g`.
+
+```lean
+  set Φ : (X → E) → (X → Eᵒᵈ) := fun f ↦ ⇑OrderDual.toDual ∘ f
+  set Ψ : (X → Eᵒᵈ) → (X → E) := fun g ↦ ⇑OrderDual.ofDual ∘ g
+  have hΦΨ : ∀ g, Φ (Ψ g) = g := fun _ ↦ rfl
+  have hGLB : ∀ {𝓖 : Set (X → E)} {t : X → E}, IsLUB 𝓖 t → IsGLB (Φ '' 𝓖) (Φ t) := fun {𝓖 t} h ↦
+    ⟨by rintro _ ⟨f, hf, rfl⟩; exact h.1 hf,
+      fun g hg ↦ h.2 (show Ψ g ∈ upperBounds 𝓖 from fun f hf ↦ hg ⟨f, hf, rfl⟩)⟩
+```
+
+Everything inside the two bridges is `rfl` at the leaves — `f ≤ t` on `X → E` and `Φ t ≤ Φ f` on
+`X → Eᵒᵈ` are the same proposition, pointwise — but the *sets* differ, so the two `⟨f, hf, rfl⟩`
+image witnesses and the round trip `Set.image_image` … `Set.image_id` are unavoidable. Round trip:
+
+```lean
+  refine ⟨Ψ '' 𝓖, ?_, 𝓖_count.image _, hLUB ?_⟩
+  · rintro _ ⟨g, hg, rfl⟩; obtain ⟨f, hf, rfl⟩ := 𝓖_sub hg; exact hf
+  · rwa [Set.image_image, show (fun g ↦ Φ (Ψ g)) = id from funext hΦΨ, Set.image_id]
+```
+
+Worth knowing: Mathlib already contains exactly the missing tool, as a **private** definition —
+`dualPiOrderIso : (∀ i, π i)ᵒᵈ ≃o ∀ i, (π i)ᵒᵈ` in `Order/Atoms.lean:1316`. It was private because
+before the change it was needed only once. It is now the natural public companion of every
+`(E := Eᵒᵈ)` transport over a function type; another entry for the design queue, beside §59 and §61.
+
+### A named-argument trap, again
+
+`IsLUB` is `IsLeast (upperBounds 𝓕) s`, i.e. an `And`. So `h.2 (b := Ψ g) …` does **not** name the
+upper bound — it names `And.right`'s implicit `b`, and you get
+`Application type mismatch … Ψ g has type X → E … but is expected to have type Prop`. Use
+`h.2 (show Ψ g ∈ upperBounds 𝓖 from …)` instead. Same shape as `Iff.mp`'s parameters swallowing
+`(f := …)` after a `.1` (§ earlier): after a structure projection, named arguments belong to the
+projection, not to the thing you are projecting out of.
+
+## 65. `𝓤 (αᵒᵈ)` has no bridge either, and Dini's theorem needs one
+
+`Topology/UniformSpace/Dini.lean` proves the four `Antitone` forms of Dini's theorem by
+`Monotone.… (G := Gᵒᵈ)`. Once `G → Gᵒᵈ` is a real map, both the family `F : ι → α → G` and the limit
+`f` have to be pushed through `⇑toDual`, and the conclusion — a `TendstoUniformly*` statement, i.e.
+a statement about the *uniformity* of `Gᵒᵈ` — has to be pulled back. The pull-back is exactly
+`UniformContinuous.comp_tendsto{,Locally}Uniformly{,On}`, which all four exist; what does not exist
+is the uniform continuity of `ofDual`:
+
+```lean
+private lemma uniformContinuous_ofDual {X : Type*} [UniformSpace X] :
+    UniformContinuous (OrderDual.ofDual : Xᵒᵈ → X) :=
+  uniformContinuous_comap
+```
+
+That this is `uniformContinuous_comap` on the nose is a small piece of luck worth recording:
+`OrderDual.instUniformSpace` is `(UniformSpace.comap ofDual ‹_›).replaceTopology _`, and
+`replaceTopology` rewrites only the topology field, so the *uniformity* is literally the comapped
+one. (`uniformContinuous_toDual` is `uniformContinuous_comap' uniformContinuous_id` by the same
+token.) The whole file is then four transports of the form
+
+```lean
+  uniformContinuous_ofDual.comp_tendstoLocallyUniformly <|
+    Monotone.tendstoLocallyUniformly_of_forall_tendsto (G := Gᵒᵈ)
+      (F := fun i ↦ ⇑OrderDual.toDual ∘ F i) (f := ⇑OrderDual.toDual ∘ f)
+      (fun i ↦ continuous_toDual.comp (hF_cont i)) (fun _ _ hij x ↦ hF_anti hij x)
+      (continuous_toDual.comp hf) (fun x ↦ (continuous_toDual.tendsto _).comp (h_tendsto x))
+```
+
+— note that `Monotone (fun i ↦ ⇑toDual ∘ F i)` from `Antitone F` is `fun _ _ hij x ↦ hF_anti hij x`,
+pointwise and definitional; only the *packaging* changed.
+
+The fifth site, `ContinuousMap.tendsto_of_antitone_of_pointwise`, was **not** transported: its data
+is a bundled `F : ι → C(α, G)`, and pushing that through `toDual` means rebuilding every bundled
+map. It mirrors its `Monotone` sibling in two lines instead — §48's rule, applied to a single
+declaration rather than a whole file. The criterion that decides between transport and mirror is not
+the length of the proof but whether the dualised data is *bundled*: an unbundled `α → G` composes
+with `toDual` for free, a `C(α, G)` does not.
+
+## 66. `EReal.negOrderIso` lands in `ERealᵒᵈ`, and that is now visible
+
+```lean
+def negOrderIso : EReal ≃o ERealᵒᵈ where toFun x := OrderDual.toDual (-x) …
+```
+
+so `OrderIso.limsup_apply negOrderIso : negOrderIso (limsup v f) = limsup (⇑negOrderIso ∘ v) f`
+is an equation **in `ERealᵒᵈ`**, while `liminf_neg : liminf (-v) f = -limsup v f` is one in `EReal`.
+Before, `.symm` sufficed. Now:
+
+```lean
+lemma liminf_neg : liminf (-v) f = -limsup v f :=
+  congrArg OrderDual.ofDual EReal.negOrderIso.limsup_apply.symm
+```
+
+and this type-checks *only* because `limsup (⇑toDual ∘ u) F = toDual (liminf u F)` is still
+definitional (see the rfl-bridge list). One `congrArg ofDual` is the whole cost of a codomain-dual
+`OrderIso`: worth remembering as the first thing to try whenever an `≃o` into a dual is applied and
+the result is one dualisation away from the goal.
