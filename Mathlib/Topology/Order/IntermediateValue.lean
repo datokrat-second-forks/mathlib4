@@ -251,8 +251,11 @@ theorem IsPreconnected.Ioi_csInf_subset {s : Set α} (hs : IsPreconnected s) (hb
   hs.Icc_subset ys zs ⟨hy.le, hz.le⟩
 
 theorem IsPreconnected.Iio_csSup_subset {s : Set α} (hs : IsPreconnected s) (hb : ¬BddBelow s)
-    (ha : BddAbove s) : Iio (sSup s) ⊆ s :=
-  IsPreconnected.Ioi_csInf_subset (α := αᵒᵈ) hs ha hb
+    (ha : BddAbove s) : Iio (sSup s) ⊆ s := fun x hx =>
+  have sne : s.Nonempty := nonempty_of_not_bddBelow hb
+  let ⟨_y, ys, hy⟩ : ∃ y ∈ s, x < y := (lt_isLUB_iff (isLUB_csSup sne ha)).1 hx
+  let ⟨_z, zs, hz⟩ : ∃ z ∈ s, z < x := not_bddBelow_iff.1 hb x
+  hs.Icc_subset zs ys ⟨hz.le, hy.le⟩
 
 /-- A preconnected set in a conditionally complete linear order is either one of the intervals
 `[Inf s, Sup s]`, `[Inf s, Sup s)`, `(Inf s, Sup s]`, `(Inf s, Sup s)`, `[Inf s, +∞)`,
@@ -341,12 +344,17 @@ theorem IsClosed.Icc_subset_of_forall_exists_gt {a b : α} {s : Set α} (hs : Is
 on a closed subset, contains `b`, and the set `s ∩ (a, b]` has no minimal point, then `a ∈ s`. -/
 theorem IsClosed.mem_of_ge_of_forall_exists_lt {a b : α} {s : Set α} (hs : IsClosed (s ∩ Icc a b))
     (hb : b ∈ s) (hab : a ≤ b) (hgt : ∀ x ∈ s ∩ Ioc a b, (s ∩ Ico a x).Nonempty) : a ∈ s := by
-  suffices OrderDual.toDual a ∈ ofDual ⁻¹' s by aesop
-  have : IsClosed (OrderDual.ofDual ⁻¹' (s ∩ Icc a b)) := hs
-  rw [preimage_inter, ← Icc_toDual] at this
-  apply this.mem_of_ge_of_forall_exists_gt (by simp_all) (by simp_all) (fun x hx ↦ ?_)
-  rw [Ico_toDual, ← preimage_inter, ← Equiv.image_symm_eq_preimage, mem_image] at hx
-  aesop
+  let S := s ∩ Icc a b
+  replace hb : b ∈ S := ⟨hb, right_mem_Icc.2 hab⟩
+  have Sbd : BddBelow S := ⟨a, fun z hz => hz.2.1⟩
+  let c := sInf (s ∩ Icc a b)
+  have c_mem : c ∈ S := hs.csInf_mem ⟨_, hb⟩ Sbd
+  have c_ge : a ≤ c := le_csInf ⟨_, hb⟩ fun x hx => hx.2.1
+  rcases eq_or_lt_of_le c_ge with hc | hc
+  · exact hc ▸ c_mem.1
+  exfalso
+  rcases hgt c ⟨c_mem.1, hc, c_mem.2.2⟩ with ⟨x, xs, ax, xc⟩
+  exact not_lt_of_ge (csInf_le Sbd ⟨xs, ax, le_trans xc.le (csInf_le Sbd hb)⟩) xc
 
 /-- A "continuous induction principle" for a closed interval: if a set `s` meets `[a, b]`
 on a closed subset, contains `b`, and for any `a ≤ y < x ≤ b`, `x ∈ s`, the set `s ∩ [y, x)`
@@ -724,8 +732,9 @@ theorem Continuous.surjective {f : α → δ} (hf : Continuous f) (h_top : Tends
 /-- A continuous function which tends to `Filter.atBot` along `Filter.atTop` and to `Filter.atTop`
 along `Filter.atBot` is surjective. -/
 theorem Continuous.surjective' {f : α → δ} (hf : Continuous f) (h_top : Tendsto f atBot atTop)
-    (h_bot : Tendsto f atTop atBot) : Function.Surjective f :=
-  Continuous.surjective (α := αᵒᵈ) hf h_top h_bot
+    (h_bot : Tendsto f atTop atBot) : Function.Surjective f := fun p =>
+  mem_range_of_exists_le_of_exists_ge hf (h_bot.eventually (eventually_le_atBot p)).exists
+    (h_top.eventually (eventually_ge_atTop p)).exists
 
 /-- If a function `f : α → β` is continuous on a nonempty interval `s`, its restriction to `s`
 tends to `Filter.atBot : Filter β` along `Filter.atBot : Filter ↥s` and tends to
@@ -744,7 +753,8 @@ surjective. We formulate the conclusion as `Function.surjOn f s Set.univ`. -/
 theorem ContinuousOn.surjOn_of_tendsto' {f : α → δ} {s : Set α} [OrdConnected s] (hs : s.Nonempty)
     (hf : ContinuousOn f s) (hbot : Tendsto (fun x : s => f x) atBot atTop)
     (htop : Tendsto (fun x : s => f x) atTop atBot) : SurjOn f s univ :=
-  ContinuousOn.surjOn_of_tendsto (δ := δᵒᵈ) hs hf hbot htop
+  haveI := Classical.inhabited_of_nonempty hs.to_subtype
+  surjOn_iff_surjective.2 <| hf.domRestrict.surjective' hbot htop
 
 /-!
 ### Monotonicity of injective continuous functions
@@ -770,7 +780,8 @@ theorem Continuous.strictMono_of_inj_boundedOrder [BoundedOrder α] {f : α → 
 
 theorem Continuous.strictAnti_of_inj_boundedOrder [BoundedOrder α] {f : α → δ}
     (hf_c : Continuous f) (hf : f ⊤ ≤ f ⊥) (hf_i : Injective f) : StrictAnti f :=
-  hf_c.strictMono_of_inj_boundedOrder (δ := δᵒᵈ) hf hf_i
+  Continuous.strictMono_of_inj_boundedOrder (δ := δᵒᵈ) (continuous_toDual.comp hf_c) hf
+    (OrderDual.toDual.injective.comp hf_i)
 
 theorem Continuous.strictMono_of_inj_boundedOrder' [BoundedOrder α] {f : α → δ}
     (hf_c : Continuous f) (hf_i : Injective f) : StrictMono f ∨ StrictAnti f :=
@@ -824,7 +835,10 @@ continuous and injective. Then `f` is strictly antitone (decreasing) if `f(b) �
 theorem ContinuousOn.strictAntiOn_of_injOn_Icc {a b : α} {f : α → δ}
     (hab : a ≤ b) (hfab : f b ≤ f a)
     (hf_c : ContinuousOn f (Icc a b)) (hf_i : InjOn f (Icc a b)) :
-    StrictAntiOn f (Icc a b) := ContinuousOn.strictMonoOn_of_injOn_Icc (δ := δᵒᵈ) hab hfab hf_c hf_i
+    StrictAntiOn f (Icc a b) :=
+  ContinuousOn.strictMonoOn_of_injOn_Icc (δ := δᵒᵈ) hab hfab
+    (continuous_toDual.comp_continuousOn hf_c)
+    (fun _ hx _ hy h ↦ hf_i hx hy (OrderDual.toDual.injective h))
 
 /-- Suppose `f : [a, b] → δ` is continuous and injective. Then `f` is strictly monotone
 or antitone (increasing or decreasing). -/
@@ -842,7 +856,8 @@ theorem Continuous.strictMono_of_inj {f : α → δ}
   have H {c d : α} (hcd : c < d) : StrictMono f ∨ StrictAnti f :=
     (hf_c.continuousOn.strictMonoOn_of_injOn_Icc' hcd.le hf_i.injOn).imp
       (hf_c.strictMonoOn_of_inj_rigidity hf_i hcd)
-      (hf_c.strictMonoOn_of_inj_rigidity (δ := δᵒᵈ) hf_i hcd)
+      (Continuous.strictMonoOn_of_inj_rigidity (δ := δᵒᵈ) (continuous_toDual.comp hf_c)
+        (OrderDual.toDual.injective.comp hf_i) hcd)
   cases subsingleton_or_nontrivial α with
   | inl h => exact Or.inl <| Subsingleton.strictMono f
   | inr h =>

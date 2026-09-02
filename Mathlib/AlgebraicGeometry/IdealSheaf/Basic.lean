@@ -623,11 +623,12 @@ lemma le_support_iff_le_vanishingIdeal {I : X.IdealSheafData} {Z : Closeds X} :
 
 /-- `support` and `vanishingIdeal` forms a Galois connection.
 This is the global version of `PrimeSpectrum.gc`. -/
-lemma gc : @GaloisConnection X.IdealSheafData (Closeds X)ᵒᵈ _ _ (support ·) (vanishingIdeal ·) :=
+lemma gc : @GaloisConnection X.IdealSheafData (Closeds X)ᵒᵈ _ _
+    (fun I ↦ OrderDual.toDual I.support) (fun Z ↦ vanishingIdeal (OrderDual.ofDual Z)) :=
   fun _ _ ↦ le_support_iff_le_vanishingIdeal
 
 lemma vanishingIdeal_antimono {S T : Closeds X} (h : S ≤ T) : vanishingIdeal T ≤ vanishingIdeal S :=
-  gc.monotone_u h
+  gc.monotone_u (OrderDual.toDual_le_toDual.2 h)
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -647,22 +648,32 @@ lemma vanishingIdeal_support {I : IdealSheafData X} :
   rw [← support_bot, vanishingIdeal_support, nilradical]
 
 @[simp] lemma vanishingIdeal_iSup {ι : Sort*} (Z : ι → Closeds X) :
-    vanishingIdeal (iSup Z) = ⨅ i, vanishingIdeal (Z i) := gc.u_iInf
+    vanishingIdeal (iSup Z) = ⨅ i, vanishingIdeal (Z i) := by
+  have h := gc.u_iInf (f := fun i ↦ OrderDual.toDual (Z i))
+  rwa [← toDual_iSup, OrderDual.ofDual_toDual] at h
 
 @[simp] lemma vanishingIdeal_sSup (Z : Set (Closeds X)) :
-    vanishingIdeal (sSup Z) = ⨅ z ∈ Z, vanishingIdeal z := gc.u_sInf
+    vanishingIdeal (sSup Z) = ⨅ z ∈ Z, vanishingIdeal z := by
+  rw [sSup_eq_iSup]
+  simp only [vanishingIdeal_iSup]
 
 @[simp] lemma vanishingIdeal_sup (Z Z' : TopologicalSpace.Closeds X) :
     vanishingIdeal (Z ⊔ Z') = vanishingIdeal Z ⊓ vanishingIdeal Z' := gc.u_inf
 
 @[simp] lemma support_sup (I J : X.IdealSheafData) :
-    (I ⊔ J).support = I.support ⊓ J.support := gc.l_sup
+    (I ⊔ J).support = I.support ⊓ J.support := by
+  have h := gc.l_sup (a₁ := I) (a₂ := J)
+  rwa [← toDual_inf, OrderDual.toDual_inj] at h
 
 @[simp] lemma support_iSup {ι : Sort*} (I : ι → X.IdealSheafData) :
-    (iSup I).support = ⨅ i, (I i).support := gc.l_iSup
+    (iSup I).support = ⨅ i, (I i).support := by
+  have h := gc.l_iSup (f := I)
+  rwa [← toDual_iInf, OrderDual.toDual_inj] at h
 
 @[simp] lemma support_sSup (I : Set X.IdealSheafData) :
-    (sSup I).support = ⨅ i ∈ I, i.support := gc.l_sSup
+    (sSup I).support = ⨅ i ∈ I, i.support := by
+  rw [sSup_eq_iSup]
+  simp only [support_iSup]
 
 end ofIsClosed
 
