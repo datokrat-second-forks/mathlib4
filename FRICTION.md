@@ -2314,3 +2314,34 @@ near-full rebuild — doing it wave by wave would have cost a dozen full builds 
 Also: `awk 'length > 100'` counts *bytes*, and this campaign's lines are full of `ᵒᵈ`, `⇑`, `↦`,
 `𝓕`. The authoritative list is the build log's own
 `warning: … This line exceeds the 100 character limit`.
+
+## 77. `(α := αᵒᵈ)` on a set-valued conclusion: the `AECover` interval family
+
+§75 in its purest form. `Mathlib/MeasureTheory/Integral/IntegralEqImproper.lean` builds the
+`AECover` versions of the four one-sided intervals by reading the `Ici`/`Ioi` theorem at `αᵒᵈ`:
+
+```lean
+theorem aecover_Iic (hb : Tendsto b l atTop) : AECover μ l fun i => Iic <| b i :=
+  aecover_Ici (α := αᵒᵈ) hb
+```
+
+`aecover_Ici (α := αᵒᵈ)` produces `AECover ?μ ?l fun i ↦ Ici (?a i)` with `Ici (?a i) : Set αᵒᵈ`,
+and the goal wants `Iic (b i) : Set α`. The two are not even the same *type*, let alone
+definitionally equal — and there is no measure to transport along either, because `μ : Measure α`
+would have to become `μ.map toDual`. Nothing can be salvaged; every one of the four sites mirrors:
+
+```lean
+theorem aecover_Iic (hb : Tendsto b l atTop) : AECover μ l fun i => Iic <| b i where
+  ae_eventually_mem := ae_of_all μ hb.eventually_ge_atTop
+  measurableSet _ := measurableSet_Iic
+```
+
+and each mirror is the original body with `eventually_le_atBot ↦ eventually_ge_atTop`,
+`eventually_lt_atBot ↦ eventually_gt_atTop`, `eventually_lt_nhds ↦ eventually_gt_nhds`,
+`measurableSet_Ici ↦ measurableSet_Iic`, `Ioi_subset_Ici_self ↦ Iio_subset_Iic_self`. All four
+substitutions are `@[to_dual]`-generated names that already exist. The general shape:
+
+> A transport whose conclusion mentions `Set α`, `Measure α`, `Filter α` — anything *indexed by*
+> the type rather than merely valued in it — is unsalvageable, because the dual reading changes the
+> index. Only conclusions that are `Prop`s about a function *into* the ordered type ever had a
+> bridge, and §75 shows even those usually do not.

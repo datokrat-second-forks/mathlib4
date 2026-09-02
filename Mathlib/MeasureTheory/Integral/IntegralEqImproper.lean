@@ -153,8 +153,9 @@ theorem aecover_Ici (ha : Tendsto a l atBot) : AECover μ l fun i => Ici (a i) w
   ae_eventually_mem := ae_of_all μ ha.eventually_le_atBot
   measurableSet _ := measurableSet_Ici
 
-theorem aecover_Iic (hb : Tendsto b l atTop) : AECover μ l fun i => Iic <| b i :=
-  aecover_Ici (α := αᵒᵈ) hb
+theorem aecover_Iic (hb : Tendsto b l atTop) : AECover μ l fun i => Iic <| b i where
+  ae_eventually_mem := ae_of_all μ hb.eventually_ge_atTop
+  measurableSet _ := measurableSet_Iic
 
 theorem aecover_Icc (ha : Tendsto a l atBot) (hb : Tendsto b l atTop) :
     AECover μ l fun i => Icc (a i) (b i) :=
@@ -173,7 +174,9 @@ theorem aecover_Ioi [NoMinOrder α] : AECover μ l fun i => Ioi (a i) where
   measurableSet _ := measurableSet_Ioi
 
 include hb in
-theorem aecover_Iio [NoMaxOrder α] : AECover μ l fun i => Iio (b i) := aecover_Ioi (α := αᵒᵈ) hb
+theorem aecover_Iio [NoMaxOrder α] : AECover μ l fun i => Iio (b i) where
+  ae_eventually_mem := ae_of_all μ hb.eventually_gt_atTop
+  measurableSet _ := measurableSet_Iio
 
 include ha hb
 
@@ -201,8 +204,10 @@ theorem aecover_Ioi_of_Ioi : AECover (μ.restrict (Ioi A)) l fun i ↦ Ioi (a i)
   measurableSet _ := measurableSet_Ioi
 
 include hb in
-theorem aecover_Iio_of_Iio : AECover (μ.restrict (Iio B)) l fun i ↦ Iio (b i) :=
-  aecover_Ioi_of_Ioi (α := αᵒᵈ) hb
+theorem aecover_Iio_of_Iio : AECover (μ.restrict (Iio B)) l fun i ↦ Iio (b i) where
+  ae_eventually_mem := (ae_restrict_mem measurableSet_Iio).mono fun _x hx ↦ hb.eventually <|
+    eventually_gt_nhds hx
+  measurableSet _ := measurableSet_Iio
 
 include ha in
 theorem aecover_Ioi_of_Ici : AECover (μ.restrict (Ioi A)) l fun i ↦ Ici (a i) :=
@@ -210,7 +215,7 @@ theorem aecover_Ioi_of_Ici : AECover (μ.restrict (Ioi A)) l fun i ↦ Ici (a i)
 
 include hb in
 theorem aecover_Iio_of_Iic : AECover (μ.restrict (Iio B)) l fun i ↦ Iic (b i) :=
-  aecover_Ioi_of_Ici (α := αᵒᵈ) hb
+  (aecover_Iio_of_Iio hb).superset (fun _ ↦ Iio_subset_Iic_self) fun _ ↦ measurableSet_Iic
 
 include hb hc in
 theorem aecover_Iio_of_Ico : AECover (μ.restrict (Iio B)) l fun i ↦ Ico (c i) (b i) where
