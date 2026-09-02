@@ -208,10 +208,9 @@ version.
 -/]
 def whisker (E : K ⥤ J) (c : Cone F) : Cone (E ⋙ F) where
   pt := c.pt
-  -- `whiskerLeft E c.π` starts at `E ⋙ (const J).obj c.pt`; the identification with
-  -- `(const K).obj c.pt` is made explicit instead of relying on definitional unfolding.
-  -- The precomposed natural transformation is required to fix `unop_fst` in `Opposites.Pullbacks`.
-  π := (compConst E c.pt).inv ≫ whiskerLeft E c.π
+  -- Not `whiskerLeft E c.π`: that starts at `E ⋙ (const J).obj c.pt`, which is only
+  -- definitionally `(const K).obj c.pt` after unfolding `Functor.comp`.
+  π := { app := fun k => c.π.app (E.obj k) }
 
 end Cone
 

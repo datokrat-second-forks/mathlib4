@@ -204,7 +204,7 @@ theorem IsVanKampenColimit.whiskerEquivalence {K : Type*} [Category* K] (e : J �
     hc (c'.whisker e.inverse) (whiskerLeft e.inverse α ≫ (e.invFunIdAssoc F).hom) f ?_
       ((hα.whiskerLeft _).comp (.of_isIso _)) using 1
   · exact (IsColimit.whiskerEquivalenceEquiv e.symm).nonempty_congr
-  · simp only [Functor.const_obj_obj, Functor.comp_obj, Cocone.whisker_pt, Cocone.whisker_ι,
+  · simp only [Functor.const_obj_obj, Functor.comp_obj, Cocone.whisker_pt, Cocone.whisker_ι_app,
       whiskerLeft_app, NatTrans.comp_app, Equivalence.invFunIdAssoc_hom_app, Functor.id_obj]
     constructor
     · intro H k
@@ -370,7 +370,8 @@ theorem IsVanKampenColimit.map_reflective [HasColimitsOfShape J C]
     dsimp [α']
     simp only [Category.comp_id, Adjunction.counit_naturality_assoc, Category.id_comp,
       Adjunction.counit_naturality, Category.assoc, Functor.map_comp]
-  let β := isoWhiskerLeft F' (asIso adj.counit) ≪≫ F'.rightUnitor
+  -- bracketed as `(F' ⋙ Gr) ⋙ Gl`, matching `hr` and `Gl.mapCocone` below
+  let β := Functor.associator F' Gr Gl ≪≫ isoWhiskerLeft F' (asIso adj.counit) ≪≫ F'.rightUnitor
   let hl := (IsColimit.precomposeHomEquiv β c').symm hc'
   let hr := isColimitOfPreserves Gl (colimit.isColimit <| F' ⋙ Gr)
   have : α.app j = β.inv.app _ ≫ Gl.map (Gr.map <| α'.app j) := by
@@ -392,7 +393,7 @@ theorem IsVanKampenColimit.map_reflective [HasColimitsOfShape J C]
       intro j
       rw [hl.fac]
       dsimp [β]
-      simp only [Category.comp_id, hα'', Category.assoc, Gl.map_comp]
+      simp only [Category.comp_id, Category.id_comp, hα'', Category.assoc, Gl.map_comp]
       congr 1
       exact (NatTrans.congr_app h j).symm
   rw [this]

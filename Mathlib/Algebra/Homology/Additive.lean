@@ -214,6 +214,7 @@ def Functor.mapHomologicalComplexCompIso {W' : Type*} [Category W'] [Preadditive
 /-- An equivalence of categories induces an equivalences between the respective categories
 of homological complex.
 -/
+set_option backward.isDefEq.respectTransparency.types false in
 @[implicit_reducible, simps]
 def Equivalence.mapHomologicalComplex (e : W₁ ≌ W₂) [e.functor.PreservesZeroMorphisms]
     (c : ComplexShape ι) :

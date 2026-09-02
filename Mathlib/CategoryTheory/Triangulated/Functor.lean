@@ -48,8 +48,8 @@ def mapTriangle : Triangle C ⥤ Triangle D where
       comm₁ := by dsimp; simp only [← F.map_comp, f.comm₁]
       comm₂ := by dsimp; simp only [← F.map_comp, f.comm₂]
       comm₃ := by
-        dsimp [Functor.comp]
-        simp only [Category.assoc, ← NatTrans.naturality,
+        dsimp
+        simp only [Category.assoc, ← F.commShiftIso_hom_naturality,
           ← F.map_comp_assoc, f.comm₃] }
 
 instance [Faithful F] : Faithful F.mapTriangle where

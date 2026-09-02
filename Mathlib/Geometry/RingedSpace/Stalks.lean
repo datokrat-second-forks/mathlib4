@@ -203,7 +203,7 @@ theorem stalkSpecializes_stalkMap {X Y : PresheafedSpace.{_, _, v} C}
   simp only [colimit.ι_desc_assoc, ι_colimMap_assoc, whiskerLeft_app,
     whiskerRight_app, NatTrans.id_app, colimit.ι_pre, assoc,
     colimit.pre_desc, colimit.map_desc, colimit.ι_desc, Cocone.precompose_obj_ι,
-    Cocone.whisker_ι, NatTrans.comp_app]
+    Cocone.whisker_ι_app, NatTrans.comp_app]
   tauto
 
 end stalkMap

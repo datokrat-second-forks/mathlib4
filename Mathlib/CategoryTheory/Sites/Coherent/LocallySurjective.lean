@@ -79,8 +79,8 @@ lemma extensiveTopology.surjective_of_isLocallySurjective_sheaf_of_types [Finita
   intro ⟨a⟩
   simp only [Functor.comp_obj, Discrete.opposite_inverse_obj, Functor.op_obj, Discrete.functor_obj,
     Functor.mapCone_pt, Cone.whisker_pt, Cocone.op_pt, Cofan.mk_pt, Functor.const_obj_obj,
-    Functor.mapCone_π_app, Cone.whisker_π, Cocone.op_π, Functor.whiskerLeft_app, NatTrans.op_app,
-    Cofan.mk_ι_app]
+    Functor.mapCone_π_app, Cone.whisker_π_app, Cocone.op_π, Functor.whiskerLeft_app,
+    NatTrans.op_app, Cofan.mk_ι_app]
   rw [← (h' a).choose_spec, ← NatTrans.naturality_apply (φ := f)]
   simp only [IsLimit.conePointsIsoOfNatIso_hom, ← comp_apply, i]
   erw [IsLimit.map_π]

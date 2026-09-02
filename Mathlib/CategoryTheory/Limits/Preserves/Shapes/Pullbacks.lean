@@ -180,6 +180,8 @@ variable {W X Y : C} {f : W ⟶ X} {g : W ⟶ Y} (c : PushoutCocone f g) (G : C 
 abbrev map : PushoutCocone (G.map f) (G.map g) :=
   PushoutCocone.mk (G.map c.inl) (G.map c.inr) (by simpa using G.congr_map c.condition)
 
+-- `Functor.comp_map` is a bad rfl lemma and it is used in the `simp` calls below
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- The map (as a cocone) of a pushout cocone is colimit iff
 the map (as a pushout cocone) is limit. -/
@@ -333,6 +335,10 @@ instance : IsIso (pushoutComparison G f g) := by
   rw [← PreservesPushout.iso_hom]
   infer_instance
 
+/-
+Difficult defeq abuse due to `Functor.comp`.
+-/
+set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- A pushout cocone in `C` is colimit iff it becomes limit
 after the application of `yoneda.obj X` for all `X : C`. -/

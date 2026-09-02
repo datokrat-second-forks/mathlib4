@@ -68,7 +68,7 @@ def spanUnop {X Y Z : Cᵒᵖ} (f : X ⟶ Z) (g : Y ⟶ Z) :
 def opCospan {X Y Z : C} (f : X ⟶ Z) (g : Y ⟶ Z) :
     (cospan f g).op ≅ walkingCospanOpEquiv.functor ⋙ span f.op g.op :=
   calc
-    (cospan f g).op ≅ 𝟭 _ ⋙ (cospan f g).op := .refl _
+    (cospan f g).op ≅ 𝟭 _ ⋙ (cospan f g).op := (leftUnitor _).symm
     _ ≅ (walkingCospanOpEquiv.functor ⋙ walkingCospanOpEquiv.inverse) ⋙ (cospan f g).op :=
       isoWhiskerRight walkingCospanOpEquiv.unitIso _
     _ ≅ walkingCospanOpEquiv.functor ⋙ walkingCospanOpEquiv.inverse ⋙ (cospan f g).op :=
@@ -111,9 +111,6 @@ def opSpan {X Y Z : C} (f : X ⟶ Y) (g : X ⟶ Z) :
 
 namespace PushoutCocone
 
-set_option linter.tacticCheckInstances true
-
-set_option trace.Meta.Tactic.simp true in
 /-- The obvious map `PushoutCocone f g → PullbackCone f.unop g.unop` -/
 @[simps!]
 def unop {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
@@ -121,41 +118,9 @@ def unop {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
   Cocone.unop ((Cocone.precompose (opCospan f.unop g.unop).hom).obj
     (Cocone.whisker walkingCospanOpEquiv.functor c))
 
-#print unop_π_app
-
-example {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) {x} : c.unop.π.app x = c.unop.π.app x := by
-  conv =>
-    lhs
-    simp only [unop]
-    simp only [op_unop]
-    simp only [Quiver.Hom.op_unop]
-    simp only [Cocone.unop_pt]
-    simp only [Cocone.precompose_obj_pt]
-    simp only [Cocone.whisker_pt]
-    simp only [Cocone.unop_π]
-    simp only [Cocone.precompose_obj_ι]
-    simp only [Cocone.whisker_ι]
-    -- simp only [NatTrans.removeOp_app, op_obj, const_obj_obj]
-    -- simp only [op_unop, Cocone.whisker_pt]
-    -- simp?
-  simp only
-
-
-#discr_tree_simp_key unop_π_app
-
-#print Cocone.precompose_obj_ι
-
 set_option backward.isDefEq.respectTransparency.types false in
 theorem unop_fst {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :
-    c.unop.fst = c.inl.unop := by
-      set_option trace.Meta.isDefEq true in
-      set_option trace.Meta.Tactic.simp true in
-      simp only [unop_π_app]
-      simp only [span_left]
-      simp only [cospan_left]
-      simp only [op_unop]
-      simp only [Iso.refl_inv]
-      simp only [unop_id, Category.comp_id]
+    c.unop.fst = c.inl.unop := by simp
 
 set_option backward.isDefEq.respectTransparency.types false in
 theorem unop_snd {X Y Z : Cᵒᵖ} {f : X ⟶ Y} {g : X ⟶ Z} (c : PushoutCocone f g) :

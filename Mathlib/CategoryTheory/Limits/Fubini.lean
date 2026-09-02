@@ -238,13 +238,13 @@ def IsLimit.ofConeOfConeUncurry {D : DiagramOfCones F} (Q : ∀ j, IsLimit (D.ob
         s.whisker (Prod.sectR p.1 K)) p.2
       simp only [Functor.comp_obj, Prod.sectR_obj, uncurry_obj_obj,
         Cone.postcompose_obj_pt, Cone.whisker_pt, Cone.postcompose_obj_π,
-        Cone.whisker_π, NatTrans.comp_app, Functor.const_obj_obj, whiskerLeft_app,
+        Cone.whisker_π_app, NatTrans.comp_app, Functor.const_obj_obj,
         NatIso.ofComponents_hom_app, Iso.refl_hom, Category.comp_id, E] at h1
       have h2 := (P.fac (S s) p.1)
       dsimp only [Functor.comp_obj, Prod.sectR_obj, uncurry_obj_obj, NatTrans.id_app,
         Functor.const_obj_obj, DiagramOfCones.conePoints_obj, DiagramOfCones.conePoints_map,
         Functor.const_obj_map, id_eq, Cone.postcompose_obj_pt, Cone.whisker_pt,
-        Cone.postcompose_obj_π, Cone.whisker_π, NatTrans.comp_app, whiskerLeft_app,
+        Cone.postcompose_obj_π, Cone.whisker_π_app, NatTrans.comp_app,
         NatIso.ofComponents_hom_app, Iso.refl_hom, Prod.sectL_obj, Prod.sectL_map, eq_mp_eq_cast,
         eq_mpr_eq_cast, coneOfConeUncurry_pt, coneOfConeUncurry_π_app, S, E] at h2 ⊢
       simp [← h1, ← h2]
@@ -314,14 +314,14 @@ def IsColimit.ofCoconeUncurry {D : DiagramOfCocones F}
         s.whisker (Prod.sectR p.1 K)) p.2
       simp only [Functor.comp_obj, Prod.sectR_obj, uncurry_obj_obj,
         Cocone.precompose_obj_pt, Cocone.whisker_pt, Functor.const_obj_obj,
-        Cocone.precompose_obj_ι, Cocone.whisker_ι, NatTrans.comp_app, NatIso.ofComponents_inv_app,
-        Iso.refl_inv, whiskerLeft_app, Category.id_comp, E] at h1
+        Cocone.precompose_obj_ι, Cocone.whisker_ι_app, NatTrans.comp_app,
+        NatIso.ofComponents_inv_app, Iso.refl_inv, Category.id_comp, E] at h1
       have h2 := (P.fac (S s) p.1)
       dsimp only [DiagramOfCocones.coconePoints_obj, Functor.comp_obj, Prod.sectR_obj,
         uncurry_obj_obj, NatTrans.id_app, Functor.const_obj_obj, DiagramOfCocones.coconePoints_map,
         Functor.const_obj_map, id_eq, Cocone.precompose_obj_pt, Cocone.whisker_pt,
-        Cocone.precompose_obj_ι, Cocone.whisker_ι, NatTrans.comp_app, NatIso.ofComponents_inv_app,
-        Iso.refl_inv, whiskerLeft_app, Prod.sectL_obj, Prod.sectL_map, eq_mp_eq_cast,
+        Cocone.precompose_obj_ι, Cocone.whisker_ι_app, NatTrans.comp_app,
+        NatIso.ofComponents_inv_app, Iso.refl_inv, Prod.sectL_obj, Prod.sectL_map, eq_mp_eq_cast,
         eq_mpr_eq_cast, coconeOfCoconeUncurry_pt, coconeOfCoconeUncurry_ι_app, S, E] at h2 ⊢
       simp [← h1, ← h2]
     uniq s f hf := P.uniq (s := S s) _ <|

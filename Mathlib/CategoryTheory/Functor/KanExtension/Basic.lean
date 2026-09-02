@@ -467,7 +467,10 @@ variable (L : C ⥤ D) (F : C ⥤ H) (F' : D ⥤ H) (G : C' ⥤ C)
 obtained by precomposition. -/
 @[simps!, implicit_reducible]
 def LeftExtension.precomp : LeftExtension L F ⥤ LeftExtension (G ⋙ L) (G ⋙ F) :=
-  StructuredArrow.map₂ (F := 𝟭 _) (G := (whiskeringLeft C' C H).obj G) (𝟙 _) (𝟙 _)
+  StructuredArrow.map₂ (F := 𝟭 _) (G := (whiskeringLeft C' C H).obj G) (𝟙 _)
+    -- Not `𝟙 _`: this identifies `G ⋙ L ⋙ F'` with `(G ⋙ L) ⋙ F'` and `𝟭 _ ⋙ _` with `_`,
+    -- which is only definitional after unfolding `Functor.comp`.
+    ((whiskeringLeftObjCompIso G L).inv ≫ (Functor.leftUnitor _).inv)
 
 /-- The functor `RightExtension L F ⥤ RightExtension (G ⋙ L) (G ⋙ F)`
 obtained by precomposition. -/
