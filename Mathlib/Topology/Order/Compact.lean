@@ -33,6 +33,32 @@ open Filter OrderDual TopologicalSpace Function Set
 
 open scoped Filter Topology
 
+section DualBridge
+
+/-- The image of `s` under `toDual`, spelled as a preimage so that it stays a `Set αᵒᵈ`. -/
+private lemma Set.Nonempty.preimage_ofDual {α : Type*} {s : Set α} (hs : s.Nonempty) :
+    (⇑ofDual ⁻¹' s).Nonempty :=
+  ⟨toDual hs.some, hs.some_mem⟩
+
+private lemma IsCompact.preimage_ofDual {α : Type*} [TopologicalSpace α] {s : Set α}
+    (hs : IsCompact s) : IsCompact (⇑ofDual ⁻¹' s) := by
+  have h := hs.image (continuous_toDual (X := α))
+  rwa [Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq] at h
+
+private lemma isLeast_preimage_ofDual {α : Type*} [Preorder α] {s : Set α} {a : αᵒᵈ} :
+    IsLeast (⇑ofDual ⁻¹' s) a ↔ IsGreatest s (ofDual a) :=
+  ⟨fun h ↦ ⟨h.1, fun b hb ↦ h.2 (show toDual b ∈ ⇑ofDual ⁻¹' s from hb)⟩, fun h ↦ h.dual⟩
+
+private lemma image_toDual_comp {α β : Type*} {f : α → β} {s : Set α} :
+    (⇑toDual ∘ f) '' s = ⇑ofDual ⁻¹' (f '' s) := by
+  rw [Set.image_comp, Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq]
+
+private lemma sSup_image_toDual {α β : Type*} [InfSet β] {f : α → β} {s : Set α} :
+    sSup ((⇑toDual ∘ f) '' s) = toDual (sInf (f '' s)) := by
+  rw [image_toDual_comp, toDual_sInf]
+
+end DualBridge
+
 /-!
 ### Compactness of a closed interval
 
@@ -68,10 +94,11 @@ lemma CompactIccSpace.mk'' [TopologicalSpace α] [PartialOrder α]
   .mk' fun hab => hab.eq_or_lt.elim (by rintro rfl; simp) h
 
 instance [TopologicalSpace α] [Preorder α] [CompactIccSpace α] : CompactIccSpace (αᵒᵈ) where
-  isCompact_Icc := by
-    intro a b
-    convert! isCompact_Icc (α := α) (a := b) (b := a) using 1
-    exact Icc_toDual (α := α)
+  isCompact_Icc {a b} := by
+    have h : Icc a b = ⇑ofDual ⁻¹' Icc (ofDual b) (ofDual a) :=
+      Icc_toDual (a := ofDual a) (b := ofDual b)
+    rw [h]
+    exact (isCompact_Icc (α := α)).preimage_ofDual
 
 /-- A closed interval in a conditionally complete linear order is compact. -/
 instance (priority := 100) ConditionallyCompleteLinearOrder.toCompactIccSpace (α : Type*)
@@ -156,8 +183,9 @@ theorem IsCompact.exists_isLeast [ClosedIicTopology α] {s : Set α} (hs : IsCom
   exact disjoint_left.mp hx x.2 le_rfl
 
 theorem IsCompact.exists_isGreatest [ClosedIciTopology α] {s : Set α} (hs : IsCompact s)
-    (ne_s : s.Nonempty) : ∃ x, IsGreatest s x :=
-  IsCompact.exists_isLeast (α := αᵒᵈ) hs ne_s
+    (ne_s : s.Nonempty) : ∃ x, IsGreatest s x := by
+  obtain ⟨x, hx⟩ := IsCompact.exists_isLeast (α := αᵒᵈ) hs.preimage_ofDual ne_s.preimage_ofDual
+  exact ⟨ofDual x, isLeast_preimage_ofDual.1 hx⟩
 
 theorem IsCompact.exists_isGLB [ClosedIicTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : ∃ x ∈ s, IsGLB s x :=
@@ -165,7 +193,7 @@ theorem IsCompact.exists_isGLB [ClosedIicTopology α] {s : Set α} (hs : IsCompa
 
 theorem IsCompact.exists_isLUB [ClosedIciTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : ∃ x ∈ s, IsLUB s x :=
-  IsCompact.exists_isGLB (α := αᵒᵈ) hs ne_s
+  (hs.exists_isGreatest ne_s).imp (fun x (hx : IsGreatest s x) => ⟨hx.1, hx.isLUB⟩)
 
 theorem cocompact_le_atBot_atTop [CompactIccSpace α] :
     cocompact α ≤ atBot ⊔ atTop := by
@@ -185,8 +213,12 @@ theorem cocompact_le_atBot [OrderTop α] [CompactIccSpace α] :
     exact (not_and_or.mp hx).casesOn (fun h ↦ ht _ (le_of_not_ge h)) (fun h ↦ (h le_top).elim)
 
 theorem cocompact_le_atTop [OrderBot α] [CompactIccSpace α] :
-    cocompact α ≤ atTop :=
-  cocompact_le_atBot (α := αᵒᵈ)
+    cocompact α ≤ atTop := by
+  refine fun _ hs ↦ mem_cocompact.mpr <| (isEmpty_or_nonempty α).casesOn ?_ ?_ <;> intro
+  · exact ⟨∅, isCompact_empty, fun x _ ↦ (IsEmpty.false x).elim⟩
+  · obtain ⟨t, ht⟩ := mem_atTop_sets.mp hs
+    refine ⟨Icc ⊥ t, isCompact_Icc, fun _ hx ↦ ?_⟩
+    exact (not_and_or.mp hx).casesOn (fun h ↦ (h bot_le).elim) (fun h ↦ ht _ (le_of_not_ge h))
 
 theorem atBot_le_cocompact [NoMinOrder α] [ClosedIicTopology α] :
     atBot ≤ cocompact α := by
@@ -202,8 +234,17 @@ theorem atBot_le_cocompact [NoMinOrder α] [ClosedIicTopology α] :
       fun hc ↦ LT.lt.false <| hb'.trans_lt <| hb.trans_le <| ha.2 (not_notMem.mp hc)⟩
 
 theorem atTop_le_cocompact [NoMaxOrder α] [ClosedIciTopology α] :
-    atTop ≤ cocompact α :=
-  atBot_le_cocompact (α := αᵒᵈ)
+    atTop ≤ cocompact α := by
+  refine fun s hs ↦ ?_
+  obtain ⟨t, ht, hts⟩ := mem_cocompact.mp hs
+  refine (Set.eq_empty_or_nonempty t).casesOn (fun h_empty ↦ ?_) (fun h_nonempty ↦ ?_)
+  · rewrite [compl_univ_iff.mpr h_empty, univ_subset_iff] at hts
+    convert! univ_mem
+  · have := h_nonempty.nonempty
+    obtain ⟨a, ha⟩ := ht.exists_isGreatest h_nonempty
+    obtain ⟨b, hb⟩ := exists_gt a
+    exact Filter.mem_atTop_sets.mpr ⟨b, fun b' hb' ↦ hts <| Classical.byContradiction
+      fun hc ↦ LT.lt.false <| (ha.2 (not_notMem.mp hc)).trans_lt <| hb.trans_le hb'⟩
 
 theorem atBot_atTop_le_cocompact [NoMinOrder α] [NoMaxOrder α]
     [OrderClosedTopology α] : atBot ⊔ atTop ≤ cocompact α :=
@@ -245,7 +286,8 @@ theorem IsCompact.exists_forall_le' [ClosedIicTopology α] [NoMaxOrder α] {f : 
 /-- The **extreme value theorem**: a continuous function realizes its maximum on a compact set. -/
 theorem IsCompact.exists_isMaxOn [ClosedIciTopology α] {s : Set β} (hs : IsCompact s)
     (ne_s : s.Nonempty) {f : β → α} (hf : ContinuousOn f s) : ∃ x ∈ s, IsMaxOn f s x :=
-  IsCompact.exists_isMinOn (α := αᵒᵈ) hs ne_s hf
+  (IsCompact.exists_isMinOn (α := αᵒᵈ) hs ne_s
+    (continuous_toDual.comp_continuousOn hf)).imp fun _ hx ↦ ⟨hx.1, hx.2.undual⟩
 
 /-- The **extreme value theorem**: if a function `f` is continuous on a closed set `s` and it is
 larger than a value in its image away from compact sets, then it has a minimum on this set. -/
@@ -265,7 +307,8 @@ smaller than a value in its image away from compact sets, then it has a maximum 
 theorem ContinuousOn.exists_isMaxOn' [ClosedIciTopology α] {s : Set β} {f : β → α}
     (hf : ContinuousOn f s) (hsc : IsClosed s) {x₀ : β} (h₀ : x₀ ∈ s)
     (hc : ∀ᶠ x in cocompact β ⊓ 𝓟 s, f x ≤ f x₀) : ∃ x ∈ s, IsMaxOn f s x :=
-  ContinuousOn.exists_isMinOn' (α := αᵒᵈ) hf hsc h₀ hc
+  (ContinuousOn.exists_isMinOn' (α := αᵒᵈ) (continuous_toDual.comp_continuousOn hf) hsc h₀
+    hc).imp fun _ hx ↦ ⟨hx.1, hx.2.undual⟩
 
 /-- The **extreme value theorem**: if a continuous function `f` is larger than a value in its range
 away from compact sets, then it has a global minimum. -/
@@ -279,7 +322,7 @@ theorem Continuous.exists_forall_le' [ClosedIicTopology α] {f : β → α} (hf 
 away from compact sets, then it has a global maximum. -/
 theorem Continuous.exists_forall_ge' [ClosedIciTopology α] {f : β → α} (hf : Continuous f)
     (x₀ : β) (h : ∀ᶠ x in cocompact β, f x ≤ f x₀) : ∃ x : β, ∀ y : β, f y ≤ f x :=
-  Continuous.exists_forall_le' (α := αᵒᵈ) hf x₀ h
+  Continuous.exists_forall_le' (α := αᵒᵈ) (continuous_toDual.comp hf) x₀ h
 
 /-- The **extreme value theorem**: if a continuous function `f` tends to infinity away from compact
 sets, then it has a global minimum. -/
@@ -291,8 +334,9 @@ theorem Continuous.exists_forall_le [ClosedIicTopology α] [Nonempty β] {f : β
 /-- The **extreme value theorem**: if a continuous function `f` tends to negative infinity away from
 compact sets, then it has a global maximum. -/
 theorem Continuous.exists_forall_ge [ClosedIciTopology α] [Nonempty β] {f : β → α}
-    (hf : Continuous f) (hlim : Tendsto f (cocompact β) atBot) : ∃ x, ∀ y, f y ≤ f x :=
-  Continuous.exists_forall_le (α := αᵒᵈ) hf hlim
+    (hf : Continuous f) (hlim : Tendsto f (cocompact β) atBot) : ∃ x, ∀ y, f y ≤ f x := by
+  inhabit β
+  exact hf.exists_forall_ge' default (hlim.eventually <| eventually_le_atBot _)
 
 /-- A continuous function with compact support has a global minimum. -/
 @[to_additive /-- A continuous function with compact support has a global minimum. -/]
@@ -307,8 +351,10 @@ theorem Continuous.exists_forall_le_of_hasCompactMulSupport [ClosedIicTopology �
 @[to_additive /-- A continuous function with compact support has a global maximum. -/]
 theorem Continuous.exists_forall_ge_of_hasCompactMulSupport [ClosedIciTopology α] [Nonempty β]
     [One α] {f : β → α} (hf : Continuous f) (h : HasCompactMulSupport f) :
-    ∃ x : β, ∀ y : β, f y ≤ f x :=
-  Continuous.exists_forall_le_of_hasCompactMulSupport (α := αᵒᵈ) hf h
+    ∃ x : β, ∀ y : β, f y ≤ f x := by
+  obtain ⟨_, ⟨x, rfl⟩, hx⟩ := (h.isCompact_range hf).exists_isGreatest (range_nonempty _)
+  rw [mem_upperBounds, forall_mem_range] at hx
+  exact ⟨x, hx⟩
 
 /-- A compact set is bounded below -/
 theorem IsCompact.bddBelow [ClosedIicTopology α] [Nonempty α] {s : Set α} (hs : IsCompact s) :
@@ -320,8 +366,11 @@ theorem IsCompact.bddBelow [ClosedIicTopology α] [Nonempty α] {s : Set α} (hs
 
 /-- A compact set is bounded above -/
 theorem IsCompact.bddAbove [ClosedIciTopology α] [Nonempty α] {s : Set α} (hs : IsCompact s) :
-    BddAbove s :=
-  IsCompact.bddBelow (α := αᵒᵈ) hs
+    BddAbove s := by
+  rcases s.eq_empty_or_nonempty with rfl | hne
+  · exact bddAbove_empty
+  · obtain ⟨a, -, has⟩ := hs.exists_isGreatest hne
+    exact ⟨a, has⟩
 
 /-- A continuous function is bounded below on a compact set. -/
 theorem IsCompact.bddBelow_image [ClosedIicTopology α] [Nonempty α] {f : β → α} {K : Set β}
@@ -331,7 +380,7 @@ theorem IsCompact.bddBelow_image [ClosedIicTopology α] [Nonempty α] {f : β �
 /-- A continuous function is bounded above on a compact set. -/
 theorem IsCompact.bddAbove_image [ClosedIciTopology α] [Nonempty α] {f : β → α} {K : Set β}
     (hK : IsCompact K) (hf : ContinuousOn f K) : BddAbove (f '' K) :=
-  IsCompact.bddBelow_image (α := αᵒᵈ) hK hf
+  (hK.image_of_continuousOn hf).bddAbove
 
 /-- A continuous function with compact support is bounded below. -/
 @[to_additive /-- A continuous function with compact support is bounded below. -/]
@@ -343,7 +392,7 @@ theorem Continuous.bddBelow_range_of_hasCompactMulSupport [ClosedIicTopology α]
 @[to_additive /-- A continuous function with compact support is bounded above. -/]
 theorem Continuous.bddAbove_range_of_hasCompactMulSupport [ClosedIciTopology α] [One α]
     {f : β → α} (hf : Continuous f) (h : HasCompactMulSupport f) : BddAbove (range f) :=
-  Continuous.bddBelow_range_of_hasCompactMulSupport (α := αᵒᵈ) hf h
+  (h.isCompact_range hf).bddAbove
 
 end LinearOrder
 
@@ -363,8 +412,10 @@ theorem IsCompact.sSup_lt_iff_of_continuous [ClosedIciTopology α] {f : β → �
 
 theorem IsCompact.lt_sInf_iff_of_continuous [ClosedIicTopology α] {f : β → α} {K : Set β}
     (hK : IsCompact K) (h0K : K.Nonempty) (hf : ContinuousOn f K) (y : α) :
-    y < sInf (f '' K) ↔ ∀ x ∈ K, y < f x :=
-  IsCompact.sSup_lt_iff_of_continuous (α := αᵒᵈ) hK h0K hf y
+    y < sInf (f '' K) ↔ ∀ x ∈ K, y < f x := by
+  have h := IsCompact.sSup_lt_iff_of_continuous (α := αᵒᵈ) (f := ⇑toDual ∘ f) hK h0K
+    (continuous_toDual.comp_continuousOn hf) (toDual y)
+  rwa [sSup_image_toDual] at h
 
 end ConditionallyCompleteLinearOrder
 
@@ -384,7 +435,7 @@ theorem IsCompact.sInf_mem [ClosedIicTopology α] {s : Set α} (hs : IsCompact s
 
 theorem IsCompact.sSup_mem [ClosedIciTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : sSup s ∈ s :=
-  IsCompact.sInf_mem (α := αᵒᵈ) hs ne_s
+  IsCompact.sInf_mem (α := αᵒᵈ) hs.preimage_ofDual ne_s.preimage_ofDual
 
 theorem IsCompact.isGLB_sInf [ClosedIicTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : IsGLB s (sInf s) :=
@@ -392,7 +443,8 @@ theorem IsCompact.isGLB_sInf [ClosedIicTopology α] {s : Set α} (hs : IsCompact
 
 theorem IsCompact.isLUB_sSup [ClosedIciTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : IsLUB s (sSup s) :=
-  IsCompact.isGLB_sInf (α := αᵒᵈ) hs ne_s
+  isGLB_preimage_ofDual.1
+    (IsCompact.isGLB_sInf (α := αᵒᵈ) hs.preimage_ofDual ne_s.preimage_ofDual)
 
 theorem IsCompact.isLeast_sInf [ClosedIicTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : IsLeast s (sInf s) :=
@@ -400,7 +452,7 @@ theorem IsCompact.isLeast_sInf [ClosedIicTopology α] {s : Set α} (hs : IsCompa
 
 theorem IsCompact.isGreatest_sSup [ClosedIciTopology α] {s : Set α} (hs : IsCompact s)
     (ne_s : s.Nonempty) : IsGreatest s (sSup s) :=
-  IsCompact.isLeast_sInf (α := αᵒᵈ) hs ne_s
+  ⟨hs.sSup_mem ne_s, (hs.isLUB_sSup ne_s).1⟩
 
 theorem IsCompact.exists_sInf_image_eq_and_le [ClosedIicTopology α] {s : Set β}
     (hs : IsCompact s) (ne_s : s.Nonempty) {f : β → α} (hf : ContinuousOn f s) :
@@ -412,7 +464,9 @@ theorem IsCompact.exists_sInf_image_eq_and_le [ClosedIicTopology α] {s : Set β
 theorem IsCompact.exists_sSup_image_eq_and_ge [ClosedIciTopology α] {s : Set β}
     (hs : IsCompact s) (ne_s : s.Nonempty) {f : β → α} (hf : ContinuousOn f s) :
     ∃ x ∈ s, sSup (f '' s) = f x ∧ ∀ y ∈ s, f y ≤ f x :=
-  IsCompact.exists_sInf_image_eq_and_le (α := αᵒᵈ) hs ne_s hf
+  let ⟨x, hxs, hx⟩ := (hs.image_of_continuousOn hf).sSup_mem (ne_s.image f)
+  ⟨x, hxs, hx.symm, fun _y hy =>
+    hx.ge.trans' <| le_csSup (hs.image_of_continuousOn hf).bddAbove <| mem_image_of_mem f hy⟩
 
 theorem IsCompact.exists_sInf_image_eq [ClosedIicTopology α] {s : Set β} (hs : IsCompact s)
     (ne_s : s.Nonempty) {f : β → α} (hf : ContinuousOn f s) : ∃ x ∈ s, sInf (f '' s) = f x :=
@@ -421,7 +475,9 @@ theorem IsCompact.exists_sInf_image_eq [ClosedIicTopology α] {s : Set β} (hs :
 
 theorem IsCompact.exists_sSup_image_eq [ClosedIciTopology α] {s : Set β} (hs : IsCompact s)
     (ne_s : s.Nonempty) : ∀ {f : β → α}, ContinuousOn f s → ∃ x ∈ s, sSup (f '' s) = f x :=
-  IsCompact.exists_sInf_image_eq (α := αᵒᵈ) hs ne_s
+  fun hf ↦
+    let ⟨x, hxs, hx, _⟩ := hs.exists_sSup_image_eq_and_ge ne_s hf
+    ⟨x, hxs, hx⟩
 
 end InfSup
 
@@ -502,8 +558,11 @@ theorem IsCompact.continuous_sSup {f : γ → β → α} {K : Set β} (hK : IsCo
     exact fun y' hy' => huv (mk_mem_prod hx' (hKv hy'))
 
 theorem IsCompact.continuous_sInf {f : γ → β → α} {K : Set β} (hK : IsCompact K)
-    (hf : Continuous ↿f) : Continuous fun x => sInf (f x '' K) :=
-  IsCompact.continuous_sSup (α := αᵒᵈ) hK hf
+    (hf : Continuous ↿f) : Continuous fun x => sInf (f x '' K) := by
+  have h := IsCompact.continuous_sSup (α := αᵒᵈ) (f := fun x ↦ ⇑toDual ∘ f x) hK
+    (continuous_toDual.comp hf)
+  simp only [sSup_image_toDual] at h
+  exact continuous_ofDual.comp h
 
 namespace ContinuousOn
 
