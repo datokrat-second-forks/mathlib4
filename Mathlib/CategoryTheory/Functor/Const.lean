@@ -21,7 +21,7 @@ We have `(const J).obj X ⋙ F ≅ (const J).obj (F.obj X)` for any `F : C ⥤ D
 @[expose] public section
 
 -- declare the `v`'s first; see `CategoryTheory.Category` for an explanation
-universe v₁ v₂ v₃ u₁ u₂ u₃
+universe v₁ v₂ v₃ v₄ u₁ u₂ u₃ u₄
 
 open CategoryTheory
 
@@ -94,6 +94,19 @@ set_option backward.defeqAttrib.useBackward true in
 def constComp (X : C) (F : C ⥤ D) : (const J).obj X ⋙ F ≅ (const J).obj (F.obj X) where
   hom := { app := fun _ => 𝟙 _ }
   inv := { app := fun _ => 𝟙 _ }
+
+section
+
+variable {J} {K : Type u₄} [Category.{v₄} K]
+
+/-- Precomposing a constant functor with any functor gives a constant functor again:
+the canonical isomorphism `E ⋙ (const J).obj X ≅ (const K).obj X`. -/
+@[simps]
+def compConst (E : K ⥤ J) (X : C) : E ⋙ (const J).obj X ≅ (const K).obj X where
+  hom := { app := fun _ => 𝟙 _ }
+  inv := { app := fun _ => 𝟙 _ }
+
+end
 
 /-- If `J` is nonempty, then the constant functor over `J` is faithful. -/
 instance [Nonempty J] : Faithful (const J : C ⥤ J ⥤ C) where

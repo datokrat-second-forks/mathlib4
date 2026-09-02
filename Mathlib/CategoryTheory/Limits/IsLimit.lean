@@ -456,8 +456,15 @@ def conePointsIsoOfEquivalence {F : J ⥤ C} {s : Cone F} {G : K ⥤ C} {t : Con
     hom_inv_id := by
       apply hom_ext P; intro j
       dsimp [w']
+      -- The `pt` lemmas are needed so that the identity from `compConst_inv_app` cancels:
+      -- There's a metavariable race while applying `id_comp`, related to the explicit object
+      -- argument of `𝟙`.
+      -- It's also related to the objects of the functor category themselves being functors.
+      -- Usually we want everything about objects to be highly reducible, but only few things
+      -- about functors.
       simp only [Limits.Cone.whisker_π, Limits.Cone.postcompose_obj_π, fac, whiskerLeft_app,
-        assoc, id_comp, invFunIdAssoc_hom_app, fac_assoc, NatTrans.comp_app]
+        assoc, id_comp, invFunIdAssoc_hom_app, fac_assoc, NatTrans.comp_app,
+        Functor.compConst_inv_app, Limits.Cone.postcompose_obj_pt, Limits.Cone.whisker_pt]
       rw [counit_app_functor, ← Functor.comp_map, ← w.inv.naturality_assoc]
       simp
     inv_hom_id := by
