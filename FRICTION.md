@@ -1960,3 +1960,95 @@ and this type-checks *only* because `limsup (⇑toDual ∘ u) F = toDual (liminf
 definitional (see the rfl-bridge list). One `congrArg ofDual` is the whole cost of a codomain-dual
 `OrderIso`: worth remembering as the first thing to try whenever an `≃o` into a dual is applied and
 the result is one dualisation away from the goal.
+
+## 67. `WithTop`'s order is *defined* through the dual, so `preimage_mono` picks a different `?f`
+
+`Metric.thickening δ E` is `{x | infEDist x E < ENNReal.ofReal δ}` and the monotonicity lemma was
+
+```lean
+theorem thickening_mono (hle : δ₁ ≤ δ₂) (E : Set α) : thickening δ₁ E ⊆ thickening δ₂ E :=
+  preimage_mono (Iio_subset_Iio (ENNReal.ofReal_le_ofReal hle))
+```
+
+which now fails with an expected type nobody wrote:
+
+```
+but is expected to have type
+  WithBot.LT (WithTop.map OrderDual.toDual' (ENNReal.ofReal δ₁)) ⊆ …
+```
+
+The cause is not in `Metric` at all. `WithTop.instLT` is *defined* by dualising:
+
+```lean
+instance (priority := 10) WithTop.instLT : LT (WithTop α) where
+  lt a b := WithBot.LT (α := αᵒᵈ) (b.map OrderDual.toDual') (a.map OrderDual.toDual')
+```
+
+so `infEDist x E < ofReal δ₁` whnf's to `WithBot.LT (map toDual' (ofReal δ₁)) (map toDual' (infEDist x E))`.
+`preimage_mono` has to solve `?f ⁻¹' ?s =?= {x | …}` — higher-order — and while `WithTop.map toDual'`
+was the identity the unifier chose `?f := (infEDist · E)`; now it absorbs the `map` into `?f` and
+`?s` comes out as a partially applied `WithBot.LT`, which no `Iio` lemma matches. This is the
+`OrderDual`-as-structure change surfacing *through a third type*: nothing in `Thickening.lean`
+mentions a dual.
+
+The repair is to stop asking for the preimage decomposition at all — the pointwise proof is shorter
+and first-order:
+
+```lean
+    thickening δ₁ E ⊆ thickening δ₂ E := fun _ hx ↦ hx.trans_le (ENNReal.ofReal_le_ofReal hle)
+    cthickening δ₁ E ⊆ cthickening δ₂ E := fun _ hx ↦ hx.trans (ENNReal.ofReal_le_ofReal hle)
+```
+
+Worth generalising: wherever a proof used `preimage_mono`/`image_subset` on a set given in
+set-builder form, the unifier was doing a higher-order guess that happened to be right. Any change
+to the *instance* used inside the predicate can flip that guess.
+
+## 68. Reindexing `⋃`/`⨆` along `ofDual`, and why `simp` fires for one and not the other
+
+`MeasureTheory/Measure/Continuity.lean` derives every `Antitone` continuity statement from the
+`Monotone` one by `hs.dual_left.measure_iUnion`, which now returns a statement indexed by `ιᵒᵈ`:
+
+```
+μ (⋃ i : ιᵒᵈ, (s ∘ ofDual) i) = ⨆ i : ιᵒᵈ, μ ((s ∘ ofDual) i)
+```
+
+Reindexing is `Function.Surjective.iSup_comp` (and `iInf_comp`) applied to `OrderDual.ofDual`:
+
+```lean
+private lemma iSup_ofDual {M : Type*} [CompleteLattice M] (g : ι → M) :
+    ⨆ i : ιᵒᵈ, g (OrderDual.ofDual i) = ⨆ i, g i :=
+  OrderDual.ofDual.surjective.iSup_comp g
+```
+
+with `⋃`/`⋂` versions proved by `ext` + `Surjective.exists`/`.forall` (note: these need the
+predicate pinned — `(p := fun i ↦ x ∈ t i)` — or the metavariable is never solved).
+
+The instructive part is the asymmetry in `simp only [iUnion_ofDual, iSup_ofDual]`: the first fires,
+the second silently does not. Both lemmas have LHS `F fun i ↦ ?g (ofDual i)`, which is not a Miller
+pattern, so simp falls back to first-order matching:
+
+* `?t (ofDual i) =?= s (ofDual i)` — first-order: heads line up, `?t := s`. **Fires.**
+* `?g (ofDual i) =?= μ (s (ofDual i))` — the head is `μ` and the argument is `s (ofDual i)`, not
+  `ofDual i`. No first-order solution. **Silently skipped.**
+
+So the value-level reindexing has to be a `rw` with the function given explicitly,
+`rwa [iSup_ofDual fun i ↦ μ (s i)] at h`, while the set-level one can stay in the simp set. A
+`simpa … using` that leaves a goal "identical except for the index type" is this, every time.
+
+## 69. Mirror when the dualised type sits in a *dependent* position
+
+Two sites in wave 35 were mirrored rather than transported, on a sharper criterion than §48's:
+
+* `aeSeq.iInf` was `iSup (β := βᵒᵈ) hf hp`. But `aeSeq hf p` takes the *proof*
+  `hf : ∀ i, AEMeasurable (f i) μ` as an argument, so dualising `β` changes the type of `hf`, and
+  the term `aeSeq hf p` in the goal is not the term the dual lemma produces. Mirroring is three
+  lines (`filter_upwards …; simp [iInf_apply, hx]`).
+* `tendsto_measure_iUnion_atBot` / `tendsto_measure_iInter_atBot` were
+  `tendsto_measure_iUnion_atTop (ι := ιᵒᵈ) hm.dual_left`. Transporting needs the `atTop (ιᵒᵈ)`
+  bridge of §61 *and* the index reindexing of §68 — two missing dictionary entries stacked. Their
+  `Monotone` siblings are four lines whose every ingredient (`atBot_neBot_iff`,
+  `tendsto_atBot_iSup`, `tendsto_atBot_iInf`) already exists by `@[to_dual]`. Mirrored.
+
+Rule of thumb after three waves of this: transport when the dualised type appears only as the
+*codomain of an unbundled function*; mirror when it appears inside a bundled structure (§65), in a
+dependent argument, or behind a filter whose dual bridge does not exist (§61).
