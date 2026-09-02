@@ -1719,3 +1719,44 @@ natural public companions of the existing `nhds_toDual`, and each new topology-o
 frontier needs them again. Whether to promote them (in `Topology/Constructions.lean`, beside
 `nhds_toDual`) is a design decision for the campaign owner; until it is taken, they stay private and
 duplicated, which is the honest way to leave the question open.
+
+## 60. A statement that can no longer be *stated*
+
+`AlgebraicGeometry/AffineSpace.lean` documents, with an `example`, that `Spec R` and
+`(PrimeSpectrum R)ᵒᵈ` carry the same order but not the same instance:
+
+```lean
+example (R : CommRingCat) :
+    inferInstance (α := Preorder (Spec R)) = inferInstance (α := Preorder (PrimeSpectrum R)ᵒᵈ) := by
+  aesop (add simp spec_le_iff)
+```
+
+The equality typechecked only because `Preorder (Spec R)` and `Preorder (PrimeSpectrum R)ᵒᵈ` were
+literally the same type — the synonym made `↥(Spec R)` and `(PrimeSpectrum R)ᵒᵈ` the same carrier.
+With the structure, the two `Preorder`s live on different types and `=` no longer applies; there is
+no coercion to insert, because it is the *statement* that has become ill-typed, not the proof.
+
+This is a different failure from every other in this document, and worth flagging as such: the file
+was recording an observation *about* the synonym. The repair states the same warning in a form that
+survives — the `Spec R` preorder is the one lifted along `toDual`:
+
+```lean
+example (R : CommRingCat) :
+    inferInstance (α := Preorder (Spec R)) =
+      Preorder.lift fun p : Spec R ↦ OrderDual.toDual (show PrimeSpectrum R from p) := by
+  refine Preorder.ext fun p q ↦ ?_
+  aesop (add simp spec_le_iff)
+```
+
+Note that the campaign *improves* this file: the thing the comment warns about ("these instances are
+not definitionally equal") is now enforced by the type system rather than by a comment.
+
+## 61. No `atTop`/`atBot` bridge exists, so filter duals get mirrored
+
+The order-filter API has no counterpart of `nhds_toDual` — nothing says
+`atTop (αᵒᵈ) = map toDual (atBot α)`. So every `cocompact_le_atBot (α := αᵒᵈ)`-style transport in
+`Topology/Order/Compact.lean` has to be mirrored instead (five lines each, all ingredients dual by
+`@[to_dual]`), while the `nhds`-based ones in `Topology/Order/LeftRightLim.lean` transport in two.
+The asymmetry is purely a question of which dictionary entries the library happens to have. Adding
+the two `atTop`/`atBot` transports would be a small, self-contained public addition — noted here
+rather than done, since new public API is out of this campaign's scope.
