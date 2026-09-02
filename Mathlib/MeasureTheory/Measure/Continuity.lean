@@ -30,6 +30,37 @@ namespace MeasureTheory
 
 variable {α ι : Type*} {m : MeasurableSpace α} {μ : Measure α} {s : ι → Set α}
 
+section DualBridge
+
+/-! Reindexing an `⋃`/`⋂`/`⨆`/`⨅` along `OrderDual.ofDual`.  These used to be `rfl`; now `ιᵒᵈ` is
+a genuinely different index type, so a dual transport has to move the index explicitly. -/
+
+private lemma iUnion_ofDual (t : ι → Set α) :
+    ⋃ i : ιᵒᵈ, t (OrderDual.ofDual i) = ⋃ i, t i := by
+  ext x
+  simp only [Set.mem_iUnion]
+  exact (OrderDual.ofDual.surjective.exists (p := fun i ↦ x ∈ t i)).symm
+
+private lemma iInter_ofDual (t : ι → Set α) :
+    ⋂ i : ιᵒᵈ, t (OrderDual.ofDual i) = ⋂ i, t i := by
+  ext x
+  simp only [Set.mem_iInter]
+  exact (OrderDual.ofDual.surjective.forall (p := fun i ↦ x ∈ t i)).symm
+
+private lemma iSup_ofDual {M : Type*} [CompleteLattice M] (g : ι → M) :
+    ⨆ i : ιᵒᵈ, g (OrderDual.ofDual i) = ⨆ i, g i :=
+  OrderDual.ofDual.surjective.iSup_comp g
+
+private lemma iInf_ofDual {M : Type*} [CompleteLattice M] (g : ι → M) :
+    ⨅ i : ιᵒᵈ, g (OrderDual.ofDual i) = ⨅ i, g i :=
+  OrderDual.ofDual.surjective.iInf_comp g
+
+private lemma exists_ofDual {p : ι → Prop} (h : ∃ i, p i) :
+    ∃ i : ιᵒᵈ, p (OrderDual.ofDual i) :=
+  h.imp' OrderDual.toDual fun _ hi ↦ hi
+
+end DualBridge
+
 /-- Continuity from below:
 the measure of the union of a directed sequence of (not necessarily measurable) sets
 is the supremum of the measures. -/
@@ -80,8 +111,10 @@ theorem _root_.Monotone.measure_iUnion [Preorder ι] [IsDirectedOrder ι]
 
 theorem _root_.Antitone.measure_iUnion [Preorder ι] [IsCodirectedOrder ι]
     [(atBot : Filter ι).IsCountablyGenerated] (hs : Antitone s) :
-    μ (⋃ i, s i) = ⨆ i, μ (s i) :=
-  hs.dual_left.measure_iUnion
+    μ (⋃ i, s i) = ⨆ i, μ (s i) := by
+  have h := hs.dual_left.measure_iUnion (μ := μ)
+  simp only [Function.comp_apply, iUnion_ofDual] at h
+  rwa [iSup_ofDual fun i ↦ μ (s i)] at h
 
 /-- Continuity from below: the measure of the union of a sequence of
 (not necessarily measurable) sets is the supremum of the measures of the partial unions. -/
@@ -167,8 +200,10 @@ is equal to the infimum of the measures. -/
 theorem _root_.Antitone.measure_iInter [Preorder ι] [IsDirectedOrder ι]
     [(atTop : Filter ι).IsCountablyGenerated] (hs : Antitone s)
     (hsm : ∀ i, NullMeasurableSet (s i) μ) (hfin : ∃ i, μ (s i) ≠ ∞) :
-    μ (⋂ i, s i) = ⨅ i, μ (s i) :=
-  hs.dual_left.measure_iInter hsm hfin
+    μ (⋂ i, s i) = ⨅ i, μ (s i) := by
+  have h := hs.dual_left.measure_iInter (fun i ↦ hsm (OrderDual.ofDual i)) (exists_ofDual hfin)
+  simp only [Function.comp_apply, iInter_ofDual] at h
+  rwa [iInf_ofDual fun i ↦ μ (s i)] at h
 
 /-- Continuity from above (a.e. version):
 the measure of the intersection of a family of sets that is almost everywhere antitone
@@ -177,8 +212,12 @@ lemma measure_iInter_of_ae_antitone [Preorder ι] [IsDirectedOrder ι]
     [(atTop : Filter ι).IsCountablyGenerated] (hs : ∀ᵐ ω ∂μ, Antitone (ω ∈ s ·))
     (hsm : ∀ (i : ι), NullMeasurableSet (s i) μ) (hfin : ∃ i, μ (s i) ≠ ∞) :
     μ (⋂ i, s i) = ⨅ i, μ (s i) := by
-  refine measure_iInter_of_ae_monotone (ι := ιᵒᵈ) ?_ hsm hfin
-  filter_upwards [hs] with ω hω using hω.dual_left
+  have h := measure_iInter_of_ae_monotone (ι := ιᵒᵈ) (μ := μ)
+    (s := fun i ↦ s (OrderDual.ofDual i))
+    (by filter_upwards [hs] with ω hω using fun _ _ hij ↦ hω hij)
+    (fun i ↦ hsm (OrderDual.ofDual i)) (exists_ofDual hfin)
+  rw [iInter_ofDual, iInf_ofDual fun i ↦ μ (s i)] at h
+  exact h
 
 /-- Continuity from above: the measure of the intersection of a sequence of
 measurable sets is the infimum of the measures of the partial intersections. -/
@@ -203,8 +242,11 @@ theorem tendsto_measure_iUnion_atTop [Preorder ι] [IsCountablyGenerated (atTop 
   exact tendsto_atTop_iSup fun n m hnm => measure_mono <| hm hnm
 
 theorem tendsto_measure_iUnion_atBot [Preorder ι] [IsCountablyGenerated (atBot : Filter ι)]
-    (hm : Antitone s) : Tendsto (μ ∘ s) atBot (𝓝 (μ (⋃ n, s n))) :=
-  tendsto_measure_iUnion_atTop (ι := ιᵒᵈ) hm.dual_left
+    (hm : Antitone s) : Tendsto (μ ∘ s) atBot (𝓝 (μ (⋃ n, s n))) := by
+  refine .of_neBot_imp fun h ↦ ?_
+  have := (atBot_neBot_iff.1 h).2
+  rw [hm.measure_iUnion]
+  exact tendsto_atBot_iSup fun n m hnm ↦ measure_mono <| hm hnm
 
 /-- Continuity from below: the measure of the union of a sequence of (not necessarily measurable)
 sets is the limit of the measures of the partial unions. -/
@@ -230,8 +272,11 @@ theorem tendsto_measure_iInter_atTop [Preorder ι]
 sets is the limit of the measures. -/
 theorem tendsto_measure_iInter_atBot [Preorder ι] [IsCountablyGenerated (atBot : Filter ι)]
     (hs : ∀ i, NullMeasurableSet (s i) μ) (hm : Monotone s)
-    (hf : ∃ i, μ (s i) ≠ ∞) : Tendsto (μ ∘ s) atBot (𝓝 (μ (⋂ n, s n))) :=
-  tendsto_measure_iInter_atTop (ι := ιᵒᵈ) hs hm.dual_left hf
+    (hf : ∃ i, μ (s i) ≠ ∞) : Tendsto (μ ∘ s) atBot (𝓝 (μ (⋂ n, s n))) := by
+  refine .of_neBot_imp fun h ↦ ?_
+  have := (atBot_neBot_iff.1 h).2
+  rw [hm.measure_iInter hs hf]
+  exact tendsto_atBot_iInf fun n m hnm ↦ measure_mono <| hm hnm
 
 /-- Continuity from above: the measure of the intersection of a sequence of measurable
 sets such that one has finite measure is the limit of the measures of the partial intersections. -/
