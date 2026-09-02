@@ -69,6 +69,67 @@ open Set Function Filter
 variable {α β γ : Type*} [TopologicalSpace α] [TopologicalSpace γ] {f : α → β} {s t : Set α}
   {x : α} {y z : β}
 
+section DualBridge
+
+open OrderDual
+
+variable {α β : Type*} [TopologicalSpace α] [Preorder β] {f : α → β} {s : Set α} {x : α}
+
+private lemma lowerSemicontinuousWithinAt_toDual_iff :
+    LowerSemicontinuousWithinAt (fun a ↦ toDual (f a)) s x ↔ UpperSemicontinuousWithinAt f s x :=
+  ⟨fun h y hy ↦ h (toDual y) hy, fun h y hy ↦ h (ofDual y) hy⟩
+
+private lemma upperSemicontinuousWithinAt_toDual_iff :
+    UpperSemicontinuousWithinAt (fun a ↦ toDual (f a)) s x ↔ LowerSemicontinuousWithinAt f s x :=
+  ⟨fun h y hy ↦ h (toDual y) hy, fun h y hy ↦ h (ofDual y) hy⟩
+
+private lemma lowerSemicontinuousAt_toDual_iff :
+    LowerSemicontinuousAt (fun a ↦ toDual (f a)) x ↔ UpperSemicontinuousAt f x :=
+  ⟨fun h y hy ↦ h (toDual y) hy, fun h y hy ↦ h (ofDual y) hy⟩
+
+private lemma upperSemicontinuousAt_toDual_iff :
+    UpperSemicontinuousAt (fun a ↦ toDual (f a)) x ↔ LowerSemicontinuousAt f x :=
+  ⟨fun h y hy ↦ h (toDual y) hy, fun h y hy ↦ h (ofDual y) hy⟩
+
+private lemma lowerSemicontinuousOn_toDual_iff :
+    LowerSemicontinuousOn (fun a ↦ toDual (f a)) s ↔ UpperSemicontinuousOn f s :=
+  forall₂_congr fun _ _ ↦ lowerSemicontinuousWithinAt_toDual_iff
+
+private lemma upperSemicontinuousOn_toDual_iff :
+    UpperSemicontinuousOn (fun a ↦ toDual (f a)) s ↔ LowerSemicontinuousOn f s :=
+  forall₂_congr fun _ _ ↦ upperSemicontinuousWithinAt_toDual_iff
+
+private lemma lowerSemicontinuous_toDual_iff :
+    LowerSemicontinuous (fun a ↦ toDual (f a)) ↔ UpperSemicontinuous f :=
+  forall_congr' fun _ ↦ lowerSemicontinuousAt_toDual_iff
+
+private lemma upperSemicontinuous_toDual_iff :
+    UpperSemicontinuous (fun a ↦ toDual (f a)) ↔ LowerSemicontinuous f :=
+  forall_congr' fun _ ↦ upperSemicontinuousAt_toDual_iff
+
+omit [TopologicalSpace α] in
+private lemma bddAbove_image_of_bddBelow_toDual {t : Set α}
+    (h : BddBelow ((fun a ↦ toDual (f a)) '' t)) : BddAbove (f '' t) := by
+  obtain ⟨c, hc⟩ := h
+  refine ⟨ofDual c, ?_⟩
+  rintro _ ⟨a, ha, rfl⟩
+  exact hc ⟨a, ha, rfl⟩
+
+private lemma bddAbove_range_toDual {ι : Sort*} {g : ι → β} (h : BddBelow (Set.range g)) :
+    BddAbove (Set.range fun i ↦ toDual (g i)) := by
+  obtain ⟨c, hc⟩ := h
+  refine ⟨toDual c, ?_⟩
+  rintro _ ⟨i, rfl⟩
+  exact hc ⟨i, rfl⟩
+
+/-- `toDual` as a homeomorphism, to transport closedness of (hypo/epi)graphs. -/
+private def toDualHomeomorph {X : Type*} [TopologicalSpace X] : X ≃ₜ Xᵒᵈ where
+  toEquiv := toDual
+  continuous_toFun := continuous_toDual
+  continuous_invFun := continuous_ofDual
+
+end DualBridge
+
 /-! ### lower bounds -/
 
 section
@@ -223,7 +284,9 @@ theorem upperSemicontinuousOn_of_forall_isMinOn_and_mem
     (m_mem : ∀ x ∈ s, m x ∈ I)
     (m_min : ∀ x ∈ s, IsMinOn (fun i ↦ f i x) I (m x)) :
     UpperSemicontinuousOn (fun x ↦ f (m x) x) s :=
-  lowerSemicontinuousOn_of_forall_isMaxOn_and_mem (β := βᵒᵈ) hfy m_mem m_min
+  lowerSemicontinuousOn_toDual_iff.1 (lowerSemicontinuousOn_of_forall_isMaxOn_and_mem (β := βᵒᵈ)
+    (fun i hi ↦ lowerSemicontinuousOn_toDual_iff.2 (hfy i hi)) m_mem
+    fun a ha ↦ (m_min a ha).dual)
 
 end
 
@@ -397,12 +460,16 @@ theorem Continuous.comp_lowerSemicontinuous {g : γ → δ} {f : α → γ} (hg 
 theorem ContinuousAt.comp_lowerSemicontinuousWithinAt_antitone {g : γ → δ} {f : α → γ}
     (hg : ContinuousAt g (f x)) (hf : LowerSemicontinuousWithinAt f s x) (gmon : Antitone g) :
     UpperSemicontinuousWithinAt (g ∘ f) s x :=
-  ContinuousAt.comp_lowerSemicontinuousWithinAt (δ := δᵒᵈ) hg hf gmon
+  lowerSemicontinuousWithinAt_toDual_iff.1
+    (ContinuousAt.comp_lowerSemicontinuousWithinAt (δ := δᵒᵈ) (g := ⇑OrderDual.toDual ∘ g)
+      (continuous_toDual.continuousAt.comp hg) hf gmon.dual_right)
 
 theorem ContinuousAt.comp_lowerSemicontinuousAt_antitone {g : γ → δ} {f : α → γ}
     (hg : ContinuousAt g (f x)) (hf : LowerSemicontinuousAt f x) (gmon : Antitone g) :
     UpperSemicontinuousAt (g ∘ f) x :=
-  ContinuousAt.comp_lowerSemicontinuousAt (δ := δᵒᵈ) hg hf gmon
+  lowerSemicontinuousAt_toDual_iff.1
+    (ContinuousAt.comp_lowerSemicontinuousAt (δ := δᵒᵈ) (g := ⇑OrderDual.toDual ∘ g)
+      (continuous_toDual.continuousAt.comp hg) hf gmon.dual_right)
 
 theorem Continuous.comp_lowerSemicontinuousOn_antitone {g : γ → δ} {f : α → γ} (hg : Continuous g)
     (hf : LowerSemicontinuousOn f s) (gmon : Antitone g) : UpperSemicontinuousOn (g ∘ f) s :=
@@ -740,12 +807,15 @@ variable {α : Type*} [TopologicalSpace α] {β : Type*} [LinearOrder β] {f : �
 theorem UpperSemicontinuousOn.exists_isMaxOn {s : Set α} (ne_s : s.Nonempty)
     (hs : IsCompact s) (hf : UpperSemicontinuousOn f s) :
     ∃ a ∈ s, IsMaxOn f s a :=
-  LowerSemicontinuousOn.exists_isMinOn (β := βᵒᵈ) ne_s hs hf
+  (LowerSemicontinuousOn.exists_isMinOn (β := βᵒᵈ) ne_s hs
+    (lowerSemicontinuousOn_toDual_iff.2 hf)).imp fun _ ha ↦ ⟨ha.1, ha.2.undual⟩
 
 /-- An upper semicontinuous function is bounded above on a compact set. -/
 theorem UpperSemicontinuousOn.bddAbove_of_isCompact [Nonempty β] {s : Set α}
     (hs : IsCompact s) (hf : UpperSemicontinuousOn f s) : BddAbove (f '' s) :=
-  LowerSemicontinuousOn.bddBelow_of_isCompact (β := βᵒᵈ) hs hf
+  bddAbove_image_of_bddBelow_toDual
+    (LowerSemicontinuousOn.bddBelow_of_isCompact (β := βᵒᵈ) hs
+      (lowerSemicontinuousOn_toDual_iff.2 hf))
 
 end
 
@@ -758,7 +828,11 @@ variable [Zero β] [Preorder β]
 
 theorem IsOpen.upperSemicontinuous_indicator (hs : IsOpen s) (hy : y ≤ 0) :
     UpperSemicontinuous (indicator s fun _x => y) :=
-  IsOpen.lowerSemicontinuous_indicator (β := βᵒᵈ) hs hy
+  lowerSemicontinuous_toDual_iff.1 (by
+    have h := IsOpen.lowerSemicontinuous_indicator (β := βᵒᵈ) (y := OrderDual.toDual y) hs hy
+    rwa [show (Set.indicator s fun _x : α ↦ OrderDual.toDual y) =
+      fun a ↦ OrderDual.toDual (Set.indicator s (fun _x ↦ y) a) from
+      Set.indicator_comp_of_zero (g := OrderDual.toDual) rfl] at h)
 
 theorem IsOpen.upperSemicontinuousOn_indicator (hs : IsOpen s) (hy : y ≤ 0) :
     UpperSemicontinuousOn (indicator s fun _x => y) t :=
@@ -774,7 +848,11 @@ theorem IsOpen.upperSemicontinuousWithinAt_indicator (hs : IsOpen s) (hy : y ≤
 
 theorem IsClosed.upperSemicontinuous_indicator (hs : IsClosed s) (hy : 0 ≤ y) :
     UpperSemicontinuous (indicator s fun _x => y) :=
-  IsClosed.lowerSemicontinuous_indicator (β := βᵒᵈ) hs hy
+  lowerSemicontinuous_toDual_iff.1 (by
+    have h := IsClosed.lowerSemicontinuous_indicator (β := βᵒᵈ) (y := OrderDual.toDual y) hs hy
+    rwa [show (Set.indicator s fun _x : α ↦ OrderDual.toDual y) =
+      fun a ↦ OrderDual.toDual (Set.indicator s (fun _x ↦ y) a) from
+      Set.indicator_comp_of_zero (g := OrderDual.toDual) rfl] at h)
 
 theorem IsClosed.upperSemicontinuousOn_indicator (hs : IsClosed s) (hy : 0 ≤ y) :
     UpperSemicontinuousOn (indicator s fun _x => y) t :=
@@ -843,25 +921,29 @@ variable {γ : Type*} [CompleteLinearOrder γ]
 
 theorem upperSemicontinuousWithinAt_iff_limsup_le {f : α → γ} :
     UpperSemicontinuousWithinAt f s x ↔ limsup f (𝓝[s] x) ≤ f x :=
-  lowerSemicontinuousWithinAt_iff_le_liminf (γ := γᵒᵈ)
+  lowerSemicontinuousWithinAt_toDual_iff.symm.trans
+    (lowerSemicontinuousWithinAt_iff_le_liminf (γ := γᵒᵈ) (f := fun a ↦ OrderDual.toDual (f a)))
 
 alias ⟨UpperSemicontinuousWithinAt.limsup_le, _⟩ := upperSemicontinuousWithinAt_iff_limsup_le
 
 theorem upperSemicontinuousAt_iff_limsup_le {f : α → γ} :
     UpperSemicontinuousAt f x ↔ limsup f (𝓝 x) ≤ f x :=
-  lowerSemicontinuousAt_iff_le_liminf (γ := γᵒᵈ)
+  lowerSemicontinuousAt_toDual_iff.symm.trans
+    (lowerSemicontinuousAt_iff_le_liminf (γ := γᵒᵈ) (f := fun a ↦ OrderDual.toDual (f a)))
 
 alias ⟨UpperSemicontinuousAt.limsup_le, _⟩ := upperSemicontinuousAt_iff_limsup_le
 
 theorem upperSemicontinuous_iff_limsup_le {f : α → γ} :
     UpperSemicontinuous f ↔ ∀ x, limsup f (𝓝 x) ≤ f x :=
-  lowerSemicontinuous_iff_le_liminf (γ := γᵒᵈ)
+  lowerSemicontinuous_toDual_iff.symm.trans
+    (lowerSemicontinuous_iff_le_liminf (γ := γᵒᵈ) (f := fun a ↦ OrderDual.toDual (f a)))
 
 alias ⟨UpperSemicontinuous.limsup_le, _⟩ := upperSemicontinuous_iff_limsup_le
 
 theorem upperSemicontinuousOn_iff_limsup_le {f : α → γ} :
     UpperSemicontinuousOn f s ↔ ∀ x ∈ s, limsup f (𝓝[s] x) ≤ f x :=
-  lowerSemicontinuousOn_iff_le_liminf (γ := γᵒᵈ)
+  lowerSemicontinuousOn_toDual_iff.symm.trans
+    (lowerSemicontinuousOn_iff_le_liminf (γ := γᵒᵈ) (f := fun a ↦ OrderDual.toDual (f a)))
 
 alias ⟨UpperSemicontinuousOn.limsup_le, _⟩ := upperSemicontinuousOn_iff_limsup_le
 
@@ -875,7 +957,8 @@ variable {γ : Type*} [LinearOrder γ]
 theorem UpperSemicontinuousOn.isCompact_inter_preimage_Ici {f : α → γ}
     (hfs : UpperSemicontinuousOn f s) (ks : IsCompact s) (c : γ) :
     IsCompact (s ∩ f ⁻¹' Ici c) :=
-  LowerSemicontinuousOn.isCompact_inter_preimage_Iic (γ := γᵒᵈ) hfs ks c
+  LowerSemicontinuousOn.isCompact_inter_preimage_Iic (γ := γᵒᵈ)
+    (lowerSemicontinuousOn_toDual_iff.2 hfs) ks (OrderDual.toDual c)
 
 open scoped Set.Notation in
 /-- An intersection of overlevel sets of an upper semicontinuous function on a compact set is
@@ -884,7 +967,8 @@ theorem UpperSemicontinuousOn.disjoint_biInter_preimage_Ici_iff_exists_finset
     {ι : Type*} {f : ι → α → γ}
     (ks : IsCompact s) {I : Set ι} {c : γ} (hfi : ∀ i ∈ I, UpperSemicontinuousOn (f i) s) :
     Disjoint s (⋂ i ∈ I, (f i) ⁻¹' Ici c) ↔ ∃ u : Finset I, ∀ x ∈ s, ∃ i ∈ u, f i x < c :=
-  LowerSemicontinuousOn.disjoint_biInter_preimage_Iic_iff_exists_finset ks hfi (γ := γᵒᵈ)
+  LowerSemicontinuousOn.disjoint_biInter_preimage_Iic_iff_exists_finset (γ := γᵒᵈ)
+    (c := OrderDual.toDual c) ks fun i hi ↦ lowerSemicontinuousOn_toDual_iff.2 (hfi i hi)
 
 @[deprecated (since := "2026-08-17")]
 alias UpperSemicontinuousOn.inter_biInter_preimage_Ici_eq_empty_iff_exists_finset :=
@@ -894,11 +978,19 @@ variable [TopologicalSpace γ] [ClosedIicTopology γ]
 
 theorem upperSemicontinuousOn_iff_isClosed_hypograph {f : α → γ} (hs : IsClosed s) :
     UpperSemicontinuousOn f s ↔ IsClosed {p : α × γ | p.1 ∈ s ∧ p.2 ≤ f p.1} :=
-  lowerSemicontinuousOn_iff_isClosed_epigraph hs (γ := γᵒᵈ)
+  lowerSemicontinuousOn_toDual_iff.symm.trans
+    ((lowerSemicontinuousOn_iff_isClosed_epigraph (γ := γᵒᵈ)
+        (f := fun a ↦ OrderDual.toDual (f a)) hs).trans
+      (((Homeomorph.refl α).prodCongr toDualHomeomorph).isClosed_preimage
+        (s := {p : α × γᵒᵈ | p.1 ∈ s ∧ OrderDual.toDual (f p.1) ≤ p.2})).symm)
 
 theorem upperSemicontinuous_iff_IsClosed_hypograph {f : α → γ} :
     UpperSemicontinuous f ↔ IsClosed {p : α × γ | p.2 ≤ f p.1} :=
-  lowerSemicontinuous_iff_isClosed_epigraph (γ := γᵒᵈ)
+  lowerSemicontinuous_toDual_iff.symm.trans
+    ((lowerSemicontinuous_iff_isClosed_epigraph (γ := γᵒᵈ)
+        (f := fun a ↦ OrderDual.toDual (f a))).trans
+      (((Homeomorph.refl α).prodCongr toDualHomeomorph).isClosed_preimage
+        (s := {p : α × γᵒᵈ | OrderDual.toDual (f p.1) ≤ p.2})).symm)
 
 alias ⟨UpperSemicontinuous.IsClosed_hypograph, _⟩ := upperSemicontinuous_iff_IsClosed_hypograph
 
@@ -914,12 +1006,14 @@ variable {γ : Type*} [TopologicalSpace γ]
 variable {f : α → β} {s : Set α} {a : α}
 
 theorem upperSemicontinuousOn_iff_preimage_Iio [Preorder β] :
-    UpperSemicontinuousOn f s ↔ ∀ b, ∃ u : Set α, IsOpen u ∧ s ∩ f ⁻¹' Set.Iio b = s ∩ u :=
-  lowerSemicontinuousOn_iff_preimage_Ioi (β := βᵒᵈ)
+    UpperSemicontinuousOn f s ↔ ∀ b, ∃ u : Set α, IsOpen u ∧ s ∩ f ⁻¹' Set.Iio b = s ∩ u := by
+  rw [← lowerSemicontinuousOn_toDual_iff, lowerSemicontinuousOn_iff_preimage_Ioi]
+  exact OrderDual.toDual.surjective.forall
 
 theorem upperSemicontinuousOn_iff_preimage_Ici [LinearOrder β] :
-    UpperSemicontinuousOn f s ↔ ∀ b, ∃ v : Set α, IsClosed v ∧ s ∩ f ⁻¹' Set.Ici b = s ∩ v :=
-  lowerSemicontinuousOn_iff_preimage_Iic (γ := βᵒᵈ)
+    UpperSemicontinuousOn f s ↔ ∀ b, ∃ v : Set α, IsClosed v ∧ s ∩ f ⁻¹' Set.Ici b = s ∩ v := by
+  rw [← lowerSemicontinuousOn_toDual_iff, lowerSemicontinuousOn_iff_preimage_Iic]
+  exact OrderDual.toDual.surjective.forall
 
 variable [PartialOrder β] [CommGroup β] [IsOrderedMonoid β]
 
@@ -998,11 +1092,21 @@ variable {δ : Type*} [LinearOrder δ] [TopologicalSpace δ] [OrderTopology δ]
 theorem ContinuousAt.comp_upperSemicontinuousWithinAt {g : γ → δ} {f : α → γ}
     (hg : ContinuousAt g (f x)) (hf : UpperSemicontinuousWithinAt f s x) (gmon : Monotone g) :
     UpperSemicontinuousWithinAt (g ∘ f) s x :=
-  ContinuousAt.comp_lowerSemicontinuousWithinAt (γ := γᵒᵈ) (δ := δᵒᵈ) hg hf gmon.dual
+  lowerSemicontinuousWithinAt_toDual_iff.1
+    (ContinuousAt.comp_lowerSemicontinuousWithinAt (γ := γᵒᵈ) (δ := δᵒᵈ)
+      (g := ⇑OrderDual.toDual ∘ g ∘ ⇑OrderDual.ofDual)
+      (continuous_toDual.continuousAt.comp (hg.comp (f := ⇑OrderDual.ofDual) (x := OrderDual.toDual (f x))
+        continuous_ofDual.continuousAt))
+      (lowerSemicontinuousWithinAt_toDual_iff.2 hf) gmon.dual)
 
 theorem ContinuousAt.comp_upperSemicontinuousAt {g : γ → δ} {f : α → γ} (hg : ContinuousAt g (f x))
     (hf : UpperSemicontinuousAt f x) (gmon : Monotone g) : UpperSemicontinuousAt (g ∘ f) x :=
-  ContinuousAt.comp_lowerSemicontinuousAt (γ := γᵒᵈ) (δ := δᵒᵈ) hg hf gmon.dual
+  lowerSemicontinuousAt_toDual_iff.1
+    (ContinuousAt.comp_lowerSemicontinuousAt (γ := γᵒᵈ) (δ := δᵒᵈ)
+      (g := ⇑OrderDual.toDual ∘ g ∘ ⇑OrderDual.ofDual)
+      (continuous_toDual.continuousAt.comp (hg.comp (f := ⇑OrderDual.ofDual) (x := OrderDual.toDual (f x))
+        continuous_ofDual.continuousAt))
+      (lowerSemicontinuousAt_toDual_iff.2 hf) gmon.dual)
 
 theorem Continuous.comp_upperSemicontinuousOn {g : γ → δ} {f : α → γ} (hg : Continuous g)
     (hf : UpperSemicontinuousOn f s) (gmon : Monotone g) : UpperSemicontinuousOn (g ∘ f) s :=
@@ -1015,12 +1119,16 @@ theorem Continuous.comp_upperSemicontinuous {g : γ → δ} {f : α → γ} (hg 
 theorem ContinuousAt.comp_upperSemicontinuousWithinAt_antitone {g : γ → δ} {f : α → γ}
     (hg : ContinuousAt g (f x)) (hf : UpperSemicontinuousWithinAt f s x) (gmon : Antitone g) :
     LowerSemicontinuousWithinAt (g ∘ f) s x :=
-  ContinuousAt.comp_upperSemicontinuousWithinAt (δ := δᵒᵈ) hg hf gmon
+  upperSemicontinuousWithinAt_toDual_iff.1
+    (ContinuousAt.comp_upperSemicontinuousWithinAt (δ := δᵒᵈ) (g := ⇑OrderDual.toDual ∘ g)
+      (continuous_toDual.continuousAt.comp hg) hf gmon.dual_right)
 
 theorem ContinuousAt.comp_upperSemicontinuousAt_antitone {g : γ → δ} {f : α → γ}
     (hg : ContinuousAt g (f x)) (hf : UpperSemicontinuousAt f x) (gmon : Antitone g) :
     LowerSemicontinuousAt (g ∘ f) x :=
-  ContinuousAt.comp_upperSemicontinuousAt (δ := δᵒᵈ) hg hf gmon
+  upperSemicontinuousAt_toDual_iff.1
+    (ContinuousAt.comp_upperSemicontinuousAt (δ := δᵒᵈ) (g := ⇑OrderDual.toDual ∘ g)
+      (continuous_toDual.continuousAt.comp hg) hf gmon.dual_right)
 
 theorem Continuous.comp_upperSemicontinuousOn_antitone {g : γ → δ} {f : α → γ} (hg : Continuous g)
     (hf : UpperSemicontinuousOn f s) (gmon : Antitone g) : LowerSemicontinuousOn (g ∘ f) s :=
@@ -1049,7 +1157,15 @@ theorem UpperSemicontinuousWithinAt.add' {f g : α → γ} (hf : UpperSemicontin
     (hg : UpperSemicontinuousWithinAt g s x)
     (hcont : ContinuousAt (fun p : γ × γ => p.1 + p.2) (f x, g x)) :
     UpperSemicontinuousWithinAt (fun z => f z + g z) s x :=
-  LowerSemicontinuousWithinAt.add' (γ := γᵒᵈ) hf hg hcont
+  lowerSemicontinuousWithinAt_toDual_iff.1
+    (LowerSemicontinuousWithinAt.add' (γ := γᵒᵈ) (lowerSemicontinuousWithinAt_toDual_iff.2 hf)
+      (lowerSemicontinuousWithinAt_toDual_iff.2 hg)
+      (show ContinuousAt (fun p : γᵒᵈ × γᵒᵈ => p.1 + p.2)
+          (OrderDual.toDual (f x), OrderDual.toDual (g x)) from
+        continuous_toDual.continuousAt.comp
+          (hcont.comp (f := Prod.map ⇑OrderDual.ofDual ⇑OrderDual.ofDual)
+            (x := (OrderDual.toDual (f x), OrderDual.toDual (g x)))
+            (continuous_ofDual.prodMap continuous_ofDual).continuousAt)))
 
 /-- The sum of two upper semicontinuous functions is upper semicontinuous. Formulated with an
 explicit continuity assumption on addition, for application to `EReal`. The unprimed version of
@@ -1110,10 +1226,19 @@ theorem UpperSemicontinuous.add {f g : α → γ} (hf : UpperSemicontinuous f)
     (hg : UpperSemicontinuous g) : UpperSemicontinuous fun z => f z + g z :=
   hf.add' hg fun _x => continuous_add.continuousAt
 
+omit [LinearOrder γ] [IsOrderedAddMonoid γ] [TopologicalSpace γ] [OrderTopology γ]
+  [ContinuousAdd γ] in
+private lemma toDual_finset_sum {ι' : Type*} (a : Finset ι') (f : ι' → γ) :
+    OrderDual.toDual (∑ i ∈ a, f i) = ∑ i ∈ a, OrderDual.toDual (f i) :=
+  map_sum ({ toEquiv := OrderDual.toDual, map_add' := fun _ _ ↦ rfl } : γ ≃+ γᵒᵈ) f a
+
 theorem upperSemicontinuousWithinAt_sum {f : ι → α → γ} {a : Finset ι}
     (ha : ∀ i ∈ a, UpperSemicontinuousWithinAt (f i) s x) :
-    UpperSemicontinuousWithinAt (fun z => ∑ i ∈ a, f i z) s x :=
-  lowerSemicontinuousWithinAt_sum (γ := γᵒᵈ) ha
+    UpperSemicontinuousWithinAt (fun z => ∑ i ∈ a, f i z) s x := by
+  refine lowerSemicontinuousWithinAt_toDual_iff.1 ?_
+  simp only [toDual_finset_sum]
+  exact lowerSemicontinuousWithinAt_sum (γ := γᵒᵈ)
+    fun i hi ↦ lowerSemicontinuousWithinAt_toDual_iff.2 (ha i hi)
 
 theorem upperSemicontinuousAt_sum {f : ι → α → γ} {a : Finset ι}
     (ha : ∀ i ∈ a, UpperSemicontinuousAt (f i) x) :
@@ -1142,40 +1267,56 @@ variable {α : Type*} {β : Type*} [TopologicalSpace α] [LinearOrder β]
 theorem UpperSemicontinuousWithinAt.inf
     (hf : UpperSemicontinuousWithinAt f s a) (hg : UpperSemicontinuousWithinAt g s a) :
     UpperSemicontinuousWithinAt (fun x ↦ f x ⊓ g x) s a :=
-  LowerSemicontinuousWithinAt.sup (β := βᵒᵈ) hf hg
+  lowerSemicontinuousWithinAt_toDual_iff.1
+    (LowerSemicontinuousWithinAt.sup (β := βᵒᵈ) (lowerSemicontinuousWithinAt_toDual_iff.2 hf)
+      (lowerSemicontinuousWithinAt_toDual_iff.2 hg))
 
 theorem UpperSemicontinuousAt.inf
     (hf : UpperSemicontinuousAt f a) (hg : UpperSemicontinuousAt g a) :
     UpperSemicontinuousAt (fun x ↦ f x ⊓ g x) a :=
-  LowerSemicontinuousAt.sup (β := βᵒᵈ) hf hg
+  lowerSemicontinuousAt_toDual_iff.1
+    (LowerSemicontinuousAt.sup (β := βᵒᵈ) (lowerSemicontinuousAt_toDual_iff.2 hf)
+      (lowerSemicontinuousAt_toDual_iff.2 hg))
 
 theorem UpperSemicontinuousOn.inf
     (hf : UpperSemicontinuousOn f s) (hg : UpperSemicontinuousOn g s) :
     UpperSemicontinuousOn (fun x ↦ f x ⊓ g x) s :=
-  LowerSemicontinuousOn.sup (β := βᵒᵈ) hf hg
+  lowerSemicontinuousOn_toDual_iff.1
+    (LowerSemicontinuousOn.sup (β := βᵒᵈ) (lowerSemicontinuousOn_toDual_iff.2 hf)
+      (lowerSemicontinuousOn_toDual_iff.2 hg))
 
 theorem UpperSemicontinuous.inf (hf : UpperSemicontinuous f) (hg : UpperSemicontinuous g) :
     UpperSemicontinuous (fun x ↦ f x ⊓ g x) :=
-  LowerSemicontinuous.sup (β := βᵒᵈ) hf hg
+  lowerSemicontinuous_toDual_iff.1
+    (LowerSemicontinuous.sup (β := βᵒᵈ) (lowerSemicontinuous_toDual_iff.2 hf)
+      (lowerSemicontinuous_toDual_iff.2 hg))
 
 theorem UpperSemicontinuousWithinAt.sup
     (hf : UpperSemicontinuousWithinAt f s a) (hg : UpperSemicontinuousWithinAt g s a) :
     UpperSemicontinuousWithinAt (fun x ↦ f x ⊔ g x) s a :=
-  LowerSemicontinuousWithinAt.inf (β := βᵒᵈ) hf hg
+  lowerSemicontinuousWithinAt_toDual_iff.1
+    (LowerSemicontinuousWithinAt.inf (β := βᵒᵈ) (lowerSemicontinuousWithinAt_toDual_iff.2 hf)
+      (lowerSemicontinuousWithinAt_toDual_iff.2 hg))
 
 theorem UpperSemicontinuousAt.sup
     (hf : UpperSemicontinuousAt f a) (hg : UpperSemicontinuousAt g a) :
     UpperSemicontinuousAt (fun x ↦ f x ⊔ g x) a :=
-  LowerSemicontinuousAt.inf (β := βᵒᵈ) hf hg
+  lowerSemicontinuousAt_toDual_iff.1
+    (LowerSemicontinuousAt.inf (β := βᵒᵈ) (lowerSemicontinuousAt_toDual_iff.2 hf)
+      (lowerSemicontinuousAt_toDual_iff.2 hg))
 
 theorem UpperSemicontinuousOn.sup
     (hf : UpperSemicontinuousOn f s) (hg : UpperSemicontinuousOn g s) :
     UpperSemicontinuousOn (fun x ↦ f x ⊔ g x) s :=
-  LowerSemicontinuousOn.inf (β := βᵒᵈ) hf hg
+  lowerSemicontinuousOn_toDual_iff.1
+    (LowerSemicontinuousOn.inf (β := βᵒᵈ) (lowerSemicontinuousOn_toDual_iff.2 hf)
+      (lowerSemicontinuousOn_toDual_iff.2 hg))
 
 theorem UpperSemicontinuous.sup (hf : UpperSemicontinuous f) (hg : UpperSemicontinuous g) :
     UpperSemicontinuous fun x ↦ f x ⊔ g x :=
-  LowerSemicontinuous.inf (β := βᵒᵈ) hf hg
+  lowerSemicontinuous_toDual_iff.1
+    (LowerSemicontinuous.inf (β := βᵒᵈ) (lowerSemicontinuous_toDual_iff.2 hf)
+      (lowerSemicontinuous_toDual_iff.2 hg))
 
 
 end
@@ -1188,12 +1329,22 @@ theorem upperSemicontinuousWithinAt_ciInf {f : ι → α → δ'}
     (bdd : ∀ᶠ y in 𝓝[s] x, BddBelow (range fun i => f i y))
     (h : ∀ i, UpperSemicontinuousWithinAt (f i) s x) :
     UpperSemicontinuousWithinAt (fun x' => ⨅ i, f i x') s x :=
-  lowerSemicontinuousWithinAt_ciSup (δ' := δ'ᵒᵈ) bdd h
+  by
+  have H := lowerSemicontinuousWithinAt_ciSup (δ' := δ'ᵒᵈ)
+    (f := fun i a ↦ OrderDual.toDual (f i a)) (bdd.mono fun _ hy ↦ bddAbove_range_toDual hy)
+    fun i ↦ lowerSemicontinuousWithinAt_toDual_iff.2 (h i)
+  simp only [← toDual_iInf] at H
+  exact lowerSemicontinuousWithinAt_toDual_iff.1 H
 
 theorem upperSemicontinuousWithinAt_iInf {f : ι → α → δ}
     (h : ∀ i, UpperSemicontinuousWithinAt (f i) s x) :
     UpperSemicontinuousWithinAt (fun x' => ⨅ i, f i x') s x :=
-  lowerSemicontinuousWithinAt_iSup (δ := δᵒᵈ) h
+  by
+  have H := lowerSemicontinuousWithinAt_iSup (δ := δᵒᵈ)
+    (f := fun i a ↦ OrderDual.toDual (f i a))
+    fun i ↦ lowerSemicontinuousWithinAt_toDual_iff.2 (h i)
+  simp only [← toDual_iInf] at H
+  exact lowerSemicontinuousWithinAt_toDual_iff.1 H
 
 theorem upperSemicontinuousWithinAt_biInf {p : ι → Prop} {f : ∀ i, p i → α → δ}
     (h : ∀ i hi, UpperSemicontinuousWithinAt (f i hi) s x) :
@@ -1203,11 +1354,20 @@ theorem upperSemicontinuousWithinAt_biInf {p : ι → Prop} {f : ∀ i, p i → 
 theorem upperSemicontinuousAt_ciInf {f : ι → α → δ'}
     (bdd : ∀ᶠ y in 𝓝 x, BddBelow (range fun i => f i y)) (h : ∀ i, UpperSemicontinuousAt (f i) x) :
     UpperSemicontinuousAt (fun x' => ⨅ i, f i x') x :=
-  @lowerSemicontinuousAt_ciSup α _ x ι δ'ᵒᵈ _ f bdd h
+  by
+  have H := lowerSemicontinuousAt_ciSup (δ' := δ'ᵒᵈ) (f := fun i a ↦ OrderDual.toDual (f i a))
+    (bdd.mono fun _ hy ↦ bddAbove_range_toDual hy)
+    fun i ↦ lowerSemicontinuousAt_toDual_iff.2 (h i)
+  simp only [← toDual_iInf] at H
+  exact lowerSemicontinuousAt_toDual_iff.1 H
 
 theorem upperSemicontinuousAt_iInf {f : ι → α → δ} (h : ∀ i, UpperSemicontinuousAt (f i) x) :
     UpperSemicontinuousAt (fun x' => ⨅ i, f i x') x :=
-  @lowerSemicontinuousAt_iSup α _ x ι δᵒᵈ _ f h
+  by
+  have H := lowerSemicontinuousAt_iSup (δ := δᵒᵈ) (f := fun i a ↦ OrderDual.toDual (f i a))
+    fun i ↦ lowerSemicontinuousAt_toDual_iff.2 (h i)
+  simp only [← toDual_iInf] at H
+  exact lowerSemicontinuousAt_toDual_iff.1 H
 
 theorem upperSemicontinuousAt_biInf {p : ι → Prop} {f : ∀ i, p i → α → δ}
     (h : ∀ i hi, UpperSemicontinuousAt (f i hi) x) :

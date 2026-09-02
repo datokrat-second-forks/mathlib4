@@ -84,8 +84,8 @@ theorem dual_solid (a b : α) (h : b ⊓ -b ≤ a ⊓ -a) : ‖a‖ ≤ ‖b‖ 
 normed lattice ordered group.
 -/
 instance (priority := 100) OrderDual.instHasSolidNorm :
-    HasSolidNorm αᵒᵈ :=
-  { solid := dual_solid (α := α) }
+    HasSolidNorm αᵒᵈ where
+  solid {x y} h := dual_solid (OrderDual.ofDual x) (OrderDual.ofDual y) h
 
 theorem norm_abs_eq_norm (a : α) : ‖|a|‖ = ‖a‖ :=
   (solid (abs_abs a).le).antisymm (solid (abs_abs a).symm.le)
@@ -139,8 +139,11 @@ instance (priority := 100) HasSolidNorm.continuousInf : ContinuousInf α := by
 
 -- see Note [lower instance priority]
 instance (priority := 100) HasSolidNorm.continuousSup {α : Type*}
-    [NormedAddCommGroup α] [Lattice α] [HasSolidNorm α] [IsOrderedAddMonoid α] : ContinuousSup α :=
-  OrderDual.continuousSup αᵒᵈ
+    [NormedAddCommGroup α] [Lattice α] [HasSolidNorm α] [IsOrderedAddMonoid α] :
+    ContinuousSup α where
+  continuous_sup := continuous_ofDual.comp
+    ((HasSolidNorm.continuousInf (α := αᵒᵈ)).continuous_inf.comp
+      (continuous_toDual.prodMap continuous_toDual))
 
 -- see Note [lower instance priority]
 /--
