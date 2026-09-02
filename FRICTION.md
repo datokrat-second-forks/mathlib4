@@ -1641,3 +1641,81 @@ sandwich the underlying operation between `continuous_toDual` and `continuous_of
 `@[to_additive]` unchanged, since the two bridges say nothing about the order. The second has no
 such shape — `CompletelyNormalSpace` is a `Prop`-valued class whose field quantifies over sets, so
 transporting it would need the set-level dictionary; mirroring the proof is much shorter.
+
+## 56. When the *definition* is the transport
+
+`Function.rightLim` was not a theorem about the dual; it *was* the dual:
+
+```lean
+noncomputable def Function.rightLim (f : α → β) (a : α) : β :=
+  @Function.leftLim αᵒᵈ β _ _ f a
+```
+
+`f : α → β` is no longer a function `αᵒᵈ → β` and `a : α` is no longer a term of `αᵒᵈ`, so the
+definition itself stops elaborating — every one of the file's ~30 dual declarations fails at once,
+downstream of a single line. Two ways out:
+
+* (a) keep the transport and insert the coercions:
+  `@Function.leftLim αᵒᵈ β _ _ (f ∘ ⇑OrderDual.ofDual) (OrderDual.toDual a)`;
+* (b) define `rightLim` directly, mirroring `leftLim`'s `if 𝓝[>] a = ⊥ ∨ ¬∃ y, … then f a else
+  limUnder (𝓝[>] a) f`.
+
+Chosen: (a). It is meaning-preserving, and — decisively — it keeps
+`rightLim f a = leftLim (f ∘ ofDual) (toDual a)` true *by `rfl`*, which is the currency every
+transport in the file is paid in. Under (b) that equation becomes a theorem whose proof has to
+reconcile `Preorder.topology αᵒᵈ` with `Preorder.topology α`, and the `Monotone.dual` transports in
+the same file (which mix a domain and a codomain dual) would have to be re-derived from scratch.
+The cost of (a) is that the coercion `f ∘ ofDual` is visible in every unfolded goal.
+
+## 57. `‹C E›`-style dual instances: use `where`, not the structure copy
+
+`Analysis/Normed/Group/Constructions.lean` had four instances of the form "the dual carries the
+same normed structure", written as a structure copy that silently reused the primal's fields. Under
+the synonym-as-structure they produce ~100 errors between them (one per downstream `‖·‖` rewrite).
+The repair is uniform and shorter than the original:
+
+```lean
+instance (priority := 100) seminormedGroup [SeminormedGroup E] : SeminormedGroup Eᵒᵈ where
+  dist_eq x y := SeminormedGroup.dist_eq (ofDual x) (ofDual y)
+```
+
+`where` lets Lean synthesize the parent instances (`Norm Eᵒᵈ`, `PseudoMetricSpace Eᵒᵈ`, the group)
+from the ones already in scope and leaves exactly one field to prove, and that field's proof is the
+primal field read at `ofDual x`. Note the field is `dist x y = ‖x⁻¹ * y‖`, so `dist_eq_norm_div`
+(which wants `SeminormedCommGroup`) is the wrong ingredient — reach for the class projection.
+
+## 58. `simpa … using h` closes at reducible transparency; `exact` does not
+
+The single most common last-line failure of this wave. `toDual u ≤ toDual v` and `v ≤ u` are
+definitionally equal, but unfolding the `LE Eᵒᵈ` instance is not a *reducible* step, so
+
+```lean
+  simpa only [leftLim_toDual_comp] using this
+  -- Type mismatch: After simplification, term `this` has type
+  --   OrderDual.toDual (leftLim f x) ≤ OrderDual.toDual (f y)
+  -- but is expected to have type  f y ≤ leftLim f x
+```
+
+Two repairs, in order of preference: put `OrderDual.toDual_le_toDual` (and `toDual_lt_toDual`,
+`toDual_inj`) into the simp set so the flip happens *propositionally*; or, when the residue is an
+instance-path mismatch rather than a flip — `@LE.le β inst✝.toSemilatticeInf.toLE …` vs
+`@LE.le β ConditionallyCompleteLattice.….toLE …` — split into `simp only [...] at h; exact h`,
+since `exact` checks at default transparency and accepts what `simpa` refuses.
+
+## 59. The sixth private copy of the `nhdsWithin` bridge
+
+```lean
+private theorem nhdsWithin_toDual {X : Type*} [TopologicalSpace X] (s : Set X) (a : X) :
+    𝓝[⇑ofDual ⁻¹' s] (toDual a) = Filter.map toDual (𝓝[s] a) := by
+  rw [nhdsWithin, nhdsWithin, nhds_toDual, Filter.map_inf toDual.injective, Filter.map_principal,
+    Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq]
+```
+
+This is now the sixth file carrying its own copy, together with the specializations `𝓝[<] (toDual a)
+= map toDual (𝓝[>] a)` and `𝓝[≤] (toDual a) = map toDual (𝓝[≥] a)` and the `Tendsto` corollaries
+that follow from it by `Filter.tendsto_map'_iff` / `Filter.map_le_map_iff toDual.injective`. Every
+one of them used to be `rfl` — that is precisely why the library never named them. They are the
+natural public companions of the existing `nhds_toDual`, and each new topology-order file on the
+frontier needs them again. Whether to promote them (in `Topology/Constructions.lean`, beside
+`nhds_toDual`) is a design decision for the campaign owner; until it is taken, they stay private and
+duplicated, which is the honest way to leave the question open.
