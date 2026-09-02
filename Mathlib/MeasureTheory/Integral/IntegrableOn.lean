@@ -555,8 +555,10 @@ theorem integrableAtFilter_atBot_iff [Preorder α] [IsCodirectedOrder α] [Nonem
   exact ⟨t, hi.mono_set fun _ hx ↦ ht _ hx⟩
 
 theorem integrableAtFilter_atTop_iff [Preorder α] [IsDirectedOrder α] [Nonempty α] :
-    IntegrableAtFilter f atTop μ ↔ ∃ a, IntegrableOn f (Ici a) μ :=
-  integrableAtFilter_atBot_iff (α := αᵒᵈ)
+    IntegrableAtFilter f atTop μ ↔ ∃ a, IntegrableOn f (Ici a) μ := by
+  refine ⟨fun ⟨s, hs, hi⟩ ↦ ?_, fun ⟨a, ha⟩ ↦ ⟨Ici a, Ici_mem_atTop a, ha⟩⟩
+  obtain ⟨t, ht⟩ := mem_atTop_sets.mp hs
+  exact ⟨t, hi.mono_set fun _ hx ↦ ht _ hx⟩
 
 @[gcongr]
 lemma IntegrableAtFilter.mono_measure (hf : IntegrableAtFilter f l μ) (h : ν ≤ μ) :
