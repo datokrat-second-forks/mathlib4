@@ -48,6 +48,85 @@ universe u v w x y
 
 variable {α β γ δ : Type*} {ι : Sort y} {s t u : Set α}
 
+section DualBridge
+
+/-! The topology of `αᵒᵈ` is coinduced by `toDual`, which for a bijection is the same as being
+induced by it; so the Borel σ-algebra of `α` is the one of `αᵒᵈ` comapped along `toDual`.  This is
+what carries a `borel _ = generateFrom (range Ixx)` statement across the dual. -/
+
+private lemma induced_toDual (α : Type*) [t : TopologicalSpace α] :
+    TopologicalSpace.induced (OrderDual.toDual : α → αᵒᵈ) inferInstance = t := by
+  refine TopologicalSpace.ext_iff.2 fun s ↦
+    ⟨?_, fun hs ↦ ⟨⇑OrderDual.ofDual ⁻¹' s, hs, rfl⟩⟩
+  rintro ⟨u, hu, rfl⟩
+  exact hu
+
+private lemma borel_comap_toDual (α : Type*) [TopologicalSpace α] :
+    MeasurableSpace.comap (OrderDual.toDual : α → αᵒᵈ) (borel αᵒᵈ) = borel α := by
+  rw [← borel_comap (f := (OrderDual.toDual : α → αᵒᵈ))]
+  congr 1
+  exact induced_toDual α
+
+private lemma preimage_toDual_Ico {α : Type*} [Preorder α] (l u : αᵒᵈ) :
+    ⇑OrderDual.toDual ⁻¹' Ico l u = Ioc (OrderDual.ofDual u) (OrderDual.ofDual l) := by
+  ext y
+  exact and_comm
+
+/-- `toDual` as a measurable equivalence; both directions are the identity on proofs, since
+`MeasurableSet[αᵒᵈ] s` is by definition `MeasurableSet (⇑toDual ⁻¹' s)`. -/
+private def toDualMeasurableEquiv (α : Type*) [MeasurableSpace α] : α ≃ᵐ αᵒᵈ where
+  toEquiv := OrderDual.toDual
+  measurable_toFun := fun _ hs ↦ hs
+  measurable_invFun := fun _ hs ↦ hs
+
+private lemma map_toDual_apply {α : Type*} [MeasurableSpace α] (μ : Measure α) (s : Set αᵒᵈ) :
+    μ.map OrderDual.toDual s = μ (⇑OrderDual.toDual ⁻¹' s) :=
+  MeasurableEquiv.map_apply (toDualMeasurableEquiv α) s
+
+private lemma eq_of_map_toDual_eq {α : Type*} [MeasurableSpace α] {μ ν : Measure α}
+    (h : μ.map OrderDual.toDual = ν.map OrderDual.toDual) : μ = ν := by
+  refine Measure.ext fun s _ ↦ ?_
+  have H : μ.map OrderDual.toDual (⇑OrderDual.ofDual ⁻¹' s)
+      = ν.map OrderDual.toDual (⇑OrderDual.ofDual ⁻¹' s) := by rw [h]
+  rw [map_toDual_apply, map_toDual_apply] at H
+  exact H
+
+private lemma measurable_toDual {α : Type*} [MeasurableSpace α] :
+    Measurable (OrderDual.toDual : α → αᵒᵈ) := fun _ hs ↦ hs
+
+private lemma measurable_ofDual {α : Type*} [MeasurableSpace α] :
+    Measurable (OrderDual.ofDual : αᵒᵈ → α) := fun _ hs ↦ hs
+
+private lemma measurable_of_toDual_comp {δ α : Type*} [MeasurableSpace δ] [MeasurableSpace α]
+    {f : δ → α} (h : Measurable fun b ↦ OrderDual.toDual (f b)) : Measurable f :=
+  measurable_ofDual.comp h
+
+private lemma aemeasurable_of_toDual_comp {δ α : Type*} [MeasurableSpace δ] [MeasurableSpace α]
+    {μ : Measure δ} {f : δ → α} (h : AEMeasurable (fun b ↦ OrderDual.toDual (f b)) μ) :
+    AEMeasurable f μ :=
+  measurable_ofDual.comp_aemeasurable h
+
+private lemma isLUB_toDual_range_iff {α : Type*} [Preorder α] {ι : Sort*} {f : ι → α} {x : α} :
+    IsLUB {a : αᵒᵈ | ∃ i, OrderDual.toDual (f i) = a} (OrderDual.toDual x) ↔
+      IsGLB {a | ∃ i, f i = a} x := by
+  rw [show {a : αᵒᵈ | ∃ i, OrderDual.toDual (f i) = a}
+      = ⇑OrderDual.ofDual ⁻¹' {a | ∃ i, f i = a} from Set.ext fun a ↦
+    ⟨fun ⟨i, hi⟩ ↦ ⟨i, congrArg OrderDual.ofDual hi⟩,
+      fun ⟨i, hi⟩ ↦ ⟨i, congrArg OrderDual.toDual hi⟩⟩]
+  exact isLUB_preimage_ofDual
+
+private lemma bddAbove_range_toDual_iff {ι : Sort*} {α : Type*} [Preorder α] {g : ι → α} :
+    BddAbove (Set.range fun i ↦ OrderDual.toDual (g i)) ↔ BddBelow (Set.range g) :=
+  ⟨fun ⟨c, hc⟩ ↦ ⟨OrderDual.ofDual c, by rintro _ ⟨i, rfl⟩; exact hc ⟨i, rfl⟩⟩,
+    fun ⟨c, hc⟩ ↦ ⟨OrderDual.toDual c, by rintro _ ⟨i, rfl⟩; exact hc ⟨i, rfl⟩⟩⟩
+
+private lemma image_toDual_comp {ι α : Type*} {g : ι → α} {s : Set ι} :
+    (fun i ↦ OrderDual.toDual (g i)) '' s = ⇑OrderDual.ofDual ⁻¹' (g '' s) := by
+  rw [show (fun i ↦ OrderDual.toDual (g i)) = ⇑OrderDual.toDual ∘ g from rfl, Set.image_comp,
+    Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq]
+
+end DualBridge
+
 section OrderTopology
 
 variable (α)
@@ -75,8 +154,13 @@ theorem borel_eq_generateFrom_Iio : borel α = .generateFrom (range Iio) := by
     intro a
     exact GenerateMeasurable.basic _ isOpen_Iio
 
-theorem borel_eq_generateFrom_Ioi : borel α = .generateFrom (range Ioi) :=
-  @borel_eq_generateFrom_Iio αᵒᵈ _ (by infer_instance : SecondCountableTopology α) _ _
+theorem borel_eq_generateFrom_Ioi : borel α = .generateFrom (range Ioi) := by
+  rw [← borel_comap_toDual α, borel_eq_generateFrom_Iio αᵒᵈ, comap_generateFrom]
+  congr 1
+  ext s
+  simp only [Set.mem_image, Set.mem_range]
+  exact ⟨by rintro ⟨_, ⟨a, rfl⟩, rfl⟩; exact ⟨OrderDual.ofDual a, rfl⟩,
+    by rintro ⟨a, rfl⟩; exact ⟨Iio (OrderDual.toDual a), ⟨OrderDual.toDual a, rfl⟩, rfl⟩⟩
 
 theorem borel_eq_generateFrom_Iic :
     borel α = MeasurableSpace.generateFrom (range Iic) := by
@@ -91,8 +175,13 @@ theorem borel_eq_generateFrom_Iic :
     rw [← compl_Ioi]
     exact (MeasurableSpace.measurableSet_generateFrom (mem_range.mpr ⟨u, rfl⟩)).compl
 
-theorem borel_eq_generateFrom_Ici : borel α = MeasurableSpace.generateFrom (range Ici) :=
-  @borel_eq_generateFrom_Iic αᵒᵈ _ _ _ _
+theorem borel_eq_generateFrom_Ici : borel α = MeasurableSpace.generateFrom (range Ici) := by
+  rw [← borel_comap_toDual α, borel_eq_generateFrom_Iic αᵒᵈ, comap_generateFrom]
+  congr 1
+  ext s
+  simp only [Set.mem_image, Set.mem_range]
+  exact ⟨by rintro ⟨_, ⟨a, rfl⟩, rfl⟩; exact ⟨OrderDual.ofDual a, rfl⟩,
+    by rintro ⟨a, rfl⟩; exact ⟨Iic (OrderDual.toDual a), ⟨OrderDual.toDual a, rfl⟩, rfl⟩⟩
 
 end OrderTopology
 
@@ -405,13 +494,22 @@ theorem Dense.borel_eq_generateFrom_Ioc_mem_aux {α : Type*} [TopologicalSpace �
     [OrderTopology α] [SecondCountableTopology α] {s : Set α} (hd : Dense s)
     (hbot : ∀ x, IsTop x → x ∈ s) (hIoo : ∀ x y : α, x < y → Ioo x y = ∅ → x ∈ s) :
     borel α = .generateFrom { S : Set α | ∃ l ∈ s, ∃ u ∈ s, l < u ∧ Ioc l u = S } := by
-  convert!
-    hd.orderDual.borel_eq_generateFrom_Ico_mem_aux hbot fun x y hlt he => hIoo y x hlt _ using 2
-  · ext s
-    constructor <;> rintro ⟨l, hl, u, hu, hlt, rfl⟩
-    exacts [⟨u, hu, l, hl, hlt, Ico_toDual⟩, ⟨u, hu, l, hl, hlt, Ioc_toDual⟩]
-  · erw [Ioo_toDual]
-    exact he
+  have H := hd.orderDual.borel_eq_generateFrom_Ico_mem_aux
+    (fun x hx ↦ hbot (OrderDual.ofDual x) fun a ↦ hx (OrderDual.toDual a))
+    (fun x y hlt he ↦ hIoo (OrderDual.ofDual y) (OrderDual.ofDual x) hlt
+      (Set.eq_empty_iff_forall_notMem.2 fun a ha ↦
+        Set.eq_empty_iff_forall_notMem.1 he (OrderDual.toDual a) ⟨ha.2, ha.1⟩))
+  rw [← borel_comap_toDual α, H, comap_generateFrom]
+  congr 1
+  ext S
+  simp only [Set.mem_image, Set.mem_ofPred_eq, Set.mem_preimage]
+  constructor
+  · rintro ⟨_, ⟨l, hl, u, hu, hlt, rfl⟩, rfl⟩
+    exact ⟨OrderDual.ofDual u, hu, OrderDual.ofDual l, hl, hlt, (preimage_toDual_Ico l u).symm⟩
+  · rintro ⟨l, hl, u, hu, hlt, rfl⟩
+    exact ⟨Ico (OrderDual.toDual u) (OrderDual.toDual l),
+      ⟨OrderDual.toDual u, hu, OrderDual.toDual l, hl, hlt, rfl⟩,
+      preimage_toDual_Ico _ _⟩
 
 theorem Dense.borel_eq_generateFrom_Ioc_mem {α : Type*} [TopologicalSpace α] [LinearOrder α]
     [OrderTopology α] [SecondCountableTopology α] [DenselyOrdered α] [NoMaxOrder α] {s : Set α}
@@ -454,7 +552,6 @@ theorem ext_of_Ico_finite {α : Type*} [TopologicalSpace α] {m : MeasurableSpac
   rintro - ⟨a, b, hlt, rfl⟩
   exact h hlt
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Two finite measures on a Borel space are equal if they agree on all open-closed intervals.  If
 `α` is a conditionally complete linear order with no top element,
 `MeasureTheory.Measure.ext_of_Ioc` is an extensionality lemma with weaker assumptions on `μ` and
@@ -463,9 +560,11 @@ theorem ext_of_Ioc_finite {α : Type*} [TopologicalSpace α] {m : MeasurableSpac
     [SecondCountableTopology α] [LinearOrder α] [OrderTopology α] [BorelSpace α] (μ ν : Measure α)
     [IsFiniteMeasure μ] (hμν : μ univ = ν univ) (h : ∀ ⦃a b⦄, a < b → μ (Ioc a b) = ν (Ioc a b)) :
     μ = ν := by
-  refine @ext_of_Ico_finite αᵒᵈ _ _ _ _ _ ‹_› μ ν _ hμν fun a b hab => ?_
-  erw [Ico_toDual (α := α)]
-  exact h hab
+  refine eq_of_map_toDual_eq (ext_of_Ico_finite (α := αᵒᵈ) _ _ ?_ fun a b hab => ?_)
+  · rw [map_toDual_apply, map_toDual_apply]
+    exact hμν
+  · rw [map_toDual_apply, map_toDual_apply, preimage_toDual_Ico]
+    exact h hab
 
 /-- Two measures which are finite on closed-open intervals are equal if they agree on all
 closed-open intervals. -/
@@ -498,7 +597,8 @@ theorem ext_of_Ioc' {α : Type*} [TopologicalSpace α] {m : MeasurableSpace α}
     [SecondCountableTopology α] [LinearOrder α] [OrderTopology α] [BorelSpace α] [NoMinOrder α]
     (μ ν : Measure α) (hμ : ∀ ⦃a b⦄, a < b → μ (Ioc a b) ≠ ∞)
     (h : ∀ ⦃a b⦄, a < b → μ (Ioc a b) = ν (Ioc a b)) : μ = ν := by
-  refine @ext_of_Ico' αᵒᵈ _ _ _ _ _ ‹_› _ μ ν ?_ ?_ <;> intro a b hab <;> erw [Ico_toDual (α := α)]
+  refine eq_of_map_toDual_eq (ext_of_Ico' (α := αᵒᵈ) _ _ ?_ ?_) <;> intro a b hab <;>
+    simp only [map_toDual_apply, preimage_toDual_Ico]
   exacts [hμ hab, h hab]
 
 /-- Two measures which are finite on closed-open intervals are equal if they agree on all
@@ -532,13 +632,15 @@ theorem ext_of_Iic {α : Type*} [TopologicalSpace α] {m : MeasurableSpace α}
     finiteness
   · finiteness
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Two finite measures on a Borel space are equal if they agree on all left-closed right-infinite
 intervals. -/
 theorem ext_of_Ici {α : Type*} [TopologicalSpace α] {_ : MeasurableSpace α}
     [SecondCountableTopology α] [LinearOrder α] [OrderTopology α] [BorelSpace α] (μ ν : Measure α)
     [IsFiniteMeasure μ] (h : ∀ a, μ (Ici a) = ν (Ici a)) : μ = ν :=
-  @ext_of_Iic αᵒᵈ _ _ _ _ _ ‹_› _ _ _ h
+  eq_of_map_toDual_eq (ext_of_Iic (α := αᵒᵈ) _ _ fun a => by
+    rw [map_toDual_apply, map_toDual_apply, show ⇑OrderDual.toDual ⁻¹' Iic a
+      = Ici (OrderDual.ofDual a) from rfl]
+    exact h _)
 
 /-- Two measures which are finite on closed intervals are equal if they agree on all
 closed intervals. -/
@@ -680,8 +782,16 @@ lemma measurable_iInf_of_upperSemicontinuous [CompleteLinearOrder β] [OrderTopo
     {ι : Type*} [TopologicalSpace ι] [SeparableSpace ι]
     {f : ι → δ → β} (mf : ∀ t, Measurable (f t))
     (cf : ∀ x, UpperSemicontinuous (f · x)) :
-    Measurable (⨅ i, f i) :=
-   measurable_iSup_of_lowerSemicontinuous (β := βᵒᵈ) mf cf
+    Measurable (⨅ i, f i) := by
+  refine measurable_of_toDual_comp ?_
+  have hfun : (fun b ↦ OrderDual.toDual ((⨅ i, f i) b))
+      = ⨆ i, fun x ↦ OrderDual.toDual (f i x) := by
+    funext b
+    simp only [iInf_apply, iSup_apply, toDual_iInf]
+  rw [hfun]
+  exact measurable_iSup_of_lowerSemicontinuous (β := βᵒᵈ)
+    (f := fun t x ↦ OrderDual.toDual (f t x)) (fun t ↦ measurable_toDual.comp (mf t))
+    (fun x t y hy ↦ cf x t (OrderDual.ofDual y) hy)
 
 theorem LowerSemicontinuous.measurable [TopologicalSpace δ] [OpensMeasurableSpace δ] {f : δ → α}
     (hf : LowerSemicontinuous f) : Measurable f :=
@@ -772,7 +882,8 @@ theorem AEMeasurable.isLUB {ι} {μ : Measure δ} [Countable ι] {f : ι → δ 
 then it is measurable. -/
 theorem Measurable.isGLB {ι} [Countable ι] {f : ι → δ → α} {g : δ → α} (hf : ∀ i, Measurable (f i))
     (hg : ∀ b, IsGLB { a | ∃ i, f i b = a } (g b)) : Measurable g :=
-  Measurable.isLUB (α := αᵒᵈ) hf hg
+  measurable_of_toDual_comp (Measurable.isLUB (α := αᵒᵈ)
+    (fun i ↦ measurable_toDual.comp (hf i)) fun b ↦ isLUB_toDual_range_iff.2 (hg b))
 
 /-- If a function is the greatest lower bound of countably many measurable functions on a measurable
 set `s`, and coincides with a measurable function outside of `s`, then it is measurable. -/
@@ -780,12 +891,17 @@ theorem Measurable.isGLB_of_mem {ι} [Countable ι] {f : ι → δ → α} {g g'
     (hf : ∀ i, Measurable (f i))
     {s : Set δ} (hs : MeasurableSet s) (hg : ∀ b ∈ s, IsGLB { a | ∃ i, f i b = a } (g b))
     (hg' : EqOn g g' sᶜ) (g'_meas : Measurable g') : Measurable g :=
-  Measurable.isLUB_of_mem (α := αᵒᵈ) hf hs hg hg' g'_meas
+  measurable_of_toDual_comp (Measurable.isLUB_of_mem (α := αᵒᵈ)
+    (fun i ↦ measurable_toDual.comp (hf i)) hs
+    (fun b hb ↦ isLUB_toDual_range_iff.2 (hg b hb))
+    (fun _b hb ↦ congrArg OrderDual.toDual (hg' hb)) (measurable_toDual.comp g'_meas))
 
 theorem AEMeasurable.isGLB {ι} {μ : Measure δ} [Countable ι] {f : ι → δ → α} {g : δ → α}
     (hf : ∀ i, AEMeasurable (f i) μ) (hg : ∀ᵐ b ∂μ, IsGLB { a | ∃ i, f i b = a } (g b)) :
     AEMeasurable g μ :=
-  AEMeasurable.isLUB (α := αᵒᵈ) hf hg
+  aemeasurable_of_toDual_comp (AEMeasurable.isLUB (α := αᵒᵈ)
+    (fun i ↦ measurable_toDual.comp_aemeasurable (hf i))
+    (hg.mono fun _b hb ↦ isLUB_toDual_range_iff.2 hb))
 
 protected theorem Monotone.measurable [LinearOrder β] [OrderClosedTopology β] {f : β → α}
     (hf : Monotone f) : Measurable f :=
@@ -800,12 +916,13 @@ theorem aemeasurable_restrict_of_monotoneOn [LinearOrder β] [OrderClosedTopolog
 
 protected theorem Antitone.measurable [LinearOrder β] [OrderClosedTopology β] {f : β → α}
     (hf : Antitone f) : Measurable f :=
-  @Monotone.measurable αᵒᵈ β _ _ ‹_› _ _ _ _ _ ‹_› _ _ _ hf
+  measurable_of_toDual_comp (Monotone.measurable (α := αᵒᵈ) fun _ _ h ↦ hf h)
 
 theorem aemeasurable_restrict_of_antitoneOn [LinearOrder β] [OrderClosedTopology β] {μ : Measure β}
     {s : Set β} (hs : MeasurableSet s) {f : β → α} (hf : AntitoneOn f s) :
     AEMeasurable f (μ.restrict s) :=
-  @aemeasurable_restrict_of_monotoneOn αᵒᵈ β _ _ ‹_› _ _ _ _ _ ‹_› _ _ _ _ hs _ hf
+  aemeasurable_of_toDual_comp
+    (aemeasurable_restrict_of_monotoneOn (α := αᵒᵈ) hs fun _ ha _ hb h ↦ hf ha hb h)
 
 theorem MeasurableSet.of_mem_nhdsGT_aux {s : Set α} (h : ∀ x ∈ s, s ∈ 𝓝[>] x)
     (h' : ∀ x ∈ s, ∃ y, x < y) : MeasurableSet s := by
@@ -874,8 +991,10 @@ lemma measurableSet_bddAbove_range {ι} [Countable ι] {f : ι → δ → α} (h
   exact MeasurableSet.iUnion (fun n ↦ B (u n))
 
 lemma measurableSet_bddBelow_range {ι} [Countable ι] {f : ι → δ → α} (hf : ∀ i, Measurable (f i)) :
-    MeasurableSet {b | BddBelow (range (fun i ↦ f i b))} :=
-  measurableSet_bddAbove_range (α := αᵒᵈ) hf
+    MeasurableSet {b | BddBelow (range (fun i ↦ f i b))} := by
+  have H := measurableSet_bddAbove_range (α := αᵒᵈ)
+    (f := fun i b ↦ OrderDual.toDual (f i b)) fun i ↦ measurable_toDual.comp (hf i)
+  exact H.congr (Set.ext fun _ ↦ bddAbove_range_toDual_iff)
 
 end LinearOrder
 
@@ -938,13 +1057,17 @@ protected theorem AEMeasurable.iSup {ι} {μ : Measure δ} [Countable ι] {f : �
 
 @[fun_prop]
 protected theorem Measurable.iInf {ι} [Countable ι] {f : ι → δ → α} (hf : ∀ i, Measurable (f i)) :
-    Measurable fun b => ⨅ i, f i b :=
-  .iSup (α := αᵒᵈ) hf
+    Measurable fun b => ⨅ i, f i b := by
+  refine measurable_of_toDual_comp ?_
+  simpa only [toDual_iInf, Function.comp_apply] using Measurable.iSup (α := αᵒᵈ)
+    fun i ↦ measurable_toDual.comp (hf i)
 
 @[fun_prop]
 protected theorem AEMeasurable.iInf {ι} {μ : Measure δ} [Countable ι] {f : ι → δ → α}
-    (hf : ∀ i, AEMeasurable (f i) μ) : AEMeasurable (fun b => ⨅ i, f i b) μ :=
-  .iSup (α := αᵒᵈ) hf
+    (hf : ∀ i, AEMeasurable (f i) μ) : AEMeasurable (fun b => ⨅ i, f i b) μ := by
+  refine aemeasurable_of_toDual_comp ?_
+  simpa only [toDual_iInf, Function.comp_apply] using AEMeasurable.iSup (α := αᵒᵈ)
+    fun i ↦ measurable_toDual.comp_aemeasurable (hf i)
 
 protected theorem Measurable.sSup {ι} {f : ι → δ → α} {s : Set ι} (hs : s.Countable)
     (hf : ∀ i ∈ s, Measurable (f i)) :
@@ -955,8 +1078,10 @@ protected theorem Measurable.sSup {ι} {f : ι → δ → α} {s : Set ι} (hs :
 
 protected theorem Measurable.sInf {ι} {f : ι → δ → α} {s : Set ι} (hs : s.Countable)
     (hf : ∀ i ∈ s, Measurable (f i)) :
-    Measurable fun x => sInf ((fun i => f i x) '' s) :=
-  .sSup (α := αᵒᵈ) hs hf
+    Measurable fun x => sInf ((fun i => f i x) '' s) := by
+  refine measurable_of_toDual_comp ?_
+  simpa only [toDual_sInf, ← image_toDual_comp] using Measurable.sSup (α := αᵒᵈ)
+    (f := fun i x ↦ OrderDual.toDual (f i x)) hs fun i hi ↦ measurable_toDual.comp (hf i hi)
 
 theorem Measurable.biSup {ι} (s : Set ι) {f : ι → δ → α} (hs : s.Countable)
     (hf : ∀ i ∈ s, Measurable (f i)) : Measurable fun b => ⨆ i ∈ s, f i b := by
@@ -986,12 +1111,16 @@ theorem AEMeasurable.biSup {ι} {μ : Measure δ} (s : Set ι) {f : ι → δ �
   exact iSup_congr fun i => iSup_congr (hb i)
 
 theorem Measurable.biInf {ι} (s : Set ι) {f : ι → δ → α} (hs : s.Countable)
-    (hf : ∀ i ∈ s, Measurable (f i)) : Measurable fun b => ⨅ i ∈ s, f i b :=
-  .biSup (α := αᵒᵈ) s hs hf
+    (hf : ∀ i ∈ s, Measurable (f i)) : Measurable fun b => ⨅ i ∈ s, f i b := by
+  refine measurable_of_toDual_comp ?_
+  simpa only [toDual_iInf, Function.comp_apply] using Measurable.biSup (α := αᵒᵈ) s hs
+    fun i hi ↦ measurable_toDual.comp (hf i hi)
 
 theorem AEMeasurable.biInf {ι} {μ : Measure δ} (s : Set ι) {f : ι → δ → α} (hs : s.Countable)
-    (hf : ∀ i ∈ s, AEMeasurable (f i) μ) : AEMeasurable (fun b => ⨅ i ∈ s, f i b) μ :=
-  .biSup (α := αᵒᵈ) s hs hf
+    (hf : ∀ i ∈ s, AEMeasurable (f i) μ) : AEMeasurable (fun b => ⨅ i ∈ s, f i b) μ := by
+  refine aemeasurable_of_toDual_comp ?_
+  simpa only [toDual_iInf, Function.comp_apply] using AEMeasurable.biSup (α := αᵒᵈ) s hs
+    fun i hi ↦ measurable_toDual.comp_aemeasurable (hf i hi)
 
 /-- `liminf` over a general filter is measurable. See `Measurable.liminf` for the version over `ℕ`.
 -/
@@ -1050,7 +1179,8 @@ theorem Measurable.liminf' {ι ι'} {f : ι → δ → α} {v : Filter ι} (hf :
 theorem Measurable.limsup' {ι ι'} {f : ι → δ → α} {u : Filter ι} (hf : ∀ i, Measurable (f i))
     {p : ι' → Prop} {s : ι' → Set ι} (hu : u.HasCountableBasis p s) (hs : ∀ i, (s i).Countable) :
     Measurable fun x => limsup (fun i => f i x) u :=
-  .liminf' (α := αᵒᵈ) hf hu hs
+  measurable_of_toDual_comp (Measurable.liminf' (α := αᵒᵈ)
+    (fun i ↦ measurable_toDual.comp (hf i)) hu hs)
 
 /-- `liminf` over `ℕ` is measurable. See `Measurable.liminf'` for a version with a general filter.
 -/
