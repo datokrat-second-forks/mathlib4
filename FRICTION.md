@@ -1383,6 +1383,18 @@ OrderDual.toDual_le_toDual, OrderDual.toDual_lt_toDual, OrderDual.toDual_inj] us
 `Finset.sup'`/`inf'` and `BddAbove`/`BddBelow` already have their bridges in the library
 (`Finset.toDual_inf'`, `bddAbove_preimage_ofDual`).
 
+Wave 33 hit the same wall in `Topology/Semicontinuity/Basic.lean` (`UpperSemicontinuousWithinAt.sum`)
+and there the induction is avoidable: the `AddEquiv` is free, so `map_sum` does the whole job.
+
+```lean
+private lemma toDual_finset_sum {ι' : Type*} (a : Finset ι') (f : ι' → γ) :
+    OrderDual.toDual (∑ i ∈ a, f i) = ∑ i ∈ a, OrderDual.toDual (f i) :=
+  map_sum ({ toEquiv := OrderDual.toDual, map_add' := fun _ _ ↦ rfl } : γ ≃+ γᵒᵈ) f a
+```
+
+Which underlines what is actually missing: not the algebra — `map_add'` is `rfl` — only the
+indexed transport lemma. Same shape as §61's missing `atTop`/`atBot` bridges.
+
 Also: a transport written as `Foo (β := βᵒᵈ) hf` makes the *unifier* produce the function
 `fun x ↦ { ofDual' := f x }`, on which no `toDual` simp lemma fires.  Rewriting the site to use
 the explicit `hf.dual` (`ConcaveOn.dual : ConcaveOn 𝕜 s f → ConvexOn 𝕜 s (toDual ∘ f)`) gives
@@ -1702,7 +1714,7 @@ instance-path mismatch rather than a flip — `@LE.le β inst✝.toSemilatticeIn
 `@LE.le β ConditionallyCompleteLattice.….toLE …` — split into `simp only [...] at h; exact h`,
 since `exact` checks at default transparency and accepts what `simpa` refuses.
 
-## 59. The sixth private copy of the `nhdsWithin` bridge
+## 59. The eighth private copy of the `nhdsWithin` bridge
 
 ```lean
 private theorem nhdsWithin_toDual {X : Type*} [TopologicalSpace X] (s : Set X) (a : X) :
@@ -1711,7 +1723,9 @@ private theorem nhdsWithin_toDual {X : Type*} [TopologicalSpace X] (s : Set X) (
     Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq]
 ```
 
-This is now the sixth file carrying its own copy, together with the specializations `𝓝[<] (toDual a)
+This is now the eighth file carrying its own copy (waves 33 added
+`Topology/EMetricSpace/BoundedVariation.lean` and a second block in
+`Topology/Order/LeftRightLim.lean`), together with the specializations `𝓝[<] (toDual a)
 = map toDual (𝓝[>] a)` and `𝓝[≤] (toDual a) = map toDual (𝓝[≥] a)` and the `Tendsto` corollaries
 that follow from it by `Filter.tendsto_map'_iff` / `Filter.map_le_map_iff toDual.injective`. Every
 one of them used to be `rfl` — that is precisely why the library never named them. They are the
@@ -1759,4 +1773,87 @@ The order-filter API has no counterpart of `nhds_toDual` — nothing says
 `@[to_dual]`), while the `nhds`-based ones in `Topology/Order/LeftRightLim.lean` transport in two.
 The asymmetry is purely a question of which dictionary entries the library happens to have. Adding
 the two `atTop`/`atBot` transports would be a small, self-contained public addition — noted here
-rather than done, since new public API is out of this campaign's scope.
+rather than done, since new public API is out of this campaign's scope. Wave 33 produced the
+second private copy, in `Topology/EMetricSpace/BoundedVariation.lean`:
+
+```lean
+private theorem atTop_dual {X : Type*} [Preorder X] :
+    (atTop : Filter Xᵒᵈ) = Filter.map (toDual : X → Xᵒᵈ) atBot := by
+  have h : (atTop : Filter Xᵒᵈ) = Filter.comap (ofDual : Xᵒᵈ → X) atBot := by
+    simp only [atTop, atBot, Filter.comap_iInf, Filter.comap_principal]
+    exact (OrderDual.toDual.surjective.iInf_comp fun a : Xᵒᵈ => 𝓟 (Ici a)).symm
+  rw [h, Filter.map_eq_comap_of_inverse (m := (toDual : X → Xᵒᵈ)) (n := ofDual) rfl rfl]
+```
+
+together with its `𝓟 t ⊓ atBot` companion. Two copies is the threshold at which the question
+stops being hypothetical.
+
+## 62. A dual bridge stated as an `Iff` whose function is `?g ∘ toDual` costs a heartbeat timeout
+
+Wave 33, `Mathlib/Topology/EMetricSpace/BoundedVariation.lean`. The natural bridge to write is
+
+```lean
+private theorem tendsto_comp_toDual_iff {f : X → Y} {t : Set X} {a : X} {l : Filter Y} :
+    Tendsto (f ∘ ⇑ofDual) (𝓝[⇑ofDual ⁻¹' t] (toDual a)) l ↔ Tendsto f (𝓝[t] a) l
+```
+
+Used in argument position it is fine; used to *produce* a `Tendsto (?g ∘ ⇑ofDual) …` goal, the
+function is a metavariable applied under a composition, so elaboration falls into higher-order
+unification and six call sites died with `(deterministic) timeout at whnf`, 200000 heartbeats.
+The rule the wave taught: an iff bridge is safe exactly when the relevant side mentions the
+function as a *bare* metavariable (`UpperSemicontinuousWithinAt ?f s x`, first-order); the moment
+it appears as `?g ∘ toDual`, it is not.
+
+Three repairs, all of which keep every function rigid:
+
+* state the bridge **one-directionally**, so the function comes from the hypothesis and is never
+  a metavariable:
+
+  ```lean
+  private theorem tendsto_comp_ofDual (h : Tendsto f (𝓝[t] a) l) :
+      Tendsto (f ∘ ⇑ofDual) (𝓝[⇑ofDual ⁻¹' t] (toDual a)) l := by
+    rw [nhdsWithin_toDual, Filter.tendsto_map'_iff]; exact h
+  ```
+
+* in result position, rewrite the hypothesis instead of the goal:
+  `have H := …; rw [nhdsWithin_toDual, Filter.tendsto_map'_iff] at H; exact H` — all first-order;
+
+* where the *set* is what has to be guessed (`Ici (toDual a)` against `⇑ofDual ⁻¹' ?t`), pin it:
+  `tendsto_comp_ofDual (t := s ∩ Ioi x) h'f`.
+
+The same rule governs a family of sites in `Mathlib/Topology/Semicontinuity/Basic.lean`. There the
+symptom is an application type mismatch rather than a timeout, but the cause is identical —
+`ContinuousAt.comp`'s `?g ∘ ?f` has nothing rigid to bite on, so Lean guesses
+`?f := Prod.mk (f x)` and the proof falls apart:
+
+```lean
+-- fails
+  ContinuousAt.comp_lowerSemicontinuousWithinAt (δ := δᵒᵈ) (continuous_toDual.continuousAt.comp hg) …
+-- works
+  ContinuousAt.comp_lowerSemicontinuousWithinAt (δ := δᵒᵈ) (g := ⇑OrderDual.toDual ∘ g)
+    (continuous_toDual.continuousAt.comp hg) …
+```
+
+At the doubly-dualised sites the inner `.comp` needs pinning too:
+`hg.comp (f := ⇑OrderDual.ofDual) (x := OrderDual.toDual (f x)) continuous_ofDual.continuousAt`.
+
+## 63. `Sort*`, not `Type*`, in a bridge over an index type
+
+The `ciSup`/`iSup` semicontinuity lemmas need two things. First, `⨆ i, toDual (g i)` is *not*
+defeq to `toDual (⨅ i, g i)`: `iSup` goes through `Set.range`, and membership in the range of
+`fun i ↦ toDual (g i)` is an equality **in the dual type** (`∃ i, toDual (g i) = toDual x`), which
+the structure does not see through. So the transported statement has to be corrected by
+`simp only [← toDual_iInf] at H` before the semicontinuity bridge applies — the same crack as §49.
+
+Second, the boundedness hypothesis needs its own bridge:
+
+```lean
+private lemma bddAbove_range_toDual {ι : Sort*} {g : ι → β} (h : BddBelow (Set.range g)) :
+    BddAbove (Set.range fun i ↦ toDual (g i))
+```
+
+and it must be `ι : Sort*`. Written with `Type*` it fails with the unsolvable universe constraint
+`?u + 1 =?= u_4` — `Set.range`'s index universe is a `Sort` level, and the semicontinuity file's
+index variable really is a `Sort*`. The error surfaces as a type mismatch between two `range`
+applications that print identically apart from their universe arguments, which is worth
+recognising on sight.
