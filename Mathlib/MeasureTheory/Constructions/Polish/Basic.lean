@@ -975,8 +975,10 @@ theorem MeasurableSet.image_of_monotoneOn [SecondCountableTopology β]
 
 /-- The image of a measurable set under an antitone map is measurable. -/
 theorem MeasurableSet.image_of_antitoneOn [SecondCountableTopology β]
-    (ht : MeasurableSet t) (hg : AntitoneOn g t) : MeasurableSet (g '' t) :=
-  (ht.image_of_monotoneOn hg.dual_right :)
+    (ht : MeasurableSet t) (hg : AntitoneOn g t) : MeasurableSet (g '' t) := by
+  have H := ht.image_of_monotoneOn hg.dual_right
+  rw [Set.image_comp, Equiv.image_eq_preimage_symm, OrderDual.toDual_symm_eq] at H
+  exact H
 
 end LinearOrder
 
