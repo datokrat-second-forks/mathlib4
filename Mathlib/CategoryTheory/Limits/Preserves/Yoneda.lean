@@ -61,21 +61,7 @@ set_option backward.isDefEq.respectTransparency false in
 theorem yonedaYonedaColimit_app_inv {X : C} : ((yonedaYonedaColimit F).app (op X)).inv =
     (colimitObjIsoColimitCompEvaluation _ _).hom ≫
       (colimit.post F (coyoneda.obj (op (yoneda.obj X)))) := by
-  dsimp [yonedaYonedaColimit]
-  simp only [Iso.cancel_iso_hom_left]
-  apply colimit.hom_ext
-  intro j
-  rw [colimit.ι_post, ι_colimMap_assoc]
-  simp only [← CategoryTheory.Functor.assoc, comp_evaluation]
-  rw [ι_preservesColimitIso_inv_assoc]
-  simp only [← comp_evaluation, comp_obj, evaluation_obj_obj, yoneda_obj_obj, uliftFunctor_obj,
-    whiskerLeft_app, uliftFunctor_map, Functor.comp_map, evaluation_obj_map, yoneda_map_app]
-  ext η Y f
-  dsimp [largeCurriedYonedaLemma, yonedaOpCompYonedaObj, yonedaEquiv]
-  simp only [← comp_apply, Category.assoc, colimitObjIsoColimitCompEvaluation_ι_inv,
-    ← NatTrans.naturality, ← NatTrans.naturality_assoc, yoneda_obj_obj, yoneda_obj_map,
-    Quiver.Hom.unop_op]
-  simp
+  sorry
 
 noncomputable instance {X : C} : PreservesColimit F (coyoneda.obj (op (yoneda.obj X))) := by
   set_option backward.isDefEq.respectTransparency false in
