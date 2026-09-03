@@ -137,11 +137,10 @@ lemma d_app (d : M.Derivation' φ') {X : Dᵒᵖ} (a : S'.obj X) :
     d.d (φ'.app X a) = 0 :=
   Derivation.d_app d _
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- The derivation relative to the morphism of commutative rings `φ'.app X` induced by
 a derivation relative to a morphism of presheaves of commutative rings. -/
 noncomputable def app (d : M.Derivation' φ') (X : Dᵒᵖ) : (M.obj X).Derivation (φ'.app X) :=
-  ModuleCat.Derivation.mk (fun b ↦ d.d b)
+  ModuleCat.Derivation.mk (fun b ↦ d.d b) (d_mul := fun b b' ↦ d.d_mul b b')
 
 @[simp]
 lemma app_apply (d : M.Derivation' φ') {X : Dᵒᵖ} (b : R.obj X) :

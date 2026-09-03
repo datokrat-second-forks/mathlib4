@@ -39,7 +39,6 @@ variable {C : Type u} [Category.{v} C] {J : GrothendieckTopology C}
 
 variable (F G : Cᵒᵖ ⥤ A)
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Given two presheaves `F` and `G` on a category `C` with values in a category `A`,
 this `presheafHom F G` is the presheaf of types which sends an object `X : C`
@@ -49,10 +48,12 @@ def presheafHom : Cᵒᵖ ⥤ Type _ where
   obj X := (Over.forget X.unop).op ⋙ F ⟶ (Over.forget X.unop).op ⋙ G
   map f := ↾(Functor.whiskerLeft (Over.map f.unop).op)
   map_id := by
+    set_option backward.isDefEq.respectTransparency.types false in
     rintro ⟨X⟩
     ext φ ⟨Y⟩
     simpa [Over.mapId] using φ.naturality ((Over.mapId X).hom.app Y).op
   map_comp := by
+    set_option backward.isDefEq.respectTransparency.types false in
     rintro ⟨X⟩ ⟨Y⟩ ⟨Z⟩ ⟨f : Y ⟶ X⟩ ⟨g : Z ⟶ Y⟩
     ext φ ⟨W⟩
     simpa [Over.mapComp] using φ.naturality ((Over.mapComp g f).hom.app W).op

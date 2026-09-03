@@ -143,12 +143,12 @@ instance : (preservesFiniteColimits (J := J) (C := C)).IsClosedUnderIsomorphisms
 lemma preservesFiniteColimits_iff (F : J ⥤ C) :
     preservesFiniteColimits F ↔ PreservesFiniteColimits F := Iff.rfl
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 instance [HasColimitsOfShape K' C]
     [PreservesLimitsOfShape K (colim (J := K') (C := C))] :
     (preservesLimitsOfShape K : ObjectProperty (J ⥤ C)).IsClosedUnderColimitsOfShape K' where
   colimitsOfShape_le := by
+    set_option backward.isDefEq.respectTransparency.types false in
     rintro G ⟨h⟩
     have := h.prop_diag_obj
     have : PreservesLimitsOfShape K h.diag.flip := ⟨fun {F} ↦ ⟨fun {c} hc ↦

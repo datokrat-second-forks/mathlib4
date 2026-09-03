@@ -56,7 +56,6 @@ noncomputable def curriedTensorPreIsoPost : curriedTensorPre F ≅ curriedTensor
   lift₂NatIso L L W W (curriedTensorPre G) (curriedTensorPost G) _ _
     (Functor.curriedTensorPreIsoPost G)
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc]
 lemma curriedTensorPreIsoPost_hom_app_app (X₁ X₂ : C) :
@@ -64,6 +63,7 @@ lemma curriedTensorPreIsoPost_hom_app_app (X₁ X₂ : C) :
     ((curriedTensorPreIsoPost L W F G).hom.app (L.obj X₁)).app (L.obj X₂) =
       (e.hom.app _ ⊗ₘ e.hom.app _) ≫ LaxMonoidal.μ G X₁ X₂ ≫ e.inv.app _ ≫
         F.map (OplaxMonoidal.δ L _ _) := by
+  set_option backward.isDefEq.respectTransparency false in
   simp [curriedTensorPreIsoPost]
 
 set_option backward.defeqAttrib.useBackward true in
@@ -84,13 +84,13 @@ lemma curriedTensorPreIsoPost_hom_app_app' {X₁ X₂ : C} {Y₁ Y₂ : D}
     tensorHom_comp_tensorHom, Iso.inv_hom_id, Iso.inv_hom_id, tensorHom_id, id_whiskerRight,
     Category.comp_id]
 
-set_option backward.isDefEq.respectTransparency false in
 /--
 Monoidal structure on `F`, given that `F` lifts along `L` to a monoidal functor `G`,
 where `L` is a monoidal localization functor.
 -/
 @[simps!]
 noncomputable def functorCoreMonoidalOfComp : F.CoreMonoidal := by
+  set_option backward.isDefEq.respectTransparency false in
   letI e := Lifting.iso L W G F
   refine Functor.CoreMonoidal.ofBifunctor
     (εIso G ≪≫ e.symm.app _ ≪≫ F.mapIso (εIso L).symm) (curriedTensorPreIsoPost L W F G) ?_ ?_ ?_
