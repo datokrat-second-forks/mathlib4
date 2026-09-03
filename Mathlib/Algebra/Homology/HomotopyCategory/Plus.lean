@@ -240,8 +240,8 @@ noncomputable def singleFunctorCompιIso (n : ℤ) :
     singleFunctor C n ⋙ ι C ≅ HomotopyCategory.singleFunctor C n :=
   Iso.refl _
 
-set_option backward.isDefEq.respectTransparency.types false in
 instance (n : ℤ) : (singleFunctor C n).Additive := by
+  set_option backward.isDefEq.respectTransparency.types false in
   dsimp [singleFunctor, singleFunctors]
   infer_instance
 

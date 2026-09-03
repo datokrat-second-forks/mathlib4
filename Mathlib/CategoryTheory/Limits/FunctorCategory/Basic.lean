@@ -273,13 +273,13 @@ def limitCompWhiskeringLeftIsoCompLimit (F : J ⥤ K ⥤ C) (G : D ⥤ K) [HasLi
       HasLimit.isoOfNatIso (isoWhiskerLeft F (whiskeringLeftCompEvaluation G j)) ≪≫
       (limitObjIsoLimitCompEvaluation F (G.obj j)).symm)
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
 theorem limitCompWhiskeringLeftIsoCompLimit_hom_whiskerLeft_π (F : J ⥤ K ⥤ C) (G : D ⥤ K)
     [HasLimitsOfShape J C] (j : J) :
     (limitCompWhiskeringLeftIsoCompLimit F G).hom ≫ whiskerLeft G (limit.π F j) =
       limit.π (F ⋙ (whiskeringLeft _ _ _).obj G) j := by
+  set_option backward.isDefEq.respectTransparency false in
   ext d
   simp [limitCompWhiskeringLeftIsoCompLimit]
 
@@ -366,13 +366,13 @@ def colimitCompWhiskeringLeftIsoCompColimit (F : J ⥤ K ⥤ C) (G : D ⥤ K) [H
       HasColimit.isoOfNatIso (isoWhiskerLeft F (whiskeringLeftCompEvaluation G j)) ≪≫
       (colimitObjIsoColimitCompEvaluation F (G.obj j)).symm)
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
 theorem ι_colimitCompWhiskeringLeftIsoCompColimit_hom (F : J ⥤ K ⥤ C) (G : D ⥤ K)
     [HasColimitsOfShape J C] (j : J) :
     colimit.ι (F ⋙ (whiskeringLeft _ _ _).obj G) j ≫
       (colimitCompWhiskeringLeftIsoCompColimit F G).hom = whiskerLeft G (colimit.ι F j) := by
+  set_option backward.isDefEq.respectTransparency false in
   ext d
   simp [colimitCompWhiskeringLeftIsoCompColimit]
 

@@ -51,12 +51,12 @@ noncomputable def ε : 𝟭 D₁ ⟶ G' ⋙ F' := by
   exact Localization.liftNatTrans L₁ W₁ L₁ ((G ⋙ F) ⋙ L₁) (𝟭 D₁) (G' ⋙ F')
     (whiskerRight adj.unit L₁)
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma ε_app (X₁ : C₁) :
     (ε adj L₁ W₁ L₂ G' F').app (L₁.obj X₁) =
       L₁.map (adj.unit.app X₁) ≫ (CatCommSq.iso F L₂ L₁ F').hom.app (G.obj X₁) ≫
         F'.map ((CatCommSq.iso G L₁ L₂ G').hom.app X₁) := by
+  set_option backward.isDefEq.respectTransparency false in
   let : Lifting L₁ W₁ ((G ⋙ F) ⋙ L₁) (G' ⋙ F') :=
     Lifting.mk (CatCommSq.hComp G F L₁ L₂ L₁ G' F').iso.symm
   simp only [ε, liftNatTrans_app, Lifting.iso, Iso.symm,
@@ -69,12 +69,12 @@ noncomputable def η : F' ⋙ G' ⟶ 𝟭 D₂ := by
     Lifting.mk (CatCommSq.hComp F G L₂ L₁ L₂ F' G').iso.symm
   exact liftNatTrans L₂ W₂ ((F ⋙ G) ⋙ L₂) L₂ (F' ⋙ G') (𝟭 D₂) (whiskerRight adj.counit L₂)
 
-set_option backward.isDefEq.respectTransparency false in
 lemma η_app (X₂ : C₂) :
     (η adj L₁ L₂ W₂ G' F').app (L₂.obj X₂) =
       G'.map ((CatCommSq.iso F L₂ L₁ F').inv.app X₂) ≫
         (CatCommSq.iso G L₁ L₂ G').inv.app (F.obj X₂) ≫
         L₂.map (adj.counit.app X₂) := by
+  set_option backward.isDefEq.respectTransparency false in
   let : Lifting L₂ W₂ ((F ⋙ G) ⋙ L₂) (F' ⋙ G') :=
     Lifting.mk (CatCommSq.hComp F G L₂ L₁ L₂ F' G').iso.symm
   simp only [η, liftNatTrans_app, Lifting.iso, Iso.symm, CatCommSq.hComp_iso_inv_app,
@@ -133,10 +133,10 @@ lemma localization_counit_app (X₂ : C₂) :
 
 end
 
-set_option backward.isDefEq.respectTransparency false in
 include adj in
 lemma isLocalization [F.Full] [F.Faithful] :
     G.IsLocalization ((MorphismProperty.isomorphisms C₂).inverseImage G) := by
+  set_option backward.isDefEq.respectTransparency false in
   let W := ((MorphismProperty.isomorphisms C₂).inverseImage G)
   have hG : W.IsInvertedBy G := fun _ _ _ hf => hf
   have : ∀ (X : C₁), IsIso ((whiskerRight adj.unit W.Q).app X) := fun X =>

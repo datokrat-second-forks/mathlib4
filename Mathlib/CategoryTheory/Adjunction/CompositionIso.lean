@@ -87,7 +87,6 @@ lemma conjugateEquiv_leftAdjointCompIso_inv (e₀₁₂ : G₂₁ ⋙ G₁₀ �
 
 end
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma leftAdjointCompIso_comp_id
     {F₀₁ : C₀ ⥤ C₁} {F₁₁' : C₁ ⥤ C₁} {G₁₀ : C₁ ⥤ C₀} {G₁'₁ : C₁ ⥤ C₁}
@@ -96,12 +95,12 @@ lemma leftAdjointCompIso_comp_id
     (h : e₀₁₁' = isoWhiskerRight e₁'₁ G₁₀ ≪≫ leftUnitor G₁₀) :
     leftAdjointCompIso adj₀₁ adj₁₁' adj₀₁ e₀₁₁' =
       isoWhiskerLeft _ (leftAdjointIdIso adj₁₁' e₁'₁) ≪≫ rightUnitor F₀₁ := by
+  set_option backward.isDefEq.respectTransparency false in
   subst h
   ext X₀
   simp [leftAdjointCompIso_hom_app, leftAdjointIdIso_hom_app,
     ← Functor.map_comp_assoc, -Functor.map_comp]
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma leftAdjointCompIso_id_comp
     {F₀₀' : C₀ ⥤ C₀} {F₀'₁ : C₀ ⥤ C₁} {G₀'₀ : C₀ ⥤ C₀} {G₁₀' : C₁ ⥤ C₀}
@@ -110,6 +109,7 @@ lemma leftAdjointCompIso_id_comp
     (h : e₀₀'₁ = isoWhiskerLeft G₁₀' e₀'₀ ≪≫ rightUnitor G₁₀') :
     leftAdjointCompIso adj₀₀' adj₀'₁ adj₀'₁ e₀₀'₁ =
       isoWhiskerRight (leftAdjointIdIso adj₀₀' e₀'₀) F₀'₁ ≪≫ leftUnitor F₀'₁ := by
+  set_option backward.isDefEq.respectTransparency false in
   subst h
   ext X₀
   have h₁ := congr_map F₀'₁ (adj₀₀'.counit.naturality (adj₀'₁.unit.app X₀))

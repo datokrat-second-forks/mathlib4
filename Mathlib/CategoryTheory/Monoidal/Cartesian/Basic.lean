@@ -662,11 +662,11 @@ def prodComparisonNatTrans (A : C) :
       Functor.comp_map, curriedTensor_obj_map, Category.assoc, prodComparison_fst, whiskerLeft_fst,
       prodComparison_snd, prodComparison_snd_assoc, whiskerLeft_snd, ← F.map_comp]
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 theorem prodComparisonNatTrans_comp :
     prodComparisonNatTrans (F ⋙ G) A = Functor.whiskerRight (prodComparisonNatTrans F A) G ≫
       Functor.whiskerLeft F (prodComparisonNatTrans G (F.obj A)) := by
+  set_option backward.isDefEq.respectTransparency false in
   ext; simp [prodComparison_comp]
 
 set_option backward.defeqAttrib.useBackward true in
@@ -688,13 +688,13 @@ def prodComparisonBifunctorNatTrans :
 
 variable {E : Type u₂} [Category.{v₂} E] [CartesianMonoidalCategory E] (G : D ⥤ E)
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 theorem prodComparisonBifunctorNatTrans_comp : prodComparisonBifunctorNatTrans (F ⋙ G) =
     Functor.whiskerRight
       (prodComparisonBifunctorNatTrans F) ((Functor.whiskeringRight _ _ _).obj G) ≫
         Functor.whiskerLeft F (Functor.whiskerRight (prodComparisonBifunctorNatTrans G)
           ((Functor.whiskeringLeft _ _ _).obj F)) := by
+  set_option backward.isDefEq.respectTransparency false in
   ext; simp [prodComparison_comp]
 
 instance (A : C) [∀ B, IsIso (prodComparison F A B)] : IsIso (prodComparisonNatTrans F A) := by

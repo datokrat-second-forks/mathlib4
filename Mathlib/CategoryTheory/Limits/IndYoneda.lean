@@ -69,11 +69,11 @@ noncomputable def colimitHomIsoLimitYoneda
     (colimit F ⟶ A) ≅ limit (F.op ⋙ yoneda.obj A) :=
   (coyonedaOpColimitIsoLimitCoyoneda F).app A ≪≫ limitObjIsoLimitCompEvaluation _ _
 
-set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma colimitHomIsoLimitYoneda_hom_comp_π [HasLimitsOfShape Iᵒᵖ (Type u₂)] (A : C) (i : I) :
     (colimitHomIsoLimitYoneda F A).hom ≫ limit.π (F.op ⋙ yoneda.obj A) ⟨i⟩ =
       (yoneda.obj A).map (colimit.ι F i).op := by
+  set_option backward.isDefEq.respectTransparency false in
   simp only [colimitHomIsoLimitYoneda, Iso.trans_hom, Iso.app_hom, Category.assoc]
   erw [limitObjIsoLimitCompEvaluation_hom_π]
   change ((coyonedaOpColimitIsoLimitCoyoneda F).hom ≫ _).app A = _
@@ -118,11 +118,11 @@ noncomputable def colimitHomIsoLimitYoneda' [HasLimitsOfShape I (Type u₂)] (A 
     (colimit F ⟶ A) ≅ limit (F.rightOp ⋙ yoneda.obj A) :=
   (coyonedaOpColimitIsoLimitCoyoneda' F).app A ≪≫ limitObjIsoLimitCompEvaluation _ _
 
-set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma colimitHomIsoLimitYoneda'_hom_comp_π [HasLimitsOfShape I (Type u₂)] (A : C) (i : I) :
     (colimitHomIsoLimitYoneda' F A).hom ≫ limit.π (F.rightOp ⋙ yoneda.obj A) i =
       (yoneda.obj A).map (colimit.ι F ⟨i⟩).op := by
+  set_option backward.isDefEq.respectTransparency false in
   simp only [colimitHomIsoLimitYoneda', Iso.trans_hom,
     Iso.app_hom, Category.assoc]
   erw [limitObjIsoLimitCompEvaluation_hom_π]

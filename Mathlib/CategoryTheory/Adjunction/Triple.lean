@@ -154,13 +154,13 @@ lemma rightToLeft_app_adj₂_unit_app (X : C) :
     t.rightToLeft.app X ≫ t.adj₂.unit.app (F.obj X) = H.map (t.adj₁.unit.app X) :=
   G.map_injective (by simp [← cancel_mono (t.adj₂.counit.app _)])
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- For an adjoint triple `F ⊣ G ⊣ H` where `G` is fully faithful, the natural transformation
 `F.op ⟶ H.op` obtained from the dual adjoint triple `H.op ⊣ G.op ⊣ F.op` is dual to the natural
 transformation `H ⟶ F`. -/
 @[simp]
 lemma op_rightToLeft : t.op.rightToLeft = NatTrans.op t.rightToLeft := by
+  set_option backward.isDefEq.respectTransparency false in
   ext
   rw [rightToLeft_eq_units, rightToLeft_eq_counits]
   simp
@@ -258,13 +258,13 @@ lemma leftToRight_app_map_adj₁_unit_app (X : C) :
     t.leftToRight.app X ≫ H.map (t.adj₁.unit.app X) = t.adj₂.unit.app (F.obj X) := by
   simp [leftToRight_app]
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- For an adjoint triple `F ⊣ G ⊣ H` where `F` and `H` are fully faithful, the natural
 transformation `H.op ⟶ F.op` obtained from the dual adjoint triple `H.op ⊣ G.op ⊣ F.op` is
 dual to the natural transformation `F ⟶ H`. -/
 @[simp]
 lemma leftToRight_op : t.op.leftToRight = NatTrans.op t.leftToRight := by
+  set_option backward.isDefEq.respectTransparency false in
   ext
   rw [leftToRight, leftToRight_eq_counits]
   simp

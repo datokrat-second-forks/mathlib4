@@ -77,8 +77,8 @@ theorem yonedaYonedaColimit_app_inv {X : C} : ((yonedaYonedaColimit F).app (op X
     Quiver.Hom.unop_op]
   simp
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance {X : C} : PreservesColimit F (coyoneda.obj (op (yoneda.obj X))) := by
+  set_option backward.isDefEq.respectTransparency false in
   suffices IsIso (colimit.post F (coyoneda.obj (op (yoneda.obj X)))) from
     preservesColimit_of_isIso_post _ _
   suffices colimit.post F (coyoneda.obj (op (yoneda.obj X))) =

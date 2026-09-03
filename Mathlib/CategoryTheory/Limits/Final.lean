@@ -308,20 +308,20 @@ def colimitCoconeComp (t : ColimitCocone G) : ColimitCocone (F ⋙ G) where
 instance (priority := 100) comp_hasColimit [HasColimit G] : HasColimit (F ⋙ G) :=
   HasColimit.mk (colimitCoconeComp F (getColimitCocone G))
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 instance (priority := 100) comp_preservesColimit {B : Type u₄} [Category.{v₄} B] {H : E ⥤ B}
     [PreservesColimit G H] : PreservesColimit (F ⋙ G) H where
   preserves {c} hc := by
+    set_option backward.isDefEq.respectTransparency false in
     refine ⟨isColimitExtendCoconeEquiv (G := G ⋙ H) F (H.mapCocone c) ?_⟩
     let hc' := isColimitOfPreserves H ((isColimitExtendCoconeEquiv F c).symm hc)
     exact IsColimit.ofIsoColimit hc' (Cocone.ext (Iso.refl _) (by simp))
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 instance (priority := 100) comp_reflectsColimit {B : Type u₄} [Category.{v₄} B] {H : E ⥤ B}
     [ReflectsColimit G H] : ReflectsColimit (F ⋙ G) H where
   reflects {c} hc := by
+    set_option backward.isDefEq.respectTransparency false in
     refine ⟨isColimitExtendCoconeEquiv F _ (isColimitOfReflects H ?_)⟩
     let hc' := (isColimitExtendCoconeEquiv (G := G ⋙ H) F _).symm hc
     exact IsColimit.ofIsoColimit hc' (Cocone.ext (Iso.refl _) (by simp))
@@ -673,20 +673,20 @@ def limitConeComp (t : LimitCone G) : LimitCone (F ⋙ G) where
 instance (priority := 100) comp_hasLimit [HasLimit G] : HasLimit (F ⋙ G) :=
   HasLimit.mk (limitConeComp F (getLimitCone G))
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 instance (priority := 100) comp_preservesLimit {B : Type u₄} [Category.{v₄} B] {H : E ⥤ B}
     [PreservesLimit G H] : PreservesLimit (F ⋙ G) H where
   preserves {c} hc := by
+    set_option backward.isDefEq.respectTransparency false in
     refine ⟨isLimitExtendConeEquiv (G := G ⋙ H) F (H.mapCone c) ?_⟩
     let hc' := isLimitOfPreserves H ((isLimitExtendConeEquiv F c).symm hc)
     exact IsLimit.ofIsoLimit hc' (Cone.ext (Iso.refl _) (by simp))
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 instance (priority := 100) comp_reflectsLimit {B : Type u₄} [Category.{v₄} B] {H : E ⥤ B}
     [ReflectsLimit G H] : ReflectsLimit (F ⋙ G) H where
   reflects {c} hc := by
+    set_option backward.isDefEq.respectTransparency false in
     refine ⟨isLimitExtendConeEquiv F _ (isLimitOfReflects H ?_)⟩
     let hc' := (isLimitExtendConeEquiv (G := G ⋙ H) F _).symm hc
     exact IsLimit.ofIsoLimit hc' (Cone.ext (Iso.refl _) (by simp))
@@ -862,8 +862,8 @@ theorem initial_iff_comp_equivalence [IsEquivalence G] : Initial F ↔ Initial (
 theorem initial_iff_equivalence_comp [IsEquivalence F] : Initial G ↔ Initial (F ⋙ G) :=
   ⟨fun _ => initial_equivalence_comp _ _, fun _ => initial_of_equivalence_comp F _⟩
 
-set_option backward.isDefEq.respectTransparency false in
 instance final_comp [hF : Final F] [hG : Final G] : Final (F ⋙ G) := by
+  set_option backward.isDefEq.respectTransparency false in
   let s₁ : C ≌ AsSmall.{max u₁ v₁ u₂ v₂ u₃ v₃} C := AsSmall.equiv
   let s₂ : D ≌ AsSmall.{max u₁ v₁ u₂ v₂ u₃ v₃} D := AsSmall.equiv
   let s₃ : E ≌ AsSmall.{max u₁ v₁ u₂ v₂ u₃ v₃} E := AsSmall.equiv
@@ -884,8 +884,8 @@ instance initial_comp [Initial F] [Initial G] : Initial (F ⋙ G) := by
   suffices Final (F ⋙ G).op from initial_of_final_op _
   exact final_comp F.op G.op
 
-set_option backward.isDefEq.respectTransparency false in
 theorem final_of_final_comp [hF : Final F] [hFG : Final (F ⋙ G)] : Final G := by
+  set_option backward.isDefEq.respectTransparency false in
   let s₁ : C ≌ AsSmall.{max u₁ v₁ u₂ v₂ u₃ v₃} C := AsSmall.equiv
   let s₂ : D ≌ AsSmall.{max u₁ v₁ u₂ v₂ u₃ v₃} D := AsSmall.equiv
   let s₃ : E ≌ AsSmall.{max u₁ v₁ u₂ v₂ u₃ v₃} E := AsSmall.equiv

@@ -230,23 +230,23 @@ lemma opShiftFunctorEquivalence_counitIso_inv_naturality (n : ℤ) {X Y : Cᵒ�
       (opShiftFunctorEquivalence C n).counitIso.inv.app X ≫ f.unop⟦n⟧'.op⟦n⟧' :=
   (opShiftFunctorEquivalence C n).counitIso.inv.naturality f
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 lemma opShiftFunctorEquivalence_zero_unitIso_hom_app (X : Cᵒᵖ) :
     (opShiftFunctorEquivalence C 0).unitIso.hom.app X =
       ((shiftFunctorZero C ℤ).hom.app X.unop).op ≫
       (((shiftFunctorZero Cᵒᵖ ℤ).inv.app X).unop⟦(0 : ℤ)⟧').op := by
+  set_option backward.isDefEq.respectTransparency.types false in
   apply Quiver.Hom.unop_inj
   dsimp [opShiftFunctorEquivalence]
   rw [shiftFunctorZero_op_inv_app, unop_comp, Quiver.Hom.unop_op, Functor.map_comp,
     shiftFunctorCompIsoId_zero_zero_hom_app, assoc]
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 lemma opShiftFunctorEquivalence_zero_unitIso_inv_app (X : Cᵒᵖ) :
     (opShiftFunctorEquivalence C 0).unitIso.inv.app X =
       (((shiftFunctorZero Cᵒᵖ ℤ).hom.app X).unop⟦(0 : ℤ)⟧').op ≫
         ((shiftFunctorZero C ℤ).inv.app X.unop).op := by
+  set_option backward.isDefEq.respectTransparency.types false in
   apply Quiver.Hom.unop_inj
   dsimp [opShiftFunctorEquivalence]
   rw [shiftFunctorZero_op_hom_app, unop_comp, Quiver.Hom.unop_op, Functor.map_comp,
@@ -330,7 +330,6 @@ lemma shiftFunctorCompIsoId_op_inv_app (X : Cᵒᵖ) (n m : ℤ) (hnm : n + m = 
   simp [shiftFunctorCompIsoId, shiftFunctorZero_op_inv_app X,
     shiftFunctorAdd'_op_hom_app X n m 0 hnm m n 0 hnm (by lia) (add_zero 0)]
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc]
 lemma shift_opShiftFunctorEquivalence_counitIso_inv_app
@@ -340,6 +339,7 @@ lemma shift_opShiftFunctorEquivalence_counitIso_inv_app
         (((shiftFunctorOpIso C m n hmn).hom.app (Opposite.op X)).unop⟦n⟧').op⟦n⟧' ≫
           ((shiftFunctorOpIso C m n hmn).inv.app (Opposite.op (X⟦n⟧)))⟦n⟧' ≫
             (shiftFunctorComm Cᵒᵖ n m).inv.app (Opposite.op (X⟦n⟧)) := by
+  set_option backward.isDefEq.respectTransparency.types false in
   obtain rfl : m = -n := by lia
   dsimp [opShiftFunctorEquivalence]
   simp only [shiftFunctor_op_map _ (-n) n, shiftFunctor_op_map _ n (-n),

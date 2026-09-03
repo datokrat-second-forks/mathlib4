@@ -72,7 +72,6 @@ private lemma adjRetraction_is_retraction (c : C) (d : D)
 
 attribute [local simp] Adjunction.homEquiv_unit Adjunction.homEquiv_counit
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /--
 Day's reflection theorem.
@@ -93,6 +92,7 @@ theorem isIso_tfae : List.TFAE
     , ∀ (c : C) (d : D), IsIso ((pre (adj.unit.app d)).app (R.obj c))
     , ∀ (d d' : D), IsIso (L.map ((adj.unit.app d) ▷ d'))
     , ∀ (d d' : D), IsIso (L.map ((adj.unit.app d) ⊗ₘ (adj.unit.app d')))] := by
+  set_option backward.isDefEq.respectTransparency false in
   tfae_have 3 → 4
   | h => by
     -- We can commute the tensor product in the condition that `L.map ((adj.unit.app d) ▷ d')` is

@@ -337,14 +337,14 @@ def RightExtension.postcomp₁ (f : L ⋙ G ⟶ L') (F : C ⥤ H) :
 
 variable [IsEquivalence G]
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance (f : L' ⟶ L ⋙ G) [IsIso f] (F : C ⥤ H) :
     IsEquivalence (LeftExtension.postcomp₁ G f F) := by
+  set_option backward.isDefEq.respectTransparency false in
   apply StructuredArrow.isEquivalenceMap₂
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance (f : L ⋙ G ⟶ L') [IsIso f] (F : C ⥤ H) :
     IsEquivalence (RightExtension.postcomp₁ G f F) := by
+  set_option backward.isDefEq.respectTransparency false in
   apply CostructuredArrow.isEquivalenceMap₂
 
 variable {G} in
@@ -480,12 +480,12 @@ def RightExtension.precomp : RightExtension L F ⥤ RightExtension (G ⋙ L) (G 
 
 variable [IsEquivalence G]
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance : IsEquivalence (LeftExtension.precomp L F G) := by
+  set_option backward.isDefEq.respectTransparency false in
   apply StructuredArrow.isEquivalenceMap₂
 
-set_option backward.isDefEq.respectTransparency false in
 noncomputable instance : IsEquivalence (RightExtension.precomp L F G) := by
+  set_option backward.isDefEq.respectTransparency false in
   apply CostructuredArrow.isEquivalenceMap₂
 
 /-- If `G` is an equivalence, then a left extension of `F` along `L` is universal iff
@@ -502,11 +502,11 @@ noncomputable def RightExtension.isUniversalPrecompEquiv (e : RightExtension L F
 
 variable {F L}
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 lemma isLeftKanExtension_iff_precomp (α : F ⟶ L ⋙ F') :
     F'.IsLeftKanExtension α ↔ F'.IsLeftKanExtension
       (whiskerLeft G α ≫ (associator _ _ _).inv) := by
+  set_option backward.isDefEq.respectTransparency false in
   let eq : (LeftExtension.mk _ α).IsUniversal ≃ (LeftExtension.mk _
       (whiskerLeft G α ≫ (associator _ _ _).inv)).IsUniversal :=
     (LeftExtension.isUniversalPrecompEquiv L F G _).trans
@@ -801,7 +801,6 @@ lemma isRightKanExtension_postcompose₂_iff
 
 end postcompose₂
 
-set_option backward.isDefEq.respectTransparency false in
 lemma isLeftKanExtension_iff_precomp_equivalence
     {F₁' : D ⥤ H} {L₁ : C ⥤ D} {F₁ : C ⥤ H} (α₁ : F₁ ⟶ L₁ ⋙ F₁')
     {F₂' : D' ⥤ H} {L₂ : C' ⥤ D'} {F₂ : C' ⥤ H} (α₂ : F₂ ⟶ L₂ ⋙ F₂')
@@ -811,6 +810,7 @@ lemma isLeftKanExtension_iff_precomp_equivalence
       whiskerRight iso.hom F₂' ≫ (associator _ _ _).hom ≫
       whiskerLeft L₁ e'.hom := by cat_disch) :
     F₂'.IsLeftKanExtension α₂ ↔ F₁'.IsLeftKanExtension α₁ := by
+  set_option backward.isDefEq.respectTransparency false in
   simp only [isLeftKanExtension_iff]
   let Φ : L₂.LeftExtension F₂ ⥤ L₁.LeftExtension F₁ :=
     StructuredArrow.map₂ (F := (whiskeringLeft _ _ _).obj G')
@@ -819,7 +819,6 @@ lemma isLeftKanExtension_iff_precomp_equivalence
   exact Equiv.nonempty_congr ((IsInitial.isInitialIffObj Φ _).trans
     (IsInitial.equivOfIso (StructuredArrow.isoMk e')))
 
-set_option backward.isDefEq.respectTransparency false in
 lemma isRightKanExtension_iff_precomp_equivalence
     {F₁' : D ⥤ H} {L₁ : C ⥤ D} {F₁ : C ⥤ H} (α₁ : L₁ ⋙ F₁' ⟶ F₁)
     {F₂' : D' ⥤ H} {L₂ : C' ⥤ D'} {F₂ : C' ⥤ H} (α₂ : L₂ ⋙ F₂' ⟶ F₂)
@@ -828,6 +827,7 @@ lemma isRightKanExtension_iff_precomp_equivalence
     (h : α₁ = whiskerLeft L₁ e'.inv ≫ (associator _ _ _).inv ≫ whiskerRight iso.inv _ ≫
       (associator _ _ _).hom ≫ whiskerLeft G α₂ ≫ e.inv := by cat_disch) :
     F₂'.IsRightKanExtension α₂ ↔ F₁'.IsRightKanExtension α₁ := by
+  set_option backward.isDefEq.respectTransparency false in
   simp only [isRightKanExtension_iff]
   let Φ : L₂.RightExtension F₂ ⥤ L₁.RightExtension F₁ :=
     CostructuredArrow.map₂ (F := (whiskeringLeft _ _ _).obj G')
@@ -927,10 +927,10 @@ noncomputable def limitIsoOfIsRightKanExtension : limit F' ≅ limit F :=
   IsLimit.conePointUniqueUpToIso (limit.isLimit F')
     (F'.isLimitConeOfIsRightKanExtension α (limit.isLimit F))
 
-set_option backward.isDefEq.respectTransparency false in
 @[reassoc (attr := simp)]
 lemma limitIsoOfIsRightKanExtension_inv_π (i : C) :
     (F'.limitIsoOfIsRightKanExtension α).inv ≫ limit.π F' (L.obj i) ≫ α.app i = limit.π F i := by
+  set_option backward.isDefEq.respectTransparency false in
   simp [limitIsoOfIsRightKanExtension]
 
 @[reassoc (attr := simp)]
