@@ -346,6 +346,13 @@ def leftOpComp {E : Type*} [Category* E] (F : C ⥤ D) (G : D ⥤ Eᵒᵖ) :
     (F ⋙ G).leftOp ≅ F.op ⋙ G.leftOp :=
   Iso.refl _
 
+/-- Compatibility of `Functor.leftOp` with respect to composition with the opposite of a
+functor. -/
+@[simps!]
+def leftOpCompOp {E : Type*} [Category* E] (F : C ⥤ Dᵒᵖ) (G : D ⥤ E) :
+    (F ⋙ G.op).leftOp ≅ F.leftOp ⋙ G :=
+  NatIso.ofComponents fun _ ↦ Iso.refl _
+
 section
 variable (C)
 

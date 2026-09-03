@@ -118,15 +118,14 @@ lemma Limits.exists_eq_isColimitMap_of_preservesColimit_coyoneda
     exists_eq_isLimitMap_of_preservesColimit_yoneda hc'.op hc.op f.op
   have := NatTrans.leftOp g
   refine ⟨Jᵒᵖ, inferInstance, inferInstance, G'.leftOp, G.leftOp, inferInstance, inferInstance,
-    NatTrans.leftOp g, ?_⟩
+    (Functor.leftOpCompOp G' D).inv ≫ NatTrans.leftOp g ≫ (Functor.leftOpCompOp G D').hom, ?_⟩
   refine Quiver.Hom.op_inj ?_
   rw [hg]
   refine ((Functor.Initial.isLimitWhiskerEquiv G' c.op).symm hc.op).hom_ext fun k ↦ ?_
   rw [IsLimit.map_π]
   dsimp
   rw [← op_comp]
-  simp [dsimp% (((Functor.Final.isColimitWhiskerEquiv G'.leftOp c).symm hc).ι_map
-    (c'.whisker G.leftOp) (NatTrans.leftOp g))]
+  simp [dsimp% ((Functor.Final.isColimitWhiskerEquiv G'.leftOp c).symm hc).ι_map]
 
 end
 
