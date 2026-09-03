@@ -143,9 +143,9 @@ noncomputable def singleFunctorιIso (n : ℤ) :
   Iso.refl _
 
 instance (n : ℤ) : (singleFunctor C n).Additive := by
-  set_option backward.isDefEq.respectTransparency.types false in
-  dsimp [singleFunctor, singleFunctors]
-  infer_instance
+  let _ : (singleFunctor C n ⋙ Plus.ι).Additive :=
+    (Functor.additive_iff_of_iso (singleFunctorιIso C n)).2 inferInstance
+  exact Functor.additive_of_comp_faithful _ Plus.ι
 
 /-- The homology functor `DerivedCategory.Plus C ⥤ C` in degree `n : ℤ`. -/
 noncomputable def homologyFunctor (n : ℤ) : Plus C ⥤ C :=

@@ -241,9 +241,9 @@ noncomputable def singleFunctorCompιIso (n : ℤ) :
   Iso.refl _
 
 instance (n : ℤ) : (singleFunctor C n).Additive := by
-  set_option backward.isDefEq.respectTransparency.types false in
-  dsimp [singleFunctor, singleFunctors]
-  infer_instance
+  let _ : (singleFunctor C n ⋙ ι C).Additive :=
+    (Functor.additive_iff_of_iso (singleFunctorCompιIso C n)).2 inferInstance
+  exact Functor.additive_of_comp_faithful _ (ι C)
 
 end
 
