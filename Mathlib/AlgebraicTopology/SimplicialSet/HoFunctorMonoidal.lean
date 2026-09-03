@@ -386,9 +386,9 @@ lemma associativityIso_hom_app (xyz) :
   dsimp [associativityIso]
   rw [associativity'Iso_hom_app _]
   dsimp
-  rw [CategoryTheory.Functor.map_id, Category.id_comp, Category.comp_id,
-    Category.comp_id, ← prod_id, CategoryTheory.Functor.map_id,
-    CategoryTheory.Functor.map_id]
+  simp only [Functor.associator_hom_app, Functor.comp_obj, prod.associator_obj,
+    prod.inverseAssociator_obj, Functor.prod_obj, Functor.id_obj, CategoryTheory.Functor.map_id,
+    Category.comp_id, ← prod_id]
 
 lemma associativity :
     (inverse X Y).prod (𝟭 _) ⋙ inverse (X ⊗ Y) Z ⋙ mapHomotopyCategory (α_ _ _ _).hom =

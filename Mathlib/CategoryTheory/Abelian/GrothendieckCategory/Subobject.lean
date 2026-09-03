@@ -109,7 +109,8 @@ noncomputable def isColimitMapCoconeOfSubobjectMkEqISup
     (Cocone.ext (Subobject.isoOfMkEqMk _ _ this) (fun j ↦ ?_))
   rw [← cancel_mono (c.pt.hom)]
   dsimp
-  rw [Category.id_comp, Category.assoc, Subobject.ofMkLEMk_comp, Over.w]
+  simp only [Functor.associator_hom_app, Functor.comp_obj, ObjectProperty.ι_obj, Over.forget_obj,
+    Category.id_comp, Category.assoc, Subobject.ofMkLEMk_comp, Over.w]
   apply colimit.ι_desc
 
 /-- If `C` is a Grothendieck abelian category, `X : C`, if `F : J ⥤ MonoOver X` is a

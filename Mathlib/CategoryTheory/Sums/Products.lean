@@ -193,7 +193,10 @@ def associativityFunctorEquivNaturalityFunctorIso :
       ext
       all_goals
         dsimp
-        simp only [Category.comp_id, Category.id_comp, NatTrans.naturality])
+        simp only [Functor.associator_hom_app, Functor.associator_inv_app, comp_obj, inl__obj,
+          inr__obj, sum.inverseAssociator_obj_inl, sum.inverseAssociator_obj_inr_inl,
+          sum.inverseAssociator_obj_inr_inr, Category.comp_id, Category.id_comp,
+          NatTrans.naturality])
 
 end CompatibilityWithProductAssociator
 

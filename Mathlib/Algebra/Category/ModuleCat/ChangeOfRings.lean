@@ -995,7 +995,8 @@ lemma homEquiv_extendScalarsComp (M : ModuleCat R₁) :
         (restrictScalars f₁₂).map ((extendRestrictScalarsAdj f₂₃).unit.app _) ≫
         (restrictScalarsComp f₁₂ f₂₃).inv.app _ := by
   dsimp [extendScalarsComp, conjugateIsoEquiv, conjugateEquiv]
-  simp only [Functor.comp_obj, Category.assoc, Category.id_comp,
+  simp only [Functor.associator_hom_app, Functor.associator_inv_app, Functor.comp_obj,
+    Functor.id_obj, Category.assoc, Category.id_comp,
     Category.comp_id, Adjunction.comp_unit_app, Adjunction.homEquiv_unit,
     Functor.map_comp, Adjunction.unit_naturality_assoc,
     Adjunction.right_triangle_components]
@@ -1026,6 +1027,8 @@ lemma extendScalars_assoc :
   rw [h₁]
   erw [h₂]
   rw [h₃, ExtendScalars.map_tmul, h₄]
+  simp only [Functor.associator_inv_app, Functor.comp_obj, ModuleCat.hom_id, LinearMap.id_coe,
+    id_eq]
 
 /-- The associativity compatibility for the extension of scalars, in the exact form
 that is needed in the definition `CommRingCat.moduleCatExtendScalarsPseudofunctor`

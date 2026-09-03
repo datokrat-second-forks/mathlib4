@@ -127,7 +127,8 @@ instance precomp₁ {M : Type*} [AddCommMonoid M] [HasShift C₁ M] [HasShift C�
   comm X₁' X₂ m n := by
     have := G.commShift₂_comm h (F.obj X₁') X₂ m n
     dsimp [commShiftIso] at this ⊢
-    simp only [Category.comp_id, Category.id_comp, map_comp, Category.assoc]
+    simp only [Functor.associator_hom_app, Functor.associator_inv_app, Functor.comp_obj,
+      Functor.flip_obj_obj, Category.comp_id, Category.id_comp, map_comp, Category.assoc]
     rw [NatTrans.shift_app (G.map ((F.commShiftIso m).hom.app X₁')) n X₂]
     simp [this]
 
@@ -144,7 +145,8 @@ instance precomp₂ {M : Type*} [AddCommMonoid M] [HasShift C₁ M] [HasShift C�
   comm X₁ X₂' m n := by
     have := G.commShift₂_comm h X₁ (F.obj X₂') m n
     dsimp [commShiftIso] at this ⊢
-    simp only [Category.comp_id, Category.id_comp, Category.assoc, map_comp]
+    simp only [Functor.associator_hom_app, Functor.associator_inv_app, Functor.comp_obj,
+      Category.comp_id, Category.id_comp, Category.assoc, map_comp]
     refine ((G.obj _).map _ ≫= this).trans ?_
     simp only [← Category.assoc]; congr 3
     exact (NatTrans.shift_app_comm (G.flip.map ((F.commShiftIso n).hom.app X₂')) m X₁).symm

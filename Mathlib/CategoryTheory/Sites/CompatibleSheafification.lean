@@ -73,7 +73,8 @@ theorem sheafificationWhiskerLeftIso_hom_app (P : Cᵒᵖ ⥤ D) (F : D ⥤ E)
         PreservesLimit (W.index P).multicospan F] :
     (sheafificationWhiskerLeftIso J P).hom.app F = (J.sheafifyCompIso F P).hom := by
   dsimp [sheafificationWhiskerLeftIso, sheafifyCompIso]
-  simp only [sheafify, Category.comp_id]
+  simp only [sheafify, associator_hom_app, comp_obj, whiskeringLeft_obj_obj, plusFunctor_obj,
+    Category.comp_id]
 
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
@@ -84,7 +85,8 @@ theorem sheafificationWhiskerLeftIso_inv_app (P : Cᵒᵖ ⥤ D) (F : D ⥤ E)
         PreservesLimit (W.index P).multicospan F] :
     (sheafificationWhiskerLeftIso J P).inv.app F = (J.sheafifyCompIso F P).inv := by
   dsimp [sheafificationWhiskerLeftIso, sheafifyCompIso]
-  simp only [sheafify, Category.id_comp]
+  simp only [sheafify, associator_inv_app, comp_obj, whiskeringLeft_obj_obj, plusFunctor_obj,
+    Category.id_comp]
 
 /-- The isomorphism between the sheafification of `P` composed with `F` and
 the sheafification of `P ⋙ F`, functorially in `P`. -/
@@ -103,7 +105,8 @@ set_option backward.defeqAttrib.useBackward true in
 theorem sheafificationWhiskerRightIso_hom_app :
     (J.sheafificationWhiskerRightIso F).hom.app P = (J.sheafifyCompIso F P).hom := by
   dsimp [sheafificationWhiskerRightIso, sheafifyCompIso]
-  simp only [sheafify, Category.id_comp, Category.comp_id]
+  simp only [sheafify, associator_hom_app, associator_inv_app, comp_obj, plusFunctor_obj,
+    whiskeringRight_obj_obj, Category.id_comp, Category.comp_id]
 
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
@@ -111,7 +114,8 @@ set_option backward.defeqAttrib.useBackward true in
 theorem sheafificationWhiskerRightIso_inv_app :
     (J.sheafificationWhiskerRightIso F).inv.app P = (J.sheafifyCompIso F P).inv := by
   dsimp [sheafificationWhiskerRightIso, sheafifyCompIso]
-  simp only [sheafify, Category.id_comp, Category.comp_id]
+  simp only [sheafify, associator_hom_app, associator_inv_app, comp_obj, plusFunctor_obj,
+    whiskeringRight_obj_obj, Category.id_comp, Category.comp_id]
 
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in

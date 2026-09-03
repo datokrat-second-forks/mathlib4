@@ -338,7 +338,7 @@ def adjointifyη : 𝟭 C ≅ F ⋙ G := by
 theorem adjointify_η_ε (X : C) :
     F.map ((adjointifyη η ε).hom.app X) ≫ ε.hom.app (F.obj X) = 𝟙 (F.obj X) := by
   dsimp [adjointifyη, Trans.trans]
-  simp only [comp_id, assoc, map_comp]
+  simp only [comp_id, assoc, map_comp, associator_hom_app, associator_inv_app, comp_obj]
   have := ε.hom.naturality (F.map (η.inv.app X)); dsimp at this; rw [this]; clear this
   rw [← assoc _ _ (F.map _)]
   have := ε.hom.naturality (ε.inv.app <| F.obj X); dsimp at this; rw [this]; clear this
@@ -392,7 +392,7 @@ def trans (e : C ≌ D) (f : D ≌ E) : C ≌ E where
   functor_unitIso_comp X := by
     dsimp
     simp only [comp_id, id_comp, map_comp, fun_inv_map, comp_obj, id_obj, counitInv,
-      functor_unit_comp_assoc, assoc]
+      functor_unit_comp_assoc, assoc, associator_hom_app, associator_inv_app]
     slice_lhs 2 3 => rw [← Functor.map_comp, Iso.inv_hom_id_app]
     simp
 

@@ -124,8 +124,9 @@ noncomputable instance :
   shiftIso_add n m a a' a'' ha' ha'' := by
     ext K
     dsimp [homologyMap]
-    simp only [ShiftSequence.shiftIso_hom_app, id_comp,
-      ← ShortComplex.homologyMap_comp, shiftFunctorAdd'_eq_shiftFunctorAdd,
+    simp only [Functor.associator_hom_app, Functor.comp_obj, homologyFunctor_obj,
+      ShiftSequence.shiftIso_hom_app, id_comp, ← ShortComplex.homologyMap_comp,
+      shiftFunctorAdd'_eq_shiftFunctorAdd,
       shiftShortComplexFunctorIso_add'_hom_app n m _ rfl a a' a'' ha' ha'' K]
 
 lemma quasiIsoAt_shift_iff {K L : CochainComplex C ℤ} (φ : K ⟶ L) (n i j : ℤ) (h : n + i = j) :

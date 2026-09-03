@@ -279,8 +279,9 @@ theorem IsUniversalColimit.map_reflective
     intro j
     rw [← cancel_mono (adj.counit.app <| F.obj j)]
     dsimp [α']
-    simp only [Category.comp_id, Adjunction.counit_naturality_assoc, Category.id_comp,
-      Adjunction.counit_naturality, Category.assoc, Functor.map_comp]
+    simp only [Functor.associator_hom_app, Functor.comp_obj, Category.comp_id,
+      Adjunction.counit_naturality_assoc, Category.id_comp, Adjunction.counit_naturality,
+      Category.assoc, Functor.map_comp]
   have hc'' : ∀ j, α.app j ≫ Gl.map (c.ι.app j) = c'.ι.app j ≫ f := NatTrans.congr_app h
   let β := isoWhiskerLeft F' (asIso adj.counit) ≪≫ F'.rightUnitor
   let c'' : Cocone (F' ⋙ Gr) := by
@@ -293,8 +294,9 @@ theorem IsUniversalColimit.map_reflective
     · intro i j g
       dsimp [α']
       ext
-      all_goals simp only [Category.comp_id, Category.id_comp, Category.assoc,
-        ← Functor.map_comp, pullback.lift_fst, pullback.lift_snd, ← Functor.map_comp_assoc]
+      all_goals simp only [Functor.associator_hom_app, Functor.comp_obj, Category.comp_id,
+        Category.id_comp, Category.assoc, ← Functor.map_comp, pullback.lift_fst,
+        pullback.lift_snd, ← Functor.map_comp_assoc]
       · congr 1
         exact c'.w _
       · rw [α.naturality_assoc]
@@ -335,8 +337,8 @@ theorem IsUniversalColimit.map_reflective
   · intro j
     apply IsPullback.of_right _ _ (IsPullback.of_hasPullback _ _)
     · dsimp [α', c'']
-      simp only [Category.comp_id, Category.id_comp, Category.assoc, Functor.map_comp,
-        pullback.lift_fst]
+      simp only [Functor.associator_hom_app, Functor.comp_obj, Category.comp_id, Category.id_comp,
+        Category.assoc, Functor.map_comp, pullback.lift_fst]
       rw [← Category.comp_id (Gr.map f)]
       refine ((hc' j).map Gr).paste_vert (IsPullback.of_vert_isIso ⟨?_⟩)
       rw [← adj.unit_naturality, Category.comp_id, ← Category.assoc,
@@ -368,8 +370,9 @@ theorem IsVanKampenColimit.map_reflective [HasColimitsOfShape J C]
     intro j
     rw [← cancel_mono (adj.counit.app <| F.obj j)]
     dsimp [α']
-    simp only [Category.comp_id, Adjunction.counit_naturality_assoc, Category.id_comp,
-      Adjunction.counit_naturality, Category.assoc, Functor.map_comp]
+    simp only [Functor.associator_hom_app, Functor.comp_obj, Category.comp_id,
+      Adjunction.counit_naturality_assoc, Category.id_comp, Adjunction.counit_naturality,
+      Category.assoc, Functor.map_comp]
   -- bracketed as `(F' ⋙ Gr) ⋙ Gl`, matching `hr` and `Gl.mapCocone` below
   let β := Functor.associator F' Gr Gl ≪≫ isoWhiskerLeft F' (asIso adj.counit) ≪≫ F'.rightUnitor
   let hl := (IsColimit.precomposeHomEquiv β c').symm hc'
@@ -393,7 +396,8 @@ theorem IsVanKampenColimit.map_reflective [HasColimitsOfShape J C]
       intro j
       rw [hl.fac]
       dsimp [β]
-      simp only [Category.comp_id, Category.id_comp, hα'', Category.assoc, Gl.map_comp]
+      simp only [Functor.associator_hom_app, Functor.comp_obj, Category.comp_id, Category.id_comp,
+        hα'', Category.assoc, Gl.map_comp]
       congr 1
       exact (NatTrans.congr_app h j).symm
   rw [this]

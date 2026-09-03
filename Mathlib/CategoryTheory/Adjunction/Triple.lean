@@ -214,7 +214,9 @@ adjunction followed by the whiskered counit `H ⋙ G ⋙ F ⟶ H` of the first. 
 lemma leftToRight_eq_counits :
     t.leftToRight = F.leftUnitor.inv ≫ inv (whiskerRight t.adj₂.counit F) ≫
     (Functor.associator _ _ _).hom ≫ whiskerLeft H t.adj₁.counit ≫ H.rightUnitor.hom := by
-  ext X; dsimp [leftToRight]; simp only [Category.id_comp, Category.comp_id, NatIso.isIso_inv_app]
+  ext X; dsimp [leftToRight]
+  simp only [Functor.associator_hom_app, Functor.associator_inv_app, Functor.comp_obj,
+    Category.id_comp, Category.comp_id, NatIso.isIso_inv_app]
   rw [IsIso.comp_inv_eq, Category.assoc, IsIso.eq_inv_comp]
   refine Eq.trans ?_ (t.adj₁.counit_naturality <| (whiskerRight t.adj₁.unit H).app X)
   rw [whiskerRight_app _ H, (asIso (t.adj₂.counit.app (G.obj _))).eq_comp_inv.2

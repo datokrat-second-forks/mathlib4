@@ -134,7 +134,9 @@ lemma N₂Γ₂ToKaroubiIso_hom_app (X : ChainComplex C ℕ) :
     (N₂Γ₂ToKaroubiIso.hom.app X).f = PInfty := by
   ext n
   dsimp [N₂Γ₂ToKaroubiIso]
-  simp only [comp_id, assoc, PInfty_f_idem]
+  simp only [Functor.associator_hom_app, Functor.associator_inv_app, comp_obj, Karoubi.id_f,
+    HomologicalComplex.id_f, NatTrans.id_app, N₂_obj_p_f, Γ₂_obj_X_obj, Γ₂_obj_p_app,
+    toKaroubi_obj_X, toKaroubi_obj_p, comp_id, assoc, PInfty_f_idem]
   conv_rhs =>
     rw [← PInfty_f_idem]
   congr 1
@@ -150,7 +152,10 @@ lemma N₂Γ₂ToKaroubiIso_inv_app (X : ChainComplex C ℕ) :
     (N₂Γ₂ToKaroubiIso.inv.app X).f = PInfty := by
   ext n
   dsimp [N₂Γ₂ToKaroubiIso]
-  simp only [comp_id, PInfty_f_idem_assoc, AlternatingFaceMapComplex.obj_X, Γ₀_obj_obj]
+  simp only [Functor.associator_hom_app, Functor.associator_inv_app, comp_obj, Karoubi.id_f,
+    HomologicalComplex.id_f, NatTrans.id_app, N₂_obj_p_f, Γ₂_obj_X_obj, Γ₂_obj_p_app,
+    toKaroubi_obj_X, toKaroubi_obj_p, comp_id, PInfty_f_idem_assoc,
+    AlternatingFaceMapComplex.obj_X, Γ₀_obj_obj]
   convert! comp_id _
   apply (Γ₀.splitting X).hom_ext'
   intro A

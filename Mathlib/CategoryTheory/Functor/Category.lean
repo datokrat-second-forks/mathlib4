@@ -189,11 +189,19 @@ def rightUnitor (F : C ⥤ D) :
 (In fact, `iso.refl _` will work here, but it tends to make Lean slow later,
 and it's usually best to insert explicit associators.)
 -/
-@[implicit_reducible, simps]
+@[implicit_reducible]
 def associator (F : C ⥤ D) (G : D ⥤ E) (H : E ⥤ E') :
     (F ⋙ G) ⋙ H ≅ F ⋙ G ⋙ H where
   hom := { app := fun _ => 𝟙 _ }
   inv := { app := fun _ => 𝟙 _ }
+
+@[simp]
+theorem associator_hom_app (F : C ⥤ D) (G : D ⥤ E) (H : E ⥤ E') (X : C) :
+    (associator F G H).hom.app X = 𝟙 (((F ⋙ G) ⋙ H).obj X) := (rfl)
+
+@[simp]
+theorem associator_inv_app (F : C ⥤ D) (G : D ⥤ E) (H : E ⥤ E') (X : C) :
+    (associator F G H).inv.app X = 𝟙 ((F ⋙ G ⋙ H).obj X) := (rfl)
 
 protected theorem assoc (F : C ⥤ D) (G : D ⥤ E) (H : E ⥤ E') : (F ⋙ G) ⋙ H = F ⋙ G ⋙ H :=
   rfl

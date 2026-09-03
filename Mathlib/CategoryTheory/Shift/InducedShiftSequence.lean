@@ -104,7 +104,7 @@ noncomputable def induced : F.ShiftSequence M where
     apply ((whiskeringLeft C D A).obj L).map_injective
     ext K
     dsimp
-    simp only [id_comp, induced.shiftIso_hom_app_obj,
+    simp only [Functor.associator_hom_app, id_comp, induced.shiftIso_hom_app_obj,
       G.shiftIso_add_hom_app n m a a' a'' ha' ha'', L.commShiftIso_add,
       comp_obj, CommShift.isoAdd_inv_app, (F' a).map_comp, assoc,
       ← (e' a).hom.naturality_assoc, comp_map]

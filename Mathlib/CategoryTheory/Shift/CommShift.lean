@@ -204,14 +204,16 @@ instance comp [F.CommShift A] [G.CommShift A] : (F ⋙ G).CommShift A where
   commShiftIso_zero := by
     ext X
     dsimp
-    simp only [id_comp, comp_id, commShiftIso_zero, isoZero_hom_app, ← Functor.map_comp_assoc,
-      assoc, Iso.inv_hom_id_app, id_obj, comp_map, comp_obj]
+    simp only [Functor.associator_hom_app, Functor.associator_inv_app, id_comp, comp_id,
+      commShiftIso_zero, isoZero_hom_app, ← Functor.map_comp_assoc, assoc, Iso.inv_hom_id_app,
+      id_obj, comp_map, comp_obj]
   commShiftIso_add := fun a b => by
     ext X
     dsimp
     simp only [commShiftIso_add, isoAdd_hom_app]
     dsimp
-    simp only [comp_id, id_comp, assoc, ← Functor.map_comp_assoc, Iso.inv_hom_id_app, comp_obj]
+    simp only [Functor.associator_hom_app, Functor.associator_inv_app, comp_id, id_comp, assoc,
+      ← Functor.map_comp_assoc, Iso.inv_hom_id_app, comp_obj]
     simp only [map_comp, assoc, commShiftIso_hom_naturality_assoc]
 
 end CommShift

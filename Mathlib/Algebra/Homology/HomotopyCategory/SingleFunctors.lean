@@ -62,7 +62,8 @@ noncomputable def singleFunctors : SingleFunctors C (CochainComplex C ℤ) ℤ w
   shiftIso_add n m a a' a'' ha' ha'' := by
     ext
     dsimp
-    simp only [shiftFunctorAdd_eq, shiftFunctorAdd'_hom_app_f, XIsoOfEq,
+    simp only [Functor.associator_inv_app, Functor.comp_obj, shiftFunctor_obj_X',
+      HomologicalComplex.id_f, shiftFunctorAdd_eq, shiftFunctorAdd'_hom_app_f, XIsoOfEq,
       eqToIso.hom, eqToHom_trans, id_comp]
 
 instance (n : ℤ) : ((singleFunctors C).functor n).Additive := by

@@ -481,9 +481,11 @@ lemma overMapPullback_assoc {X Y Z T : C} (f : X ⟶ Y) (g : Y ⟶ Z) (h : Z ⟶
     (overMapPullbackCongr _ _ (by simp)).hom := by
   ext
   dsimp
-  simp only [overMapPullbackComp_inv_app_hom_app,
-    overMapPullbackComp_hom_app_hom_app, Functor.sheafPushforwardContinuous_obj_obj_map,
-    Quiver.Hom.unop_op, ← Functor.map_comp, ← op_comp, id_comp, assoc]
+  simp only [Functor.associator_hom_app, Functor.comp_obj, ObjectProperty.FullSubcategory.id_hom,
+    NatTrans.id_app, Functor.sheafPushforwardContinuous_obj_obj_obj,
+    overMapPullbackComp_inv_app_hom_app, overMapPullbackComp_hom_app_hom_app,
+    Functor.sheafPushforwardContinuous_obj_obj_map, Quiver.Hom.unop_op, ← Functor.map_comp,
+    ← op_comp, id_comp, assoc]
   congr
   cat_disch
 

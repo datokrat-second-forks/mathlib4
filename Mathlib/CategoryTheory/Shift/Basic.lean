@@ -255,7 +255,8 @@ lemma shiftFunctorAdd'_assoc (a₁ a₂ a₃ a₁₂ a₂₃ a₁₂₃ : A)
   subst h₁₂ h₂₃ h₁₂₃
   ext X
   dsimp
-  simp only [shiftFunctorAdd'_eq_shiftFunctorAdd, Category.comp_id]
+  simp only [shiftFunctorAdd'_eq_shiftFunctorAdd, Functor.associator_hom_app, Functor.comp_obj,
+    Category.comp_id]
   dsimp [shiftFunctorAdd']
   simp only [eqToHom_app]
   dsimp [shiftFunctorAdd, shiftFunctor]

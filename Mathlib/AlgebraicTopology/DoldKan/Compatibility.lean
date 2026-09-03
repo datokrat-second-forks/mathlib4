@@ -219,8 +219,9 @@ theorem equivalenceCounitIso_eq (hη : τ₀ = τ₁ hF hG η) :
     (equivalence hF hG).counitIso = equivalenceCounitIso η := by
   ext1; apply NatTrans.ext; ext Y
   dsimp [equivalence]
-  simp only [comp_id, id_comp, Functor.map_comp, equivalence₂CounitIso_eq,
-    equivalence₂CounitIso_hom_app, assoc, equivalenceCounitIso_hom_app]
+  simp only [Functor.associator_hom_app, Functor.associator_inv_app, comp_obj, comp_id, id_comp,
+    Functor.map_comp, equivalence₂CounitIso_eq, equivalence₂CounitIso_hom_app, assoc,
+    equivalenceCounitIso_hom_app]
   simp only [equivalence₂_inverse, comp_obj, ← τ₀_hom_app, hη, τ₁_hom_app, ←
     eB.inverse.map_comp_assoc]
   rw [hF.inv.naturality_assoc, hF.inv.naturality_assoc]
@@ -277,7 +278,8 @@ theorem equivalenceUnitIso_eq (hε : υ hF = ε) :
     (equivalence hF hG).unitIso = equivalenceUnitIso hG ε := by
   ext1; apply NatTrans.ext; ext X
   dsimp [equivalence]
-  simp only [assoc, comp_id, equivalenceUnitIso_hom_app, equivalence₂_inverse, Functor.comp_obj,
+  simp only [Functor.associator_hom_app, Functor.associator_inv_app, assoc, comp_id,
+    equivalenceUnitIso_hom_app, equivalence₂_inverse, Functor.comp_obj,
     id_comp, equivalence₂UnitIso_eq eB hF, equivalence₂UnitIso_hom_app,
     ← eA.inverse.map_comp_assoc, assoc, ← hε, υ_hom_app]
 

@@ -136,7 +136,10 @@ lemma isPullback {i j : 𝒰.I₀} (hij : i ⟶ j) :
       Adjunction.counit_naturality, cocone_ι_transitionMap]
     ext
     dsimp
-    rw [Category.comp_id, ← Category.assoc]
+    simp only [Functor.associator_inv_app, Functor.comp_obj, Comma.id_hom,
+      CategoryTheory.Comma.id_left, MorphismProperty.Over.pullback_obj_left,
+      MorphismProperty.Over.pullback_obj_hom, Category.comp_id]
+    rw [← Category.assoc]
     congr 1
     apply pullback.hom_ext <;> simp
   let iso2 : (d.cocone i).pt.left ≅ pullback (d.cocone j).pt.hom (𝒰.trans hij) :=
