@@ -900,7 +900,6 @@ noncomputable def coneOfIsRightKanExtension (c : Cone F) : Cone F' where
   pt := c.pt
   π := F'.liftOfIsRightKanExtension α _ c.π
 
-set_option backward.isDefEq.respectTransparency false in
 /-- If `c` is a limit cone for a functor `F : C ⥤ H` and `α : L ⋙ F' ⟶ F` is the counit of any
 right Kan extension `F' : D ⥤ H` of `F` along `L : C ⥤ D`, then `coneOfIsRightKanExtension α c` is
 a limit cone, too. -/
@@ -909,15 +908,18 @@ noncomputable def isLimitConeOfIsRightKanExtension {c : Cone F} (hc : IsLimit c)
     IsLimit (F'.coneOfIsRightKanExtension α c) where
   lift s := hc.lift (Cone.mk _ (whiskerLeft L s.π ≫ α))
   fac s := by
-    have : (Functor.const _).map (hc.lift (Cone.mk _ (whiskerLeft L s.π ≫ α))) ≫
-        F'.liftOfIsRightKanExtension α ((const D).obj c.pt) c.π = s.π :=
-      F'.hom_ext_of_isRightKanExtension α _ _ (by cat_disch)
-    exact congr_app this
-  uniq s m hm := hc.hom_ext (fun j ↦ by
-    have := hm (L.obj j)
-    nth_rw 1 [← F'.liftOfIsRightKanExtension_fac_app α ((const D).obj c.pt)]
-    dsimp at this ⊢
-    rw [← assoc, this, IsLimit.fac, NatTrans.comp_app, whiskerLeft_app])
+    set_option backward.isDefEq.respectTransparency false in
+      have : (Functor.const _).map (hc.lift (Cone.mk _ (whiskerLeft L s.π ≫ α))) ≫
+          F'.liftOfIsRightKanExtension α ((const D).obj c.pt) c.π = s.π :=
+        F'.hom_ext_of_isRightKanExtension α _ _ (by cat_disch)
+      exact congr_app this
+  uniq s m hm := by
+    set_option backward.isDefEq.respectTransparency false in
+      exact hc.hom_ext (fun j ↦ by
+        have := hm (L.obj j)
+        nth_rw 1 [← F'.liftOfIsRightKanExtension_fac_app α ((const D).obj c.pt)]
+        dsimp at this ⊢
+        rw [← assoc, this, IsLimit.fac, NatTrans.comp_app, whiskerLeft_app])
 
 variable [HasLimit F] [HasLimit F']
 

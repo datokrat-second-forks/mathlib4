@@ -441,9 +441,12 @@ instance monoidalUnopUnop : (unopUnop C).Monoidal where
 instance : (opOpEquivalence C).functor.Monoidal := monoidalUnopUnop
 instance : (opOpEquivalence C).inverse.Monoidal := monoidalOpOp
 
-set_option backward.isDefEq.respectTransparency false in
 instance : (opOpEquivalence C).IsMonoidal where
-  leftAdjoint_ε := by simp [opOpEquivalence]
-  leftAdjoint_μ := by simp [opOpEquivalence]
+  leftAdjoint_ε := by
+    set_option backward.isDefEq.respectTransparency false in
+      simp [opOpEquivalence]
+  leftAdjoint_μ := by
+    set_option backward.isDefEq.respectTransparency false in
+      simp [opOpEquivalence]
 
 end CategoryTheory

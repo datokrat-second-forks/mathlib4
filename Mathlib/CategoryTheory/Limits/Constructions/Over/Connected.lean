@@ -46,7 +46,6 @@ def natTransInCostructuredArrow {B : D} (F : J ⥤ CostructuredArrow K B) :
     F ⋙ CostructuredArrow.proj K B ⋙ K ⟶ (CategoryTheory.Functor.const J).obj B where
   app j := (F.obj j).hom
 
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- (Implementation) Given a cone in the base category, raise it to a cone in
 `CostructuredArrow K B`. Note this is where the connected assumption is used.
@@ -58,10 +57,11 @@ def raiseCone [IsConnected J] {B : D} {F : J ⥤ CostructuredArrow K B}
   pt := CostructuredArrow.mk
     (K.map (c.π.app (Classical.arbitrary J)) ≫ (F.obj (Classical.arbitrary J)).hom)
   π.app j := CostructuredArrow.homMk (c.π.app j) <| by
-    let z : (Functor.const J).obj (K.obj c.pt) ⟶ _ :=
-      (CategoryTheory.Functor.constComp J c.pt K).inv ≫ Functor.whiskerRight c.π K ≫
-        natTransInCostructuredArrow F
-    convert! (nat_trans_from_is_connected z j (Classical.arbitrary J)) <;> simp [z]
+    set_option backward.isDefEq.respectTransparency.types false in
+      let z : (Functor.const J).obj (K.obj c.pt) ⟶ _ :=
+        (CategoryTheory.Functor.constComp J c.pt K).inv ≫ Functor.whiskerRight c.π K ≫
+          natTransInCostructuredArrow F
+      convert! (nat_trans_from_is_connected z j (Classical.arbitrary J)) <;> simp [z]
   π.naturality X Y f := by
     apply CommaMorphism.ext
     · simpa using (c.w f).symm

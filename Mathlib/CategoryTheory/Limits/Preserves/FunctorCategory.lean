@@ -249,7 +249,6 @@ section
 variable [HasLimitsOfShape J C] [HasColimitsOfShape K C]
 variable [PreservesLimitsOfShape J (colim : (K ⥤ C) ⥤ _)]
 
-set_option backward.isDefEq.respectTransparency.types false in
 noncomputable instance : PreservesLimitsOfShape J (colim : (K ⥤ D ⥤ C) ⥤ _) :=
   preservesLimitsOfShape_of_evaluation _ _ (fun d =>
     let i : (colim : (K ⥤ D ⥤ C) ⥤ _) ⋙ (evaluation D C).obj d ≅
@@ -257,7 +256,9 @@ noncomputable instance : PreservesLimitsOfShape J (colim : (K ⥤ D ⥤ C) ⥤ _
       NatIso.ofComponents (fun X => (colimitObjIsoColimitCompEvaluation _ _) ≪≫
           (by exact HasColimit.isoOfNatIso (Iso.refl _)) ≪≫
           (colimitObjIsoColimitCompEvaluation _ _).symm)
-        (fun {F G} η => colimit_obj_ext (fun j => by simp [← NatTrans.comp_app_assoc]))
+        (fun {F G} η => by
+          set_option backward.isDefEq.respectTransparency.types false in
+            exact colimit_obj_ext (fun j => by simp [← NatTrans.comp_app_assoc]))
     preservesLimitsOfShape_of_natIso (i ≪≫ colimitFlipIsoCompColim _).symm)
 
 end
@@ -267,7 +268,6 @@ section
 variable [HasColimitsOfShape J C] [HasLimitsOfShape K C]
 variable [PreservesColimitsOfShape J (lim : (K ⥤ C) ⥤ _)]
 
-set_option backward.isDefEq.respectTransparency.types false in
 noncomputable instance : PreservesColimitsOfShape J (lim : (K ⥤ D ⥤ C) ⥤ _) :=
   preservesColimitsOfShape_of_evaluation _ _ (fun d =>
     let i : (lim : (K ⥤ D ⥤ C) ⥤ _) ⋙ (evaluation D C).obj d ≅
@@ -275,7 +275,9 @@ noncomputable instance : PreservesColimitsOfShape J (lim : (K ⥤ D ⥤ C) ⥤ _
       NatIso.ofComponents (fun X => (limitObjIsoLimitCompEvaluation _ _) ≪≫
           (by exact HasLimit.isoOfNatIso (Iso.refl _)) ≪≫
           (limitObjIsoLimitCompEvaluation _ _).symm)
-        (fun {F G} η => limit_obj_ext (fun j => by simp [← NatTrans.comp_app]))
+        (fun {F G} η => by
+          set_option backward.isDefEq.respectTransparency.types false in
+            exact limit_obj_ext (fun j => by simp [← NatTrans.comp_app]))
     preservesColimitsOfShape_of_natIso (i ≪≫ limitFlipIsoCompLim _).symm)
 
 end

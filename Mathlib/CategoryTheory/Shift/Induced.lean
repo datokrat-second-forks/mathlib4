@@ -95,7 +95,6 @@ end Induced
 
 variable (A)
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- When `F : C ⥤ D` is a functor satisfying suitable technical assumptions,
 this is the induced term of type `HasShift D A` deduced from `[HasShift C A]`. -/
@@ -138,7 +137,8 @@ noncomputable def induced : HasShift D A :=
         suffices (Induced.add F s i (m₁ + m₂) m₃).hom ≫
             whiskerRight (Induced.add F s i m₁ m₂).hom (s m₃) =
             eqToHom (by rw [add_assoc]) ≫ (Induced.add F s i m₁ (m₂ + m₃)).hom ≫
-              whiskerLeft (s m₁) (Induced.add F s i m₂ m₃).hom by
+              whiskerLeft (s m₁) (Induced.add F s i m₂ m₃).hom ≫
+                (Functor.associator (s m₁) (s m₂) (s m₃)).inv by
           intro X
           simpa using NatTrans.congr_app this X
         apply ((whiskeringLeft C D D).obj F).map_injective
@@ -163,7 +163,7 @@ noncomputable def induced : HasShift D A :=
         simp only [Functor.comp_obj, eqToHom_map, eqToHom_app, NatTrans.naturality_assoc,
           Induced.add_hom_app_obj, Functor.comp_map, Category.assoc, Iso.inv_hom_id_app_assoc,
           eqToHom_trans_assoc, eqToHom_refl, Category.id_comp, Category.comp_id,
-          ← Functor.map_comp, Iso.inv_hom_id_app, Functor.map_id] }
+          Functor.associator_inv_app, ← Functor.map_comp, Iso.inv_hom_id_app, Functor.map_id] }
 
 end HasShift
 

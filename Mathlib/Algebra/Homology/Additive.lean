@@ -211,7 +211,6 @@ def Functor.mapHomologicalComplexCompIso {W' : Type*} [Category W'] [Preadditive
     F.mapHomologicalComplex c ⋙ G.mapHomologicalComplex c ≅ H.mapHomologicalComplex c :=
   NatIso.mapHomologicalComplex e c
 
-set_option backward.isDefEq.respectTransparency.types false in
 /-- An equivalence of categories induces an equivalences between the respective categories
 of homological complex.
 -/
@@ -224,7 +223,10 @@ def Equivalence.mapHomologicalComplex (e : W₁ ≌ W₂) [e.functor.PreservesZe
   unitIso :=
     (Functor.mapHomologicalComplexIdIso W₁ c).symm ≪≫ NatIso.mapHomologicalComplex e.unitIso c
   counitIso := NatIso.mapHomologicalComplex e.counitIso c ≪≫
-  Functor.mapHomologicalComplexIdIso W₂ c
+    Functor.mapHomologicalComplexIdIso W₂ c
+  functor_unitIso_comp := by
+    set_option backward.isDefEq.respectTransparency.types false in
+      aesop_cat
 
 end CategoryTheory
 
