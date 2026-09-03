@@ -263,15 +263,21 @@ theorem limit_obj_ext {H : J ⥤ K ⥤ C} [HasLimitsOfShape J C] {k : K} {W : C}
   ext j
   simpa using w j
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Taking a limit after whiskering by `G` is the same as using `G` and then taking a limit. -/
 def limitCompWhiskeringLeftIsoCompLimit (F : J ⥤ K ⥤ C) (G : D ⥤ K) [HasLimitsOfShape J C] :
     limit (F ⋙ (whiskeringLeft _ _ _).obj G) ≅ G ⋙ limit F :=
   NatIso.ofComponents (fun j =>
     limitObjIsoLimitCompEvaluation (F ⋙ (whiskeringLeft _ _ _).obj G) j ≪≫
-      HasLimit.isoOfNatIso (isoWhiskerLeft F (whiskeringLeftCompEvaluation G j)) ≪≫
-      (limitObjIsoLimitCompEvaluation F (G.obj j)).symm)
+      HasLimit.isoOfNatIso
+        (Functor.associator F ((whiskeringLeft D K C).obj G) ((evaluation D C).obj j) ≪≫
+          isoWhiskerLeft F (whiskeringLeftCompEvaluation G j)) ≪≫
+      (limitObjIsoLimitCompEvaluation F (G.obj j)).symm) (by
+        -- TODO: Ideally, `cat_disch` should prove this naturality condition.
+        intro X Y f
+        apply limit_obj_ext
+        intro j
+        simp [Iso.trans, whiskeringLeftCompEvaluation])
 
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
@@ -356,15 +362,21 @@ theorem colimit_obj_ext {H : J ⥤ K ⥤ C} [HasColimitsOfShape J C] {k : K} {W 
   ext j
   simpa using w j
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Taking a colimit after whiskering by `G` is the same as using `G` and then taking a colimit. -/
 def colimitCompWhiskeringLeftIsoCompColimit (F : J ⥤ K ⥤ C) (G : D ⥤ K) [HasColimitsOfShape J C] :
     colimit (F ⋙ (whiskeringLeft _ _ _).obj G) ≅ G ⋙ colimit F :=
   NatIso.ofComponents (fun j =>
     colimitObjIsoColimitCompEvaluation (F ⋙ (whiskeringLeft _ _ _).obj G) j ≪≫
-      HasColimit.isoOfNatIso (isoWhiskerLeft F (whiskeringLeftCompEvaluation G j)) ≪≫
-      (colimitObjIsoColimitCompEvaluation F (G.obj j)).symm)
+      HasColimit.isoOfNatIso
+        (Functor.associator F ((whiskeringLeft D K C).obj G) ((evaluation D C).obj j) ≪≫
+          isoWhiskerLeft F (whiskeringLeftCompEvaluation G j)) ≪≫
+      (colimitObjIsoColimitCompEvaluation F (G.obj j)).symm) (by
+        -- TODO: Ideally, `cat_disch` should prove this naturality condition.
+        intro X Y f
+        apply colimit_obj_ext
+        intro j
+        simp [Iso.trans, whiskeringLeftCompEvaluation])
 
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]
@@ -450,14 +462,18 @@ instance preservesColimits_const : PreservesColimitsOfSize.{w', w} (const D : C 
 
 open CategoryTheory.prod
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The limit of a diagram `F : J ⥤ K ⥤ C` is isomorphic to the functor given by
 the individual limits on objects. -/
 @[simps!]
 def limitIsoFlipCompLim [HasLimitsOfShape J C] (F : J ⥤ K ⥤ C) : limit F ≅ F.flip ⋙ lim :=
-  NatIso.ofComponents (limitObjIsoLimitCompEvaluation F)
+  NatIso.ofComponents (fun k =>
+    limitObjIsoLimitCompEvaluation F k ≪≫ HasLimit.isoOfNatIso (compEvaluation F k)) (by
+      -- TODO: Ideally, `cat_disch` should prove this naturality condition.
+      intro X Y f
+      apply limit.hom_ext
+      intro j
+      simp [compEvaluation, Iso.trans])
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `limitIsoFlipCompLim` is natural with respect to diagrams. -/
 @[simps!]
@@ -467,7 +483,7 @@ def limIsoFlipCompWhiskerLim [HasLimitsOfShape J C] :
     ext k
     apply limit_obj_ext
     intro j
-    simp [comp_evaluation, ← NatTrans.comp_app (limMap η)]).symm
+    simp [compEvaluation, ← NatTrans.comp_app (limMap η)]).symm
 
 set_option backward.defeqAttrib.useBackward true in
 /-- A variant of `limitIsoFlipCompLim` where the arguments of `F` are flipped. -/
@@ -477,7 +493,6 @@ def limitFlipIsoCompLim [HasLimitsOfShape J C] (F : K ⥤ J ⥤ C) : limit F.fli
     limitObjIsoLimitCompEvaluation F.flip k ≪≫ HasLimit.isoOfNatIso (flipCompEvaluation _ _)
   NatIso.ofComponents f
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `limitFlipIsoCompLim` is natural with respect to diagrams. -/
 @[simps!]
@@ -487,7 +502,7 @@ def limCompFlipIsoWhiskerLim [HasLimitsOfShape J C] :
     ext k
     apply limit_obj_ext
     intro j
-    simp [comp_evaluation, ← NatTrans.comp_app (limMap _)]).symm
+    simp [flipCompEvaluation, ← NatTrans.comp_app (limMap _)]).symm
 
 /-- For a functor `G : J ⥤ K ⥤ C`, its limit `K ⥤ C` is given by `(G' : K ⥤ J ⥤ C) ⋙ lim`.
 Note that this does not require `K` to be small.
@@ -497,14 +512,18 @@ def limitIsoSwapCompLim [HasLimitsOfShape J C] (G : J ⥤ K ⥤ C) :
     limit G ≅ curry.obj (Prod.swap K J ⋙ uncurry.obj G) ⋙ lim :=
   limitIsoFlipCompLim G ≪≫ isoWhiskerRight (flipIsoCurrySwapUncurry _) _
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The colimit of a diagram `F : J ⥤ K ⥤ C` is isomorphic to the functor given by
 the individual colimits on objects. -/
 @[simps!]
 def colimitIsoFlipCompColim [HasColimitsOfShape J C] (F : J ⥤ K ⥤ C) : colimit F ≅ F.flip ⋙ colim :=
-  NatIso.ofComponents (colimitObjIsoColimitCompEvaluation F)
+  NatIso.ofComponents (fun k =>
+    colimitObjIsoColimitCompEvaluation F k ≪≫ HasColimit.isoOfNatIso (compEvaluation F k)) (by
+      -- TODO: Ideally, `cat_disch` should prove this naturality condition.
+      intro X Y f
+      apply colimit_obj_ext
+      intro j
+      simp [compEvaluation, Iso.trans])
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `colimitIsoFlipCompColim` is natural with respect to diagrams. -/
 @[simps!]
@@ -514,7 +533,7 @@ def colimIsoFlipCompWhiskerColim [HasColimitsOfShape J C] :
     ext k
     apply colimit_obj_ext
     intro j
-    simp [comp_evaluation, ← NatTrans.comp_app_assoc _ (colimMap η)]
+    simp [compEvaluation, ← NatTrans.comp_app_assoc _ (colimMap η)]
 
 set_option backward.defeqAttrib.useBackward true in
 /-- A variant of `colimitIsoFlipCompColim` where the arguments of `F` are flipped. -/
@@ -524,7 +543,6 @@ def colimitFlipIsoCompColim [HasColimitsOfShape J C] (F : K ⥤ J ⥤ C) : colim
       colimitObjIsoColimitCompEvaluation _ _ ≪≫ HasColimit.isoOfNatIso (flipCompEvaluation _ _)
   NatIso.ofComponents f
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `colimitFlipIsoCompColim` is natural with respect to diagrams. -/
 @[simps!]
@@ -534,7 +552,7 @@ def colimCompFlipIsoWhiskerColim [HasColimitsOfShape J C] :
     ext k
     apply colimit_obj_ext
     intro j
-    simp [comp_evaluation, ← NatTrans.comp_app_assoc _ (colimMap _)]
+    simp [flipCompEvaluation, ← NatTrans.comp_app_assoc _ (colimMap _)]
 
 /-- For a functor `G : J ⥤ K ⥤ C`, its colimit `K ⥤ C` is given by `(G' : K ⥤ J ⥤ C) ⋙ colim`.
 Note that this does not require `K` to be small.

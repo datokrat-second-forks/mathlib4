@@ -263,18 +263,15 @@ lemma preservesLimitsOfSize_iff_of_natIso {F G : C ⥤ D} (h : F ≅ G) :
     PreservesLimitsOfSize.{w, w'} F ↔ PreservesLimitsOfSize.{w, w'} G :=
   ⟨fun _ ↦ preservesLimits_of_natIso h, fun _ ↦ preservesLimits_of_natIso h.symm⟩
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Transfer preservation of limits along an equivalence in the shape. -/
 lemma preservesLimitsOfShape_of_equiv {J' : Type w₂} [Category.{w₂'} J'] (e : J ≌ J') (F : C ⥤ D)
     [PreservesLimitsOfShape J F] : PreservesLimitsOfShape J' F where
   preservesLimit {K} :=
     { preserves := fun {c} t => ⟨by
-        let equ := e.invFunIdAssoc (K ⋙ F)
-        have := (isLimitOfPreserves F (t.whiskerEquivalence e)).whiskerEquivalence e.symm
-        apply ((IsLimit.postcomposeHomEquiv equ _).symm this).ofIsoLimit
-        refine Cone.ext (Iso.refl _) fun j => ?_
-        simp [equ, ← Functor.map_comp]⟩ }
+        apply IsLimit.ofWhiskerEquivalence e
+        exact (isLimitOfPreserves F (t.whiskerEquivalence e)).ofIsoLimit
+          (Functor.mapConeWhisker (H := F))⟩ }
 
 /-- A functor preserving larger limits also preserves smaller limits. -/
 lemma preservesLimitsOfSize_of_univLE (F : C ⥤ D) [UnivLE.{w, w'}] [UnivLE.{w₂, w₂'}]
@@ -346,18 +343,15 @@ lemma preservesColimitsOfSize_iff_of_natIso {F G : C ⥤ D} (h : F ≅ G) :
     PreservesColimitsOfSize.{w, w'} F ↔ PreservesColimitsOfSize.{w, w'} G :=
   ⟨fun _ ↦ preservesColimits_of_natIso h, fun _ ↦ preservesColimits_of_natIso h.symm⟩
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- Transfer preservation of colimits along an equivalence in the shape. -/
 lemma preservesColimitsOfShape_of_equiv {J' : Type w₂} [Category.{w₂'} J'] (e : J ≌ J') (F : C ⥤ D)
     [PreservesColimitsOfShape J F] : PreservesColimitsOfShape J' F where
   preservesColimit {K} :=
     { preserves := fun {c} t => ⟨by
-        let equ := e.invFunIdAssoc (K ⋙ F)
-        have := (isColimitOfPreserves F (t.whiskerEquivalence e)).whiskerEquivalence e.symm
-        apply ((IsColimit.precomposeInvEquiv equ _).symm this).ofIsoColimit
-        refine Cocone.ext (Iso.refl _) fun j => ?_
-        simp [equ, ← Functor.map_comp]⟩ }
+        apply IsColimit.ofWhiskerEquivalence e
+        exact (isColimitOfPreserves F (t.whiskerEquivalence e)).ofIsoColimit
+          (Functor.mapCoconeWhisker (H := F))⟩ }
 
 /-- A functor preserving larger colimits also preserves smaller colimits. -/
 lemma preservesColimitsOfSize_of_univLE (F : C ⥤ D) [UnivLE.{w, w'}] [UnivLE.{w₂, w₂'}]

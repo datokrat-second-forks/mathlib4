@@ -180,8 +180,6 @@ variable {W X Y : C} {f : W ⟶ X} {g : W ⟶ Y} (c : PushoutCocone f g) (G : C 
 abbrev map : PushoutCocone (G.map f) (G.map g) :=
   PushoutCocone.mk (G.map c.inl) (G.map c.inr) (by simpa using G.congr_map c.condition)
 
--- `Functor.comp_map` is a bad rfl lemma and it is used in the `simp` calls below
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- The map (as a cocone) of a pushout cocone is colimit iff
 the map (as a pushout cocone) is limit. -/
@@ -189,11 +187,12 @@ def isColimitMapCoconeEquiv :
     IsColimit (mapCocone G c) ≃ IsColimit (c.map G) :=
   (IsColimit.precomposeHomEquiv (diagramIsoSpan.{v₂} _).symm _).symm.trans <|
     IsColimit.equivIsoColimit <| by
-      refine PushoutCocone.ext (Iso.refl _) ?_ ?_
-      · dsimp only [inl]
-        simp
-      · dsimp only [inr]
-        simp
+      set_option backward.isDefEq.respectTransparency.types false in
+        refine PushoutCocone.ext (Iso.refl _) ?_ ?_
+        · dsimp only [inl]
+          simp
+        · dsimp only [inr]
+          simp
 
 end PushoutCocone
 
@@ -335,10 +334,6 @@ instance : IsIso (pushoutComparison G f g) := by
   rw [← PreservesPushout.iso_hom]
   infer_instance
 
-/-
-Difficult defeq abuse due to `Functor.comp`.
--/
-set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
 /-- A pushout cocone in `C` is colimit iff it becomes limit
 after the application of `yoneda.obj X` for all `X : C`. -/
@@ -350,7 +345,9 @@ def PushoutCocone.isColimitYonedaEquiv (c : PushoutCocone f g) :
         ((IsLimit.postcomposeHomEquiv
           (isoWhiskerRight (cospanOp f g).symm (yoneda.obj X)) _).symm.trans
             (Equiv.trans (IsLimit.equivIsoLimit
-              (by exact Cone.ext (Iso.refl _) (by rintro (_ | _ | _) <;> cat_disch)))
+              (by
+                set_option backward.isDefEq.respectTransparency.types false in
+                  exact Cone.ext (Iso.refl _) (by rintro (_ | _ | _) <;> cat_disch)))
                 (c.op.isLimitMapConeEquiv (yoneda.obj X))))))
 
 end Pushout

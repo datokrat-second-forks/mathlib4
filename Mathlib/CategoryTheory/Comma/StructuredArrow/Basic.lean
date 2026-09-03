@@ -435,7 +435,6 @@ where finally
 
 end
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 -- The unitors below (and in `mapIsoMap₂`, `map₂IsoPreEquivalenceInverseCompProj`) replace `𝟙 _`
 -- used at a type that is only correct after unfolding `Functor.comp`; needed by
@@ -445,18 +444,16 @@ def postIsoMap₂ (S : C) (F : B ⥤ C) (G : C ⥤ D) :
     post S F G ≅ map₂ (F := 𝟭 _) (𝟙 _) (F ⋙ G).leftUnitor.inv :=
   NatIso.ofComponents fun _ => isoMk <| Iso.refl _
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `StructuredArrow.map` is a special case of `StructuredArrow.map₂` up to natural isomorphism. -/
 def mapIsoMap₂ {S S' : D} (f : S ⟶ S') :
     map (T := T) f ≅ map₂ (F := 𝟭 _) (G := 𝟭 _) f (T.rightUnitor.hom ≫ T.leftUnitor.inv) :=
   NatIso.ofComponents fun _ => isoMk <| Iso.refl _
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `StructuredArrow.pre` is a special case of `StructuredArrow.map₂` up to natural isomorphism. -/
 def preIsoMap₂ (S : D) (F : B ⥤ C) (G : C ⥤ D) :
-    pre S F G ≅ map₂ (G := 𝟭 _) (𝟙 _) (𝟙 (F ⋙ G)) :=
+    pre S F G ≅ map₂ (G := 𝟭 _) (𝟙 _) (F ⋙ G).rightUnitor.hom :=
   NatIso.ofComponents fun _ => isoMk <| Iso.refl _
 
 /-- A structured arrow is called universal if it is initial. -/
@@ -901,12 +898,11 @@ where finally
 
 end
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- `CostructuredArrow.post` is a special case of `CostructuredArrow.map₂` up to natural
 isomorphism. -/
 def postIsoMap₂ (S : C) (F : B ⥤ C) (G : C ⥤ D) :
-    post F G S ≅ map₂ (F := 𝟭 _) (𝟙 (F ⋙ G)) (𝟙 _) :=
+    post F G S ≅ map₂ (F := 𝟭 _) (F ⋙ G).leftUnitor.hom (𝟙 _) :=
   NatIso.ofComponents fun _ => isoMk <| Iso.refl _
 
 /-- A costructured arrow is called universal if it is terminal. -/

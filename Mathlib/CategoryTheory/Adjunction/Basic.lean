@@ -455,7 +455,6 @@ lemma mkOfHomEquiv_homEquiv (adj : CoreHomEquiv F G) :
   ext X Y g
   simp [mkOfHomEquiv, ← adj.homEquiv_naturality_right (𝟙 _) g]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Construct an adjunction between functors `F` and `G` given a unit and counit for the adjunction
 satisfying the triangle identities. -/
 @[simps!]
@@ -463,13 +462,9 @@ def mkOfUnitCounit (adj : CoreUnitCounit F G) : F ⊣ G where
   unit := adj.unit
   counit := adj.counit
   left_triangle_components X := by
-    have := adj.left_triangle
-    rw [NatTrans.ext_iff, funext_iff] at this
-    simpa [-CoreUnitCounit.left_triangle] using this X
+    simpa [-CoreUnitCounit.left_triangle] using NatTrans.congr_app adj.left_triangle X
   right_triangle_components Y := by
-    have := adj.right_triangle
-    rw [NatTrans.ext_iff, funext_iff] at this
-    simpa [-CoreUnitCounit.right_triangle] using this Y
+    simpa [-CoreUnitCounit.right_triangle] using NatTrans.congr_app adj.right_triangle Y
 
 /-- The adjunction between the identity functor on a category and itself. -/
 @[simps]

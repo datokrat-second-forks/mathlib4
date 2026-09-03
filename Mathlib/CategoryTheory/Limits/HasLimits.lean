@@ -872,18 +872,18 @@ theorem colimit.post_post {E : Type u''} [Category.{v''} E] (H : D ⥤ E)
 
 end Post
 
-set_option backward.isDefEq.respectTransparency false in
 theorem colimit.pre_post {D : Type u'} [Category.{v'} D] (E : K ⥤ J) (F : J ⥤ C) (G : C ⥤ D)
     [HasColimit F] [HasColimit (E ⋙ F)] [HasColimit (F ⋙ G)] [h : HasColimit ((E ⋙ F) ⋙ G)] :
-    -- G (colimit F) ⟶ G (colimit (E ⋙ F)) ⟶ colimit ((E ⋙ F) ⋙ G) vs
-    -- G (colimit F) ⟶ colimit F ⋙ G ⟶ colimit (E ⋙ (F ⋙ G)) or
-    haveI : HasColimit (E ⋙ F ⋙ G) := h
+    -- Compare the chosen colimits of the two parenthesizations via the associator.
+    letI : HasColimit (E ⋙ F ⋙ G) := hasColimit_of_iso (Functor.associator E F G).symm
     colimit.post (E ⋙ F) G ≫ G.map (colimit.pre F E) =
-      colimit.pre (F ⋙ G) E ≫ colimit.post F G := by
+      (HasColimit.isoOfNatIso (Functor.associator E F G)).hom ≫
+        colimit.pre (F ⋙ G) E ≫ colimit.post F G := by
+  let h' : HasColimit (E ⋙ F ⋙ G) := hasColimit_of_iso (Functor.associator E F G).symm
   ext j
-  rw [← assoc, colimit.ι_post, ← G.map_comp, colimit.ι_pre, ← assoc]
-  have : HasColimit (E ⋙ F ⋙ G) := h
-  erw [colimit.ι_pre (F ⋙ G) E j, colimit.ι_post]
+  rw [← assoc, colimit.ι_post, ← G.map_comp, colimit.ι_pre]
+  rw [HasColimit.isoOfNatIso_ι_hom_assoc (Functor.associator E F G) j]
+  simp
 
 open CategoryTheory.Equivalence
 

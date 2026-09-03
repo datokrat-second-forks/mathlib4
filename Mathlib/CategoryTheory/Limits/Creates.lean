@@ -534,7 +534,6 @@ def createsLimitsOfNatIso {F G : C ⥤ D} (h : F ≅ G) [CreatesLimitsOfSize.{w,
     CreatesLimitsOfSize.{w, w'} G where
   CreatesLimitsOfShape := createsLimitsOfShapeOfNatIso h
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- If `F` creates limits of shape `J` and `J ≌ J'`, then `F` creates limits of shape `J'`. -/
 @[instance_reducible]
@@ -542,12 +541,13 @@ def createsLimitsOfShapeOfEquiv {J' : Type w₁} [Category.{w'₁} J'] (e : J �
     [CreatesLimitsOfShape J F] : CreatesLimitsOfShape J' F where
   CreatesLimit {K} :=
     { lifts c hc := by
-        refine ⟨(Cone.whiskeringEquivalence e).inverse.obj
-          (liftLimit (hc.whiskerEquivalence e)), ?_⟩
-        letI inner := (Cone.whiskeringEquivalence (F := K ⋙ F) e).inverse.mapIso
-          (liftedLimitMapsToOriginal (K := e.functor ⋙ K) (hc.whiskerEquivalence e))
-        refine ?_ ≪≫ inner ≪≫ ((Cone.whiskeringEquivalence e).unitIso.app c).symm
-        exact Cone.ext (Iso.refl _)
+        set_option backward.isDefEq.respectTransparency false in
+          refine ⟨(Cone.whiskeringEquivalence e).inverse.obj
+            (liftLimit (hc.whiskerEquivalence e)), ?_⟩
+          letI inner := (Cone.whiskeringEquivalence (F := K ⋙ F) e).inverse.mapIso
+            (liftedLimitMapsToOriginal (K := e.functor ⋙ K) (hc.whiskerEquivalence e))
+          refine ?_ ≪≫ inner ≪≫ ((Cone.whiskeringEquivalence e).unitIso.app c).symm
+          exact Cone.ext (Iso.refl _)
       toReflectsLimit := have := reflectsLimitsOfShape_of_equiv e F; inferInstance }
 
 set_option backward.defeqAttrib.useBackward true in
@@ -590,7 +590,6 @@ def createsColimitsOfNatIso {F G : C ⥤ D} (h : F ≅ G) [CreatesColimitsOfSize
     CreatesColimitsOfSize.{w, w'} G where
   CreatesColimitsOfShape := createsColimitsOfShapeOfNatIso h
 
-set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
 /-- If `F` creates colimits of shape `J` and `J ≌ J'`, then `F` creates colimits of shape `J'`. -/
 @[instance_reducible]
@@ -598,12 +597,13 @@ def createsColimitsOfShapeOfEquiv {J' : Type w₁} [Category.{w'₁} J'] (e : J 
     [CreatesColimitsOfShape J F] : CreatesColimitsOfShape J' F where
   CreatesColimit {K} :=
     { lifts c hc := by
-        refine ⟨(Cocone.whiskeringEquivalence e).inverse.obj
-          (liftColimit (hc.whiskerEquivalence e)), ?_⟩
-        letI inner := (Cocone.whiskeringEquivalence (F := K ⋙ F) e).inverse.mapIso
-          (liftedColimitMapsToOriginal (K := e.functor ⋙ K) (hc.whiskerEquivalence e))
-        refine ?_ ≪≫ inner ≪≫ ((Cocone.whiskeringEquivalence e).unitIso.app c).symm
-        exact Cocone.ext (Iso.refl _)
+        set_option backward.isDefEq.respectTransparency false in
+          refine ⟨(Cocone.whiskeringEquivalence e).inverse.obj
+            (liftColimit (hc.whiskerEquivalence e)), ?_⟩
+          letI inner := (Cocone.whiskeringEquivalence (F := K ⋙ F) e).inverse.mapIso
+            (liftedColimitMapsToOriginal (K := e.functor ⋙ K) (hc.whiskerEquivalence e))
+          refine ?_ ≪≫ inner ≪≫ ((Cocone.whiskeringEquivalence e).unitIso.app c).symm
+          exact Cocone.ext (Iso.refl _)
       toReflectsColimit := have := reflectsColimitsOfShape_of_equiv e F; inferInstance }
 
 -- For the inhabited linter later.
