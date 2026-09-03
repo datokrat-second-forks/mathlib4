@@ -59,8 +59,8 @@ private lemma final_of_final_costructuredArrowToOver_small (L : A ⥤ T) (R : B 
             Final.colimitIso _ _
       _ ≅ colimit G := (colimitIsoColimitGrothendieck (𝟭 T) G).symm
   convert! Iso.isIso_hom i
-  simp only [Iso.trans_def, comp_obj, grothendieckProj_obj, Grothendieck.pre_obj_base,
-    Grothendieck.pre_obj_fiber, Iso.trans_assoc, Iso.trans_hom, Iso.symm_hom, i]
+  simp only [Iso.trans_def, comp_obj, grothendieckProj_obj, Iso.trans_assoc, Iso.trans_hom,
+    Iso.symm_hom, i]
   rw [← Iso.inv_comp_eq, Iso.eq_inv_comp]
   apply colimit.hom_ext (fun _ => by simp)
 
