@@ -113,57 +113,23 @@ theorem congr_map (F : C ⥤ D) {X Y : C} {f g : X ⟶ Y}
     (h : f = g) : F.map f = F.map g := by
   rw [h]
 
--- /-- `F ⋙ G` is the composition of a functor `F` and a functor `G` (`F` first, then `G`).
--- -/
--- @[simps (attr := grind =) obj, implicit_reducible]
--- def comp (F : C ⥤ D) (G : D ⥤ E) : C ⥤ E where
---   obj X := G.obj (F.obj X)
--- map f := G.map (F.map f)
+/-- The action of `F ⋙ G` on morphisms. It is deliberately a separate, semireducible definition so
+that `(F ⋙ G).map f` does not unfold to `G.map (F.map f)` below default transparency. -/
+@[simp]
+def comp.map (F : C ⥤ D) (G : D ⥤ E) {X Y : C} (f : X ⟶ Y) : G.obj (F.obj X) ⟶ G.obj (F.obj Y) :=
+  G.map (F.map f)
 
 /-- `F ⋙ G` is the composition of a functor `F` and a functor `G` (`F` first, then `G`).
 -/
 @[simps (attr := grind =) obj, instance_reducible]
 def comp (F : C ⥤ D) (G : D ⥤ E) : C ⥤ E where
   obj X := G.obj (F.obj X)
-  map := map
-  map_id := sorry
-  map_comp := sorry
-where @[simp] map {X Y} (f : X ⟶ Y) := G.map (F.map f)
+  map := comp.map F G
+  map_id _ := by simp [comp.map]
+  map_comp _ _ := by simp [comp.map]
 
 /-- Notation for composition of functors. -/
 scoped[CategoryTheory] infixr:80 " ⋙ " => Functor.comp
-
--- section
-
--- variable {C : Type} [Category.{0, 0} C]
-
--- class X (F : C ⥤ C) where
---   n : Nat
-
--- opaque myC : Type
--- instance : Category.{0, 0} myC := sorry
--- def myF : myC ⥤ myC := sorry
--- def myG : myC ⥤ myC := sorry
--- def myH : myC ⥤ myC := sorry
-
--- instance : X myF where n := 1
--- instance : X myG where n := 2
--- instance : X myH where n := 3
-
--- instance (F : C ⥤ C) (G : C ⥤ C) [X F] [X G] : X (F.comp G) where
---   n := 2 * (inferInstance : X F).n + (inferInstance : X G).n
-
--- example : False :=
---   let badN := (inferInstance : X ((myF ⋙ myG) ⋙ myH)).n
---   let goodN := (inferInstance : X (myF ⋙ myG ⋙ myH)).n
---   haveI : X ((myF ⋙ myG) ⋙ myH) := sorry
---   letI i : X (myF ⋙ myG ⋙ myH : myC ⥤ myC) := inferInstance
---   -- the following fails if `comp.map` is instance-reducible
---   have : badN ≠ goodN := by decide
---   have : i.n = goodN := by decide
---   sorry
-
--- end
 
 @[simp, grind =, to_dual self]
 theorem comp_map (F : C ⥤ D) (G : D ⥤ E) {X Y : C} (f : X ⟶ Y) :
