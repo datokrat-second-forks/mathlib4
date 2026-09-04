@@ -258,7 +258,7 @@ def map : Comma L R ⥤ Comma L' R' where
         dsimp
         rw [assoc, assoc, ← Functor.comp_map, α.naturality_assoc, ← Functor.comp_map,
           ← β.naturality]
-        dsimp
+        simp only [Functor.comp_map]
         rw [← F.map_comp_assoc, ← F.map_comp_assoc, φ.w] }
 
 attribute [to_dual existing] map_obj_left

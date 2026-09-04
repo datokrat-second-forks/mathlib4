@@ -134,6 +134,7 @@ noncomputable def partialFunEquivPointed : PartialFun.{u} ≌ Pointed where
       fun f =>
         PFun.ext fun a b => by
           dsimp [PartialFun.Iso.mk, CategoryStruct.comp, pointedToPartialFun]
+          simp only [Functor.comp_map]
           rw [Part.bind_some]
           refine (Part.mem_bind_iff.trans ?_).trans PFun.mem_toSubtype_iff.symm
           obtain ⟨b | b, hb⟩ := b

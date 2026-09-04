@@ -32,5 +32,6 @@ def PrincipalSeg.cocone {α β : Type*} [PartialOrder α] [PartialOrder β]
     { app i := F.map (homOfLE (f.lt_top i).le)
       naturality i j f := by
         dsimp
+        rw [Functor.comp_map]
         rw [← F.map_comp, comp_id]
         rfl }

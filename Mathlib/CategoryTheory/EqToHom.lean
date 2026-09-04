@@ -320,6 +320,7 @@ theorem precomp_map_heq (H : E ⥤ C) (hmap : ∀ {X Y} (f : X ⟶ Y), F.map f �
 theorem postcomp_map_heq (H : D ⥤ E) (hx : F.obj X = G.obj X) (hy : F.obj Y = G.obj Y)
     (hmap : F.map f ≍ G.map f) : (F ⋙ H).map f ≍ (G ⋙ H).map f := by
   dsimp
+  simp only [Functor.comp_map]
   congr
 
 theorem postcomp_map_heq' (H : D ⥤ E) (hobj : ∀ X : C, F.obj X = G.obj X)

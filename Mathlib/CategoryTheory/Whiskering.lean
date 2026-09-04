@@ -82,7 +82,10 @@ def whiskeringLeft : (C ⥤ D) ⥤ (D ⥤ E) ⥤ C ⥤ E where
   map τ :=
     { app := fun H =>
         { app := fun c => H.map (τ.app c)
-          naturality := fun X Y f => by dsimp; rw [← H.map_comp, ← H.map_comp, ← τ.naturality] }
+          naturality := fun X Y f => by
+            dsimp
+            simp only [Functor.comp_map]
+            rw [← H.map_comp, ← H.map_comp, ← τ.naturality] }
       naturality := fun X Y f => by ext; dsimp; rw [f.naturality] }
 
 set_option backward.defeqAttrib.useBackward true in
@@ -99,7 +102,10 @@ def whiskeringRight : (D ⥤ E) ⥤ (C ⥤ D) ⥤ C ⥤ E where
   map τ :=
     { app := fun F =>
         { app := fun c => τ.app (F.obj c)
-          naturality := fun X Y f => by dsimp; rw [τ.naturality] }
+          naturality := fun X Y f => by
+            dsimp
+            simp only [Functor.comp_map]
+            rw [τ.naturality] }
       naturality := fun X Y f => by ext; dsimp; rw [← NatTrans.naturality] }
 
 variable {C} {D} {E}

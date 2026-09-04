@@ -186,11 +186,15 @@ lemma uncurry_obj_curry_obj_flip_flip (F₁ : B ⥤ C) (F₂ : D ⥤ E) (G : C �
     uncurry.obj (F₂ ⋙ (F₁ ⋙ curry.obj G).flip).flip = (F₁.prod F₂) ⋙ G :=
   Functor.ext (by simp) (fun ⟨x₁, x₂⟩ ⟨y₁, y₂⟩ ⟨f₁, f₂⟩ => by
     dsimp
+    simp only [Functor.comp_map]
+    dsimp
     simp only [Category.id_comp, Category.comp_id, ← G.map_comp, prod_comp])
 
 lemma uncurry_obj_curry_obj_flip_flip' (F₁ : B ⥤ C) (F₂ : D ⥤ E) (G : C × E ⥤ H) :
     uncurry.obj (F₁ ⋙ (F₂ ⋙ (curry.obj G).flip).flip) = (F₁.prod F₂) ⋙ G :=
   Functor.ext (by simp) (fun ⟨x₁, x₂⟩ ⟨y₁, y₂⟩ ⟨f₁, f₂⟩ => by
+    dsimp
+    simp only [Functor.comp_map]
     dsimp
     simp only [Category.id_comp, Category.comp_id, ← G.map_comp, prod_comp])
 

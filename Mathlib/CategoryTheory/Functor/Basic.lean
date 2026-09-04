@@ -137,7 +137,8 @@ scoped[CategoryTheory] infixr:80 " ⋙ " => Functor.comp
 
 @[simp, grind =, to_dual self]
 theorem comp_map (F : C ⥤ D) (G : D ⥤ E) {X Y : C} (f : X ⟶ Y) :
-    (F ⋙ G).map f = G.map (F.map f) := rfl
+    (F ⋙ G).map f = G.map (F.map f) := by
+  simp [comp, comp.map]
 
 -- These are not simp lemmas because rewriting along equalities between functors
 -- is not necessarily a good idea.

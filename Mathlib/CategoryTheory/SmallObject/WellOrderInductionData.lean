@@ -98,7 +98,7 @@ structure Extension (val₀ : F.obj (op ⊥)) (j : J) where
       { val := fun ⟨⟨k, hk⟩⟩ ↦ F.map (homOfLE (hk.le.trans hij)).op val
         property := fun f ↦ by
           dsimp
-          rw [← comp_apply, ← map_comp]
+          rw [← comp_apply, Functor.comp_map, ← map_comp]
           rfl }
 
 namespace Extension
@@ -216,7 +216,11 @@ def limit (j : J) (hj : Order.IsSuccLimit j)
     d.Extension val₀ j where
   val := d.lift j hj
     { val := fun ⟨i, hi⟩ ↦ (e i hi).val
-      property := fun f ↦ by dsimp; apply compatibility }
+      property := fun f ↦ by
+        dsimp
+        simp only [Functor.comp_map]
+        dsimp
+        apply compatibility }
   map_zero := by
     rw [d.map_lift _ _ _ _ (by simpa [bot_lt_iff_ne_bot] using hj.not_isMin)]
     simpa using (e ⊥ (by simpa [bot_lt_iff_ne_bot] using hj.not_isMin)).map_zero

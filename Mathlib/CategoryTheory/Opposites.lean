@@ -859,7 +859,8 @@ def opUnopEquiv : (C ⥤ D)ᵒᵖ ≌ Cᵒᵖ ⥤ Dᵒᵖ where
       (by
         intro F G f
         dsimp [opUnopIso]
-        rw [Functor.id_map]
+        rw [Functor.id_map, Functor.comp_map]
+        dsimp
         rw [show f = f.unop.op by simp, ← op_comp, ← op_comp]
         congr 1
         cat_disch)
@@ -884,7 +885,8 @@ def leftOpRightOpEquiv : (Cᵒᵖ ⥤ D)ᵒᵖ ≌ C ⥤ Dᵒᵖ where
       (by
         intro F G η
         dsimp
-        rw [Functor.id_map]
+        rw [Functor.id_map, Functor.comp_map]
+        dsimp
         rw [show η = η.unop.op by simp, ← op_comp, ← op_comp]
         congr 1
         cat_disch)

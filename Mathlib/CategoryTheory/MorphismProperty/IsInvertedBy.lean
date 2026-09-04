@@ -47,6 +47,7 @@ theorem of_comp {C₁ C₂ C₃ : Type*} [Category* C₁] [Category* C₂] [Cate
     W.IsInvertedBy (F ⋙ G) := fun X Y f hf => by
   have := hF f hf
   dsimp
+  rw [Functor.comp_map]
   infer_instance
 
 set_option backward.defeqAttrib.useBackward true in

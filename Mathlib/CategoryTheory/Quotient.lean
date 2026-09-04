@@ -272,9 +272,10 @@ lemma lift_unique' (F₁ F₂ : Quotient r ⥤ D) (h : functor r ⋙ F₁ = func
   rw [lift_unique r (functor r ⋙ F₂) _ F₂ rfl]; swap
   · rintro X Y f g h
     dsimp
+    simp only [Functor.comp_map]
     rw [Quotient.sound r h]
   apply lift_unique
-  rw [h]
+  exact h
 
 /-- The original functor factors through the induced functor. -/
 def lift.isLift : functor r ⋙ lift r F H ≅ F :=

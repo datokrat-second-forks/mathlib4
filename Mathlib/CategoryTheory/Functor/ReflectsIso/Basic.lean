@@ -72,6 +72,7 @@ lemma reflectsIsomorphisms_of_comp (F : C ⥤ D) (G : D ⥤ E)
   reflects f _ := by
     rw [← isIso_iff_of_reflects_iso _ (F ⋙ G)]
     dsimp
+    rw [Functor.comp_map]
     infer_instance
 
 instance (F : D ⥤ E) [F.ReflectsIsomorphisms] :

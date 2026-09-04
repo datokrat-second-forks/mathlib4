@@ -338,12 +338,21 @@ def adjointifyη : 𝟭 C ≅ F ⋙ G := by
 theorem adjointify_η_ε (X : C) :
     F.map ((adjointifyη η ε).hom.app X) ≫ ε.hom.app (F.obj X) = 𝟙 (F.obj X) := by
   dsimp [adjointifyη, Trans.trans]
-  simp only [comp_id, assoc, map_comp, associator_hom_app, associator_inv_app, comp_obj]
-  have := ε.hom.naturality (F.map (η.inv.app X)); dsimp at this; rw [this]; clear this
+  simp only [comp_id, assoc, map_comp, Functor.comp_map, associator_hom_app,
+    associator_inv_app, comp_obj]
+  have := ε.hom.naturality (F.map (η.inv.app X))
+  dsimp at this
+  simp only [Functor.comp_map] at this
+  rw [this]
+  clear this
   change F.map (η.hom.app X) ≫ F.map (G.map (ε.inv.app (F.obj X))) ≫
     ε.hom.app (F.obj (G.obj (F.obj X))) ≫ F.map (η.inv.app X) = 𝟙 (F.obj X)
   rw [← assoc _ _ (F.map _)]
-  have := ε.hom.naturality (ε.inv.app <| F.obj X); dsimp at this; rw [this]; clear this
+  have := ε.hom.naturality (ε.inv.app <| F.obj X)
+  dsimp at this
+  simp only [Functor.comp_map] at this
+  rw [this]
+  clear this
   rw [Functor.id_map (ε.inv.app (F.obj X))]
   rw [ε.hom_inv_id_app]
   simp only [Functor.comp_obj]
@@ -396,8 +405,8 @@ def trans (e : C ≌ D) (f : D ≌ E) : C ≌ E where
   -- lemmas.
   functor_unitIso_comp X := by
     dsimp
-    simp only [comp_id, id_comp, map_comp, fun_inv_map, comp_obj, id_obj, counitInv,
-      functor_unit_comp_assoc, assoc, associator_hom_app, associator_inv_app]
+    simp only [comp_id, id_comp, map_comp, Functor.comp_map, fun_inv_map, comp_obj, id_obj,
+      counitInv, functor_unit_comp_assoc, assoc, associator_hom_app, associator_inv_app]
     slice_lhs 2 3 => rw [← Functor.map_comp, Iso.inv_hom_id_app]
     simp
 

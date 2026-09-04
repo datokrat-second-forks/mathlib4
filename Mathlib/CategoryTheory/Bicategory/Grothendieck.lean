@@ -222,6 +222,7 @@ set_option backward.isDefEq.respectTransparency false in
 def mapCompIso (α : F ⟶ G) (β : G ⟶ H) : map (α ≫ β) ≅ map α ⋙ map β :=
   NatIso.ofComponents (fun _ ↦ eqToIso (by cat_disch)) (fun f ↦ by
     dsimp
+    simp only [Functor.comp_map]
     simp only [comp_id, id_comp]
     ext <;> simp)
 
@@ -384,6 +385,7 @@ set_option backward.isDefEq.respectTransparency false in
 def mapCompIso (α : F ⟶ G) (β : G ⟶ H) : map (α ≫ β) ≅ map α ⋙ map β :=
   NatIso.ofComponents (fun _ ↦ eqToIso (by cat_disch)) (fun f ↦ by
     dsimp
+    simp only [Functor.comp_map]
     simp only [comp_id, id_comp]
     ext <;> simp)
 

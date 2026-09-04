@@ -224,6 +224,8 @@ theorem equivalenceCounitIso_eq (hη : τ₀ = τ₁ hF hG η) :
     equivalenceCounitIso_hom_app]
   simp only [equivalence₂_inverse, comp_obj, ← τ₀_hom_app, hη, τ₁_hom_app, ←
     eB.inverse.map_comp_assoc]
+  simp only [Functor.comp_map]
+  simp only [← eB.inverse.map_comp_assoc]
   rw [hF.inv.naturality_assoc, hF.inv.naturality_assoc]
   congr 2
   simp only [← e'.functor.map_comp_assoc]
