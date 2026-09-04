@@ -916,8 +916,13 @@ lemma isSheafFor_over_map_op_comp_ofArrows_iff
           Over.homMk (𝟙 _) (by simpa using Over.w g₁)
         replace this := congr_arg (P.map φ.op) this
         dsimp at this
-        simp only [← comp_apply, ← Functor.map_comp, ← op_comp] at this
-        convert! this <;> cat_disch⟩
+        simp only [Functor.comp_map, ← comp_apply, ← Functor.map_comp] at this
+        convert! this
+        all_goals
+          apply Quiver.Hom.unop_inj
+          apply Over.OverMorphism.ext
+          dsimp [φ]
+          simp⟩
       invFun s := ⟨fun i ↦ s.val i, fun i₁ i₂ Z g₁ g₂ h ↦
         s.property i₁ i₂ _ ((Over.map p).map g₁) ((Over.map p).map g₂)
           (by simp only [← Functor.map_comp, h])⟩ }

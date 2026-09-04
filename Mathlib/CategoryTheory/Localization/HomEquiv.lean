@@ -102,7 +102,7 @@ lemma homMap_homMap (f : L₁.obj X ⟶ L₁.obj Y) :
       Functor.associator _ _ _)]
   dsimp
   simp only [Functor.associator_hom_app, Functor.associator_inv_app, Functor.comp_obj,
-    Functor.map_comp, assoc, comp_id, id_comp]
+    Functor.map_comp, Functor.comp_map, assoc, comp_id, id_comp]
 
 end LocalizerMorphism
 

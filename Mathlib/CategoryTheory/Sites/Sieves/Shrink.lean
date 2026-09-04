@@ -63,6 +63,7 @@ def shrinkFunctorUliftFunctorIso [LocallySmall.{w} C] [LocallySmall.{max w' w} C
         fun a ↦ by simp)))
     fun {U V} f ↦ by
       dsimp
+      simp only [Functor.comp_map]
       ext
       dsimp [Equiv.subtypeEquiv_apply]
       rw [shrinkYonedaObjObjEquiv_obj_map, shrinkYonedaObjObjEquiv_symm_comp]

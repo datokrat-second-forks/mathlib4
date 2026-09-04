@@ -1101,7 +1101,9 @@ def Grothendieck.structuredArrowToStructuredArrowPre (d : D) (f : F.obj d) :
     (Grothendieck.Hom.mk (by exact g.right)
       (eqToHom (by
         dsimp +instances
-        rw [← StructuredArrow.w g, map_comp, Cat.Hom.comp_obj])))
+        rw [← StructuredArrow.w g, map_comp, Cat.Hom.comp_obj]
+        exact Functor.congr_obj
+          (congrArg Cat.Hom.toFunctor (Functor.comp_map G F g.right)) _)))
     (by
       simp only [StructuredArrow.mk_right]
       generalize_proofs

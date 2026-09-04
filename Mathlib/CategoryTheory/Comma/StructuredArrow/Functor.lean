@@ -60,6 +60,18 @@ def functor (T : C ⥤ D) : D ⥤ Cat where
 variable {E : Type u₃} [Category.{v₃} E]
 variable (L : C ⥤ D) (R : E ⥤ D)
 
+/-- `Functor.comp_map` under `Cat.Hom.toFunctor.obj`, as a term to feed to congruence lemmas
+such as `Comma.congr_hom`. -/
+theorem _root_.CategoryTheory.Functor.comp_map_obj {C' D' : Type*} [Category* C'] [Category* D']
+    (F' : C' ⥤ D') (G' : D' ⥤ Cat) {X Y : C'} (f : X ⟶ Y) (A : (F' ⋙ G').obj X) :
+    ((F' ⋙ G').map f).toFunctor.obj A = (G'.map (F'.map f)).toFunctor.obj A :=
+  Functor.congr_obj (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) A
+
+theorem _root_.CategoryTheory.Comma.congr_hom {A' B' T' : Type*} [Category* A'] [Category* B']
+    [Category* T'] {L' : A' ⥤ T'} {R' : B' ⥤ T'} {X Y : Comma L' R'} (h : X = Y) :
+    X.hom = eqToHom (by rw [h]) ≫ Y.hom ≫ eqToHom (by rw [h]) := by
+  subst h; simp
+
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The functor used to establish the equivalence `grothendieckPrecompFunctorEquivalence` between
@@ -67,7 +79,11 @@ the Grothendieck construction on `CostructuredArrow.functor` and the comma categ
 @[simps]
 def grothendieckPrecompFunctorToComma : Grothendieck (R ⋙ functor L) ⥤ Comma L R where
   obj P := ⟨P.fiber.left, P.base, P.fiber.hom⟩
-  map f := ⟨f.fiber.left, f.base, by simp⟩
+  map f := ⟨f.fiber.left, f.base, by
+    simp only [Functor.comp_obj, functor_obj, Cat.of_α, CommaMorphism.w, Functor.const_obj_obj,
+      right_eq_id, Functor.const_obj_map, Category.comp_id]
+    rw [Comma.congr_hom (Functor.comp_map_obj _ _ _ _)]
+    simp⟩
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -86,7 +102,8 @@ between the Grothendieck construction on `CostructuredArrow.functor` and the com
 @[simps]
 def commaToGrothendieckPrecompFunctor : Comma L R ⥤ Grothendieck (R ⋙ functor L) where
   obj X := ⟨X.right, mk X.hom⟩
-  map f := ⟨f.right, homMk f.left⟩
+  map {X Y} f := ⟨f.right,
+    eqToHom (Functor.comp_map_obj R (functor L) f.right (mk X.hom)) ≫ homMk f.left⟩
   map_id X := Grothendieck.ext _ _ rfl (by simp)
   map_comp f g := Grothendieck.ext _ _ rfl (by simp)
 
@@ -98,8 +115,15 @@ the comma category `Comma L R`. -/
 def grothendieckPrecompFunctorEquivalence : Grothendieck (R ⋙ functor L) ≌ Comma L R where
   functor := grothendieckPrecompFunctorToComma _ _
   inverse := commaToGrothendieckPrecompFunctor _ _
-  unitIso := NatIso.ofComponents (fun _ => Iso.refl _)
-  counitIso := NatIso.ofComponents (fun _ => Iso.refl _)
+  unitIso := NatIso.ofComponents (fun _ => Iso.refl _) (fun f => by
+    -- TODO: this should be closed by `cat_disch`
+    simp only [Functor.id_map, Iso.refl_hom, Category.comp_id, Category.id_comp, Functor.comp_map]
+    fapply Grothendieck.ext
+    · rfl
+    · apply CostructuredArrow.ext
+      simp)
+  counitIso := NatIso.ofComponents (fun _ => Iso.refl _) (fun f => by
+    ext <;> simp [commaToGrothendieckPrecompFunctor])
 
 /-- The functor projecting out the domain of arrows from the Grothendieck construction on
 costructured arrows. -/

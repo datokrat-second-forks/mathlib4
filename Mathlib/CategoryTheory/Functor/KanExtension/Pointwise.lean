@@ -229,9 +229,10 @@ def coconeAt (Y : D) : Cocone (CostructuredArrow.proj L Y ⋙ F) where
     { app := fun g => E.hom.app g.left ≫ E.right.map g.hom
       naturality := fun g₁ g₂ φ => by
         dsimp
+        simp only [Functor.comp_map]
+        dsimp
         rw [← CostructuredArrow.w φ]
-        simp only [NatTrans.naturality_assoc, Functor.comp_map,
-          Functor.map_comp, comp_id] }
+        simp only [NatTrans.naturality_assoc, Functor.comp_map, Functor.map_comp, comp_id] }
 
 set_option backward.defeqAttrib.useBackward true in
 variable (L F) in

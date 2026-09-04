@@ -621,6 +621,7 @@ noncomputable def lift (F : C ⥤ E) (hF : W.IsInvertedBy F) :
 set_option backward.isDefEq.respectTransparency false in
 lemma fac (F : C ⥤ E) (hF : W.IsInvertedBy F) : Q W ⋙ lift F hF = F :=
   Functor.ext (fun _ => rfl) (fun X Y f => by
+    simp only [Functor.comp_map]
     dsimp [lift]
     rw [Q_map, Hom.map_mk, id_comp, comp_id, map_ofHom])
 
@@ -639,6 +640,7 @@ lemma uniq (F₁ F₂ : Localization W ⥤ E) (h : Q W ⋙ F₁ = Q W ⋙ F₂) 
     rw [← cancel_epi (F₂.map ((Q W).map f.s)), ← F₂.map_comp_assoc,
       Qiso_hom_inv_id, Functor.map_id, id_comp]
     erw [Functor.congr_hom h.symm f.s]
+    simp only [Functor.comp_map]
     dsimp
     rw [assoc, assoc, eqToHom_trans_assoc, eqToHom_refl, id_comp, ← F₁.map_comp,
       Qiso_hom_inv_id]

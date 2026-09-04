@@ -120,7 +120,7 @@ lemma additive_of_full_essSurj_comp [Full F] [EssSurj F] (G : D ⥤ E)
       ← cancel_epi (G.map (F.objObjPreimageIso X).hom),
       Preadditive.add_comp, Preadditive.comp_add, ← Functor.map_comp]
     erw [← hf', ← hg', ← (F ⋙ G).map_add]
-    dsimp
+    simp only [Functor.comp_map]
     rw [F.map_add]
 
 lemma additive_of_comp_faithful

@@ -519,11 +519,13 @@ lemma areEqualizedByLocalization_iff [L.IsLocalization W] :
     let e := Localization.compUniqFunctor W.Q L W
     rw [← NatIso.naturality_1 e f, ← NatIso.naturality_1 e g]
     dsimp
+    simp only [Functor.comp_map]
     rw [h]
   · intro h
     let e := Localization.compUniqFunctor L W.Q W
     rw [← NatIso.naturality_1 e f, ← NatIso.naturality_1 e g]
     dsimp
+    simp only [Functor.comp_map]
     rw [h]
 
 namespace AreEqualizedByLocalization

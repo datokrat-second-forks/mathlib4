@@ -173,7 +173,7 @@ lemma preservesLimit_of_preservesEqualizers_and_product :
     · apply G.map t
     · intro f
       dsimp [P, Q, s, Fan.mk]
-      simp only [← G.map_comp, limit.lift_π]
+      simp only [← G.map_comp, limit.lift_π, Functor.comp_map]
       congr
     · intro f
       dsimp [P, Q, t, Fan.mk]
@@ -446,7 +446,7 @@ lemma preservesColimit_of_preservesCoequalizers_and_coproduct :
     · apply G.map t
     · intro f
       dsimp [P, Q, s, Cofan.mk]
-      simp only [← G.map_comp, colimit.ι_desc]
+      simp only [← G.map_comp, colimit.ι_desc, Functor.comp_map]
       congr
     · intro f
       dsimp [P, Q, t, Cofan.mk]

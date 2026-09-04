@@ -295,12 +295,13 @@ theorem IsUniversalColimit.map_reflective
       dsimp [α']
       ext
       all_goals simp only [Functor.associator_hom_app, Functor.comp_obj, Category.comp_id,
-        Category.id_comp, Category.assoc, ← Functor.map_comp, pullback.lift_fst,
+        Category.id_comp, Category.assoc, Functor.comp_map, ← Functor.map_comp, pullback.lift_fst,
         pullback.lift_snd, ← Functor.map_comp_assoc]
       · congr 1
         exact c'.w _
       · rw [α.naturality_assoc]
         dsimp
+        simp only [Functor.comp_map]
         rw [adj.counit_naturality, ← Category.assoc, Gr.map_comp_assoc]
         congr 1
         exact c.w _

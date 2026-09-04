@@ -76,6 +76,8 @@ noncomputable def colimitLimitToLimitColimit :
           naturality := by
             intro j j' f
             dsimp
+            simp only [Functor.comp_map]
+            dsimp
             ext k
             simp only [Functor.comp_obj, lim_obj, Category.id_comp, colimit.ι_desc,
               colimit.ι_desc_assoc, Category.assoc, ι_colimMap,

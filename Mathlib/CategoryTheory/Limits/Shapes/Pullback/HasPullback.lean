@@ -274,6 +274,22 @@ abbrev pullback.map {W X Y Z S T : C} (f₁ : W ⟶ S) (f₂ : X ⟶ S) [HasPull
   pullback.lift (pullback.fst f₁ f₂ ≫ i₁) (pullback.snd f₁ f₂ ≫ i₂)
     (by simp only [Category.assoc, ← eq₁, ← eq₂, pullback.condition_assoc])
 
+@[simp, reassoc]
+theorem pullback.map_fst {W X Y Z S T : C} (f₁ : W ⟶ S) (f₂ : X ⟶ S) [HasPullback f₁ f₂]
+    (g₁ : Y ⟶ T) (g₂ : Z ⟶ T) [HasPullback g₁ g₂] (i₁ : W ⟶ Y) (i₂ : X ⟶ Z)
+    (i₃ : S ⟶ T) (eq₁ : f₁ ≫ i₃ = i₁ ≫ g₁) (eq₂ : f₂ ≫ i₃ = i₂ ≫ g₂) :
+    pullback.map f₁ f₂ g₁ g₂ i₁ i₂ i₃ eq₁ eq₂ ≫ pullback.fst g₁ g₂ =
+      pullback.fst f₁ f₂ ≫ i₁ :=
+  pullback.lift_fst _ _ _
+
+@[simp, reassoc]
+theorem pullback.map_snd {W X Y Z S T : C} (f₁ : W ⟶ S) (f₂ : X ⟶ S) [HasPullback f₁ f₂]
+    (g₁ : Y ⟶ T) (g₂ : Z ⟶ T) [HasPullback g₁ g₂] (i₁ : W ⟶ Y) (i₂ : X ⟶ Z)
+    (i₃ : S ⟶ T) (eq₁ : f₁ ≫ i₃ = i₁ ≫ g₁) (eq₂ : f₂ ≫ i₃ = i₂ ≫ g₂) :
+    pullback.map f₁ f₂ g₁ g₂ i₁ i₂ i₃ eq₁ eq₂ ≫ pullback.snd g₁ g₂ =
+      pullback.snd f₁ f₂ ≫ i₂ :=
+  pullback.lift_snd _ _ _
+
 /-- The canonical map `X ×ₛ Y ⟶ X ×ₜ Y` given `S ⟶ T`. -/
 abbrev pullback.mapDesc {X Y S T : C} (f : X ⟶ S) (g : Y ⟶ S) (i : S ⟶ T) [HasPullback f g]
     [HasPullback (f ≫ i) (g ≫ i)] : pullback f g ⟶ pullback (f ≫ i) (g ≫ i) :=
@@ -353,22 +369,6 @@ isomorphism `pullback f₁ g₁ ≅ pullback f₂ g₂` -/
 def pullback.congrHom {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z} (h₁ : f₁ = f₂) (h₂ : g₁ = g₂)
     [HasPullback f₁ g₁] [HasPullback f₂ g₂] : pullback f₁ g₁ ≅ pullback f₂ g₂ :=
   asIso <| pullback.map _ _ _ _ (𝟙 _) (𝟙 _) (𝟙 _) (by simp [h₁]) (by simp [h₂])
-
-@[simp, reassoc]
-theorem pullback.congrHom_hom_fst {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z}
-    (h₁ : f₁ = f₂) (h₂ : g₁ = g₂) [HasPullback f₁ g₁] [HasPullback f₂ g₂] :
-    (pullback.congrHom h₁ h₂).hom ≫ pullback.fst f₂ g₂ = pullback.fst f₁ g₁ := by
-  subst f₂
-  subst g₂
-  simp [pullback.congrHom]
-
-@[simp, reassoc]
-theorem pullback.congrHom_hom_snd {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z}
-    (h₁ : f₁ = f₂) (h₂ : g₁ = g₂) [HasPullback f₁ g₁] [HasPullback f₂ g₂] :
-    (pullback.congrHom h₁ h₂).hom ≫ pullback.snd f₂ g₂ = pullback.snd f₁ g₁ := by
-  subst f₂
-  subst g₂
-  simp [pullback.congrHom]
 
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
@@ -465,10 +465,8 @@ lemma pullbackComparison_comp {E : Type*} [Category* E] (F : C ⥤ D) (G : D ⥤
         (pullback.congrHom (Functor.comp_map F G f).symm
           (Functor.comp_map F G g).symm).hom := by
   ext
-  · simp only [Category.assoc, pullback.congrHom_hom_fst]
-    simp [Functor.comp_map, ← Functor.map_comp]
-  · simp only [Category.assoc, pullback.congrHom_hom_snd]
-    simp [Functor.comp_map, ← Functor.map_comp]
+  · simp [Functor.comp_map, ← Functor.map_comp]
+  · simp [Functor.comp_map, ← Functor.map_comp]
 
 /-- The comparison morphism for the pushout of `f,g`.
 This is an isomorphism iff `G` preserves the pushout of `f,g`; see

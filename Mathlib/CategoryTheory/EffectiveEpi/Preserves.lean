@@ -181,19 +181,19 @@ variable {E : Type*} [Category* E]
 set_option backward.defeqAttrib.useBackward true in
 instance (F : C ⥤ D) (G : D ⥤ E) [PreservesEffectiveEpis F] [PreservesEffectiveEpis G] :
     PreservesEffectiveEpis (F ⋙ G) where
-  preserves _ _ := by dsimp; infer_instance
+  preserves _ _ := by simp only [Functor.comp_map]; infer_instance
 
 set_option backward.defeqAttrib.useBackward true in
 instance (F : C ⥤ D) (G : D ⥤ E) [PreservesFiniteEffectiveEpiFamilies F]
     [PreservesFiniteEffectiveEpiFamilies G] :
     PreservesFiniteEffectiveEpiFamilies (F ⋙ G) where
-  preserves _ _ _ := by dsimp; infer_instance
+  preserves _ _ _ := by simp only [Functor.comp_obj, Functor.comp_map]; infer_instance
 
 set_option backward.defeqAttrib.useBackward true in
 instance (F : C ⥤ D) (G : D ⥤ E) [PreservesEffectiveEpiFamilies.{u} F]
     [PreservesEffectiveEpiFamilies.{u} G] :
     PreservesEffectiveEpiFamilies.{u} (F ⋙ G) where
-  preserves _ _ _ := by dsimp; infer_instance
+  preserves _ _ _ := by simp only [Functor.comp_obj, Functor.comp_map]; infer_instance
 
 end Composition
 

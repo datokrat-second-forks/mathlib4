@@ -320,7 +320,8 @@ theorem _root_.CategoryTheory.Functor.comp_map_map
     ((F' ⋙ G').map f).toFunctor.map φ =
       eqToHom (Functor.congr_obj (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) A) ≫
         (G'.map (F'.map f)).toFunctor.map φ ≫
-        eqToHom (Functor.congr_obj (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) B).symm :=
+        eqToHom (Eq.symm <|
+          Functor.congr_obj (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) B) :=
   Functor.congr_hom (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) φ
 
 theorem Hom.congr_fiber {X Y : Grothendieck F} {f g : X ⟶ Y} (h : f = g) :

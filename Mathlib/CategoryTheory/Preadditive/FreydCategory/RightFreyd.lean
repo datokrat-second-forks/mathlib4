@@ -137,6 +137,7 @@ instance : (functor V).Full where
 set_option backward.defeqAttrib.useBackward true in
 instance : (functor V).Faithful where
   map_injective {_ _} f g eq := by
+    simp only [Functor.comp_map] at eq
     dsimp at eq
     rw [quotient_map_eq_iff] at eq
     simpa [← sub_eq_zero] using! eq.some.comm

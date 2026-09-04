@@ -129,6 +129,7 @@ variable [HasCoproducts.{w} C] [HasCoproducts.{w} D]
 preserves coproducts. -/
 noncomputable def sigmaConstObjCompIso : sigmaConst.obj X ⋙ F ≅ sigmaConst.obj (F.obj X) :=
   NatIso.ofComponents (fun _ ↦ PreservesCoproduct.iso _ _) (fun {T₁ T₂} f ↦ by
+    simp only [Functor.comp_map]
     dsimp [Sigma.map']
     rw [← cancel_epi (PreservesCoproduct.iso F (fun (_ : T₁) ↦ X)).inv,
       ← cancel_mono (PreservesCoproduct.iso F (fun (_ : T₂) ↦ X)).inv,
