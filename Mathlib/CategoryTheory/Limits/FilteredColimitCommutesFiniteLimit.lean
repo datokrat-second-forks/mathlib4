@@ -287,6 +287,8 @@ theorem colimitLimitToLimitColimit_surjective :
       · -- After which it's just a calculation, using `s` and `wf`, to see they are coherent.
         dsimp
         intro j j' f
+        simp only [Functor.comp_map]
+        dsimp
         simp only [← comp_apply, ← Functor.map_comp, prod_comp, id_comp, comp_id]
         calc
           F.map (f ×ₘ (g j ≫ gf (𝟙 j) ≫ i (𝟙 j))) (y j) =

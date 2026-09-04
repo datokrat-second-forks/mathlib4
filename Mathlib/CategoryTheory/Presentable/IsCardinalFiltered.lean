@@ -229,6 +229,8 @@ instance isCardinalFiltered_under
               ext
               have := c.w f
               dsimp at this ⊢
+              simp only [Functor.comp_map] at this
+              dsimp at this
               simp only [reassoc_of% this, Category.comp_id] } }⟩
 
 set_option backward.defeqAttrib.useBackward true in

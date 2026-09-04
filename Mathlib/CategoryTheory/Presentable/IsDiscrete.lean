@@ -48,7 +48,11 @@ protected instance (priority := low) isCardinalAccessible
     have : IsIso ((F.mapCocone c).ι.app j) := by
       dsimp; infer_instance
     exact Functor.IsEventuallyConstantFrom.isColimitOfIsIso (i₀ := j)
-      (fun _ _ ↦ by dsimp; infer_instance) _⟩⟩⟩
+      (fun _ _ ↦ by
+        set_option backward.isDefEq.respectTransparency.types false in
+        simp only [Functor.comp_map]
+        dsimp
+        infer_instance) _⟩⟩⟩
 
 instance (priority := low) (κ : Cardinal.{w}) [Fact κ.IsRegular]
     [Subsingleton C] [Nonempty C] :

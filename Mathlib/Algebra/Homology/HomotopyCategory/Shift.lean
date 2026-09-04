@@ -287,11 +287,13 @@ attribute [local implicit_reducible] HomotopyCategory.quotient
 instance {R : Type*} [Ring R] [CategoryTheory.Linear R C] (n : ℤ) :
     (CategoryTheory.shiftFunctor (HomotopyCategory C (ComplexShape.up ℤ)) n).Linear R where
   map_smul := by
+    set_option backward.isDefEq.respectTransparency.types false in
     rintro ⟨X⟩ ⟨Y⟩ f r
     obtain ⟨f, rfl⟩ := (HomotopyCategory.quotient C (ComplexShape.up ℤ)).map_surjective f
     have h₁ := NatIso.naturality_1 ((HomotopyCategory.quotient _ _).commShiftIso n) f
     have h₂ := NatIso.naturality_1 ((HomotopyCategory.quotient _ _).commShiftIso n) (r • f)
     dsimp at h₁ h₂
+    simp only [Functor.comp_map] at h₁ h₂
     rw [← Functor.map_smul, ← h₁, ← h₂]
     simp
 

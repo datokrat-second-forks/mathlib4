@@ -244,6 +244,8 @@ def createsGSplitCoequalizersOfMonadic [MonadicRightAdjoint G] ⦃A B⦄ (f g : 
   all_goals
     apply @preservesColimit_of_iso_diagram _ _ _ _ _ _ _ _ _ (diagramIsoParallelPair.{v₁} _).symm ?_
     dsimp
+    simp only [Functor.comp_map]
+    dsimp
     infer_instance
 
 section BeckMonadicity

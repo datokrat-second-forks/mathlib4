@@ -227,10 +227,12 @@ noncomputable def closed (c : C) : Closed c where
     · refine NatIso.ofComponents (fun _ ↦ (μIso L _ _).symm ≪≫
         asIso ((adj.counit.app _) ⊗ₘ (adj.counit.app _))) (fun _ ↦ ?_)
       dsimp
+      simp only [Functor.comp_map, Functor.id_map]
+      dsimp
       rw [Category.assoc, ← δ_natural_right_assoc,
         tensorHom_def', ← MonoidalCategory.whiskerLeft_comp_assoc,
         Adjunction.counit_naturality, whisker_exchange,
-        tensorHom_def_assoc, MonoidalCategory.whiskerLeft_comp, Functor.id_map]
+        tensorHom_def_assoc, MonoidalCategory.whiskerLeft_comp]
     · exact NatIso.ofComponents (fun _ ↦ asIso (adj.unit.app ((ihom _).obj _)))
 
 /--

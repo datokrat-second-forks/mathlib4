@@ -100,6 +100,7 @@ set_option backward.defeqAttrib.useBackward true in
 lemma IsCardinalPure.mono [IsCardinalAccessibleCategory C κ]
     {X Y : C} (f : X ⟶ Y) [IsCardinalPure κ f] :
     Mono f := by
+  set_option backward.isDefEq.respectTransparency.types false in
   rw [IsCardinalAccessibleCategory.mono_iff κ]
   intro K _ p q hpq
   obtain ⟨j, p', q', h₁, h₂⟩ := IsCardinalPresentable.exists_hom₂_of_isColimit κ
@@ -114,7 +115,8 @@ lemma IsCardinalPure.mono [IsCardinalAccessibleCategory C κ]
   obtain ⟨⟨Y'', _ : IsCardinalPresentable Y'' κ⟩, v, rfl⟩ := j''.mk_surjective
   obtain ⟨⟨h⟩, H, rfl⟩ := CostructuredArrow.homMk_surjective c
   dsimp at v' f' hf' v h H hc
-  simp only [Category.assoc, Category.id_comp, Functor.id_map] at hf' h₁ h₂ hc
+  simp only [Category.assoc, Category.id_comp, Functor.id_map, Functor.comp_map] at hf' h₁ h₂ hc
+  dsimp at hc
   obtain ⟨u', hu'⟩ :=
     IsCardinalPure.exists_of_commSq κ (show CommSq (f' ≫ h) u v f from { })
   simp only [Category.assoc] at hu'

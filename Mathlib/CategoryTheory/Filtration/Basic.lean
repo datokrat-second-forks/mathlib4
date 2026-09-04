@@ -123,8 +123,11 @@ def homMk {F G : FilteredObject C I}
   natTrans.app := app
   natTrans.naturality i j f := by
     rw [← cancel_mono (G.filtration.ι.app j)]
-    simp [comm, dsimp% G.filtration.ι.naturality f,
-      dsimp% F.filtration.ι.naturality_assoc f]
+    have hG := G.filtration.ι.naturality f
+    have hF := F.filtration.ι.naturality_assoc f hom
+    simp only [Functor.comp_map] at hG hF ⊢
+    dsimp at hG hF ⊢
+    simp [comm, hG, hF]
   comm := comm
 
 /-- Constructor for isomorphisms of filtered objects. -/

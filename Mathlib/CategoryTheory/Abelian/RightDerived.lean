@@ -86,6 +86,7 @@ lemma InjectiveResolution.isoRightDerivedToHomotopyCategoryObj_hom_naturality
       (I.isoRightDerivedToHomotopyCategoryObj F).hom ≫
         (F.mapHomologicalComplex _ ⋙ HomotopyCategory.quotient _ _).map φ := by
   dsimp [Functor.rightDerivedToHomotopyCategory, isoRightDerivedToHomotopyCategoryObj]
+  simp only [Functor.comp_map]
   rw [← Functor.map_comp_assoc, iso_hom_naturality f I J φ comm, Functor.map_comp,
     assoc, assoc]
   erw [(F.mapHomotopyCategoryFactors (ComplexShape.up ℕ)).hom.naturality]
@@ -102,6 +103,7 @@ lemma InjectiveResolution.isoRightDerivedToHomotopyCategoryObj_inv_naturality
         (J.isoRightDerivedToHomotopyCategoryObj F).inv := by
     rw [← cancel_epi (I.isoRightDerivedToHomotopyCategoryObj F).hom, Iso.hom_inv_id_assoc]
     dsimp
+    simp only [Functor.comp_map]
     rw [← isoRightDerivedToHomotopyCategoryObj_hom_naturality_assoc f I J φ comm F,
       Iso.hom_inv_id, comp_id]
 
@@ -130,6 +132,8 @@ lemma InjectiveResolution.isoRightDerivedObj_hom_naturality
       (I.isoRightDerivedObj F n).hom ≫
         (F.mapHomologicalComplex _ ⋙ HomologicalComplex.homologyFunctor _ _ n).map φ := by
   dsimp [isoRightDerivedObj, Functor.rightDerived]
+  simp only [Functor.comp_map]
+  dsimp
   rw [assoc, ← Functor.map_comp_assoc,
     InjectiveResolution.isoRightDerivedToHomotopyCategoryObj_hom_naturality f I J φ comm F,
     Functor.map_comp, assoc]

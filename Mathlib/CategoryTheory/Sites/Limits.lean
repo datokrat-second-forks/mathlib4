@@ -81,6 +81,8 @@ def multiforkEvaluationCone (F : K ⥤ Sheaf J D) (E : Cone (F ⋙ sheafToPreshe
       naturality := by
         intro i j f
         dsimp [Presheaf.isLimitOfIsSheaf]
+        simp only [Functor.comp_map]
+        dsimp
         rw [Category.id_comp]
         apply Presheaf.IsSheaf.hom_ext (F.obj j).2 W
         intro ii

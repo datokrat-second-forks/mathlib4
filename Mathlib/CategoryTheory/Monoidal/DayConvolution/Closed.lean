@@ -107,10 +107,12 @@ def map (ℌ : DayConvolutionInternalHom F G H) {G' : C ⥤ V} {H' : C ⥤ V}
       (dayConvolutionInternalHomDiagramFunctor
         F |>.map f |>.app c |>.app (op j) |>.app j))
     (fun ⦃j j'⦄ φ ↦ by
+      set_option backward.isDefEq.respectTransparency.types false in
       have := congrArg (fun t ↦ t.app j') <|
         dayConvolutionInternalHomDiagramFunctor
           F |>.map f |>.app c |>.naturality φ.op
       dsimp at this ⊢
+      simp only [dayConvolutionInternalHomDiagramFunctor_obj_obj_obj_map] at this ⊢
       rw [Category.assoc, ← (ihom (F.obj j)).map_comp, ← f.naturality,
         Functor.map_comp, reassoc_of% ℌ.hπ]
       simp)
@@ -156,7 +158,10 @@ def ev_app : F ⊛ H ⟶ G :=
   DayConvolution.corepresentableBy F H |>.homEquiv.symm <|
     { app x := MonoidalClosed.uncurry <| ℌ.π x.2 x.1
       naturality {x y} f := by
+        set_option backward.isDefEq.respectTransparency.types false in
         have := congrArg (fun t ↦ F.obj x.1 ◁ t) <| ℌ.hπ x.2 f.1
+        dsimp at this ⊢
+        simp only [Functor.comp_map] at this ⊢
         dsimp at this ⊢
         simp only [whiskerLeft_comp] at this
         simp only [Category.assoc, MonoidalClosed.uncurry_eq, Functor.id_obj,
@@ -206,11 +211,13 @@ def coev_app : G ⟶ H where
       (fun c' => MonoidalClosed.curry <|
         (DayConvolution.unit F G).app (c', c))
         (fun {c' c''} f => by
+          set_option backward.isDefEq.respectTransparency.types false in
           have := DayConvolution.unit_naturality F G f (𝟙 c)
           simp only [Functor.map_id, tensorHom_id] at this
           replace this := congrArg MonoidalClosed.curry this
           simp only [MonoidalClosed.curry_natural_right] at this
           dsimp
+          simp only [dayConvolutionInternalHomDiagramFunctor_obj_obj_obj_map]
           rw [← this]
           simp [MonoidalClosed.curry_eq])
   naturality {c c'} f := by

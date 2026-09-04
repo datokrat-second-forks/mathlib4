@@ -129,14 +129,17 @@ def isPointwiseRightKanExtensionAtOfIsoOfIsLocalization
         have := Localization.inverts L W w hw
         rw [← NatIso.naturality_2 e w]
         dsimp
+        simp only [Functor.comp_map]
         infer_instance
       have eq := s.π.naturality (StructuredArrow.homMk w :
           StructuredArrow.mk (φ ≫ (Localization.isoOfHom L W w hw).inv) ⟶
             StructuredArrow.mk φ)
       dsimp at eq hφ ⊢
+      simp only [Functor.comp_map] at eq hφ ⊢
+      dsimp at eq hφ ⊢
       rw [id_comp] at eq
       rw [assoc] at hφ
-      simp only [← cancel_mono (F.map w), ← eq, comp_obj, comp_map, assoc,
+      simp only [← cancel_mono (F.map w), ← eq, comp_obj, Functor.comp_map, assoc,
         ← hφ, ← NatTrans.naturality, ← G.map_comp_assoc,
         Localization.isoOfHom_inv_hom_id, comp_id]
   uniq s m hm := by

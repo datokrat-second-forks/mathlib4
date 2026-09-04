@@ -869,6 +869,8 @@ def counit : restrictScalars.{max v u₂, u₁, u₂} f ⋙ extendScalars f ⟶ 
     | zero => rw [map_zero, map_zero]
     | tmul s' y =>
       dsimp
+      simp only [Functor.comp_map, Functor.id_map]
+      dsimp
       -- This used to be `rw`, but we need `erw` after https://github.com/leanprover/lean4/pull/2644
       erw [Counit.map_hom_apply]
       rw [lift.tmul, LinearMap.coe_mk, LinearMap.coe_mk]
@@ -998,9 +1000,8 @@ lemma homEquiv_extendScalarsComp (M : ModuleCat R₁) :
   simp only [Functor.associator_hom_app, Functor.associator_inv_app, Functor.comp_obj,
     Functor.id_obj, Category.assoc, Category.id_comp,
     Category.comp_id, Adjunction.comp_unit_app, Adjunction.homEquiv_unit,
-    Functor.map_comp, Adjunction.unit_naturality_assoc,
+    Functor.comp_map, Functor.id_map, Functor.map_comp, Adjunction.unit_naturality_assoc,
     Adjunction.right_triangle_components]
-  rfl
 
 set_option backward.isDefEq.respectTransparency false in
 lemma extendScalarsComp_hom_app_one_tmul (M : ModuleCat R₁) (m : M) :

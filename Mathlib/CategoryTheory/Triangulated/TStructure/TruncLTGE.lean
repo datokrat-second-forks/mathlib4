@@ -230,7 +230,8 @@ set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 instance (n : ℤ) : (t.truncLT n).Additive where
   map_add {_ _ _ _} := by
-    dsimp only [truncLT, Functor.comp_map]
+    dsimp only [truncLT]
+    simp only [Functor.comp_map]
     rw [Functor.map_add]
     dsimp
 
@@ -248,7 +249,8 @@ set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 instance (n : ℤ) : (t.truncGE n).Additive where
   map_add {_ _ _ _} := by
-    dsimp only [truncGE, Functor.comp_map]
+    dsimp only [truncGE]
+    simp only [Functor.comp_map]
     rw [Functor.map_add]
     dsimp
 

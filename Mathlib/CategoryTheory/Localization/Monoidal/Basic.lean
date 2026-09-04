@@ -117,6 +117,8 @@ lemma isInvertedBy₂ :
   have := Localization.inverts L' W _ (W.whiskerRight_mem f₁ hf₁ Y₁)
   have := Localization.inverts L' W _ (W.whiskerLeft_mem X₂ f₂ hf₂)
   dsimp
+  simp only [Functor.comp_map]
+  dsimp
   infer_instance
 
 set_option backward.isDefEq.respectTransparency false in

@@ -214,6 +214,8 @@ def cartesianClosedOfReflective' (l : i.EssImageSubcategory ⥤ D) (φ : l ⋙ i
               Adjunction.rightAdjoint_preservesLimits.{0, 0} (reflectorAdjunction i)
             apply asIso (prodComparison i B X)
           · dsimp [asIso]
+            simp only [Functor.comp_map]
+            dsimp
             rw [prodComparison_natural_whiskerLeft]
         · exact (i.essImage.liftCompιIso _ _).symm.trans <|
             (Functor.isoWhiskerLeft _ φ.symm).trans (Functor.associator _ _ _).symm }

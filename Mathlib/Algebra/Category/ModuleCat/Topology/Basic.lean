@@ -458,6 +458,8 @@ def freeAdj : free.{max v u} R ⊣ forget₂ (TopModuleCat.{max v u} R) TopCat.{
       apply ContinuousLinearMap.coe_injective
       refine Finsupp.lhom_ext' fun a ↦ LinearMap.ext_ring ?_
       dsimp [freeObj, freeMap]
+      simp only [Functor.comp_map, Functor.id_map]
+      dsimp [freeObj, freeMap]
       simp }
   left_triangle_components X := by
     ext1

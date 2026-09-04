@@ -133,7 +133,16 @@ noncomputable def leftKanExtensionIsoFiberwiseColimit [HasLeftKanExtension L F] 
   Iso.symm <| NatIso.ofComponents
     (fun X => HasColimit.isoOfNatIso (isoWhiskerRight (ιCompGrothendieckProj L X) F) ≪≫
       (leftKanExtensionObjIsoColimit L F X).symm)
-    fun f => colimit.hom_ext (by simp)
+    fun {X _} f => colimit.hom_ext (by
+      have h (j : CostructuredArrow L X) :
+          (𝟙 (((𝟭 D ⋙ functor L).map f).toFunctor.obj j) : _).left = 𝟙 j.left := by
+        rw [CostructuredArrow.id_left]
+        have hj : (((𝟭 D ⋙ functor L).map f).toFunctor.obj j).left = j.left := by
+          rw [Functor.comp_map_obj]
+          simp
+        cases hj
+        rfl
+      simp [h])
 
 end
 
@@ -153,7 +162,8 @@ noncomputable def lanAdjunction : L.lan ⊣ (whiskeringLeft C D H).obj L :=
           rw [descOfIsLeftKanExtension_fac_app, NatTrans.comp_app, ← assoc]
           have h := congr_app (L.lanUnit.naturality f) X
           dsimp at h ⊢
-          simp only [Functor.id_map] at h
+          simp only [Functor.id_map, Functor.comp_map] at h
+          dsimp at h
           rw [← h, assoc, descOfIsLeftKanExtension_fac_app])
       homEquiv_naturality_right := fun {F G₁ G₂} β f => by
         dsimp [homEquivOfIsLeftKanExtension]
@@ -198,6 +208,8 @@ noncomputable def lanCompColimIso [HasColimitsOfShape C H] [HasColimitsOfShape D
   Iso.symm <| NatIso.ofComponents
     (fun G ↦ (colimitIsoOfIsLeftKanExtension _ (L.lanUnit.app G)).symm)
     (fun f ↦ colimit.hom_ext (fun i ↦ by
+      dsimp
+      simp only [Functor.comp_map]
       dsimp
       rw [ι_colimMap_assoc, ι_colimitIsoOfIsLeftKanExtension_inv,
         ι_colimitIsoOfIsLeftKanExtension_inv_assoc, ι_colimMap, ← assoc, ← assoc]
@@ -346,7 +358,8 @@ noncomputable def ranAdjunction : (whiskeringLeft C D H).obj L ⊣ L.ran :=
         rw [liftOfIsRightKanExtension_fac_app, NatTrans.comp_app, assoc]
         have h := congr_app (L.ranCounit.naturality f) X
         dsimp at h ⊢
-        simp only [Functor.id_map] at h
+        simp only [Functor.id_map, Functor.comp_map] at h
+        dsimp at h
         rw [h, liftOfIsRightKanExtension_fac_app_assoc])
       homEquiv_naturality_left_symm := fun {F₁ F₂ G} β f ↦ by
         dsimp [homEquivOfIsRightKanExtension]
@@ -391,6 +404,8 @@ noncomputable def ranCompLimIso (L : C ⥤ D) [∀ (G : C ⥤ H), L.HasRightKanE
   NatIso.ofComponents
     (fun G ↦ limitIsoOfIsRightKanExtension _ (L.ranCounit.app G))
     (fun f ↦ limit.hom_ext (fun i ↦ by
+      dsimp
+      simp only [Functor.comp_map]
       dsimp
       rw [assoc, assoc, limMap_π, limitIsoOfIsRightKanExtension_hom_π_assoc,
         limitIsoOfIsRightKanExtension_hom_π, limMap_π_assoc]

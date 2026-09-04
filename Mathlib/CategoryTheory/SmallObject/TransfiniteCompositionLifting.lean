@@ -159,7 +159,10 @@ noncomputable def liftHom : F.obj j ⟶ X :=
     (Cocone.mk _
       { app := fun i ↦ (s.1 ⟨i⟩).f'
         naturality i i' g := by
+          set_option backward.isDefEq.respectTransparency.types false in
           have := congr_arg SqStruct.f' (s.2 g.op)
+          dsimp at this ⊢
+          simp only [Functor.comp_map] at this ⊢
           dsimp at this ⊢
           rw [this, comp_id] })
 

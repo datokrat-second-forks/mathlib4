@@ -259,6 +259,8 @@ noncomputable def transfiniteCompositionOfShapeMapFromBot (j : J) :
   isColimit := colimitOfDiagramTerminal isTerminalTop _
   map_mem k hk := by
     dsimp [MonoOver.forget]
+    simp only [Functor.comp_map]
+    dsimp [MonoOver.forget]
     convert!
       pushouts_ofLE_le_largerSubobject hG (transfiniteIterate (largerSubobject hG) k.1 A₀) using 2
     all_goals
@@ -283,6 +285,8 @@ noncomputable def transfiniteCompositionOfShapeOfEqTop
   apply (transfiniteCompositionOfShapeMapFromBot hG (Subobject.mk f) j).ofArrowIso
   refine Arrow.isoMk ((Subobject.isoOfEq _ _ (transfiniteIterate_bot _ _) ≪≫
     Subobject.underlyingIso f)) (asIso t.arrow) ?_
+  dsimp [MonoOver.forget]
+  simp only [Functor.comp_map]
   dsimp [MonoOver.forget]
   rw [assoc, Subobject.underlyingIso_hom_comp_eq_mk, Subobject.ofLE_arrow,
     Subobject.ofLE_arrow]

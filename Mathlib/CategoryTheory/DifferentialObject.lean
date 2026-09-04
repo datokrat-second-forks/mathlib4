@@ -285,10 +285,15 @@ nonrec def shiftFunctorAdd (m n : S) :
     simp only [Category.assoc, Iso.inv_hom_id_app_assoc]
     rw [← NatTrans.naturality_assoc]
     dsimp
-    simp only [Functor.map_comp, Category.assoc,
+    simp only [Functor.comp_map, Functor.map_comp, Category.assoc,
       shiftFunctorComm_hom_app_comp_shift_shiftFunctorAdd_hom_app 1 m n X.obj,
       Iso.inv_hom_id_app_assoc]
-  · ext; dsimp; exact NatTrans.naturality _ _
+  · simp only [Functor.comp_map]
+    ext
+    dsimp
+    have h := (shiftFunctorAdd C m n).hom.naturality f.f
+    simp only [Functor.comp_map] at h
+    exact h
 
 section
 

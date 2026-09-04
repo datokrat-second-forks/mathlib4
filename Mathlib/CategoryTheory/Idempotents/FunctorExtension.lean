@@ -148,6 +148,9 @@ def KaroubiUniversal₁.counitIso :
     (fun {X Y} φ => by
       ext P
       dsimp
+      simp only [Functor.comp_map]
+      dsimp
+      simp only [Functor.comp_map]
       rw [Functor.id_map, natTrans_eq φ P, P.decomp_p]
       simp only [Functor.map_comp, comp_f, assoc]
       rfl)

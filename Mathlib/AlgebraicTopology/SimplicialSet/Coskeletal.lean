@@ -163,9 +163,11 @@ lemma fac_aux₂ {n : ℕ}
             dsimp [α₀] at h₀ ⊢
             rw [h₀, ← dsimp% [α₀] ConcreteCategory.congr_hom (s.w β₀) x]
             rfl
+      have hβ₁ := s.w β₁
+      simp only [Functor.comp_map] at hβ₁
       rw [← StructuredArrow.w β₁, Functor.map_comp_apply]
-      dsimp [fromPUnit] at this ⊢
-      rw [this, ← s.w β₁]
+      dsimp [fromPUnit] at this hβ₁ ⊢
+      rw [this, ← hβ₁]
       dsimp
 
 lemma fac_aux₃ {n : ℕ}

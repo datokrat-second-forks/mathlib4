@@ -94,6 +94,8 @@ theorem compatibility_N₂_N₁_karoubi :
         ← HomologicalComplex.Hom.comm_assoc, ← h, app_idem_assoc]
   · ext n
     dsimp [KaroubiKaroubi.inverse, Functor.mapHomologicalComplex]
+    simp only [Functor.comp_map]
+    dsimp [KaroubiKaroubi.inverse, Functor.mapHomologicalComplex]
     simp only [karoubi_PInfty_f, HomologicalComplex.eqToHom_f, Karoubi.eqToHom_f,
       assoc, comp_id, PInfty_f_naturality, app_p_comp,
       karoubiChainComplexEquivalence_functor_obj_X_p, N₂_obj_p_f, eqToHom_refl,

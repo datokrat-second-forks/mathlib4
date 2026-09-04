@@ -548,6 +548,7 @@ lemma shiftFunctorCompIsoId_add'_inv_app :
   congr 1
   rw [← NatTrans.naturality]
   dsimp
+  simp only [Functor.comp_map]
   rw [← cancel_mono ((shiftFunctorAdd' C p' p 0 hp).inv.app X), Iso.hom_inv_id_app,
     Category.assoc, Category.assoc, Category.assoc, Category.assoc,
     ← shiftFunctorAdd'_assoc_inv_app p' m n n' p 0
@@ -637,7 +638,7 @@ theorem shiftComm' (i j : A) :
     f⟦i⟧'⟦j⟧' = (shiftComm _ _ _).hom ≫ f⟦j⟧'⟦i⟧' ≫ (shiftComm _ _ _).hom := by
   erw [← shiftComm_symm Y i j, ← ((shiftFunctorComm C i j).hom.naturality_assoc f)]
   dsimp
-  simp only [Iso.hom_inv_id_app, Functor.comp_obj, Category.comp_id]
+  simp only [Functor.comp_map, Iso.hom_inv_id_app, Functor.comp_obj, Category.comp_id]
 
 @[reassoc]
 theorem shiftComm_hom_comp (i j : A) :

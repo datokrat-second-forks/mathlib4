@@ -113,6 +113,8 @@ def restrictedULiftYonedaHomEquiv' (P : Cᵒᵖ ⥤ Type max w v₁ v₂) (E : �
     { app y := (uliftYonedaEquiv.{max w v₂} (y.hom ≫ g)).down
       naturality y y' f := by
         dsimp
+        simp only [Functor.comp_map]
+        dsimp
         rw [comp_id, ← CostructuredArrow.w f, assoc, map_comp_uliftYonedaEquiv_down] }
   left_inv f := by
     ext X
@@ -466,9 +468,11 @@ noncomputable def compULiftYonedaIsoULiftYonedaCompLan :
           (F.op.lanUnit.app (uliftYoneda.obj X))) _) ⟨𝟙 _⟩
       have eq₃ := ConcreteCategory.congr_hom (congr_app (F.op.lanUnit.naturality
         (uliftYoneda.{max w v₂}.map f)) _) ⟨𝟙 _⟩
-      simp only [Functor.id_map] at eq₃
+      simp only [Functor.id_map, Functor.comp_map] at eq₃ ⊢
       dsimp [uliftYoneda, uliftYonedaMap, uliftYonedaEquiv,
         Functor.leftKanExtensionUnique] at eq₁ eq₂ eq₃ ⊢
+      simp only [Functor.comp_map] at eq₃ ⊢
+      dsimp at eq₃ ⊢
       simp only [Functor.map_id] at eq₂
       simp only [id_comp] at eq₃
       simp [eq₁, eq₂, eq₃])
@@ -515,6 +519,8 @@ lemma coconeApp_naturality {P : Cᵒᵖ ⥤ Type max w v₁ v₂} {x y : P.Eleme
     (congr_app (φ.naturality f.1.unop) _) (ULift.up (𝟙 _))
   have eq₄ := ConcreteCategory.congr_hom ((φ.app x.1.unop).naturality (F.map f.1.unop).op)
   dsimp at eq₂ eq₃ eq₄
+  simp only [Functor.comp_map] at eq₃
+  dsimp at eq₃
   apply uliftYonedaEquiv.{max w v₂}.injective
   dsimp only [coconeApp]
   rw [Equiv.apply_symm_apply, ← uliftYonedaEquiv_naturality, Equiv.apply_symm_apply]
@@ -572,6 +578,8 @@ noncomputable def natTrans : F.op.lan ⟶ G where
     apply (F.op.lan.obj P).hom_ext_of_isLeftKanExtension (F.op.lanUnit.app P)
     have eq := F.op.lanUnit.naturality f
     dsimp at eq ⊢
+    simp only [Functor.id_map, Functor.comp_map] at eq
+    dsimp at eq
     rw [Functor.descOfIsLeftKanExtension_fac_assoc, ← reassoc_of% eq,
       Functor.descOfIsLeftKanExtension_fac, presheafHom_naturality]
 
@@ -619,6 +627,8 @@ lemma hom_ext {Φ : uliftYoneda.{max w v₂}.LeftExtension (F ⋙ uliftYoneda.{m
   have eq₂ := congr_hom (CC := fun X ↦ X) (congr_app (congr_app (StructuredArrow.w g) x.unop.1.unop)
     (F.op.obj x.unop.1)) (ULift.up (𝟙 _))
   dsimp at eq₁ eq₂ eq ⊢
+  simp only [Functor.id_map, Functor.comp_map] at eq
+  dsimp at eq
   simp only [reassoc_of% eq, ← Functor.whiskerLeft_comp]
   congr 2
   simp only [← cancel_epi ((compULiftYonedaIsoULiftYonedaCompLan F).hom.app x.unop.1.unop),

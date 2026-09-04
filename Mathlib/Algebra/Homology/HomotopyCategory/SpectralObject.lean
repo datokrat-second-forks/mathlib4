@@ -54,6 +54,8 @@ noncomputable def spectralObjectMappingCone :
     obtain ⟨_, _, _, f', g', rfl⟩ := ComposableArrows.mk₂_surjective D₂
     have eq := CochainComplex.mappingConeCompTriangle_mor₃_naturality f g f' g' φ
     dsimp [ComposableArrows.Precomp.map] at eq ⊢
+    simp only [Functor.comp_map] at eq ⊢
+    dsimp [ComposableArrows.Precomp.map] at eq ⊢
     simp only [Category.assoc, ← Functor.map_comp_assoc]
     simp [eq]
   distinguished' D := by

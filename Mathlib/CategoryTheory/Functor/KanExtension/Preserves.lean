@@ -539,11 +539,14 @@ def ranCompIsoOfPreserves [G.PreservesRightKanExtensions L]
         (L.rightKanExtensionCounit <| F' ⋙ G)
       dsimp [ran]
       ext
-      simp only [comp_obj, Category.assoc, rightKanExtensionCompIsoOfPreserves_hom_fac,
-        NatTrans.comp_app, whiskerLeft_app, whiskerRight_app, associator_inv_app, Category.id_comp,
-        liftOfIsRightKanExtension_fac, rightKanExtensionCompIsoOfPreserves_hom_fac_assoc,
-        ← G.map_comp]
-      simp)
+      simp only [comp_obj, Functor.comp_map, Category.assoc,
+        rightKanExtensionCompIsoOfPreserves_hom_fac,
+        NatTrans.comp_app, whiskerLeft_app, whiskerRight_app, associator_inv_app, Category.id_comp]
+      simp only [whiskeringRight_obj_map, whiskerRight_app, whiskeringRight_obj_obj,
+        liftOfIsRightKanExtension_fac_app, NatTrans.comp_app, comp_obj,
+        rightKanExtensionCompIsoOfPreserves_hom_fac_app_assoc]
+      rw [← G.map_comp, ← G.map_comp]
+      simp only [liftOfIsRightKanExtension_fac_app, NatTrans.comp_app])
 
 end RightKanExtension
 

@@ -47,8 +47,10 @@ def sectionsSubgroup : Subgroup (∀ j, F.obj j) :=
     carrier := (F ⋙ forget GrpCat).sections
     inv_mem' := fun {a} ah j j' f => by
       simp only [Functor.comp_map, Pi.inv_apply]
-      dsimp [Functor.sections] at ah ⊢
-      rw [(F.map f).hom.map_inv (a j), ah f] }
+      have ahf := ah f
+      simp only [Functor.comp_map] at ahf
+      dsimp [Functor.sections] at ahf ⊢
+      rw [(F.map f).hom.map_inv (a j), ahf] }
 
 @[to_additive]
 instance sectionsGroup : Group (F ⋙ forget GrpCat.{u}).sections :=

@@ -132,6 +132,7 @@ lemma isoAdd'_assoc {a b c ab bc abc : A}
   ext X
   have := NatTrans.naturality_2 ec.hom ((shiftFunctorAdd' C a b ab hab).app X)
   dsimp at this ⊢
+  simp only [Functor.comp_map] at this ⊢
   simp only [isoAdd'_hom_app, Category.assoc]
   rw [← NatTrans.naturality_assoc, ← this, Category.assoc, ← F.map_comp_assoc,
     shiftFunctorAdd'_assoc_hom_app a b c ab bc abc hab hbc h,
@@ -213,7 +214,7 @@ instance comp [F.CommShift A] [G.CommShift A] : (F ⋙ G).CommShift A where
     simp only [commShiftIso_add, isoAdd_hom_app]
     dsimp
     simp only [Functor.associator_hom_app, Functor.associator_inv_app, comp_id, id_comp, assoc,
-      ← Functor.map_comp_assoc, Iso.inv_hom_id_app, comp_obj]
+      ← Functor.map_comp_assoc, Iso.inv_hom_id_app, comp_obj, Functor.comp_map]
     simp only [map_comp, assoc, commShiftIso_hom_naturality_assoc]
 
 end CommShift
@@ -334,6 +335,7 @@ lemma add {a b : A} (ha : CommShiftCore τ a) (hb : CommShiftCore τ b) :
     ext X
     have := (shiftFunctorAdd D a b).inv.naturality (τ.app X)
     dsimp at this ⊢
+    simp only [Functor.comp_map] at this ⊢
     simp only [Functor.commShiftIso_add, Functor.CommShift.isoAdd_hom_app,
       ← NatTrans.naturality_2 τ ((shiftFunctorAdd C a b).app X),
       Functor.comp_obj, hb.app_shift_assoc, ha.app_shift, assoc,

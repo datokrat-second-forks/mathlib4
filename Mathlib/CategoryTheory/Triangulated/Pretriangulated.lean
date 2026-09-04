@@ -729,6 +729,7 @@ def isoTriangleOfIso₁₃ (T₁ T₂ : Triangle C) (hT₁ : T₁ ∈ distTriang
     (Arrow.isoMk ((shiftFunctor C (-1)).mapIso e₃) e₁ (by
       have := (shiftFunctorCompIsoId C (1 : ℤ) (-1) (by simp)).hom.naturality e₁.hom
       dsimp at this ⊢
+      simp only [Functor.comp_map, Functor.id_map] at this
       simp only [comp_neg, neg_comp, assoc, neg_inj, ← Functor.map_comp_assoc, ← comm]
       simp [this]))
   let e := h.choose

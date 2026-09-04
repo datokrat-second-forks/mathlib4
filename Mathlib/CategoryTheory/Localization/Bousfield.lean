@@ -225,7 +225,7 @@ lemma isLocal_iff_isIso_map {X Y : D} (f : X ⟶ Y) :
     isLocal (· ∈ Set.range F.obj) f ↔ IsIso (G.map f) := by
   have := adj.unit.naturality f
   dsimp at this
-  simp only [Functor.id_map] at this
+  simp only [Functor.id_map, Functor.comp_map] at this
   rw [← (isLocal (· ∈ Set.range F.obj)).postcomp_iff _ _ (isLocal_adj_unit_app adj Y),
     this, (isLocal (· ∈ Set.range F.obj)).precomp_iff _ _ (isLocal_adj_unit_app adj X),
     isLocal_iff_isIso _ _ ⟨_, rfl⟩ ⟨_, rfl⟩]
@@ -260,7 +260,7 @@ lemma isColocal_iff_isIso_map {X Y : C} (f : X ⟶ Y) :
     isColocal (· ∈ Set.range G.obj) f ↔ IsIso (F.map f) := by
   have := adj.counit.naturality f
   dsimp at this
-  simp only [Functor.id_map] at this
+  simp only [Functor.id_map, Functor.comp_map] at this
   rw [← (isColocal _).precomp_iff _ _ (isColocal_adj_counit_app adj X),
     ← this, (isColocal _).postcomp_iff _ _ (isColocal_adj_counit_app adj Y),
     isColocal_iff_isIso _ _ ⟨_, rfl⟩ ⟨_, rfl⟩]

@@ -66,7 +66,7 @@ def derived' [G'.IsLeftDerivedFunctor α W₁] [F'.IsRightDerivedFunctor β W₂
     have eq₁ := ε.naturality (α.app X₁)
     have eq₂ := G'.congr_map (hη X₁)
     have eq₃ := α.naturality (adj.unit.app X₁)
-    simp only [Functor.id_map] at eq₁
+    simp only [Functor.id_map, Functor.comp_map] at eq₁ eq₂ eq₃ ⊢
     dsimp at eq₁ eq₂ eq₃ ⊢
     simp only [Functor.map_comp] at eq₂
     simp only [Functor.associator_hom_app, Functor.comp_obj]
@@ -83,7 +83,7 @@ def derived' [G'.IsLeftDerivedFunctor α W₁] [F'.IsRightDerivedFunctor β W₂
     have eq₁ := η.naturality (β.app X₂)
     have eq₂ := F'.congr_map (hε X₂)
     have eq₃ := β.naturality (adj.counit.app X₂)
-    simp only [Functor.id_map] at eq₁
+    simp only [Functor.id_map, Functor.comp_map] at eq₁ eq₂ eq₃ ⊢
     dsimp at eq₁ eq₂ eq₃ ⊢
     simp only [Functor.map_comp] at eq₂
     simp only [Functor.associator_inv_app, Functor.comp_obj]

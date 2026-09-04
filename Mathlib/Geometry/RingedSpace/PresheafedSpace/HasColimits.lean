@@ -91,7 +91,104 @@ def componentwiseDiagram (F : J ⥤ PresheafedSpace.{_, _, v} C) [HasColimit F]
     simp only [assoc, CategoryTheory.NatTrans.naturality_assoc]
     simp
 
+theorem pushforwardDiagramToColimit_obj_eq
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C)) (j : J) :
+    (F ⋙ PresheafedSpace.forget C).obj j = (F.obj j).carrier :=
+  (Functor.comp_obj F (PresheafedSpace.forget C) j).trans
+    (PresheafedSpace.forget_obj C (F.obj j))
+
 variable [HasColimitsOfShape J TopCat.{v}]
+
+def pushforwardDiagramToColimitι
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C)) (j : J) :
+    (F.obj j).carrier ⟶ colimit (F ⋙ PresheafedSpace.forget C) :=
+  eqToHom (pushforwardDiagramToColimit_obj_eq F j).symm ≫
+    colimit.ι (F ⋙ PresheafedSpace.forget C) j
+
+theorem pushforwardDiagramToColimit_eqToHom_comp_ι
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C)) (j : J) :
+    eqToHom (pushforwardDiagramToColimit_obj_eq F j) ≫
+        pushforwardDiagramToColimitι F j =
+      colimit.ι (F ⋙ PresheafedSpace.forget C) j := by
+  unfold pushforwardDiagramToColimitι
+  rw [← Category.assoc, eqToHom_trans, eqToHom_refl, Category.id_comp]
+
+omit [HasColimitsOfShape J TopCat] in
+theorem pushforwardDiagramToColimit_map_coherence_inv
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C))
+    {j j' : J} (f : j ⟶ j') :
+    (F.map f).base ≫ eqToHom (pushforwardDiagramToColimit_obj_eq F j').symm =
+      eqToHom (pushforwardDiagramToColimit_obj_eq F j).symm ≫
+        (F ⋙ PresheafedSpace.forget C).map f := by
+  rw [comp_eqToHom_iff, Category.assoc]
+  apply (conj_eqToHom_iff_heq (F.map f).base
+    ((F ⋙ PresheafedSpace.forget C).map f)
+    (pushforwardDiagramToColimit_obj_eq F j).symm
+    (pushforwardDiagramToColimit_obj_eq F j').symm).mpr
+  rw [Functor.comp_map, PresheafedSpace.forget_map]
+  rfl
+
+omit [HasColimitsOfShape J TopCat] in
+theorem pushforwardDiagramToColimit_map_coherence
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C))
+    {j j' : J} (f : j ⟶ j') :
+    (F ⋙ PresheafedSpace.forget C).map f ≫
+        eqToHom (pushforwardDiagramToColimit_obj_eq F j') =
+      eqToHom (pushforwardDiagramToColimit_obj_eq F j) ≫
+        (F.map f).base := by
+  rw [comp_eqToHom_iff, Category.assoc]
+  apply (conj_eqToHom_iff_heq ((F ⋙ PresheafedSpace.forget C).map f)
+    (F.map f).base
+    (pushforwardDiagramToColimit_obj_eq F j)
+    (pushforwardDiagramToColimit_obj_eq F j')).mpr
+  rw [Functor.comp_map, PresheafedSpace.forget_map]
+  rfl
+
+theorem pushforwardDiagramToColimitι_naturality
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C))
+    {j j' : J} (f : j ⟶ j') :
+    (F.map f).base ≫ pushforwardDiagramToColimitι F j' =
+      pushforwardDiagramToColimitι F j := by
+  unfold pushforwardDiagramToColimitι
+  rw [← colimit.w (F ⋙ PresheafedSpace.forget C) f]
+  rw [← Category.assoc, pushforwardDiagramToColimit_map_coherence_inv, Category.assoc]
+
+theorem pushforwardDiagramToColimitι_hom_ext
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C)) {X : TopCat}
+    {f g : colimit (F ⋙ PresheafedSpace.forget C) ⟶ X}
+    (h : ∀ j, pushforwardDiagramToColimitι F j ≫ f =
+      pushforwardDiagramToColimitι F j ≫ g) : f = g := by
+  apply colimit.hom_ext
+  intro j
+  have h' := congr_arg
+    (fun k => eqToHom (pushforwardDiagramToColimit_obj_eq F j) ≫ k) (h j)
+  simpa only [pushforwardDiagramToColimitι, ← Category.assoc, eqToHom_trans,
+    eqToHom_refl, Category.id_comp] using h'
+
+def pushforwardDiagramToColimitDesc
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C)) (s : Cocone F) :
+    colimit (F ⋙ PresheafedSpace.forget C) ⟶ s.pt.carrier :=
+  colimit.desc (F ⋙ PresheafedSpace.forget C)
+    { pt := s.pt.carrier
+      ι :=
+        { app := fun j => eqToHom (pushforwardDiagramToColimit_obj_eq F j) ≫
+            (s.ι.app j).base
+          naturality := fun {j j'} f => by
+            dsimp
+            simp only [Category.comp_id]
+            rw [← Category.assoc, pushforwardDiagramToColimit_map_coherence, Category.assoc]
+            exact congr_arg Hom.base (s.w f) } }
+
+theorem pushforwardDiagramToColimitι_desc
+    (F : CategoryTheory.Functor J (PresheafedSpace.{_, _, v} C))
+    (s : Cocone F) (j : J) :
+    pushforwardDiagramToColimitι F j ≫
+        pushforwardDiagramToColimitDesc F s =
+      (s.ι.app j).base := by
+  unfold pushforwardDiagramToColimitι pushforwardDiagramToColimitDesc
+  rw [Category.assoc, colimit.ι_desc]
+  dsimp
+  simp
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -102,12 +199,13 @@ obtaining a diagram in `(Presheaf C X)ᵒᵖ`.
 @[simps]
 def pushforwardDiagramToColimit (F : J ⥤ PresheafedSpace.{_, _, v} C) :
     J ⥤ (Presheaf C (colimit (F ⋙ PresheafedSpace.forget C)))ᵒᵖ where
-  obj j := op (colimit.ι (F ⋙ PresheafedSpace.forget C) j _* (F.obj j).presheaf)
+  obj j := op (pushforwardDiagramToColimitι F j _* (F.obj j).presheaf)
   map {j j'} f :=
-    ((pushforward C (colimit.ι (F ⋙ PresheafedSpace.forget C) j')).map (F.map f).c ≫
-      (Pushforward.comp ((F ⋙ PresheafedSpace.forget C).map f)
-        (colimit.ι (F ⋙ PresheafedSpace.forget C) j') (F.obj j).presheaf).inv ≫
-      (pushforwardEq (colimit.w (F ⋙ PresheafedSpace.forget C) f) (F.obj j).presheaf).hom).op
+    ((pushforward C (pushforwardDiagramToColimitι F j')).map (F.map f).c ≫
+      (Pushforward.comp (F.map f).base (pushforwardDiagramToColimitι F j')
+        (F.obj j).presheaf).inv ≫
+      (pushforwardEq (pushforwardDiagramToColimitι_naturality F f)
+        (F.obj j).presheaf).hom).op
   map_id j := by
     apply (opEquiv _ _).injective
     refine NatTrans.ext (funext fun U => ?_)
@@ -121,12 +219,12 @@ def pushforwardDiagramToColimit (F : J ⥤ PresheafedSpace.{_, _, v} C) :
     dsimp [opEquiv]
     have :
       op ((Opens.map (F.map g).base).obj
-          ((Opens.map (colimit.ι (F ⋙ forget C) j₃)).obj U.unop)) =
-        op ((Opens.map (colimit.ι (F ⋙ PresheafedSpace.forget C) j₂)).obj (unop U)) := by
+          ((Opens.map (pushforwardDiagramToColimitι F j₃)).obj U.unop)) =
+        op ((Opens.map (pushforwardDiagramToColimitι F j₂)).obj (unop U)) := by
       apply unop_injective
       rw [← Opens.map_comp_obj]
-      congr
-      exact colimit.w (F ⋙ PresheafedSpace.forget C) g
+      exact Functor.congr_obj
+        (congr_arg Opens.map (pushforwardDiagramToColimitι_naturality F g)) U.unop
     simp only [map_comp_c_app, pushforward_obj_obj, pushforward_map_app, comp_base,
       pushforwardEq_hom_app, op_obj, Opens.map_comp_obj, id_comp, assoc, eqToHom_map_comp,
       NatTrans.naturality_assoc, pushforward_obj_map, eqToHom_unop]
@@ -159,14 +257,14 @@ def colimitCocone (F : J ⥤ PresheafedSpace.{_, _, v} C) : Cocone F where
   pt := colimit F
   ι :=
     { app := fun j =>
-        { base := colimit.ι (F ⋙ PresheafedSpace.forget C) j
+        { base := pushforwardDiagramToColimitι F j
           c := limit.π _ (op j) }
       naturality := fun {j j'} f => by
         ext1
-        · ext x
-          exact colimit.w_apply (F ⋙ PresheafedSpace.forget C) f x
+        · exact pushforwardDiagramToColimitι_naturality F f
         · ext ⟨⟩
-          simp [← congr_arg NatTrans.app (limit.w (pushforwardDiagramToColimit F).leftOp f.op)] }
+          simp [Functor.comp_obj, ← congr_arg NatTrans.app
+            (limit.w (pushforwardDiagramToColimit F).leftOp f.op)] }
 
 variable [HasLimitsOfShape Jᵒᵖ C]
 
@@ -178,7 +276,7 @@ set_option backward.isDefEq.respectTransparency false in
 -/
 def descCApp (F : J ⥤ PresheafedSpace.{_, _, v} C) (s : Cocone F) (U : (Opens s.pt.carrier)ᵒᵖ) :
     s.pt.presheaf.obj U ⟶
-      (colimit.desc (F ⋙ PresheafedSpace.forget C) ((PresheafedSpace.forget C).mapCocone s) _*
+      (pushforwardDiagramToColimitDesc F s _*
             limit (pushforwardDiagramToColimit F).leftOp).obj
         U := by
   refine
@@ -192,12 +290,17 @@ def descCApp (F : J ⥤ PresheafedSpace.{_, _, v} C) (s : Cocone F) (U : (Opens 
   · refine (s.ι.app (unop j)).c.app U ≫ (F.obj (unop j)).presheaf.map (eqToHom ?_)
     dsimp
     rw [← Opens.map_comp_obj]
-    simp
+    rw [pushforwardDiagramToColimitι_desc]
   · dsimp
+    simp only [Functor.leftOp_obj, pushforwardDiagramToColimit_obj, Opposite.unop_op,
+      Functor.comp_map, evaluation_obj_map, Functor.leftOp_map,
+      pushforwardDiagramToColimit_map, Quiver.Hom.unop_op]
+    dsimp
     rw [PresheafedSpace.congr_app (s.w f.unop).symm U]
     have w :=
       Functor.congr_obj
-        (congr_arg Opens.map (colimit.ι_desc ((PresheafedSpace.forget C).mapCocone s) (unop j)))
+        (congr_arg Opens.map
+          (pushforwardDiagramToColimitι_desc F s (unop j)))
         (unop U)
     simp only [Opens.map_comp_obj_unop] at w
     replace w := congr_arg op w
@@ -211,19 +314,19 @@ theorem desc_c_naturality (F : J ⥤ PresheafedSpace.{_, _, v} C) (s : Cocone F)
     {U V : (Opens s.pt.carrier)ᵒᵖ} (i : U ⟶ V) :
     s.pt.presheaf.map i ≫ descCApp F s V =
       descCApp F s U ≫
-        (colimit.desc (F ⋙ forget C) ((forget C).mapCocone s) _* (colimitCocone F).pt.presheaf).map
+        (pushforwardDiagramToColimitDesc F s _* (colimitCocone F).pt.presheaf).map
           i := by
   dsimp [descCApp]
   refine limit_obj_ext (fun j => ?_)
   have w := Functor.congr_hom (congr_arg Opens.map
-    (colimit.ι_desc ((PresheafedSpace.forget C).mapCocone s) (unop j))) i.unop
+    (pushforwardDiagramToColimitι_desc F s (unop j))) i.unop
   simp only [Opens.map_comp_map] at w
   simp [congr_arg Quiver.Hom.op w]
 
 /-- Auxiliary definition for `AlgebraicGeometry.PresheafedSpace.colimitCoconeIsColimit`.
 -/
 def desc (F : J ⥤ PresheafedSpace.{_, _, v} C) (s : Cocone F) : colimit F ⟶ s.pt where
-  base := colimit.desc (F ⋙ PresheafedSpace.forget C) ((PresheafedSpace.forget C).mapCocone s)
+  base := pushforwardDiagramToColimitDesc F s
   c :=
     { app := fun U => descCApp F s U
       naturality := fun _ _ i => desc_c_naturality F s i }
@@ -236,7 +339,7 @@ theorem desc_fac (F : J ⥤ PresheafedSpace.{_, _, v} C) (s : Cocone F) (j : J) 
   -- `ext <;> dsimp [desc, descCApp] <;> simpa`,
   -- but this has to be expanded a bit
   ext U
-  · simp [desc]
+  · exact ConcreteCategory.congr_hom (pushforwardDiagramToColimitι_desc F s j) U
   · simp only [op_obj, desc, descCApp, Presheaf.comp_app, comp_c_app, colimitCocone_ι_app_c, assoc]
     rw [limitObjIsoLimitCompEvaluation_inv_π_app_assoc]
     simp
@@ -256,14 +359,12 @@ def colimitCoconeIsColimit (F : J ⥤ PresheafedSpace.{_, _, v} C) :
   uniq s m w := by
     -- We need to use the identity on the continuous maps twice, so we prepare that first:
     have t :
-      m.base =
-        colimit.desc (F ⋙ PresheafedSpace.forget C) ((PresheafedSpace.forget C).mapCocone s) := by
-      dsimp
-      -- `colimit.hom_ext` used to be automatically applied by `ext` before https://github.com/leanprover-community/mathlib4/pull/21302
-      apply colimit.hom_ext fun j => ?_
-      ext
-      rw [colimit.ι_desc, mapCocone_ι_app, ← w j]
-      simp
+      m.base = pushforwardDiagramToColimitDesc F s := by
+      apply pushforwardDiagramToColimitι_hom_ext F
+      intro j
+      rw [pushforwardDiagramToColimitι_desc]
+      have hw := congr_arg Hom.base (w j)
+      simpa only [comp_base, colimitCocone_ι_app_base] using hw
     ext : 1
     · exact t
     · refine NatTrans.ext (funext fun U => limit_obj_ext fun j => ?_)
@@ -282,7 +383,12 @@ instance : PreservesColimitsOfShape J (PresheafedSpace.forget.{v, u, v} C) :=
     apply IsColimit.ofIsoColimit (colimit.isColimit _)
     fapply Cocone.ext
     · rfl
-    · simp⟩
+    · intro j
+      simp only [Functor.mapCocone_ι_app, PresheafedSpace.forget_map]
+      change colimit.ι (F ⋙ PresheafedSpace.forget C) j =
+        eqToHom (pushforwardDiagramToColimit_obj_eq F j) ≫
+          pushforwardDiagramToColimitι F j
+      exact (pushforwardDiagramToColimit_eqToHom_comp_ι F j).symm⟩
 
 /-- When `C` has limits, the category of presheafed spaces with values in `C` itself has colimits.
 -/

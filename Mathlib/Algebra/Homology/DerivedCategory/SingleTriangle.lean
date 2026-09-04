@@ -97,6 +97,7 @@ noncomputable def singleTriangle.map : h₁.singleTriangle ⟶ h₂.singleTriang
     dsimp [singleδ]
     rw [assoc, assoc, ← Functor.map_comp, ← NatTrans.naturality, Functor.map_comp]
     dsimp [CochainComplex.singleFunctors]
+    simp only [Functor.comp_map]
     rw [reassoc_of% dsimp% ((triangleOfSES.map (h₁.map_of_exact _) (h₂.map_of_exact _))
       ((HomologicalComplex.single C (.up ℤ) 0).mapShortComplex.map f)).comm₃]
     simp

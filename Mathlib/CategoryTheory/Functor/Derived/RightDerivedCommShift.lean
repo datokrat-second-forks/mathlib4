@@ -96,10 +96,13 @@ noncomputable def commShift : RF.CommShift A where
     have hb := rightDerivedNatTrans_app _ _ (precomposeShiftNatTrans RF α b)
       (postcomposeShiftNatTrans RF α _) W (F.commShiftIso _).hom (X⟦a⟧) =≫
         (RF.map ((L.commShiftIso a).hom.app X))⟦b⟧'
+    have hnat := (rightDerivedNatTrans _ _ (precomposeShiftNatTrans RF α b)
+      (postcomposeShiftNatTrans RF α b) W (commShiftIso F b).hom).naturality
+        ((L.commShiftIso a).hom.app X)
+    dsimp at hnat
+    simp only [Functor.comp_map] at hnat
     rw [Category.assoc, Category.assoc,
-      ← dsimp% (rightDerivedNatTrans _ _ (precomposeShiftNatTrans RF α b)
-        (postcomposeShiftNatTrans RF α b) W (commShiftIso F b).hom).naturality
-        ((L.commShiftIso a).hom.app X), precomposeShiftNatTrans_app] at hb
+      ← hnat, precomposeShiftNatTrans_app] at hb
     dsimp at hb ⊢
     rw [dsimp% rightDerivedNatTrans_app _ _ (precomposeShiftNatTrans RF α (a + b))
       (postcomposeShiftNatTrans RF α _) W (F.commShiftIso _).hom X]
@@ -107,12 +110,15 @@ noncomputable def commShift : RF.CommShift A where
     simp only [postcomposeShiftNatTrans_app, precomposeShiftNatTrans_app, L.commShiftIso_add a b,
       CommShift.isoAdd_hom_app, comp_obj, rightDerivedNatIso_hom, Category.assoc,
       ← RF.map_comp_assoc, Iso.inv_hom_id_app, Category.comp_id]
+    have hα := α.naturality ((shiftFunctorAdd C a b).hom.app X)
+    simp only [Functor.comp_map] at hα
     rw [RF.map_comp_assoc, RF.map_comp, Category.assoc,
-      ← dsimp% α.naturality_assoc ((shiftFunctorAdd C a b).hom.app X),
+      ← reassoc_of% hα,
       reassoc_of% hb, postcomposeShiftNatTrans_app _ _ b, reassoc_of% ha,
       F.commShiftIso_add, CommShift.isoAdd_hom_app_assoc,
       ← NatTrans.naturality]
     dsimp
+    simp only [Functor.comp_map]
 
 set_option backward.defeqAttrib.useBackward true in
 @[reassoc (attr := simp)]

@@ -85,6 +85,8 @@ lemma δ_naturality {i' j' k' : ι} (f' : i' ⟶ j') (g' : j' ⟶ k')
     (by simp [Precomp.map, hαβ, dsimp% naturality' β 0 1] )
   have h := X.δ'.naturality φ
   dsimp at h
+  simp only [Functor.comp_map] at h
+  dsimp at h
   simp only [φ, hαβ] at h
   convert! h <;> cat_disch
 
@@ -149,10 +151,11 @@ def precomp : SpectralObject C ι' where
     rw [← cancel_epi (X.ω₁.map (F.mapComposableArrowsObjMk₁Iso _).hom)] at this
     rw [← cancel_mono ((X.ω₁.map (F.mapComposableArrowsObjMk₁Iso _).hom)⟦(1 : ℤ)⟧')]
     dsimp at this ⊢
+    simp only [Functor.comp_map] at this ⊢
     simp only [← Functor.map_comp_assoc, ← Functor.map_comp, Category.assoc,
       Iso.inv_hom_id, Functor.map_id, Category.comp_id] at this ⊢
     convert! this using 3
-    · cat_disch
+    · ext <;> simp
     · congr 2; cat_disch
   distinguished' D := by
     obtain ⟨_, _, _, f, g, rfl⟩ := ComposableArrows.mk₂_surjective D
@@ -161,14 +164,18 @@ def precomp : SpectralObject C ι' where
       (X.ω₁.mapIso (ComposableArrows.isoMk₁ (Iso.refl _) (Iso.refl _)))
       (X.ω₁.mapIso (ComposableArrows.isoMk₁ (Iso.refl _) (Iso.refl _))) ?_ ?_ ?_
     · dsimp
+      simp only [Functor.comp_map]
       simp only [← Functor.map_comp]
       congr 1
       cat_disch
     · dsimp
+      simp only [Functor.comp_map]
       simp only [← Functor.map_comp]
       congr 1
       cat_disch
     · have := X.δ'.naturality (F.mapComposableArrowsObjMk₂Iso f g).hom
+      dsimp at this ⊢
+      simp only [Functor.comp_map] at this ⊢
       dsimp at this ⊢
       rw [← cancel_epi (X.ω₁.map (F.mapComposableArrowsObjMk₁Iso _).inv)]
       simp only [← Functor.map_comp_assoc, ← Functor.map_comp, Category.assoc,
@@ -309,6 +316,7 @@ def mapTriangulatedSpectralObject (F : C ⥤ D) [F.CommShift ℤ] [F.IsTriangula
       comm f g := by
         have hf := (F.commShiftIso (1 : ℤ)).hom.naturality (α.hom.app (mk₁ f))
         dsimp at hf ⊢
+        simp only [Functor.comp_map] at hf ⊢
         rw [Category.assoc, ← hf, ← F.map_comp_assoc, α.comm, F.map_comp_assoc] }
 
 end Functor

@@ -82,6 +82,7 @@ lemma isIso_Qh_map_iff {X Y : HomotopyCategory C (ComplexShape.up ℤ)} (f : X �
     intro n
     rw [← NatIso.isIso_map_iff (homologyFunctorFactorsh C n) f]
     dsimp
+    rw [Functor.comp_map]
     infer_instance
   · exact Localization.inverts Qh (HomotopyCategory.quasiIso _ _) _
 

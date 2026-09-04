@@ -814,22 +814,30 @@ def equivalenceMulticospanOfIso {E F : PreOneHypercover.{w} S} (f : E ≅ F) :
       (fun _ ↦ by dsimp; congr; apply PreOneHypercover.I₁'.ext <;> simp)
       (fun _ ↦ by
         dsimp
-        rw [Functor.id_map, eqToHom_naturality]
+        rw [Functor.id_map, Functor.comp_map]
+        dsimp
+        rw [eqToHom_naturality]
         apply PreOneHypercover.I₁'.ext <;> simp)
       (fun _ ↦ by
         dsimp
-        rw [Functor.id_map, eqToHom_naturality]
+        rw [Functor.id_map, Functor.comp_map]
+        dsimp
+        rw [eqToHom_naturality]
         apply PreOneHypercover.I₁'.ext <;> simp))
   counitIso :=
     eqToIso (WalkingMulticospan.functor_ext (by simp)
       (fun _ ↦ by dsimp; congr 1; apply PreOneHypercover.I₁'.ext <;> simp)
       (fun _ ↦ by
         dsimp
-        rw [Functor.id_map, eqToHom_naturality]
+        rw [Functor.id_map, Functor.comp_map]
+        dsimp
+        rw [eqToHom_naturality]
         apply PreOneHypercover.I₁'.ext <;> simp)
       (fun _ ↦ by
         dsimp
-        rw [Functor.id_map, eqToHom_naturality]
+        rw [Functor.id_map, Functor.comp_map]
+        dsimp
+        rw [eqToHom_naturality]
         apply PreOneHypercover.I₁'.ext <;> simp))
   functor_unitIso_comp c := by
     cases c <;> rw [eqToIso.hom, eqToHom_app, eqToHom_map] <;> simp

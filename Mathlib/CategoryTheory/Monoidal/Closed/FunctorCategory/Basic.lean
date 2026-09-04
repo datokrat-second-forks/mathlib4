@@ -49,6 +49,9 @@ noncomputable def homEquiv : (F₁ ⊗ F₂ ⟶ F₃) ≃ (F₂ ⟶ functorEnric
   toFun f :=
     { app j := end_.lift (fun k ↦ F₂.map k.hom ≫ curry (f.app k.right))
         (fun k₁ k₂ φ ↦ by
+          set_option backward.isDefEq.respectTransparency.types false in
+          dsimp
+          simp only [Functor.comp_map]
           dsimp
           simp only [enrichedOrdinaryCategorySelf_eHomWhiskerLeft, Category.assoc,
             enrichedOrdinaryCategorySelf_eHomWhiskerRight]

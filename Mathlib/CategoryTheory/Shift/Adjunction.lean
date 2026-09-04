@@ -101,8 +101,8 @@ lemma compatibilityCounit_of_compatibilityUnit (h : CompatibilityUnit adj e₁ e
   simp only [assoc, ← Functor.map_comp, Iso.inv_hom_id_app_assoc]
   erw [← e₂.inv.naturality]
   dsimp
-  simp only [right_triangle_components, ← Functor.map_comp_assoc, Functor.map_id, id_comp,
-    Iso.hom_inv_id_app, Functor.comp_obj]
+  simp only [Functor.comp_map, right_triangle_components, ← Functor.map_comp_assoc,
+    Functor.map_id, id_comp, Iso.hom_inv_id_app, Functor.comp_obj]
 
 set_option backward.defeqAttrib.useBackward true in
 /-- Given an adjunction `adj : F ⊣ G`, `a` in `A` and commutation isomorphisms
@@ -131,8 +131,11 @@ lemma compatibilityCounit_left (h : CompatibilityCounit adj e₁ e₂) (X : C) :
   have := h (F.obj X)
   rw [← cancel_epi (F.map (e₂.inv.app _)), ← assoc, ← F.map_comp, Iso.inv_hom_id_app, F.map_id,
     id_comp] at this
+  have hnat := e₁.hom.naturality_assoc (adj.unit.app X)
+    ((shiftFunctor D a).map (adj.counit.app (F.obj X)))
+  simp only [Functor.comp_map, Functor.comp_obj, Functor.id_obj] at hnat
   dsimp only [Functor.comp_obj, Functor.id_obj]
-  rw [this, dsimp% e₁.hom.naturality_assoc, ← Functor.map_comp, left_triangle_components]
+  rw [this, hnat, ← Functor.map_comp, left_triangle_components]
   simp only [Functor.map_id, comp_id]
 
 /-- Given an adjunction `adj : F ⊣ G`, `a` in `A` and commutation isomorphisms
@@ -182,6 +185,8 @@ lemma compatibilityUnit_isoAdd (h : CompatibilityUnit adj e₁ e₂)
     CompatibilityUnit adj (Functor.CommShift.isoAdd e₁ f₁) (Functor.CommShift.isoAdd e₂ f₂) := by
   intro X
   have := h' (X⟦a⟧)
+  have hshift := (shiftFunctorAdd C a b).hom.naturality (adj.unit.app X)
+  simp only [Functor.comp_map, Functor.comp_obj, Functor.id_obj] at hshift
   simp only [← cancel_mono (f₂.inv.app _), assoc, Iso.hom_inv_id_app,
     Functor.id_obj, Functor.comp_obj, comp_id] at this
   simp only [Functor.id_obj, Functor.comp_obj, Functor.CommShift.isoAdd_hom_app,
@@ -192,8 +197,9 @@ lemma compatibilityUnit_isoAdd (h : CompatibilityUnit adj e₁ e₂)
   rw [← reassoc_of% this, ← cancel_mono ((shiftFunctorAdd C a b).hom.app _),
     assoc, assoc, assoc, assoc, assoc, assoc, Iso.inv_hom_id_app_assoc, Iso.inv_hom_id_app]
   dsimp
+  simp only [Functor.comp_map]
   rw [← (shiftFunctor C b).map_comp_assoc, ← (shiftFunctor C b).map_comp_assoc,
-    assoc, ← h X, NatTrans.naturality]
+    assoc, ← h X, hshift]
   dsimp
   rw [comp_id]
 

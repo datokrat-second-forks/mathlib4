@@ -266,15 +266,18 @@ noncomputable abbrev precompEnrichedHom' {F₁' F₂' : K ⥤ C}
   end_.lift (fun x ↦ enrichedHomπ V F₁ F₂ (G.obj x) ≫
     (eHomWhiskerRight _ (e₁.inv.app x) _ ≫ eHomWhiskerLeft _ _ (e₂.hom.app x)))
     (fun i j f ↦ by
+      set_option backward.isDefEq.respectTransparency.types false in
       dsimp
       rw [assoc, assoc, assoc, assoc, ← eHomWhiskerLeft_comp,
         ← eHom_whisker_exchange, ← e₂.hom.naturality f,
         eHomWhiskerLeft_comp_assoc]
       dsimp
+      simp only [Functor.comp_map]
       rw [enrichedHom_condition_assoc, eHom_whisker_exchange,
         eHom_whisker_exchange, ← eHomWhiskerRight_comp_assoc,
         ← eHomWhiskerRight_comp_assoc, NatTrans.naturality]
-      dsimp)
+      dsimp
+      simp only [Functor.comp_map])
 
 /-- If `F₁` and `F₂` are functors `J ⥤ C`, and `G : K ⥤ J`,
 then this is the induced morphism
@@ -345,6 +348,7 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Auxiliary definition for `Enriched.FunctorCategory.isLimitConeFunctorEnrichedHom`. -/
 noncomputable def lift : s.pt ⟶ enrichedHom V F₁ F₂ :=
   end_.lift (fun j ↦ s.π.app j ≫ enrichedHomπ V _ _ (Under.mk (𝟙 j))) (fun j j' f ↦ by
+    set_option backward.isDefEq.respectTransparency.types false in
     dsimp
     rw [← s.w f, assoc, assoc, assoc]
     -- this was produced by `simp?`
@@ -353,6 +357,8 @@ noncomputable def lift : s.pt ⟶ enrichedHom V F₁ F₂ :=
       NatTrans.id_app, eHomWhiskerRight_id, Iso.refl_hom, eHomWhiskerLeft_id, comp_id]
     have := enrichedHom_condition V (Under.forget j ⋙ F₁) (Under.forget j ⋙ F₂)
       (Under.homMk f : Under.mk (𝟙 j) ⟶ Under.mk f)
+    dsimp at this
+    simp only [Functor.comp_map] at this
     dsimp at this
     rw [this]
     congr 3

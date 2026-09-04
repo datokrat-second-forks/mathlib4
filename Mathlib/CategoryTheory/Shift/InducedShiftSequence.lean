@@ -111,7 +111,7 @@ noncomputable def induced : F.ShiftSequence M where
     simp only [← NatTrans.naturality_assoc, induced.shiftIso_hom_app_obj,
       ← Functor.map_comp_assoc, ← Functor.map_comp, Iso.inv_hom_id_app, comp_obj,
       Functor.map_id, id_comp]
-    dsimp
+    simp only [Functor.comp_map]
     simp only [Functor.map_comp, assoc, Iso.inv_hom_id_app_assoc]
 
 @[simp, reassoc]

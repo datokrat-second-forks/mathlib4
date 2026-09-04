@@ -155,6 +155,8 @@ def natTrans : (N₁ : SimplicialObject C ⥤ _) ⋙ Γ₂ ⟶ toKaroubi _ where
     apply (Γ₀.splitting K[X]).hom_ext
     intro n
     dsimp [N₁, toKaroubi]
+    simp only [Functor.comp_map]
+    dsimp [N₁, toKaroubi]
     simp only [← Splitting.cofan_inj_id, Splitting.ι_desc, Splitting.ι_desc_assoc, assoc,
       PInfty_f_idem_assoc, PInfty_f_naturality_assoc,
       NatTrans.naturality, Splitting.IndexSet.id_fst, unop_op, len_mk]
@@ -189,8 +191,8 @@ theorem compatibility_Γ₂N₁_Γ₂N₂_natTrans (X : SimplicialObject C) :
       (Γ₂N₂ToKaroubiIso.app X).inv ≫
         Γ₂N₂.natTrans.app ((toKaroubi (SimplicialObject C)).obj X) := by
   rw [Γ₂N₂.natTrans_app_f_app]
-  dsimp only [Karoubi.decompId_i_toKaroubi, Karoubi.decompId_p_toKaroubi, Functor.comp_map,
-    NatTrans.comp_app]
+  dsimp only [Karoubi.decompId_i_toKaroubi, Karoubi.decompId_p_toKaroubi, NatTrans.comp_app]
+  simp only [Functor.comp_map]
   rw [N₂.map_id, Γ₂.map_id, Iso.app_inv]
   dsimp only [toKaroubi]
   erw [id_comp]
@@ -209,6 +211,8 @@ theorem identity_N₂_objectwise (P : Karoubi (SimplicialObject C)) :
       (N₂.map (Γ₂N₂.natTrans.app P)).f.f n = PInfty.f n ≫ P.p.app (op ⦋n⦌) := by
     dsimp
     rw [PInfty_on_Γ₀_splitting_summand_eq_self_assoc, Γ₂N₂.natTrans_app_f_app]
+    dsimp
+    simp only [Functor.comp_map]
     dsimp
     rw [Γ₂N₂ToKaroubiIso_hom_app, assoc, Splitting.ι_desc_assoc, assoc, assoc]
     dsimp [toKaroubi]

@@ -71,7 +71,9 @@ noncomputable def fromRightResolution :
   map {R R'} φ := CostructuredArrow.homMk (StructuredArrow.homMk φ.f) (by
     ext
     dsimp
-    rw [← assoc, ← cancel_epi (isoOfHom L W₂ R.w R.hw).hom,
+    rw [TwoSquare.structuredArrowDownwards_map]
+    dsimp
+    rw [Functor.comp_map, ← assoc, ← cancel_epi (isoOfHom L W₂ R.w R.hw).hom,
       isoOfHom_hom, isoOfHom_hom_inv_id_assoc, assoc, ← L.map_comp_assoc,
       φ.comm, isoOfHom_hom_inv_id_assoc])
 

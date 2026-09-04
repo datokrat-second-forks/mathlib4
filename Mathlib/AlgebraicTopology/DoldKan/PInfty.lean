@@ -197,6 +197,8 @@ theorem karoubi_PInfty_f {Y : Karoubi (SimplicialObject C)} (n : ℕ) :
   dsimp [natTransPInfty_f] at h₁₄
   simp_rw [NatTrans.hcomp_app] at h₁₄
   dsimp at h₁₄
+  simp only [Functor.comp_map] at h₁₄
+  dsimp at h₁₄
   rw [id_comp, id_comp, comp_id, comp_id] at h₁₄
   -- We use the three equalities h₃₂, h₄₃, h₁₄.
   rw [← h₃₂, ← h₄₃, h₁₄]
@@ -206,6 +208,8 @@ theorem karoubi_PInfty_f {Y : Karoubi (SimplicialObject C)} (n : ℕ) :
   have eq := Karoubi.hom_ext_iff.mp (PInfty_f_naturality n π)
   simp only [Karoubi.comp_f] at eq
   dsimp [π] at eq
+  simp only [Functor.comp_map] at eq
+  dsimp at eq
   rw [← eq, app_idem_assoc Y (op ⦋n⦌)]
 
 end DoldKan

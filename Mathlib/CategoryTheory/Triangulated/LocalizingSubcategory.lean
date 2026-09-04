@@ -209,6 +209,7 @@ variable [A.IsVerdierRightLocalizing B]
 
 set_option backward.defeqAttrib.useBackward true in
 instance : ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Full := by
+  set_option backward.isDefEq.respectTransparency.types false in
   let F := (A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂
   have : L₁.EssSurj := Localization.essSurj L₁ (B.inverseImage A.ι).trW
   let e : A.ι ⋙ L₂ ≅ L₁ ⋙ F := CatCommSq.iso
@@ -227,10 +228,15 @@ instance : ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Full
       hs := by rwa [trW_inverseImage_ι_iff] }
   have := Localization.inverts L₁ _ _ g.hs
   refine ⟨g.map L₁ (Localization.inverts _ _), ?_⟩
+  have hnat_f := NatIso.naturality_1 e
+    (A.homMk (f.f ≫ a) : X₁ ⟶ ⟨X₃, hX₃⟩)
+  have hnat_s := NatIso.naturality_1 e
+    (A.homMk (f.s ≫ a) : X₂ ⟶ ⟨X₃, hX₃⟩)
+  simp only [Functor.comp_map] at hnat_f hnat_s
+  dsimp at hnat_f hnat_s
   rw [← cancel_mono (F.map (L₁.map g.s)), ← Functor.map_comp,
     MorphismProperty.LeftFraction.map_comp_map_s]
-  simp [g, ← fac, hφ', hf, ← dsimp% NatIso.naturality_1 e,
-    dsimp% e.hom_inv_id_app_assoc]
+  simp [g, ← fac, hφ', hf, ← hnat_f, ← hnat_s, dsimp% e.hom_inv_id_app_assoc]
 
 instance [Preadditive D₁] [Preadditive D₂] [L₁.Additive] [L₂.Additive] :
     ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Additive := by
@@ -242,6 +248,7 @@ instance [Preadditive D₁] [Preadditive D₂] [L₁.Additive] [L₂.Additive] :
 
 set_option backward.defeqAttrib.useBackward true in
 instance : ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Faithful := by
+  set_option backward.isDefEq.respectTransparency.types false in
   let := Localization.preadditive L₁ (B.inverseImage A.ι).trW
   let := Localization.preadditive L₂ B.trW
   have := Localization.functor_additive L₁ (B.inverseImage A.ι).trW
@@ -251,8 +258,11 @@ instance : ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Fait
     CatCommSq.iso (A.triangulatedLocalizerMorphism B).functor L₁ L₂ F
   refine Functor.faithful_of_comp_cancel_zero_of_hasLeftCalculusOfFractions L₁
     (B.inverseImage A.ι).trW F (fun X₁ X₂ f hf ↦ ?_)
+  have hnat := NatIso.naturality_2 e f
+  simp only [Functor.comp_map] at hnat
+  dsimp at hnat
   replace hf : L₂.map f.hom = L₂.map 0 := by
-    simp [← dsimp% NatIso.naturality_2 e f, hf]
+    simp [← hnat, hf]
   rw [MorphismProperty.map_eq_iff_postcomp L₂ B.trW] at hf
   obtain ⟨X₃, s, hs, fac⟩ := hf
   obtain ⟨X₄, t, a, hX₄, ht, fac'⟩ :=

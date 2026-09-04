@@ -71,6 +71,7 @@ lemma opEquiv_symm_comp {a b : ℤ}
   rw [assoc, id_comp, Functor.map_comp, ← NatTrans.naturality_assoc,
     ← NatTrans.naturality, opEquiv_symm_apply]
   dsimp
+  simp only [Functor.comp_map]
   rw [← Functor.map_comp_assoc, ← Functor.map_comp_assoc,
     ← Functor.map_comp_assoc]
   rw [← unop_comp_assoc]

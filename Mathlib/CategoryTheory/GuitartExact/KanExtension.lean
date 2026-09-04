@@ -171,6 +171,7 @@ noncomputable def lanBaseChange :
       ((LeftExtension.mk _ (R.lanUnit.app F)).compTwoSquare w).hom
   naturality {F₁ F₂} τ := by
     dsimp
+    simp only [Functor.comp_map]
     refine (Adjunction.homEquiv_naturality_left_symm ..).symm.trans
       (Eq.trans ?_ (Adjunction.homEquiv_naturality_right_symm ..))
     congr 1

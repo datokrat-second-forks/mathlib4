@@ -60,6 +60,7 @@ lemma bijective_sectionsPrecomp (F : C ⥤ D) (P : D ⥤ Type w) [F.Initial] :
       dsimp
       rw [← t.property φ.left]
       dsimp
+      simp only [Functor.comp_map]
       rw [← comp_apply, ← Functor.map_comp, CostructuredArrow.w]
     choose val hval using h
     refine ⟨⟨val, fun {Y₁ Y₂} f ↦ ?_⟩, ?_⟩

@@ -351,6 +351,7 @@ def mkCommaObject (F : WithTerminal C ⥤ D) : Comma (𝟭 (C ⥤ D)) (Functor.c
   hom :=
     { app x := F.map (starTerminal.from (.of x))
       naturality x y f := by
+        simp only [Functor.id_obj, Functor.const_obj_map, Functor.comp_map]
         dsimp
         rw [Category.comp_id, ← F.map_comp]
         congr 1 }
@@ -767,6 +768,7 @@ def mkCommaObject (F : WithInitial C ⥤ D) : Comma (Functor.const C) (𝟭 (C �
   hom :=
     { app x := F.map (starInitial.to (.of x))
       naturality x y f := by
+        simp only [Functor.id_obj, Functor.const_obj_map, Functor.comp_map]
         dsimp
         rw [Category.id_comp, ← F.map_comp]
         congr 1 }

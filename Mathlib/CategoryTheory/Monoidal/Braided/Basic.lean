@@ -397,6 +397,7 @@ instance (F : C ⥤ D) (G : D ⥤ E) [F.LaxBraided] [G.LaxBraided] :
     (F ⋙ G).LaxBraided where
   braided X Y := by
     dsimp
+    simp only [Functor.comp_map]
     slice_lhs 2 3 =>
       rw [← CategoryTheory.Functor.map_comp, braided, CategoryTheory.Functor.map_comp]
     slice_lhs 1 2 => rw [braided]

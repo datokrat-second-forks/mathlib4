@@ -250,6 +250,8 @@ theorem Functor.Final.exists_coeq_of_locally_small [IsFilteredOrEmpty C] [Final 
   refine ⟨IsFiltered.coeq t₁ t₂, t₁ ≫ IsFiltered.coeqHom t₁ t₂, ?_⟩
   conv_rhs => rw [IsFiltered.coeq_condition t₁ t₂]
   dsimp at h
+  simp only [Functor.comp_map] at h
+  dsimp at h
   simp [reassoc_of% h]
 
 end LocallySmall

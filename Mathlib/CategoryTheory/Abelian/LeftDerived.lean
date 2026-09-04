@@ -85,6 +85,7 @@ lemma ProjectiveResolution.isoLeftDerivedToHomotopyCategoryObj_inv_naturality
       (F.mapHomologicalComplex _ ⋙ HomotopyCategory.quotient _ _).map φ ≫
         (Q.isoLeftDerivedToHomotopyCategoryObj F).inv := by
   dsimp [Functor.leftDerivedToHomotopyCategory, isoLeftDerivedToHomotopyCategoryObj]
+  simp only [Functor.comp_map]
   rw [assoc, ← Functor.map_comp, iso_inv_naturality f P Q φ comm, Functor.map_comp]
   erw [(F.mapHomotopyCategoryFactors (ComplexShape.down ℕ)).inv.naturality_assoc]
   rfl
@@ -95,9 +96,10 @@ lemma ProjectiveResolution.isoLeftDerivedToHomotopyCategoryObj_hom_naturality
     (φ : P.complex ⟶ Q.complex) (comm : φ.f 0 ≫ Q.π.f 0 = P.π.f 0 ≫ f)
     (F : C ⥤ D) [F.Additive] :
     F.leftDerivedToHomotopyCategory.map f ≫ (Q.isoLeftDerivedToHomotopyCategoryObj F).hom =
-      (P.isoLeftDerivedToHomotopyCategoryObj F).hom ≫
+        (P.isoLeftDerivedToHomotopyCategoryObj F).hom ≫
         (F.mapHomologicalComplex _ ⋙ HomotopyCategory.quotient _ _).map φ := by
     dsimp
+    simp only [Functor.comp_map]
     rw [← cancel_epi (P.isoLeftDerivedToHomotopyCategoryObj F).inv, Iso.inv_hom_id_assoc,
       isoLeftDerivedToHomotopyCategoryObj_inv_naturality_assoc f P Q φ comm F,
       Iso.inv_hom_id, comp_id]
@@ -127,6 +129,8 @@ lemma ProjectiveResolution.isoLeftDerivedObj_hom_naturality
       (P.isoLeftDerivedObj F n).hom ≫
         (F.mapHomologicalComplex _ ⋙ HomologicalComplex.homologyFunctor _ _ n).map φ := by
   dsimp [isoLeftDerivedObj, Functor.leftDerived]
+  simp only [Functor.comp_map]
+  dsimp
   rw [assoc, ← Functor.map_comp_assoc,
     ProjectiveResolution.isoLeftDerivedToHomotopyCategoryObj_hom_naturality f P Q φ comm F,
     Functor.map_comp, assoc]

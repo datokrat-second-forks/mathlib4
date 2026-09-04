@@ -121,6 +121,8 @@ def isPointwiseLeftKanExtensionAtOfIsoOfIsLocalization
     · have eq := s.ι.naturality
         (CostructuredArrow.homMk f : CostructuredArrow.mk (L.map f ≫ φ) ⟶ CostructuredArrow.mk φ)
       dsimp at eq hφ ⊢
+      simp only [Functor.comp_map] at eq hφ ⊢
+      dsimp at eq hφ ⊢
       rw [comp_id] at eq
       rw [assoc] at hφ
       rw [assoc, map_comp_assoc, ← eq, ← hφ, NatTrans.naturality_assoc, comp_map]
@@ -128,10 +130,13 @@ def isPointwiseLeftKanExtensionAtOfIsoOfIsLocalization
         have := Localization.inverts L W w hw
         rw [← NatIso.naturality_2 e w]
         dsimp
+        simp only [Functor.comp_map]
         infer_instance
       have eq := s.ι.naturality
         (CostructuredArrow.homMk w : CostructuredArrow.mk φ ⟶ CostructuredArrow.mk
           ((Localization.isoOfHom L W w hw).inv ≫ φ))
+      dsimp at eq hφ ⊢
+      simp only [Functor.comp_map] at eq hφ ⊢
       dsimp at eq hφ ⊢
       rw [comp_id] at eq
       rw [assoc] at hφ

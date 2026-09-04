@@ -45,6 +45,9 @@ set_option backward.defeqAttrib.useBackward true in
 instance [Limits.HasPullbacks C] {X : C} :
     ((singularChainComplexFunctor C).obj X).PreservesMonomorphisms where
   preserves f _ := by
+    set_option backward.isDefEq.respectTransparency.types false in
+    dsimp [singularChainComplexFunctor, SSet.chainComplexFunctor]
+    simp only [Functor.comp_map]
     dsimp [singularChainComplexFunctor, SSet.chainComplexFunctor]
     infer_instance
 

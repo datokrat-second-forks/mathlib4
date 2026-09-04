@@ -137,7 +137,10 @@ def effectiveEpiStructOfIsColimit {X Y : C} (f : Y ⟶ X)
         app := fun ⟨_,hT⟩ => hT.choose ≫ e
         naturality := by
           rintro ⟨A, hA⟩ ⟨B, hB⟩ ⟨q : A ⟶ B⟩
-          dsimp; simp only [← Category.assoc, Category.comp_id]
+          dsimp
+          simp only [Functor.comp_map]
+          dsimp
+          simp only [← Category.assoc, Category.comp_id]
           apply h
           rw [Category.assoc, hB.choose_spec, hA.choose_spec, Over.w] } }
   { desc := fun {_} e h => Hf.desc (aux e h)
@@ -256,7 +259,10 @@ def effectiveEpiFamilyStructOfIsColimit {B : C} {α : Type*}
         app := fun ⟨_, hT⟩ => hT.choose_spec.choose ≫ e hT.choose
         naturality := by
           rintro ⟨A, a, (g₁ : A.left ⟶ _), ha⟩ ⟨B, b, (g₂ : B.left ⟶ _), hb⟩ ⟨q : A ⟶ B⟩
-          dsimp; rw [Category.comp_id, ← Category.assoc]
+          dsimp
+          simp only [Functor.comp_map]
+          dsimp
+          rw [Category.comp_id, ← Category.assoc]
           apply h; rw [Category.assoc]
           generalize_proofs h1 h2 h3 h4
           rw [h2.choose_spec, h4.choose_spec, Over.w] } }

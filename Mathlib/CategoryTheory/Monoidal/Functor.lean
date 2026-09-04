@@ -237,6 +237,7 @@ instance comp : (F ⋙ G).LaxMonoidal where
     simp_rw [comp_obj, F.comp_map, μ_natural_right_assoc, assoc, ← G.map_comp, μ_natural_right]
   associativity _ _ _ := by
     dsimp
+    simp only [F.comp_map]
     simp_rw [comp_whiskerRight, assoc, μ_natural_left_assoc, MonoidalCategory.whiskerLeft_comp,
       assoc, μ_natural_right_assoc, ← associativity_assoc, ← G.map_comp, associativity]
 
@@ -367,12 +368,15 @@ instance comp : (F ⋙ G).OplaxMonoidal where
   δ X Y := G.map (δ F X Y) ≫ δ G _ _
   δ_natural_left {X Y} f X' := by
     dsimp
+    simp only [F.comp_map]
     rw [assoc, δ_natural_left, ← G.map_comp_assoc, δ_natural_left, map_comp, assoc]
   δ_natural_right _ _ := by
     dsimp
+    simp only [F.comp_map]
     rw [assoc, δ_natural_right, ← G.map_comp_assoc, δ_natural_right, map_comp, assoc]
   oplax_associativity X Y Z := by
     dsimp
+    simp only [F.comp_map]
     rw [comp_whiskerRight, assoc, assoc, assoc, δ_natural_left_assoc, associativity,
       ← G.map_comp_assoc, ← G.map_comp_assoc, assoc, associativity, map_comp, map_comp,
       assoc, assoc, MonoidalCategory.whiskerLeft_comp, δ_natural_right_assoc]
@@ -956,9 +960,8 @@ def rightAdjointLaxMonoidal : G.LaxMonoidal where
       MonoidalCategory.whiskerLeft_comp]
     rw [← δ_natural_left_assoc, ← δ_natural_left_assoc, ← δ_natural_left_assoc]
     have := @NatTrans.whiskerRight_app_tensor_app_assoc _ _ _ _ _ _ _ _ _ adj.counit adj.counit
-    dsimp only [id_obj, comp_obj, Functor.comp_map, Functor.id_map] at this
+    simp only [id_obj, comp_obj, Functor.comp_map, Functor.id_map] at this
     rw [this, this]
-    simp only [Functor.id_map]
     rw [tensorHom_def, assoc, ← comp_whiskerRight_assoc,
       left_triangle_components, id_whiskerRight, id_comp,
       whisker_exchange_assoc, whisker_exchange_assoc, ← tensorHom_def_assoc,

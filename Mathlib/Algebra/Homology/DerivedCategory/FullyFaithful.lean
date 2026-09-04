@@ -39,7 +39,7 @@ instance (n : ℤ) : (singleFunctor C n).Faithful where
     have eq₁ := NatIso.naturality_1 (singleFunctorCompHomologyFunctorIso C n) f₁
     have eq₂ := NatIso.naturality_1 (singleFunctorCompHomologyFunctorIso C n) f₂
     dsimp at eq₁ eq₂
-    simp only [Functor.id_map] at eq₁ eq₂
+    simp only [Functor.comp_map, Functor.id_map] at eq₁ eq₂
     rw [← eq₁, ← eq₂, h]
 
 set_option backward.isDefEq.respectTransparency false in
@@ -59,7 +59,7 @@ instance (n : ℤ) : (singleFunctor C n).Full where
       rw [hφ, Functor.map_comp]
       infer_instance
     have : IsIso φ := (NatIso.isIso_map_iff (singleFunctorCompHomologyFunctorIso C n) φ).1
-        (by dsimp; infer_instance)
+        (by rw [Functor.comp_map]; infer_instance)
     have : IsIso (e.inv ≫ s) := by rw [← hφ]; infer_instance
     have : IsIso s := IsIso.of_isIso_comp_left e.inv s
     exact ⟨inv s ≫ g, by simp⟩

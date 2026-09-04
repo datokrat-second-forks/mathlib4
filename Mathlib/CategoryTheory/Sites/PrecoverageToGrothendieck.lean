@@ -249,6 +249,7 @@ lemma Presieve.IsSheafFor.comp_iff_of_preservesPairwisePullbacks (F : C ⥤ D) (
   rw [map_ofArrows] at this ⊢
   simp_rw [Presieve.isSheafFor_arrows_iff_pullbacks]
   dsimp [Arrows.PullbackCompatible]
+  simp only [Functor.comp_map, Functor.op_map, Quiver.Hom.unop_op]
   congr! with x
   rw [forall₂_congr]
   intro i j

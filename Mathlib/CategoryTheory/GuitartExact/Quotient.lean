@@ -53,6 +53,7 @@ lemma quotient_of_nonempty_leftHomotopy (e : T ⋙ R ≅ L ⋙ B)
       ∃ (P : Precylinder X₀), T.map P.i₀ = T.map P.i₁ ∧
         Nonempty ((P.map L).LeftHomotopy f₀ f₁)) :
     GuitartExact e.hom := by
+  set_option backward.isDefEq.respectTransparency.types false in
   rw [guitartExact_iff_isConnected_downwards]
   intro Y₀ X g
   let X₀ := T.objPreimage Y₀
@@ -66,17 +67,20 @@ lemma quotient_of_nonempty_leftHomotopy (e : T ⋙ R ≅ L ⋙ B)
   refine zigzag_isConnected (fun A₀ A₁ ↦ ?_)
   have H (A : CostructuredArrowDownwards e.hom g) : ∃ s, Nonempty (Z s ⟶ A) := by
     obtain ⟨a, ha⟩ := T.map_surjective (e₀.hom ≫ A.left.hom)
+    have hnat := NatIso.naturality_1 e a
+    simp only [Functor.comp_map] at hnat
     refine ⟨⟨L.map a ≫ A.hom.right, ?_⟩,
       ⟨CostructuredArrow.homMk (StructuredArrow.homMk a ?_)⟩⟩
-    · simp [← dsimp% NatIso.naturality_1 e a, ha, dsimp% A.hom.w]
+    · simp [← hnat, ha, dsimp% A.hom.w]
     · cat_disch
   obtain ⟨s₀, ⟨f₀⟩⟩ := H A₀
   obtain ⟨s₁, ⟨f₁⟩⟩ := H A₁
   obtain ⟨P, hP, ⟨h⟩⟩ := he s₀.val s₁.val (by simp [s₀.property, s₁.property])
+  have hnat := e.hom.naturality P.i₀
+  simp only [Functor.comp_map] at hnat
   let Z' : CostructuredArrowDownwards e.hom g :=
     CostructuredArrowDownwards.mk _ _ P.I (e₀.inv ≫ T.map P.i₀) h.h (by
-      simp [R.map_comp, ← B.map_comp, dsimp% h.h₀, s₀.property,
-        dsimp% e.hom.naturality_assoc P.i₀])
+      simp [R.map_comp, ← B.map_comp, dsimp% h.h₀, s₀.property, reassoc_of% hnat])
   calc
     Zigzag A₀ (Z s₀) := .of_inv f₀
     Zigzag (Z s₀) Z' := .of_hom <|

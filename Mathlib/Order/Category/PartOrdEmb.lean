@@ -274,6 +274,7 @@ def cocone : Cocone F where
         rintro ⟨k, x', y', hx, hy, h⟩
         obtain ⟨l₁, a₁, b₁, hl₁⟩ := (Types.FilteredColimit.isColimit_eq_iff _ hc).1 hx
         obtain ⟨l₂, a₂, b₂, hl₂⟩ := (Types.FilteredColimit.isColimit_eq_iff _ hc).1 hy
+        simp only [Functor.comp_map] at hl₁ hl₂
         dsimp at hx hy hl₁ hl₂
         obtain ⟨m, d, d', h₁, h₂⟩ := bowtie a₁ a₂ b₁ b₂
         rw [← (F.map (a₁ ≫ d)).le_iff_le] at h
@@ -281,7 +282,11 @@ def cocone : Cocone F where
         conv_rhs => rw [h₂]
         conv_rhs at h => rw [h₁]
         simpa [← hl₁, ← hl₂] using h }
-  ι.naturality _ _ f := by ext x; exact ConcreteCategory.congr_hom (c.w f) x
+  ι.naturality _ _ f := by
+    ext x
+    have h := ConcreteCategory.congr_hom (c.w f) x
+    rw [Functor.comp_map] at h
+    exact h
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -307,6 +312,7 @@ def CoconePt.desc (s : Cocone F) : CoconePt hc ↪o s.pt where
     refine ⟨fun h ↦ ⟨j, _, _, rfl, rfl, h⟩, fun ⟨k, x, y, hx', hy', h⟩ ↦ ?_⟩
     obtain ⟨l, f, g, hl⟩ := (Types.FilteredColimit.isColimit_eq_iff _ hc).1 hx'
     obtain ⟨l', f', g', hl'⟩ := (Types.FilteredColimit.isColimit_eq_iff _ hc).1 hy'
+    simp only [Functor.comp_map] at hl hl'
     obtain ⟨m, a, b, h₁, h₂⟩ := bowtie f f' g g'
     dsimp at hl hl'
     rw [← (F.map (f ≫ a)).le_iff_le] at h

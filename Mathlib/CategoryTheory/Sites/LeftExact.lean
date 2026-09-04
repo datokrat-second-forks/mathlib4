@@ -45,9 +45,12 @@ def coneCompEvaluationOfConeCompDiagramFunctorCompEvaluation {X : C} {K : Type s
   π :=
     { app := fun k => E.π.app k ≫ Multiequalizer.ι (W.index (F.obj k)) i
       naturality := by
+        set_option backward.isDefEq.respectTransparency.types false in
         intro a b f
         dsimp
         rw [Category.id_comp, Category.assoc, ← E.w f]
+        dsimp [diagramNatTrans]
+        simp only [Functor.comp_map]
         dsimp [diagramNatTrans]
         simp only [Multiequalizer.lift_ι, Category.assoc] }
 
@@ -95,17 +98,23 @@ instance preservesLimit_diagramFunctor
     preservesLimit_of_preserves_limit_cone (limit.isLimit _)
       { lift := fun E => liftToDiagramLimitObj.{_, t, w, v, u} F E
         fac := by
+          set_option backward.isDefEq.respectTransparency.types false in
           intro E k
+          dsimp [diagramNatTrans]
+          simp only [Functor.comp_map]
           dsimp [diagramNatTrans]
           refine Multiequalizer.hom_ext _ _ _ (fun a => ?_)
           simp only [Multiequalizer.lift_ι, Multiequalizer.lift_ι_assoc, Category.assoc,
             liftToDiagramLimitObjAux_fac]
         uniq := by
+          set_option backward.isDefEq.respectTransparency.types false in
           intro E m hm
           refine Multiequalizer.hom_ext _ _ _ (fun a => limit_obj_ext (fun j => ?_))
           dsimp [liftToDiagramLimitObj]
           rw [Multiequalizer.lift_ι, Category.assoc, liftToDiagramLimitObjAux_fac, ← hm,
             Category.assoc]
+          dsimp
+          simp only [Functor.comp_map]
           dsimp
           rw [limit.lift_π]
           dsimp }
