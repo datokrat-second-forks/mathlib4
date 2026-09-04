@@ -420,7 +420,7 @@ def post (F : T ⥤ D) : Over X ⥤ Over (F.obj X) where
 
 lemma post_comp {E : Type*} [Category* E] (F : T ⥤ D) (G : D ⥤ E) :
     post (X := X) (F ⋙ G) = post (X := X) F ⋙ post G :=
-  rfl
+  (rfl)
 
 lemma post_forget_eq_forget_comp (F : T ⥤ D) (X : T) :
     post F ⋙ forget (F.obj X) = forget X ⋙ F :=
@@ -431,10 +431,7 @@ set_option backward.defeqAttrib.useBackward true in
 @[simps!]
 def postComp {E : Type*} [Category* E] (F : T ⥤ D) (G : D ⥤ E) :
     post (X := X) (F ⋙ G) ≅ post F ⋙ post G :=
-  NatIso.ofComponents (fun X ↦ Iso.refl _) (fun f ↦ by
-    ext
-    dsimp only [Iso.refl_hom, Over.comp_left, Over.id_left]
-    simp)
+  eqToIso (post_comp F G)
 
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in
@@ -945,7 +942,7 @@ def post {X : T} (F : T ⥤ D) : Under X ⥤ Under (F.obj X) where
 
 lemma post_comp {E : Type*} [Category* E] (F : T ⥤ D) (G : D ⥤ E) :
     post (X := X) (F ⋙ G) = post (X := X) F ⋙ post G :=
-  rfl
+  (rfl)
 
 lemma post_forget_eq_forget_comp (F : T ⥤ D) (X : T) :
     post F ⋙ forget (F.obj X) = forget X ⋙ F :=
@@ -956,10 +953,7 @@ set_option backward.defeqAttrib.useBackward true in
 @[simps!]
 def postComp {E : Type*} [Category* E] (F : T ⥤ D) (G : D ⥤ E) :
     post (X := X) (F ⋙ G) ≅ post F ⋙ post G :=
-  NatIso.ofComponents (fun X ↦ Iso.refl _) (fun f ↦ by
-    ext
-    dsimp only [Iso.refl_hom, Under.comp_right, Under.id_right]
-    simp)
+  eqToIso (post_comp F G)
 
 set_option backward.isDefEq.respectTransparency.types false in
 set_option backward.defeqAttrib.useBackward true in

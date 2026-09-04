@@ -354,6 +354,22 @@ def pullback.congrHom {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z} (h
     [HasPullback f₁ g₁] [HasPullback f₂ g₂] : pullback f₁ g₁ ≅ pullback f₂ g₂ :=
   asIso <| pullback.map _ _ _ _ (𝟙 _) (𝟙 _) (𝟙 _) (by simp [h₁]) (by simp [h₂])
 
+@[simp, reassoc]
+theorem pullback.congrHom_hom_fst {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z}
+    (h₁ : f₁ = f₂) (h₂ : g₁ = g₂) [HasPullback f₁ g₁] [HasPullback f₂ g₂] :
+    (pullback.congrHom h₁ h₂).hom ≫ pullback.fst f₂ g₂ = pullback.fst f₁ g₁ := by
+  subst f₂
+  subst g₂
+  simp [pullback.congrHom]
+
+@[simp, reassoc]
+theorem pullback.congrHom_hom_snd {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z}
+    (h₁ : f₁ = f₂) (h₂ : g₁ = g₂) [HasPullback f₁ g₁] [HasPullback f₂ g₂] :
+    (pullback.congrHom h₁ h₂).hom ≫ pullback.snd f₂ g₂ = pullback.snd f₁ g₁ := by
+  subst f₂
+  subst g₂
+  simp [pullback.congrHom]
+
 set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem pullback.congrHom_inv {X Y Z : C} {f₁ f₂ : X ⟶ Z} {g₁ g₂ : Y ⟶ Z} (h₁ : f₁ = f₂)
@@ -445,12 +461,14 @@ lemma pullbackComparison_comp {E : Type*} [Category* E] (F : C ⥤ D) (G : D ⥤
     [HasPullback (G.map (F.map f)) (G.map (F.map g))]
     [HasPullback ((F ⋙ G).map f) ((F ⋙ G).map g)] :
     pullbackComparison (F ⋙ G) f g = G.map (pullbackComparison F f g) ≫
-      pullbackComparison G (F.map f) (F.map g) := by
+      pullbackComparison G (F.map f) (F.map g) ≫
+        (pullback.congrHom (Functor.comp_map F G f).symm
+          (Functor.comp_map F G g).symm).hom := by
   ext
-  · rw [pullbackComparison_comp_fst]
-    simp [← Functor.map_comp]
-  · rw [pullbackComparison_comp_snd]
-    simp [← Functor.map_comp]
+  · simp only [Category.assoc, pullback.congrHom_hom_fst]
+    simp [Functor.comp_map, ← Functor.map_comp]
+  · simp only [Category.assoc, pullback.congrHom_hom_snd]
+    simp [Functor.comp_map, ← Functor.map_comp]
 
 /-- The comparison morphism for the pushout of `f,g`.
 This is an isomorphism iff `G` preserves the pushout of `f,g`; see

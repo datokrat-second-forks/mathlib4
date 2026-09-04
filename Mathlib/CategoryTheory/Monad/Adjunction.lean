@@ -52,10 +52,12 @@ def toMonad (h : L ⊣ R) : Monad C where
   μ := whiskerRight (whiskerLeft L h.counit) R
   assoc X := by
     dsimp
+    rw [Functor.comp_map]
     rw [← R.map_comp]
     simp
   right_unit X := by
     dsimp
+    rw [Functor.comp_map]
     rw [← R.map_comp]
     simp
 
@@ -70,10 +72,12 @@ def toComonad (h : L ⊣ R) : Comonad D where
   δ := whiskerRight (whiskerLeft R h.unit) L
   coassoc X := by
     dsimp
+    rw [Functor.comp_map]
     rw [← L.map_comp]
     simp
   right_counit X := by
     dsimp
+    rw [Functor.comp_map]
     rw [← L.map_comp]
     simp
 
@@ -165,11 +169,13 @@ def Monad.comparison (h : L ⊣ R) : D ⥤ h.toMonad.Algebra where
       a := R.map (h.counit.app X)
       assoc := by
         dsimp
+        rw [Functor.comp_map]
         rw [← R.map_comp, ← Adjunction.counit_naturality, R.map_comp] }
   map f :=
     { f := R.map f
       h := by
         dsimp
+        rw [Functor.comp_map]
         rw [← R.map_comp, Adjunction.counit_naturality, R.map_comp] }
 
 set_option backward.defeqAttrib.useBackward true in
@@ -212,11 +218,13 @@ def Comonad.comparison (h : L ⊣ R) : C ⥤ h.toComonad.Coalgebra where
       a := L.map (h.unit.app X)
       coassoc := by
         dsimp
+        rw [Functor.comp_map]
         rw [← L.map_comp, ← Adjunction.unit_naturality, L.map_comp] }
   map f :=
     { f := L.map f
       h := by
         dsimp
+        rw [Functor.comp_map]
         rw [← L.map_comp]
         simp }
 
@@ -355,6 +363,7 @@ instance comparison_essSurj [Reflective R] :
     Monad.comparison_obj_A, Adjunction.toMonad_coe]
   rw [← cancel_epi ((reflectorAdjunction R).unit.app X.A)]
   dsimp only [Functor.id_obj, Functor.comp_obj]
+  rw [Functor.comp_map]
   rw [Adjunction.unit_naturality_assoc,
     Adjunction.right_triangle_components, comp_id]
   apply (X.unit_assoc _).symm

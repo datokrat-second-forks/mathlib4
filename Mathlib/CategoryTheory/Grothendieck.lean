@@ -310,6 +310,30 @@ def mapCompIso (α : F ⟶ G) (β : G ⟶ H) : map (α ≫ β) ≅ map α ⋙ ma
 
 variable (F)
 
+/-- `Functor.comp_map` under `Cat.Hom.toFunctor.map`: the functor sits in a fixed argument of
+`Prefunctor.map` (the result type depends on it), so `simp` cannot rewrite it there and the
+equation has to be transported along `eqToHom`. -/
+@[simp]
+theorem _root_.CategoryTheory.Functor.comp_map_map
+    {C' D' : Type*} [Category* C'] [Category* D'] (F' : C' ⥤ D') (G' : D' ⥤ Cat)
+    {X Y : C'} (f : X ⟶ Y) {A B : (F' ⋙ G').obj X} (φ : A ⟶ B) :
+    ((F' ⋙ G').map f).toFunctor.map φ =
+      eqToHom (Functor.congr_obj (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) A) ≫
+        (G'.map (F'.map f)).toFunctor.map φ ≫
+        eqToHom (Functor.congr_obj (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) B).symm :=
+  Functor.congr_hom (congrArg Cat.Hom.toFunctor (Functor.comp_map F' G' f)) φ
+
+theorem Hom.congr_fiber {X Y : Grothendieck F} {f g : X ⟶ Y} (h : f = g) :
+    f.fiber = eqToHom (by rw [h]) ≫ g.fiber := by
+  subst h; simp
+
+/-- `Functor.comp_map` under the dependent projection `Hom.fiber`. -/
+@[simp]
+theorem comp_map_fiber {A B : Type*} [Category* A] [Category* B] (Φ₁ : A ⥤ B)
+    (Φ₂ : B ⥤ Grothendieck F) {X Y : A} (f : X ⟶ Y) :
+    ((Φ₁ ⋙ Φ₂).map f).fiber = eqToHom (by simp) ≫ (Φ₂.map (Φ₁.map f)).fiber :=
+  Hom.congr_fiber _ (Functor.comp_map Φ₁ Φ₂ f)
+
 set_option backward.isDefEq.respectTransparency false in
 /-- The inverse functor to build the equivalence `compAsSmallFunctorEquivalence`. -/
 @[simps]
@@ -359,17 +383,15 @@ def mapWhiskerRightAsSmallFunctor (α : F ⟶ G) :
       · simp only [compAsSmallFunctorEquivalence_functor, compAsSmallFunctorEquivalence_inverse,
         comp_obj, compAsSmallFunctorEquivalenceInverse_obj_base, map_obj_base,
         compAsSmallFunctorEquivalenceFunctor_obj_base, Cat.asSmallFunctor_obj, Cat.of_α,
-        Iso.refl_hom, Functor.comp_map, comp_base, id_base,
-        compAsSmallFunctorEquivalenceInverse_map_base, map_map_base,
-        compAsSmallFunctorEquivalenceFunctor_map_base, Cat.asSmallFunctor_map, toCatHom_toFunctor,
-        map_obj_fiber, whiskerRight_app, AsSmall.down_obj, AsSmall.up_obj_down,
+        Iso.refl_hom, Functor.comp_map, comp_base, id_base, map_map_base,
+        Cat.asSmallFunctor_map, toCatHom_toFunctor,
+        map_obj_fiber, whiskerRight_app, AsSmall.down_obj,
         compAsSmallFunctorEquivalenceInverse_obj_fiber,
         compAsSmallFunctorEquivalenceFunctor_obj_fiber, comp_fiber, map_map_fiber, AsSmall.down_map,
-        down_comp, eqToHom_down, AsSmall.up_map_down, map_comp, eqToHom_map, id_fiber,
-        Category.assoc, eqToHom_trans_assoc, compAsSmallFunctorEquivalenceInverse_map_fiber,
-        compAsSmallFunctorEquivalenceFunctor_map_fiber, eqToHom_comp_iff, comp_eqToHom_iff]
+        map_comp, eqToHom_map, id_fiber,
+        Category.assoc, eqToHom_trans_assoc, eqToHom_comp_iff, comp_eqToHom_iff]
         simp only [conj_eqToHom_iff_heq']
-        rw [G.map_id]
+        rw [Functor.comp_map G Cat.asSmallFunctor (𝟙 _), G.map_id]
         simp)
 
 end
