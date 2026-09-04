@@ -238,6 +238,7 @@ lemma comm {D₁ D₂ : F.DescentData' sq sq₃} (φ : D₁ ⟶ D₂)
   dsimp only [pullHom]
   rw [NatTrans.naturality_assoc]
   dsimp
+  simp only [Functor.comp_map]
   rw [← Functor.map_comp_assoc, φ.comm, Functor.map_comp_assoc, mapComp'_inv_naturality]
   simp only [Category.assoc]
 

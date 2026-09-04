@@ -239,7 +239,7 @@ lemma extMk_comp_mk₀ {n : ℕ} (f : R.complex.X n ⟶ Y) (m : ℕ) (hm : n + 1
     ShiftedHom.comp_assoc _ _ _ (zero_add _) (zero_add _) (by simp),
     ShiftedHom.comp_assoc _ _ _ (zero_add _) (zero_add _) (by simp),
     ShiftedHom.mk₀_comp_mk₀, ShiftedHom.mk₀_comp_mk₀, ← NatTrans.naturality]
-  dsimp
+  simp only [Functor.comp_map]
 
 variable {R} in
 lemma mk₀_comp_extMk {n : ℕ} (f : R.complex.X n ⟶ Y) (m : ℕ) (hm : n + 1 = m)

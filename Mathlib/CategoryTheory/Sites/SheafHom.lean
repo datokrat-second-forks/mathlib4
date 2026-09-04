@@ -185,6 +185,7 @@ lemma presheafHom_isSheafFor :
           rintro ⟨Y₁ : Over X⟩ ⟨Y₂ : Over X⟩ ⟨φ : Y₂ ⟶ Y₁⟩
           apply (hG Y₂.hom).hom_ext
           rintro ⟨Z : Over Y₂.left, hZ⟩
+          simp only [Functor.comp_map]
           dsimp
           rw [assoc, assoc, app_cond hG x hx Y₂.hom Z.hom hZ, ← G.map_comp, ← op_comp]
           rw [app_cond hG x hx Y₁.hom (Z.hom ≫ φ.left) (by simpa using hZ),

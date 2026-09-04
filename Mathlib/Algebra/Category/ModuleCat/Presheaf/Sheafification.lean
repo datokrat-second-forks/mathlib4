@@ -105,6 +105,7 @@ lemma toPresheaf_map_sheafificationHomEquiv
         ((SheafOfModules.toSheaf _).obj F) ((SheafOfModules.toSheaf _).map f) := by
   rw [toPresheaf_map_sheafificationHomEquiv_def, Adjunction.homEquiv_unit]
   dsimp
+  simp only [Functor.comp_map, SheafOfModules.forget_map]
 
 set_option backward.isDefEq.respectTransparency.types false in
 lemma toSheaf_map_sheafificationHomEquiv_symm

@@ -191,7 +191,8 @@ noncomputable def relativeDifferentials' :
     PresheafOfModules.{u} (R ⋙ forget₂ _ _) where
   obj X := CommRingCat.KaehlerDifferential (φ'.app X)
   -- Have to hint `g' := R.map f` below, or it gets unfolded weirdly.
-  map f := CommRingCat.KaehlerDifferential.map (g' := R.map f) (φ'.naturality f)
+  map f := CommRingCat.KaehlerDifferential.map (g' := R.map f) (φ'.naturality f) ≫
+    (ModuleCat.restrictScalarsCongr (by simp)).hom.app _
   -- Without `dsimp`, `ext` doesn't pick up the right lemmas.
   map_id _ := by dsimp; ext; simp
   map_comp _ _ := by dsimp; ext; simp

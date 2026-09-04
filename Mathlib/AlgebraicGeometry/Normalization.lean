@@ -151,6 +151,8 @@ def toNormalization : X ⟶ f.normalization :=
   dsimp [normalizationOpenCover]
   rw [← colimit.w f.normalizationGlueData.functor i]
   dsimp [normalizationGlueData, relativeGluingData]
+  simp only [Functor.comp_map]
+  dsimp
   rw [← Spec.map_comp_assoc]
   rfl
 
@@ -387,6 +389,8 @@ def normalizationDesc (H : f = f₁ ≫ f₂) : f.normalization ⟶ T := by
     exact .algebraMap (R := Γ(Y, U.1)) (B := Γ(X, f ⁻¹ᵁ U.1)) (f₂.isIntegral_app U.1 U.2 x)
   · intros U V i
     dsimp [normalizationGlueData, relativeGluingData]
+    simp only [Functor.comp_map, Functor.rightOp_map, Functor.op_map, Quiver.Hom.unop_op]
+    dsimp
     rw [Category.comp_id, ← Spec.map_comp_assoc, ← (V.2.preimage f₂).map_fromSpec (U.2.preimage f₂)
       (homOfLE (f₂.preimage_mono (Scheme.AffineZariskiSite.toOpens_mono i.le))).op,
       ← Spec.map_comp_assoc]

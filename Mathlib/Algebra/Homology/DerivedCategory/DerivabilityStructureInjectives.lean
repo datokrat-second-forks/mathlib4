@@ -205,7 +205,8 @@ lemma isIso_quotient_map_iff
   rw [← isIso_iff_of_reflects_iso _ (HomotopyCategory.Plus.ι (InjectiveObject C)),
     ← isIso_iff_of_reflects_iso _ (Functor.mapHomotopyCategory (InjectiveObject.ι C) (.up ℤ))]
   dsimp
-  rw [HomologicalComplex.isIso_quotient_map_iff_homotopyEquivalences,
+  rw [HomotopyCategory.Plus.quotient_map_hom, Functor.mapHomotopyCategory_map,
+    HomologicalComplex.isIso_quotient_map_iff_homotopyEquivalences,
     ← CochainComplex.IsKInjective.quasiIso_iff]
   rfl
 

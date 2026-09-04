@@ -55,6 +55,7 @@ noncomputable def functorEnrichedHomCoyonedaObjEquiv (M : A) (F G : Cᵒᵖ ⥤ 
   toFun f :=
     { app j := MonoidalClosed.uncurry (f ≫ enrichedHomπ A _ _ (Under.mk j.unop.hom.op))
       naturality j j' φ := by
+        simp only [Functor.comp_map]
         dsimp
         rw [tensorHom_id, ← uncurry_natural_right, ← uncurry_pre_app, Category.assoc,
           Category.assoc, ← enrichedOrdinaryCategorySelf_eHomWhiskerRight,

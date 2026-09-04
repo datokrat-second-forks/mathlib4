@@ -246,7 +246,7 @@ instance isCommMonObj_spec_asOver_spec [Bialgebra R A] [IsCocomm R A] :
     simp only [mul_spec_asOver_spec_left, ← Category.assoc, algSpec, Equivalence.op_functor,
       comp_obj, op_obj, commAlgCatEquivUnder_functor_obj, Over.opEquivOpUnder_inverse_obj,
       CommRingCat.mkUnder_hom, Over.post_obj, Spec_obj, Over.mk_left, Over.mk_hom, Spec_map,
-      Quiver.Hom.unop_op, Spec.map_comp]
+      Quiver.Hom.unop_op, Functor.map_comp, Mon.comp_hom', Over.comp_left]
     congr 1
     rw [← Iso.eq_comp_inv, Category.assoc, ← Iso.inv_comp_eq]
     ext

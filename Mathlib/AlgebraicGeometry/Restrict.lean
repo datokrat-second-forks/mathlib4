@@ -370,6 +370,7 @@ def Scheme.restrictFunctorΓ : X.restrictFunctor.op ⋙ (Over.forget X).op ⋙ S
     (fun U => X.presheaf.mapIso ((eqToIso (unop U).isOpenEmbedding_obj_top).symm.op :))
     (by
       intro U V i
+      simp only [Functor.comp_map]
       dsimp
       rw [X.homOfLE_appTop, ← Functor.map_comp, ← Functor.map_comp]
       congr 1)

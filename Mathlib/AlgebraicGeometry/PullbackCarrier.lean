@@ -400,11 +400,13 @@ lemma pullbackComparison_forget_surjective {X Y S : Scheme.{u}} (f : X ⟶ S) (g
 
 instance {X Y S : Scheme.{u}} (f : X ⟶ S) (g : Y ⟶ S) :
     Epi (pullbackComparison Scheme.forgetToTop f g) := by
-  set_option backward.isDefEq.respectTransparency.types false in
   refine (CategoryTheory.forget TopCat).epi_of_epi_map ?_
   rw [← CategoryTheory.epi_comp_iff_of_isIso _
     (pullbackComparison (CategoryTheory.forget TopCat) (forgetToTop.map f) (forgetToTop.map g)),
-    ← _root_.CategoryTheory.Limits.pullbackComparison_comp, epi_iff_surjective]
+    ← CategoryTheory.epi_comp_iff_of_isIso _
+      (pullback.congrHom (Functor.comp_map forgetToTop (CategoryTheory.forget TopCat) f).symm
+        (Functor.comp_map forgetToTop (CategoryTheory.forget TopCat) g).symm).hom,
+    Category.assoc, ← _root_.CategoryTheory.Limits.pullbackComparison_comp, epi_iff_surjective]
   apply Scheme.pullbackComparison_forget_surjective _ _
 
 lemma exists_preimage_of_isPullback {P X Y Z : Scheme.{u}} {fst : P ⟶ X} {snd : P ⟶ Y}

@@ -71,14 +71,26 @@ noncomputable def tensorObj : PresheafOfModules (R ⋙ forget₂ _ _) where
   map_comp f g := ModuleCat.MonoidalCategory.tensor_ext (by
     intro m₁ m₂
     dsimp [tensorObjMap]
-    simp +instances)
+    simp +instances only [map_comp, Functor.comp_obj, CommRingCat.forgetToRingCat_obj,
+      ModuleCat.restrictScalarsComp'_inv_app]
+    -- `ModuleCat.restrictScalarsComp'App_inv_apply` does not fire on its own: the equation's type
+    -- spells the ring map as `(R.map (f ≫ g)).hom` while the `restrictScalarsComp'App` in the
+    -- goal (coming from the `map_comp` field of `PresheafOfModules (R ⋙ forget₂ _ _)`) spells it
+    -- as `((R ⋙ forget₂ _ _).map (f ≫ g)).hom`; the two agree only at default transparency.
+    exact (ModuleCat.restrictScalarsComp'App_inv_apply
+      (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map f))
+      (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map g))
+      (RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map (f ≫ g)))
+      (congrArg RingCat.Hom.hom ((R ⋙ forget₂ CommRingCat RingCat).map_comp f g))
+      (M₁.obj _ ⊗ M₂.obj _) _).symm)
 
 variable {M₁ M₂ M₃ M₄}
 
 @[simp]
 lemma tensorObj_map_tmul {X Y : Cᵒᵖ} (f : X ⟶ Y) (m₁ : M₁.obj X) (m₂ : M₂.obj X) :
     DFunLike.coe (α := (M₁.obj X ⊗ M₂.obj X :))
-      (β := fun _ ↦ (ModuleCat.restrictScalars (R.map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y))
+      (β := fun _ ↦ (ModuleCat.restrictScalars
+        ((R ⋙ forget₂ CommRingCat RingCat).map f).hom).obj (M₁.obj Y ⊗ M₂.obj Y))
       (ModuleCat.Hom.hom (R := ↑(R.obj X)) ((tensorObj M₁ M₂).map f)) (m₁ ⊗ₜ[R.obj X] m₂) =
     M₁.map f m₁ ⊗ₜ[R.obj Y] M₂.map f m₂ := rfl
 

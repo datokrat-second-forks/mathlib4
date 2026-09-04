@@ -126,8 +126,9 @@ noncomputable def isoRestrict : X ≅ Y.restrict H.base_open :=
       rfl
     · intro U V i
       dsimp
-      simp only [NatTrans.naturality_assoc, TopCat.Presheaf.pushforward_obj_obj,
-        TopCat.Presheaf.pushforward_obj_map, Quiver.Hom.unop_op, Category.assoc]
+      simp only [Functor.comp_map, Functor.op_obj, Functor.op_map, NatTrans.naturality_assoc,
+        TopCat.Presheaf.pushforward_obj_obj, TopCat.Presheaf.pushforward_obj_map,
+        Quiver.Hom.unop_op, Category.assoc]
       rw [← X.presheaf.map_comp, ← X.presheaf.map_comp]
       congr 1
 
@@ -480,9 +481,7 @@ instance forget_preservesLimitsOfLeft : PreservesLimit (cospan f g) (forget C) :
       simp_rw [Category.id_comp]
       rintro (_ | _ | _) <;> symm
       · simp only [limit.cone_x, cospan_one, Functor.mapCone_π_app, PullbackCone.condition_one,
-        forget_map,
-          comp_base, cospan_left, cospan_right, Functor.comp_map, cospan_map_inl, cospan_map_inr,
-          diagramIsoCospan_hom_app, PullbackCone.fst_limit_cone]
+          forget_map, comp_base, diagramIsoCospan_hom_app, PullbackCone.fst_limit_cone]
         tauto
       · exact Category.comp_id _
       · exact Category.comp_id _)
@@ -694,7 +693,7 @@ instance sheafedSpace_forgetPreserves_of_left :
       have : PreservesLimit
         (cospan ((cospan f g ⋙ forget).map Hom.inl)
           ((cospan f g ⋙ forget).map Hom.inr)) (PresheafedSpace.forget C) := by
-        dsimp
+        simp only [Functor.comp_map, cospan_map_inl, cospan_map_inr]
         infer_instance
       apply preservesLimit_of_iso_diagram _ (diagramIsoCospan _).symm
 
@@ -720,6 +719,9 @@ instance sheafedSpace_pullback_snd_of_left :
   dsimp at this
   rw [Category.comp_id] at this
   rw [← this]
+  have : PresheafedSpace.IsOpenImmersion ((cospan f g ⋙ forget).map Hom.inl) := by
+    simp only [Functor.comp_map, cospan_map_inl]
+    infer_instance
   infer_instance
 
 set_option backward.defeqAttrib.useBackward true in
@@ -733,6 +735,9 @@ instance sheafedSpace_pullback_fst_of_right :
   dsimp at this
   rw [Category.comp_id] at this
   rw [← this]
+  have : PresheafedSpace.IsOpenImmersion ((cospan g f ⋙ forget).map Hom.inr) := by
+    simp only [Functor.comp_map, cospan_map_inr]
+    infer_instance
   infer_instance
 
 instance sheafedSpace_pullback_to_base_isOpenImmersion [SheafedSpace.IsOpenImmersion g] :
@@ -1095,7 +1100,7 @@ instance forgetToTop_preservesPullback_of_left :
   apply +allowSynthFailures Limits.comp_preservesLimit
   apply +allowSynthFailures preservesLimit_of_iso_diagram
   · exact (diagramIsoCospan _).symm
-  dsimp
+  simp only [Functor.comp_map, cospan_map_inl, cospan_map_inr]
   infer_instance
 
 instance forget_reflectsPullback_of_left :

@@ -263,7 +263,8 @@ variable (X) in
     Limits.Cocone (toOpensFunctor X ⋙ X.presheaf.rightOp ⋙ Scheme.Spec) where
   pt := X
   ι.app U := U.2.fromSpec
-  ι.naturality {U V} f := by dsimp; rw [V.2.map_fromSpec U.2]; simp
+  ι.naturality {U V} f := by
+    simp only [Functor.comp_map]; dsimp; rw [V.2.map_fromSpec U.2]; simp
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

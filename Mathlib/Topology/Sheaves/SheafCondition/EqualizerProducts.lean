@@ -261,7 +261,8 @@ def coneEquivInverseObj (c : Limits.Cone (SheafConditionEqualizerProducts.diagra
         generalize f.unop = f'
         rintro rfl
         rcases x with (⟨i⟩ | ⟨⟩) <;> rcases y with (⟨⟩ | ⟨j, j⟩) <;> rcases f' with ⟨⟩
-        · dsimp
+        · simp only [Functor.comp_map]
+          dsimp
           rw [F.map_id]
           simp
         · dsimp
@@ -282,7 +283,8 @@ def coneEquivInverseObj (c : Limits.Cone (SheafConditionEqualizerProducts.diagra
           rw [h']
           simp
           rfl
-        · dsimp
+        · simp only [Functor.comp_map]
+          dsimp
           rw [F.map_id]
           simp }
 
@@ -367,7 +369,8 @@ def coneEquivCounitIso :
     fun {c d} f => by
     ext
     dsimp
-    simp only [Functor.id_map, Category.comp_id, Category.id_comp]
+    simp only [Functor.comp_map, coneEquivFunctor_map_hom, coneEquivInverse_map_hom,
+      Functor.id_map, Category.comp_id, Category.id_comp]
 
 set_option backward.defeqAttrib.useBackward true in
 /--

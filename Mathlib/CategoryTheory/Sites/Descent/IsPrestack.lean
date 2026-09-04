@@ -144,6 +144,7 @@ def overMapCompPresheafHomIso {S' : C} (q : S' ⟶ S) :
     exact (Iso.homFromEquiv (e.app M)).trans (Iso.homToEquiv (e.app N)))) (by
       rintro ⟨T₁⟩ ⟨T₂⟩ ⟨f⟩
       ext g
+      simp only [Functor.comp_map, Functor.op_map]
       dsimp [pullHom]
       simp only [Category.assoc,
         Functor.map_comp]

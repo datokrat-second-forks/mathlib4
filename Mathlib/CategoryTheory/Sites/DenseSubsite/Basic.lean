@@ -327,6 +327,8 @@ noncomputable def sheafCoyonedaHom (α : G.op ⋙ ℱ ⟶ G.op ⋙ ℱ'.obj) :
     · exact pushforwardFamily_compatible (homOver α Y.unop) (f.unop ≫ x)
     intro Y' f' hf'
     dsimp
+    simp only [Functor.comp_map]
+    dsimp
     simp only [Category.assoc]
     congr 1
     conv_lhs => rw [← hf'.some.fac]
@@ -402,6 +404,8 @@ theorem sheafHom_restrict_eq (α : G.op ⋙ ℱ ⟶ G.op ⋙ ℱ'.obj) :
   · exact (pushforwardFamily_compatible _ _)
   intro Y f hf
   conv_lhs => rw [← hf.some.fac]
+  dsimp
+  simp only [Functor.comp_map]
   dsimp
   simp only [Functor.map_comp, ← Category.assoc]
   congr 1
@@ -515,6 +519,8 @@ instance faithful_sheafPushforwardContinuous [G.IsContinuous J K] :
     ext1
     apply_fun fun e => e.hom at e
     dsimp [sheafPushforwardContinuous] at e
+    simp only [Functor.comp_map] at e
+    dsimp at e
     rw [← sheafHom_eq G α.hom, ← sheafHom_eq G β.hom, e]
 
 end IsCoverDense

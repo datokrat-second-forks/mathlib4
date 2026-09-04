@@ -122,7 +122,7 @@ lemma internallyProjective_iff_tensor_condition (P : LightCondMod R) : Internall
     refine ⟨S', π, hπ, (ihomPoints _ _ _ _).symm g', ?_⟩
     rw [ihom_map_val_app]
     have := ihomPoints_symm_comp R B P S' S π ((ihomPoints R P B S) g)
-    dsimp at hh
+    simp only [Functor.comp_map] at hh
     rw [hh] at this
     simp [this, Quiver.Hom.op]
 

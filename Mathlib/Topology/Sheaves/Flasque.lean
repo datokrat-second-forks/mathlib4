@@ -94,6 +94,7 @@ lemma structured_arrows_elements_sheaf_chains_bounded (c : Set (Under g s))
     · rfl
     all_goals
       rw [← CategoryOfElements.map_snd h₁.some.2]
+      simp only [Functor.comp_map]
       dsimp
       rw [← Functor.map_comp_apply]
       rfl

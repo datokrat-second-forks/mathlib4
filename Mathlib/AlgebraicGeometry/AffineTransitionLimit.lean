@@ -166,7 +166,7 @@ lemma exists_mem_of_isClosed_of_nonempty'
       Set.MapsTo (D.map hi'i) (Z i' (hi'i ≫ hij)) (Z i hij)) :
     ∃ (s : c.pt), ∀ i hij, c.π.app i s ∈ Z i hij := by
   have {i₁ i₂ : Over j} (f : i₁ ⟶ i₂) : IsAffineHom ((Over.forget j ⋙ D).map f) := by
-    dsimp; infer_instance
+    simp only [Functor.comp_map]; dsimp; infer_instance
   simpa [Over.forall_iff] using! exists_mem_of_isClosed_of_nonempty (Over.forget j ⋙ D) _
     ((Functor.Initial.isLimitWhiskerEquiv (Over.forget j) c).symm hc)
     (fun i ↦ Z i.left i.hom) (fun _ ↦ hZc _ _) (fun _ ↦ hZne _ _) (fun _ ↦ hZcpt _ _)
@@ -729,9 +729,15 @@ lemma exists_appTop_map_eq_zero_of_isAffine_of_isLimit
   have : ∀ i, IsAffine (D.op.obj i).unop := by dsimp; infer_instance
   obtain ⟨j, f, hj⟩ := (Types.FilteredColimit.isColimit_eq_iff'
     (isColimitOfPreserves (Scheme.Γ ⋙ forget _) hc.op) s (0 : Γ(D.obj i, ⊤))).mp
-    (by dsimp at hs ⊢; simpa)
+    (by
+      simp only [Functor.mapCocone_ι_app, Cone.op_ι, NatTrans.op_app, Functor.comp_map,
+        TypeCat.ofHom_apply, Scheme.Γ_map, map_zero]
+      dsimp at hs ⊢
+      exact hs)
+  simp only [Functor.comp_map, Functor.op_map, TypeCat.ofHom_apply, Scheme.Γ_map,
+    map_zero] at hj
   dsimp at hj
-  exact ⟨j.unop, f.unop, by simpa using hj⟩
+  exact ⟨j.unop, f.unop, hj⟩
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
@@ -926,12 +932,12 @@ lemma exists_appTop_π_eq_of_isLimit [∀ {i j} (f : i ⟶ j), IsAffineHom (D.ma
       congr(((D.map (fk'k ≫ fk (hjS x.2 y.2))).app _ ≫ (D.obj k').presheaf.map (homOfLE H).op)
         $(hj x y)) using 1
     · dsimp [TopCat.Presheaf.restrictOpen, TopCat.Presheaf.restrict]
-      simp only [← ConcreteCategory.comp_apply]
+      simp only [Functor.comp_map, TypeCat.ofHom_apply, ← ConcreteCategory.comp_apply]
       congr 2
       simp [Scheme.Hom.app_eq_appLE, Scheme.Hom.appLE_comp_appLE,
         -Scheme.Hom.comp_appLE, ← Functor.map_comp, hk₁]
     · dsimp [TopCat.Presheaf.restrictOpen, TopCat.Presheaf.restrict]
-      simp only [← ConcreteCategory.comp_apply]
+      simp only [Functor.comp_map, TypeCat.ofHom_apply, ← ConcreteCategory.comp_apply]
       congr 2
       simp [Scheme.Hom.app_eq_appLE, Scheme.Hom.appLE_comp_appLE,
         -Scheme.Hom.comp_appLE, ← Functor.map_comp, hk₂]
@@ -947,6 +953,7 @@ lemma exists_appTop_π_eq_of_isLimit [∀ {i j} (f : i ⟶ j), IsAffineHom (D.ma
     congr 2
     simp [Scheme.Hom.app_eq_appLE, Scheme.Hom.appLE_comp_appLE, -Scheme.Hom.comp_appLE]
   · dsimp [Scheme.Opens.toScheme_presheaf_obj]
+    simp only [Functor.comp_map, TypeCat.ofHom_apply]
     rw [← ConcreteCategory.comp_apply, ← ConcreteCategory.comp_apply,
       ← ConcreteCategory.comp_apply]
     congr 2
@@ -1040,7 +1047,7 @@ lemma Scheme.exists_isAffine_of_isLimit [IsCofiltered I]
   have := isAffineHom_π_app _ _ hc
   obtain ⟨i, hi⟩ := Scheme.exists_isQuasiAffine_of_isLimit D c hc
   have : ∀ {i j : I} (f : i ⟶ j), IsAffineHom ((D ⋙ Γ.rightOp ⋙ Scheme.Spec).map f) := by
-    dsimp; infer_instance
+    simp only [Functor.comp_map]; dsimp; infer_instance
   have (j : _) : CompactSpace ((D ⋙ Γ.rightOp ⋙ Scheme.Spec).obj j) := by dsimp; infer_instance
   obtain ⟨j, fij, hj⟩ := exists_map_eq_top _ _
     (isLimitOfPreserves (Scheme.Γ.rightOp ⋙ Scheme.Spec) hc) (D.obj i).toSpecΓ.opensRange
@@ -1343,7 +1350,7 @@ instance Scheme.preservesColimit_yoneda (D : I ⥤ Over S) [IsCofiltered I]
     have (i : I) : CompactSpace ((D ⋙ Over.forget S).obj i) := by dsimp; infer_instance
     have (i : I) : QuasiSeparatedSpace ((D ⋙ Over.forget S).obj i) := by dsimp; infer_instance
     have {i j : I} (f : i ⟶ j) : IsAffineHom ((D ⋙ Over.forget S).map f) := by
-      dsimp; infer_instance
+      simp only [Functor.comp_map]; dsimp; infer_instance
     refine ⟨⟨?_, ?_⟩⟩
     · rw [Functor.CoconeTypes.descColimitType_injective_iff_of_isFiltered']
       intro k g₁ g₂ hg

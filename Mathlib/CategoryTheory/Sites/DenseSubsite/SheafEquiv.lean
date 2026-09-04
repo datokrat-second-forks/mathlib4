@@ -52,6 +52,8 @@ lemma isIso_ranCounit_app_of_isDenseSubsite (Y : Sheaf J A) (U X) :
       (fun V iVW ⟨iVU, h⟩ ↦ ?_)
     have := congr($e ≫ Y.1.map iVU.op)
     dsimp at this ⊢
+    simp only [Functor.comp_map]
+    dsimp
     simp only [Category.assoc, ← NatTrans.naturality] at this ⊢
     simpa [h] using! this
   · intro f
@@ -74,7 +76,9 @@ lemma isIso_ranCounit_app_of_isDenseSubsite (Y : Sheaf J A) (U X) :
         rw [Category.id_comp]
         apply Y.2.hom_ext ⟨_, IsDenseSubsite.imageSieve_mem J K G (G.map i ≫ g₁)⟩
         intro I
-        simp only [Presheaf.IsSheaf.amalgamate_map, Category.assoc, ← Functor.map_comp]
+        simp only [Presheaf.IsSheaf.amalgamate_map, Category.assoc, Functor.comp_map]
+        dsimp
+        simp only [← Functor.map_comp]
         let I' : GrothendieckTopology.Cover.Arrow ⟨_, IsDenseSubsite.imageSieve_mem J K G g₁⟩ :=
           ⟨_, I.f ≫ i, ⟨l _ _ _ _ _ I.hf, by simp [hl]⟩⟩
         refine Eq.trans ?_ (Y.2.amalgamate_map _ _ _ I').symm

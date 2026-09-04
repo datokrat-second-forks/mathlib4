@@ -353,6 +353,7 @@ private noncomputable def lift : s.pt ⟶ G.obj (op X) :=
       hG₀ ⟨_, cover_lift F J₀ _
         (J.pullback_stable (F.map ((data X).p₁ j) ≫ (data X).f i₁) S.2)⟩ _ _ ?_
     rintro ⟨W₀, a, ha⟩
+    simp only [Functor.comp_map]
     dsimp
     simp only [assoc, ← Functor.map_comp, ← op_comp]
     have ha₁ : S (F.map (a ≫ (data X).p₁ j) ≫ (data X).f i₁) := by simpa using ha
@@ -381,6 +382,7 @@ private lemma fac (a : S.Arrow) :
         refine Presheaf.IsSheaf.hom_ext hG₀
           ⟨_, IsDenseSubsite.imageSieve_mem J₀ J F c⟩ _ _ ?_
         rintro ⟨Y₀, d, e, fac₂⟩
+        simp only [Functor.comp_map]
         dsimp at i j c fac₁ ⊢
         have he : S (F.map e ≫ (data X).f j) := by
           rw [fac₂, assoc, fac₁]
@@ -403,6 +405,7 @@ private lemma hom_ext {f₁ f₂ : s.pt ⟶ G.obj (op X)}
     refine Presheaf.IsSheaf.hom_ext hG₀
       ⟨_, cover_lift F J₀ _ (J.pullback_stable ((data X).f i) S.2)⟩ _ _ ?_
     rintro ⟨X₀, a, ha⟩
+    simp only [Functor.comp_map]
     dsimp
     simp only [assoc, ← Functor.map_comp]
     exact h ⟨_, _, ha⟩)

@@ -318,6 +318,7 @@ def stalkPullbackInv (f : X ⟶ Y) (F : Y.Presheaf C) (x : X) :
             dsimp
             ext W hW
             dsimp [OpenNhds.inclusion]
+            simp only [Functor.comp_map]
             rw [Category.comp_id, ← Functor.map_comp_assoc,
               pullbackPushforwardAdjunction_unit_pullback_map_germToPullbackStalk]
             erw [pullbackPushforwardAdjunction_unit_pullback_map_germToPullbackStalk] } }

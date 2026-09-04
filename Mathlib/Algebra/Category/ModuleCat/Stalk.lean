@@ -69,17 +69,20 @@ noncomputable abbrev filteredColimitsModule : Module (RingCat.FilteredColimits.c
       (rightToMax U₁ U₂ ≫ leftToMax (max U₁ U₂) V) (leftToMax U₂ V ≫ rightToMax U₁ (max U₂ V))
       (rightToMax (max U₁ U₂) V) (rightToMax U₂ V ≫ rightToMax U₁ (max U₂ V))
     refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ α β ?_
+    simp only [Functor.comp_map]
     dsimp
     simp only [map_mul, ← ConcreteCategory.comp_apply, ← Functor.map_comp, mul_smul, *]
   one_smul m := Quot.induction_on m <| by
     rintro ⟨V, b⟩
     refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ (𝟙 _) (rightToMax _ _) ?_
+    simp only [Functor.comp_map]
     dsimp
     simp only [map_one, ← ConcreteCategory.comp_apply, ← Functor.map_comp, one_smul,
       Category.comp_id]
   smul_zero r := Quot.induction_on r <| by
     rintro ⟨U, a⟩
     refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ (𝟙 _) (rightToMax _ _) ?_
+    simp only [Functor.comp_map]
     dsimp
     simp only [map_zero, smul_zero]
   smul_add r m n := Quot.induction_on₃ r m n <| by
@@ -92,6 +95,7 @@ noncomputable abbrev filteredColimitsModule : Module (RingCat.FilteredColimits.c
       (rightToMax U V₂ ≫ rightToMax (max U V₁) (max U V₂))
       (rightToMax V₁ V₂ ≫ rightToMax U (max V₁ V₂))
     refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ β α ?_
+    simp only [Functor.comp_map]
     dsimp
     -- We use this pattern instead of a single `simp` to avoid heatbeat modifications
     rw [H, H, H]
@@ -109,11 +113,13 @@ noncomputable abbrev filteredColimitsModule : Module (RingCat.FilteredColimits.c
       (leftToMax U₂ V ≫ rightToMax (max U₁ V) (max U₂ V))
       (rightToMax U₁ U₂ ≫ leftToMax (max U₁ U₂) V)
     refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ β α ?_
+    simp only [Functor.comp_map]
     dsimp
     simp only [add_smul, map_add, ← ConcreteCategory.comp_apply, ← Functor.map_comp, *]
   zero_smul m := Quot.induction_on m <| by
     rintro ⟨V, b⟩
     refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ (𝟙 _) (leftToMax _ _) ?_
+    simp only [Functor.comp_map]
     dsimp
     simp only [map_zero, zero_smul]
 
@@ -148,6 +154,7 @@ lemma IsColimit.ι_smul {cR : Cocone R} (hcR : IsColimit cR) {cM : Cocone M}
   simp only [Functor.const_obj_obj, comp_coconePointUniqueUpToIso_hom, α, β]
   obtain ⟨s, α, H⟩ := IsFilteredOrEmpty.cocone_maps (leftToMax i i) (rightToMax i i)
   refine Functor.ιColimitType_eq_of_map_eq_map _ _ _ (leftToMax _ _ ≫ α) α ?_
+  simp only [Functor.comp_map]
   dsimp
   simp only [← ConcreteCategory.comp_apply, ← Functor.map_comp, *]
 

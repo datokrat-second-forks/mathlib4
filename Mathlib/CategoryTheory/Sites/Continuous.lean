@@ -236,7 +236,9 @@ private lemma isSheaf_of_isContinuous_aux (F : C ⥤ D) [Functor.IsContinuous F 
       (H'.mapIso (shrinkYonedaUliftFunctorIso.{max u₁ v₁ u₂ v₂}.app _).symm ≪≫ (e.app _).symm) <| by
         simp only [Functor.mapIso_symm, Functor.comp_obj, Functor.whiskeringRight_obj_obj,
           Iso.trans_hom, Iso.symm_hom, Functor.mapIso_inv, Iso.app_inv, Category.assoc]
-        rw [← Functor.map_comp_assoc, ← dsimp% e.inv.naturality, ← Functor.map_comp_assoc,
+        have he := e.inv.naturality (Sieve.shrinkFunctor.{max u₁ v₁ u₂ v₂} S).ι
+        simp only [Functor.comp_map, Functor.whiskeringRight_obj_map] at he
+        rw [← Functor.map_comp_assoc, ← he, ← Functor.map_comp_assoc,
           Sieve.shrinkFunctorUliftFunctorIso_inv_ι]
   rw [K.W.arrow_mk_iso_iff iso]
   apply GrothendieckTopology.W_of_preservesSheafification

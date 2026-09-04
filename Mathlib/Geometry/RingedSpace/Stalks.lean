@@ -200,7 +200,8 @@ theorem stalkSpecializes_stalkMap {X Y : PresheafedSpace.{_, _, v} C}
   refine colimit.hom_ext fun j => ?_
   induction j with | op j => ?_
   dsimp
-  simp only [colimit.ι_desc_assoc, ι_colimMap_assoc, whiskerLeft_app,
+  simp only [Functor.comp_map, whiskeringLeft_obj_obj, whiskeringLeft_obj_map, colim_map,
+    colimit.ι_desc_assoc, ι_colimMap_assoc, whiskerLeft_app,
     whiskerRight_app, NatTrans.id_app, colimit.ι_pre, assoc,
     colimit.pre_desc, colimit.map_desc, colimit.ι_desc, Cocone.precompose_obj_ι,
     Cocone.whisker_ι_app, NatTrans.comp_app]

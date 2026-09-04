@@ -279,6 +279,7 @@ noncomputable def Scheme.Modules.fromTildeΓ (M : (Spec (.of R)).Modules) :
           rw [← map_mul, ← e, map_pow]
           exact (M.isUnit_algebraMap_end_of_le_basicOpen g.unop le_rfl).pow n
         · dsimp [← ModuleCat.hom_comp]
+          simp only [Functor.comp_map, Functor.op_map]
           rw [tilde.toOpen_res_assoc]
           ext x
           dsimp
@@ -363,6 +364,7 @@ def tilde.adjunction : tilde.functor R ⊣ moduleSpecΓFunctor where
     rfl
   right_triangle_components M := by
     dsimp [toTildeΓNatIso, fromTildeΓNatTrans, tilde.isoTop, moduleSpecΓFunctor, Sheaf.forget]
+    simp only [Functor.comp_map, evaluation_obj_map, ObjectProperty.ι_map]
     rw [toOpen_fromTildeΓ_app]
     exact (modulesSpecToSheaf.obj M).obj.map_id _
 

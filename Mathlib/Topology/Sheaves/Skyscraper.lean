@@ -296,7 +296,8 @@ def fromStalk {𝓕 : Presheaf C X} {c : C} (f : 𝓕 ⟶ skyscraperPresheaf p�
     Cocone.mk c <|
       { app := fun U => f.app ((OpenNhds.inclusion p₀).op.obj U) ≫ eqToHom (ite_eq_left U.unop.2)
         naturality := fun U V inc => by
-          dsimp only [Functor.const_obj_map, Functor.const_obj_obj, Functor.comp_map,
+          simp only [Functor.comp_map]
+          dsimp only [Functor.const_obj_map, Functor.const_obj_obj,
             Functor.comp_obj, Functor.op_obj, skyscraperPresheaf_obj]
           rw [Category.comp_id, ← Category.assoc, comp_eqToHom_iff, Category.assoc,
             eqToHom_trans, f.naturality, skyscraperPresheaf_map]
@@ -338,8 +339,10 @@ protected def unit :
   naturality 𝓕 𝓖 f := by
     ext U; dsimp
     split_ifs with h
-    · simp only [Functor.id_map, Category.id_comp, Category.assoc, eqToHom_trans_assoc,
-        eqToHom_refl, Presheaf.stalkFunctor_map_germ_assoc, Presheaf.stalkFunctor_obj]
+    · simp only [Functor.comp_map, skyscraperPresheafFunctor_map,
+        SkyscraperPresheafFunctor.map'_app, dite_eq_left h, Functor.id_map, Category.id_comp,
+        Category.assoc, eqToHom_trans_assoc, eqToHom_refl,
+        Presheaf.stalkFunctor_map_germ_assoc, Presheaf.stalkFunctor_obj]
     · apply ((ite_eq_right h).symm.ndrec terminalIsTerminal).hom_ext
 
 set_option backward.defeqAttrib.useBackward true in
@@ -369,8 +372,9 @@ def skyscraperPresheafStalkAdjunction [HasColimits C] :
   left_triangle_components X := by
     dsimp [Presheaf.stalkFunctor, toSkyscraperPresheaf]
     ext
-    simp only [Functor.comp_obj, Functor.op_obj, ι_colimMap_assoc, skyscraperPresheaf_obj,
-      Functor.whiskerLeft_app, Category.comp_id]
+    simp only [Functor.comp_obj, Functor.op_obj, Category.id_comp, Functor.comp_map,
+      Functor.whiskeringLeft_obj_obj, Functor.whiskeringLeft_obj_map, colim_map, ι_colimMap_assoc,
+      skyscraperPresheaf_obj, Functor.whiskerLeft_app, Category.comp_id]
     split_ifs with h
     · simp [skyscraperPresheafStalkOfSpecializes]
       rfl

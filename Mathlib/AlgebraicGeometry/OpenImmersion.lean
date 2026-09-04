@@ -612,6 +612,7 @@ instance : PreservesLimit (cospan f g) Scheme.forgetToTop := by
     (G := LocallyRingedSpace.forgetToTop) ?_ ?_
   · infer_instance
   refine @preservesLimit_of_iso_diagram _ _ _ _ _ _ _ _ _ (diagramIsoCospan.{u} _).symm ?_
+  simp only [Functor.comp_map, cospan_map_inl, cospan_map_inr]
   dsimp [LocallyRingedSpace.forgetToTop]
   infer_instance
 
