@@ -521,7 +521,10 @@ noncomputable def conePoint : Coalgebra T where
   A := c.pt
   a := lambda c t
   counit := t.hom_ext fun j ↦ by
-    rw [assoc, ← show _ = _ ≫ c.π.app j from T.ε.naturality _, ← assoc, commuting, assoc]
+    have h := T.ε.naturality (c.π.app j)
+    dsimp only [Functor.id_obj, Functor.comp_obj, Functor.const_obj_obj] at h
+    rw [assoc, ← Functor.id_map (c.π.app j),
+      ← h, ← assoc, commuting, assoc]
     simp [Coalgebra.counit (D.obj j)]
   coassoc := by
     refine (isLimitOfPreserves _ (isLimitOfPreserves _ t)).hom_ext fun j => ?_

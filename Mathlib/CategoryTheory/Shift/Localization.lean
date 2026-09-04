@@ -193,7 +193,8 @@ noncomputable def commShiftOfLocalization : F'.CommShift A where
       ← NatTrans.naturality_assoc, ← NatTrans.naturality]
     dsimp
     simp only [← Functor.map_comp_assoc, ← Functor.map_comp,
-      Iso.inv_hom_id_app, id_obj, map_id, Category.id_comp, Iso.hom_inv_id_app_assoc]
+      Iso.inv_hom_id_app, id_obj, map_id, Category.id_comp, Iso.hom_inv_id_app_assoc,
+      Functor.id_map]
   commShiftIso_add a b := by
     ext1
     apply natTrans_ext L W

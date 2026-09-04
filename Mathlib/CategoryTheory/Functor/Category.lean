@@ -173,16 +173,40 @@ protected def flip (F : C ⥤ D ⥤ E) : D ⥤ C ⥤ E where
 @[implicit_reducible, simps]
 def leftUnitor (F : C ⥤ D) :
     𝟭 C ⋙ F ≅ F where
-  hom := { app := fun X => 𝟙 (F.obj X) }
-  inv := { app := fun X => 𝟙 (F.obj X) }
+  hom :=
+    { app := fun X => 𝟙 (F.obj X)
+      naturality := by
+        intros
+        rw [comp_map, id_map]
+        exact (Category.comp_id _).trans (Category.id_comp _).symm }
+  inv :=
+    { app := fun X => 𝟙 (F.obj X)
+      naturality := by
+        intros
+        rw [comp_map, id_map]
+        exact (Category.comp_id _).trans (Category.id_comp _).symm }
+  hom_inv_id := by ext; simp [Functor.id]
+  inv_hom_id := by ext; simp [Functor.id]
 
 /-- The right unitor, a natural isomorphism `(F ⋙ (𝟭 B)) ≅ F`.
 -/
 @[implicit_reducible, simps]
 def rightUnitor (F : C ⥤ D) :
     F ⋙ 𝟭 D ≅ F where
-  hom := { app := fun X => 𝟙 (F.obj X) }
-  inv := { app := fun X => 𝟙 (F.obj X) }
+  hom :=
+    { app := fun X => 𝟙 (F.obj X)
+      naturality := by
+        intros
+        rw [comp_map, id_map]
+        exact (Category.comp_id _).trans (Category.id_comp _).symm }
+  inv :=
+    { app := fun X => 𝟙 (F.obj X)
+      naturality := by
+        intros
+        rw [comp_map, id_map]
+        exact (Category.comp_id _).trans (Category.id_comp _).symm }
+  hom_inv_id := by ext; simp [Functor.id]
+  inv_hom_id := by ext; simp [Functor.id]
 
 /-- The associator for functors, a natural isomorphism `((F ⋙ G) ⋙ H) ≅ (F ⋙ (G ⋙ H))`.
 

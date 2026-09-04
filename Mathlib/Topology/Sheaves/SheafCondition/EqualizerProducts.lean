@@ -367,7 +367,7 @@ def coneEquivCounitIso :
     fun {c d} f => by
     ext
     dsimp
-    simp only [Category.comp_id, Category.id_comp]
+    simp only [Functor.id_map, Category.comp_id, Category.id_comp]
 
 set_option backward.defeqAttrib.useBackward true in
 /--

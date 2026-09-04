@@ -338,8 +338,8 @@ protected def unit :
   naturality 𝓕 𝓖 f := by
     ext U; dsimp
     split_ifs with h
-    · simp only [Category.id_comp, Category.assoc, eqToHom_trans_assoc, eqToHom_refl,
-        Presheaf.stalkFunctor_map_germ_assoc, Presheaf.stalkFunctor_obj]
+    · simp only [Functor.id_map, Category.id_comp, Category.assoc, eqToHom_trans_assoc,
+        eqToHom_refl, Presheaf.stalkFunctor_map_germ_assoc, Presheaf.stalkFunctor_obj]
     · apply ((ite_eq_right h).symm.ndrec terminalIsTerminal).hom_ext
 
 set_option backward.defeqAttrib.useBackward true in

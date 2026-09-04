@@ -172,6 +172,7 @@ def sheafComposeNatTrans :
     ext X
     have := NatTrans.congr_app (adj₁.unit.naturality f) X
     dsimp at this ⊢
+    simp only [Functor.id_map] at this
     grind
 
 set_option backward.isDefEq.respectTransparency false in

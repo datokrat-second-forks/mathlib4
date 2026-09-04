@@ -103,8 +103,11 @@ include adj
 
 lemma localEpi_mem_range_iff_epi {X Y : C} (f : X ⟶ Y) :
     localEpi (· ∈ Set.range G.obj) f ↔ Epi (F.map f) := by
+  have h := adj.unit.naturality f
+  dsimp at h
+  simp only [Functor.id_map] at h
   rw [← dsimp% (localEpi (· ∈ Set.range G.obj)).postcomp_iff _ _ (isLocal_adj_unit_app adj Y),
-    dsimp% adj.unit.naturality f,
+    h,
     dsimp% (localEpi (· ∈ Set.range G.obj)).precomp_iff _ _ (isLocal_adj_unit_app adj X)]
   refine ⟨fun h ↦ ⟨fun {Z} u v huv ↦ ?_⟩, ?_⟩
   · refine G.map_injective ?_

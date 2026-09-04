@@ -114,7 +114,7 @@ lemma IsCardinalPure.mono [IsCardinalAccessibleCategory C κ]
   obtain ⟨⟨Y'', _ : IsCardinalPresentable Y'' κ⟩, v, rfl⟩ := j''.mk_surjective
   obtain ⟨⟨h⟩, H, rfl⟩ := CostructuredArrow.homMk_surjective c
   dsimp at v' f' hf' v h H hc
-  simp only [Category.assoc, Category.id_comp] at hf' h₁ h₂ hc
+  simp only [Category.assoc, Category.id_comp, Functor.id_map] at hf' h₁ h₂ hc
   obtain ⟨u', hu'⟩ :=
     IsCardinalPure.exists_of_commSq κ (show CommSq (f' ≫ h) u v f from { })
   simp only [Category.assoc] at hu'

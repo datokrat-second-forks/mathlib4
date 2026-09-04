@@ -323,7 +323,7 @@ noncomputable def Scheme.Modules.fromTildeΓNatTrans :
       exact N.isUnit_algebraMap_end_of_le_basicOpen r.unop le_rfl
     dsimp [TopCat.Sheaf.restrictHomEquivHom, Functor.IsCoverDense.restrictHomEquivHom,
       moduleSpecΓFunctor, Sheaf.forget]
-    simp only [← ModuleCat.hom_comp, Functor.map_comp]
+    simp only [← ModuleCat.hom_comp, Functor.map_comp, Functor.id_map]
     congr 1
     erw [tilde.toOpen_map_app_assoc, toOpen_fromTildeΓ_app N (PrimeSpectrum.basicOpen r.unop),
       toOpen_fromTildeΓ_app_assoc M (PrimeSpectrum.basicOpen r.unop),

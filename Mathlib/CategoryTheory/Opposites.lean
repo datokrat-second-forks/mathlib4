@@ -859,10 +859,14 @@ def opUnopEquiv : (C ⥤ D)ᵒᵖ ≌ Cᵒᵖ ⥤ Dᵒᵖ where
       (by
         intro F G f
         dsimp [opUnopIso]
+        rw [Functor.id_map]
         rw [show f = f.unop.op by simp, ← op_comp, ← op_comp]
         congr 1
         cat_disch)
   counitIso := NatIso.ofComponents fun F => F.unopOpIso
+  functor_unitIso_comp X := by
+    ext Y
+    simp
 
 set_option backward.defeqAttrib.useBackward true in
 /-- The equivalence of functor categories induced by `leftOp` and `rightOp`.
@@ -880,10 +884,14 @@ def leftOpRightOpEquiv : (Cᵒᵖ ⥤ D)ᵒᵖ ≌ C ⥤ Dᵒᵖ where
       (by
         intro F G η
         dsimp
+        rw [Functor.id_map]
         rw [show η = η.unop.op by simp, ← op_comp, ← op_comp]
         congr 1
         cat_disch)
   counitIso := NatIso.ofComponents fun F => F.leftOpRightOpIso
+  functor_unitIso_comp X := by
+    ext Y
+    simp
 
 instance {F : C ⥤ D} [EssSurj F] : EssSurj F.op where
   mem_essImage X := ⟨op _, ⟨(F.objObjPreimageIso X.unop).op.symm⟩⟩

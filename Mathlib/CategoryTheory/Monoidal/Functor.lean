@@ -957,7 +957,9 @@ def rightAdjointLaxMonoidal : G.LaxMonoidal where
     rw [← δ_natural_left_assoc, ← δ_natural_left_assoc, ← δ_natural_left_assoc]
     have := @NatTrans.whiskerRight_app_tensor_app_assoc _ _ _ _ _ _ _ _ _ adj.counit adj.counit
     dsimp only [id_obj, comp_obj, Functor.comp_map, Functor.id_map] at this
-    rw [this, this, tensorHom_def, assoc, ← comp_whiskerRight_assoc,
+    rw [this, this]
+    simp only [Functor.id_map]
+    rw [tensorHom_def, assoc, ← comp_whiskerRight_assoc,
       left_triangle_components, id_whiskerRight, id_comp,
       whisker_exchange_assoc, whisker_exchange_assoc, ← tensorHom_def_assoc,
       associator_naturality, OplaxMonoidal.associativity_assoc]

@@ -475,7 +475,8 @@ def whiskering (D : Type u') [Category.{v'} D] : (C ⥤ D) ⥤ Augmented C ⥤ A
           w := by
             ext n
             dsimp
-            rw [Category.comp_id, Category.comp_id, η.naturality] } }
+            rw [Functor.id_map, whiskerLeft_app, Category.comp_id, Category.comp_id,
+              η.naturality] } }
   map_comp := fun _ _ => by ext <;> rfl
 
 variable {C}
@@ -825,7 +826,8 @@ def whiskeringObj (D : Type*) [Category* D] (F : C ⥤ D) : Augmented C ⥤ Augm
       w := by
         ext
         dsimp
-        rw [Category.id_comp, Category.id_comp, ← F.map_comp, ← F.map_comp]
+        rw [Functor.id_map, whiskerRight_app, Category.id_comp, Category.id_comp, ← F.map_comp,
+          ← F.map_comp]
         simp [w_app, map_comp] }
 
 set_option backward.isDefEq.respectTransparency.types false in
@@ -841,7 +843,8 @@ def whiskering (D : Type u') [Category.{v'} D] : (C ⥤ D) ⥤ Augmented C ⥤ A
           w := by
             ext n
             dsimp
-            rw [Category.id_comp, Category.id_comp, η.naturality] }
+            rw [Functor.id_map, whiskerLeft_app, Category.id_comp, Category.id_comp,
+              η.naturality] }
       naturality := fun _ _ f => by ext <;> simp }
 
 variable {C}
@@ -974,6 +977,7 @@ def cosimplicialToSimplicialAugmented :
         w := by
           ext x
           dsimp
+          rw [Functor.id_map, NatTrans.leftOp_app]
           simp_rw [← unop_comp]
           congr 1
           exact (congr_app f.w (unop x)).symm }
@@ -989,7 +993,7 @@ def simplicialCosimplicialAugmentedEquiv :
   inverse := cosimplicialToSimplicialAugmented _
   unitIso := NatIso.ofComponents (fun X => X.unop.rightOpLeftOpIso.op) fun f => by
       dsimp
-      rw [← f.op_unop]
+      rw [Functor.id_map, ← f.op_unop]
       simp_rw [← op_comp]
       congr 1
       cat_disch

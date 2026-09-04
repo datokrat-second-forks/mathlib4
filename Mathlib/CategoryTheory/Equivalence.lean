@@ -340,10 +340,15 @@ theorem adjointify_η_ε (X : C) :
   dsimp [adjointifyη, Trans.trans]
   simp only [comp_id, assoc, map_comp, associator_hom_app, associator_inv_app, comp_obj]
   have := ε.hom.naturality (F.map (η.inv.app X)); dsimp at this; rw [this]; clear this
+  change F.map (η.hom.app X) ≫ F.map (G.map (ε.inv.app (F.obj X))) ≫
+    ε.hom.app (F.obj (G.obj (F.obj X))) ≫ F.map (η.inv.app X) = 𝟙 (F.obj X)
   rw [← assoc _ _ (F.map _)]
   have := ε.hom.naturality (ε.inv.app <| F.obj X); dsimp at this; rw [this]; clear this
-  have := (ε.app <| F.obj X).hom_inv_id; dsimp at this; rw [this]; clear this
-  rw [id_comp]; have := (F.mapIso <| η.app X).hom_inv_id; dsimp at this; rw [this]
+  rw [Functor.id_map (ε.inv.app (F.obj X))]
+  rw [ε.hom_inv_id_app]
+  simp only [Functor.comp_obj]
+  rw [← Category.assoc, Category.comp_id]
+  have := (F.mapIso <| η.app X).hom_inv_id; dsimp at this; rw [this]
 
 end
 

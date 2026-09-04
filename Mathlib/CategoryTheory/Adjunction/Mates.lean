@@ -304,8 +304,7 @@ theorem unit_conjugateEquiv (α : L₂ ⟶ L₁) (c : C) :
   rw [id_comp, comp_id]
   have := unit_mateEquiv adj₁ adj₂ (L₂.leftUnitor.hom ≫ α ≫ L₁.rightUnitor.inv) c
   dsimp at this
-  rw [this]
-  simp
+  simpa using this
 
 /-- A component of a transposed form of the inverse conjugation definition. -/
 theorem unit_conjugateEquiv_symm (α : R₁ ⟶ R₂) (c : C) :

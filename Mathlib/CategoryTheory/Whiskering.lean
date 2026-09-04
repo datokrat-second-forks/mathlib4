@@ -360,7 +360,12 @@ variable {A : Type u₁} [Category.{v₁} A] {B : Type u₂} [Category.{v₂} B]
 @[reassoc]
 theorem triangleIso :
     associator F (𝟭 B) G ≪≫ isoWhiskerLeft F (leftUnitor G) =
-      isoWhiskerRight (rightUnitor F) G := by cat_disch
+      isoWhiskerRight (rightUnitor F) G := by
+  ext X
+  simp only [comp_obj, Iso.trans_hom, isoWhiskerLeft_hom, NatTrans.comp_app,
+    associator_hom_app, whiskerLeft_app, leftUnitor_hom_app, Category.id_comp,
+    isoWhiskerRight_hom, whiskerRight_app, rightUnitor_hom_app]
+  exact (G.map_id (F.obj X)).symm
 
 @[reassoc]
 theorem pentagonIso :
@@ -370,7 +375,11 @@ theorem pentagonIso :
 
 theorem triangle :
     (associator F (𝟭 B) G).hom ≫ whiskerLeft F (leftUnitor G).hom =
-      whiskerRight (rightUnitor F).hom G := by cat_disch
+      whiskerRight (rightUnitor F).hom G := by
+  ext X
+  simp only [comp_obj, NatTrans.comp_app, associator_hom_app, whiskerLeft_app,
+    leftUnitor_hom_app, Category.id_comp, whiskerRight_app, rightUnitor_hom_app]
+  exact (G.map_id (F.obj X)).symm
 
 theorem pentagon :
     whiskerRight (associator F G H).hom K ≫

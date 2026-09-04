@@ -184,7 +184,7 @@ def functorCompInverseIso : functor X Y ⋙ inverse X Y ≅ 𝟭 _ :=
     rintro ⟨x₀, y₀⟩ ⟨x₁, y₁⟩ e
     obtain ⟨ex, ey, rfl⟩ := e.tensor_surjective
     dsimp
-    rw [Category.comp_id, Category.id_comp, inverse_map_mkHom_homMk_homMk])
+    rw [Functor.id_map, Category.comp_id, Category.id_comp, inverse_map_mkHom_homMk_homMk])
 
 @[simp]
 lemma functorCompInverseIso_hom_app (x : X _⦋0⦌₂) (y : Y _⦋0⦌₂) :
@@ -341,6 +341,7 @@ def associativity'Iso :
     (mkNatIso (fun x ↦ mkNatIso (fun y ↦ mkNatIso (fun z ↦ Iso.refl _)
       (fun z₀ z₁ e ↦ by
         dsimp
+        simp only [Functor.id_map]
         rw [Category.comp_id, Category.id_comp, ← prod_id,
           inverse_map_mkHom_id_homMk, inverse_map_mkHom_id_homMk,
           CategoryTheory.Functor.map_id]
@@ -349,12 +350,16 @@ def associativity'Iso :
         ext z
         obtain ⟨z, rfl⟩ := z.mk_surjective
         dsimp
+        simp only [Functor.id_map]
+        dsimp
         rw [Category.comp_id, Category.id_comp,
           inverse_map_mkHom_homMk_id, inverse_map_mkHom_id_homMk]))
       (fun x₀ x₁ e ↦ by
         ext y z
         obtain ⟨y, rfl⟩ := y.mk_surjective
         obtain ⟨z, rfl⟩ := z.mk_surjective
+        dsimp
+        simp only [Functor.id_map]
         dsimp
         simp only [Category.comp_id, Category.id_comp, ← prod_id',
           CategoryTheory.Functor.map_id, inverse_obj, inverse_map_mkHom_homMk_id]))

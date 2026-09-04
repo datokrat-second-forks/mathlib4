@@ -95,6 +95,8 @@ noncomputable def functorCoreMonoidalOfComp : F.CoreMonoidal := by
   refine Functor.CoreMonoidal.ofBifunctor
     (εIso G ≪≫ e.symm.app _ ≪≫ F.mapIso (εIso L).symm) (curriedTensorPreIsoPost L W F G) ?_ ?_ ?_
   · refine natTrans₃_ext L L L W W W (fun X₁ X₂ X₃ ↦ ?_)
+    rw [LaxMonoidal.ofBifunctor.firstMap_app_app_app,
+      LaxMonoidal.ofBifunctor.secondMap_app_app_app]
     dsimp [e]
     rw [curriedTensorPreIsoPost_hom_app_app, curriedTensorPreIsoPost_hom_app_app,
       curriedTensorPreIsoPost_hom_app_app' L W F G (μIso L _ _) (Iso.refl _),

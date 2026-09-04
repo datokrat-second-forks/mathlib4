@@ -153,6 +153,7 @@ noncomputable def lanAdjunction : L.lan ⊣ (whiskeringLeft C D H).obj L :=
           rw [descOfIsLeftKanExtension_fac_app, NatTrans.comp_app, ← assoc]
           have h := congr_app (L.lanUnit.naturality f) X
           dsimp at h ⊢
+          simp only [Functor.id_map] at h
           rw [← h, assoc, descOfIsLeftKanExtension_fac_app])
       homEquiv_naturality_right := fun {F G₁ G₂} β f => by
         dsimp [homEquivOfIsLeftKanExtension]
@@ -345,6 +346,7 @@ noncomputable def ranAdjunction : (whiskeringLeft C D H).obj L ⊣ L.ran :=
         rw [liftOfIsRightKanExtension_fac_app, NatTrans.comp_app, assoc]
         have h := congr_app (L.ranCounit.naturality f) X
         dsimp at h ⊢
+        simp only [Functor.id_map] at h
         rw [h, liftOfIsRightKanExtension_fac_app_assoc])
       homEquiv_naturality_left_symm := fun {F₁ F₂ G} β f ↦ by
         dsimp [homEquivOfIsRightKanExtension]

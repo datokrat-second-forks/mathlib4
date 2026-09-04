@@ -39,6 +39,7 @@ instance (n : ℤ) : (singleFunctor C n).Faithful where
     have eq₁ := NatIso.naturality_1 (singleFunctorCompHomologyFunctorIso C n) f₁
     have eq₂ := NatIso.naturality_1 (singleFunctorCompHomologyFunctorIso C n) f₂
     dsimp at eq₁ eq₂
+    simp only [Functor.id_map] at eq₁ eq₂
     rw [← eq₁, ← eq₂, h]
 
 set_option backward.isDefEq.respectTransparency false in

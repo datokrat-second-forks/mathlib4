@@ -372,7 +372,7 @@ lemma compatibilityUnit_iso (a : A) :
   erw [← NatTrans.naturality_assoc]
   dsimp
   rw [shift_shiftFunctorCompIsoId_hom_app, Iso.inv_hom_id_app_assoc,
-    Functor.commShiftIso_hom_naturality_assoc, ← Functor.map_comp,
+    Functor.id_map, Functor.commShiftIso_hom_naturality_assoc, ← Functor.map_comp,
     left_triangle_components, Functor.map_id, comp_id]
 
 end RightAdjointCommShift

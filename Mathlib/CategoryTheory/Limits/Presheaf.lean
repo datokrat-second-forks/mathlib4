@@ -466,6 +466,7 @@ noncomputable def compULiftYonedaIsoULiftYonedaCompLan :
           (F.op.lanUnit.app (uliftYoneda.obj X))) _) ⟨𝟙 _⟩
       have eq₃ := ConcreteCategory.congr_hom (congr_app (F.op.lanUnit.naturality
         (uliftYoneda.{max w v₂}.map f)) _) ⟨𝟙 _⟩
+      simp only [Functor.id_map] at eq₃
       dsimp [uliftYoneda, uliftYonedaMap, uliftYonedaEquiv,
         Functor.leftKanExtensionUnique] at eq₁ eq₂ eq₃ ⊢
       simp only [Functor.map_id] at eq₂

@@ -76,12 +76,18 @@ variable (C : Type u₁) [Category.{v₁} C]
 
 initialize_simps_projections Functor
 
--- We don't use `@[simps]` here because we want `C` implicit for the simp lemmas.
+/-- The action of `𝟭 C` on morphisms. It is deliberately a separate, semireducible definition so
+that `(𝟭 C).map f` does not unfold to `f` below default transparency. -/
+@[simp]
+def id.map {X Y : C} (f : X ⟶ Y) : X ⟶ Y := f
+
 /-- `𝟭 C` is the identity functor on a category `C`. -/
-@[implicit_reducible]
+@[simps (attr := grind =) obj, instance_reducible]
 protected def id : C ⥤ C where
   obj X := X
-  map f := f
+  map := fun f ↦ Functor.id.map C f
+  map_id _ := by simp [Functor.id.map]
+  map_comp _ _ := by simp [Functor.id.map]
 
 /-- Notation for the identity functor on a category. -/
 scoped[CategoryTheory] notation "𝟭" => Functor.id -- Type this as `\sb1`
@@ -91,11 +97,9 @@ instance : Inhabited (C ⥤ C) :=
 
 variable {C}
 
-@[simp, grind =]
-theorem id_obj (X : C) : (𝟭 C).obj X = X := rfl
-
-@[simp, grind =, to_dual self]
-theorem id_map {X Y : C} (f : X ⟶ Y) : (𝟭 C).map f = f := rfl
+@[simp, to_dual self]
+theorem id_map {X Y : C} (f : X ⟶ Y) : (𝟭 C).map f = f := by
+  simp [Functor.id, Functor.id.map]
 
 end
 
@@ -138,9 +142,15 @@ theorem comp_map (F : C ⥤ D) (G : D ⥤ E) {X Y : C} (f : X ⟶ Y) :
 -- These are not simp lemmas because rewriting along equalities between functors
 -- is not necessarily a good idea.
 -- Natural isomorphisms are also provided in `Whiskering.lean`.
-protected theorem comp_id (F : C ⥤ D) : F ⋙ 𝟭 D = F := rfl
+protected theorem comp_id (F : C ⥤ D) : F ⋙ 𝟭 D = F := by
+  cases F
+  dsimp [comp, Functor.id, comp.map, Functor.id.map]
+  congr
 
-protected theorem id_comp (F : C ⥤ D) : 𝟭 C ⋙ F = F := rfl
+protected theorem id_comp (F : C ⥤ D) : 𝟭 C ⋙ F = F := by
+  cases F
+  dsimp [comp, Functor.id, comp.map, Functor.id.map]
+  congr
 
 @[simp, to_dual self]
 theorem map_dite (F : C ⥤ D) {X Y : C} {P : Prop} [Decidable P]

@@ -93,6 +93,7 @@ lemma isConnected :
   obtain ⟨c, g, x, fac, rfl⟩ := TwoSquare.CostructuredArrowDownwards.mk_surjective X
   dsimp [w] at x fac
   rw [id_comp] at fac
+  simp only [Functor.id_map] at fac
   let ρ : Φ.arrow.RightResolution (Arrow.mk g) := Classical.arbitrary _
   refine ⟨RightResolution.mk ρ.w.left ρ.hw.1, ?_⟩
   have := zigzag_obj_of_zigzag

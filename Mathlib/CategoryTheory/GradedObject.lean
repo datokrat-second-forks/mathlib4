@@ -191,9 +191,10 @@ def comapEquiv {β γ : Type w} (e : β ≃ γ) : GradedObject β C ≌ GradedOb
   functor := comap C (e.symm : γ → β)
   inverse := comap C (e : β → γ)
   counitIso :=
-    (Pi.comapComp (fun _ => C) _ _).trans (comapEq C (by ext; simp))
+    Pi.comapComp (fun _ => C) _ _ ≪≫ comapEq C (by ext; simp) ≪≫ Pi.comapId γ (fun _ => C)
   unitIso :=
-    (comapEq C (by ext; simp)).trans (Pi.comapComp _ _ _).symm
+    (Pi.comapId β (fun _ => C)).symm ≪≫ comapEq C (by ext; simp) ≪≫
+      (Pi.comapComp _ _ _).symm
 
 end
 
