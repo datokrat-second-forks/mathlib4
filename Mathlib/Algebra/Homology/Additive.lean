@@ -211,6 +211,16 @@ def Functor.mapHomologicalComplexCompIso {W' : Type*} [Category W'] [Preadditive
     F.mapHomologicalComplex c ⋙ G.mapHomologicalComplex c ≅ H.mapHomologicalComplex c :=
   NatIso.mapHomologicalComplex e c
 
+/-- The functor on homological complexes induced by a composition of functors is isomorphic
+to the composition of the induced functors. -/
+@[simps!]
+def Functor.mapHomologicalComplexComp {W₃ : Type*} [Category* W₃] [HasZeroMorphisms W₃]
+    (F : W₁ ⥤ W₂) (G : W₂ ⥤ W₃) [F.PreservesZeroMorphisms] [G.PreservesZeroMorphisms]
+    (c : ComplexShape ι) :
+    (F ⋙ G).mapHomologicalComplex c ≅
+      F.mapHomologicalComplex c ⋙ G.mapHomologicalComplex c :=
+  NatIso.ofComponents fun _ => Hom.isoOfComponents fun _ => Iso.refl _
+
 /-- An equivalence of categories induces an equivalences between the respective categories
 of homological complex.
 -/
@@ -221,12 +231,12 @@ def Equivalence.mapHomologicalComplex (e : W₁ ≌ W₂) [e.functor.PreservesZe
   functor := e.functor.mapHomologicalComplex c
   inverse := e.inverse.mapHomologicalComplex c
   unitIso :=
-    (Functor.mapHomologicalComplexIdIso W₁ c).symm ≪≫ NatIso.mapHomologicalComplex e.unitIso c
-  counitIso := NatIso.mapHomologicalComplex e.counitIso c ≪≫
-    Functor.mapHomologicalComplexIdIso W₂ c
+    (Functor.mapHomologicalComplexIdIso W₁ c).symm ≪≫ NatIso.mapHomologicalComplex e.unitIso c ≪≫
+      Functor.mapHomologicalComplexComp _ _ c
+  counitIso := (Functor.mapHomologicalComplexComp _ _ c).symm ≪≫
+    NatIso.mapHomologicalComplex e.counitIso c ≪≫ Functor.mapHomologicalComplexIdIso W₂ c
   functor_unitIso_comp := by
-    set_option backward.isDefEq.respectTransparency.types false in
-      aesop_cat
+    aesop_cat
 
 end CategoryTheory
 

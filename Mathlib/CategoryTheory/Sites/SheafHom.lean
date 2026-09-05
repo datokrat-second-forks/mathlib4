@@ -46,14 +46,15 @@ to the type of morphisms between the "restrictions" of `F` and `G` to the catego
 @[simps! obj]
 def presheafHom : Cᵒᵖ ⥤ Type _ where
   obj X := (Over.forget X.unop).op ⋙ F ⟶ (Over.forget X.unop).op ⋙ G
-  map f := ↾(Functor.whiskerLeft (Over.map f.unop).op)
+  map f := ↾(fun φ ↦
+    { app := fun Y ↦ φ.app (op ((Over.map f.unop).obj Y.unop))
+      naturality := fun _ _ g ↦ by
+        simpa using φ.naturality ((Over.map f.unop).map g.unop).op })
   map_id := by
-    set_option backward.isDefEq.respectTransparency.types false in
     rintro ⟨X⟩
     ext φ ⟨Y⟩
     simpa [Over.mapId] using φ.naturality ((Over.mapId X).hom.app Y).op
   map_comp := by
-    set_option backward.isDefEq.respectTransparency.types false in
     rintro ⟨X⟩ ⟨Y⟩ ⟨Z⟩ ⟨f : Y ⟶ X⟩ ⟨g : Z ⟶ Y⟩
     ext φ ⟨W⟩
     simpa [Over.mapComp] using φ.naturality ((Over.mapComp g f).hom.app W).op

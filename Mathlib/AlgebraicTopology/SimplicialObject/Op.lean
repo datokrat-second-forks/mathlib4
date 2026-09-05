@@ -66,19 +66,19 @@ is a covariant involution. -/
 def opFunctorCompOpFunctorIso : opFunctor (C := C) ⋙ opFunctor ≅ 𝟭 _ :=
   (Functor.whiskeringLeftObjCompIso _ _).symm ≪≫
     (Functor.whiskeringLeft _ _ _).mapIso
-    ((Functor.opHom _ _).mapIso (SimplexCategory.revCompRevIso).symm.op) ≪≫
+    ((Functor.opComp _ _).symm ≪≫
+      (Functor.opHom _ _).mapIso (SimplexCategory.revCompRevIso).symm.op ≪≫
+      Functor.opId _) ≪≫
     Functor.whiskeringLeftObjIdIso
 
 @[simp]
 lemma opFunctorCompOpFunctorIso_hom_app_app (X : SimplicialObject C) (n : SimplexCategoryᵒᵖ) :
     (opFunctorCompOpFunctorIso.hom.app X).app n = opObjIso.hom ≫ opObjIso.hom := by
-  set_option backward.isDefEq.respectTransparency.types false in
   simp [opFunctorCompOpFunctorIso, opObjIso, opFunctor]
 
 @[simp]
 lemma opFunctorCompOpFunctorIso_inv_app_app (X : SimplicialObject C) (n : SimplexCategoryᵒᵖ) :
     (opFunctorCompOpFunctorIso.inv.app X).app n = opObjIso.inv ≫ opObjIso.inv := by
-  set_option backward.isDefEq.respectTransparency.types false in
   simp [opFunctorCompOpFunctorIso, opObjIso, opFunctor]
 
 /-- The functor `opFunctor : SimplicialObject C ⥤ SimplicialObject C`
