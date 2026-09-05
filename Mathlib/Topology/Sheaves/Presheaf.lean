@@ -330,7 +330,6 @@ theorem pullbackObjObjOfImageOpen_hom_naturality {X Y : TopCat.{v}} (f : X ⟶ Y
     {U V : Opens X} (HU : IsOpen (f '' U)) (HV : IsOpen (f '' V)) (le : U ≤ V) :
     ((pullback C f).obj ℱ).map (homOfLE le).op ≫ (pullbackObjObjOfImageOpen f ℱ U HU).hom =
     (pullbackObjObjOfImageOpen f ℱ V HV).hom ≫ ℱ.map (IsOpenMap.functorMap HU HV le).op := by
-  set_option backward.isDefEq.respectTransparency.types false in
   dsimp [pullbackObjObjOfImageOpen]
   refine ((Opens.map f).op.isPointwiseLeftKanExtensionLeftKanExtensionUnit ℱ (op V)).hom_ext
     (fun j ↦ ?_)
@@ -383,7 +382,6 @@ lemma pullbackObjIso_hom_naturality {X Y : TopCat.{v}} {f : X ⟶ Y} (hf : IsOpe
    {ℱ 𝒢 : Y.Presheaf C} (u : ℱ ⟶ 𝒢) :
    (pullback C f).map u ≫ (hf.pullbackObjIso 𝒢).hom =
    (hf.pullbackObjIso ℱ).hom ≫ Functor.whiskerLeft hf.functor.op u := by
-  set_option backward.isDefEq.respectTransparency.types false in
   ext U
   dsimp [pullbackObjIso, pullbackObjObjOfImageOpen]
   refine ((Opens.map f).op.isPointwiseLeftKanExtensionLeftKanExtensionUnit ℱ (op U)).hom_ext

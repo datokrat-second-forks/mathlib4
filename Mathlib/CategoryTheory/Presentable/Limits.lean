@@ -94,7 +94,6 @@ lemma surjective (x : c.pt.obj cX.pt) :
   let s : (F ⋙ (evaluation C (Type w')).obj (X.obj j₁)).sections :=
     { val k := (F.obj k).map (X.map α) (z k)
       property {k k'} φ := by
-        set_option backward.isDefEq.respectTransparency.types false in
         dsimp
         simp only [Functor.comp_map]
         dsimp

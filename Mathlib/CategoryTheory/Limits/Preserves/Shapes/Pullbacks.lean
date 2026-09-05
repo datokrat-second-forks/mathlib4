@@ -187,12 +187,11 @@ def isColimitMapCoconeEquiv :
     IsColimit (mapCocone G c) ≃ IsColimit (c.map G) :=
   (IsColimit.precomposeHomEquiv (diagramIsoSpan.{v₂} _).symm _).symm.trans <|
     IsColimit.equivIsoColimit <| by
-      set_option backward.isDefEq.respectTransparency.types false in
-        refine PushoutCocone.ext (Iso.refl _) ?_ ?_
-        · dsimp only [inl]
-          simp
-        · dsimp only [inr]
-          simp
+      refine PushoutCocone.ext (Iso.refl _) ?_ ?_
+      · dsimp only [inl]
+        simp
+      · dsimp only [inr]
+        simp
 
 end PushoutCocone
 
@@ -343,11 +342,10 @@ def PushoutCocone.isColimitYonedaEquiv (c : PushoutCocone f g) :
     (Equiv.piCongrRight (fun X ↦
       (IsLimit.whiskerEquivalenceEquiv walkingSpanOpEquiv.symm).trans
         ((IsLimit.postcomposeHomEquiv
-          (isoWhiskerRight (cospanOp f g).symm (yoneda.obj X)) _).symm.trans
+          ((Functor.associator _ _ _).symm ≪≫
+            isoWhiskerRight (cospanOp f g).symm (yoneda.obj X)) _).symm.trans
             (Equiv.trans (IsLimit.equivIsoLimit
-              (by
-                set_option backward.isDefEq.respectTransparency.types false in
-                  exact Cone.ext (Iso.refl _) (by rintro (_ | _ | _) <;> cat_disch)))
+              (by exact Cone.ext (Iso.refl _) (by rintro (_ | _ | _) <;> cat_disch)))
                 (c.op.isLimitMapConeEquiv (yoneda.obj X))))))
 
 end Pushout

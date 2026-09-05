@@ -128,7 +128,6 @@ noncomputable def iic (j : J) :
   incl :=
     { app i := c.F.map (homOfLE i.2)
       naturality i i' φ := by
-        set_option backward.isDefEq.respectTransparency.types false in
         dsimp
         simp only [Functor.comp_map]
         dsimp

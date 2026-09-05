@@ -328,7 +328,6 @@ set_option backward.isDefEq.respectTransparency false in
 theorem middle_assoc' :
     (actLeft P Q ▷ T.X) ≫ actRight P Q =
       (α_ R.X _ T.X).hom ≫ (R.X ◁ actRight P Q) ≫ actLeft P Q := by
-  set_option backward.isDefEq.respectTransparency.types false in
   refine (cancel_epi ((tensorLeft _ ⋙ tensorRight _).map (coequalizer.π _ _))).1 ?_
   dsimp [X]
   simp only [Functor.comp_map]
@@ -469,7 +468,6 @@ noncomputable def hom :
     ((P.tensorBimod Q).tensorBimod L).X ⟶ (P.tensorBimod (Q.tensorBimod L)).X :=
   coequalizer.desc (homAux P Q L)
     (by
-      set_option backward.isDefEq.respectTransparency.types false in
       dsimp [homAux]
       refine (cancel_epi ((tensorRight _ ⋙ tensorRight _).map (coequalizer.π _ _))).1 ?_
       dsimp [TensorBimod.X]
@@ -492,7 +490,6 @@ set_option backward.isDefEq.respectTransparency false in
 theorem hom_left_act_hom' :
     ((P.tensorBimod Q).tensorBimod L).actLeft ≫ hom P Q L =
       (R.X ◁ hom P Q L) ≫ (P.tensorBimod (Q.tensorBimod L)).actLeft := by
-  set_option backward.isDefEq.respectTransparency.types false in
   dsimp; dsimp [hom, homAux]
   refine (cancel_epi ((tensorLeft _).map (coequalizer.π _ _))).1 ?_
   simp only [curriedTensor_obj_map]
@@ -522,7 +519,6 @@ set_option backward.isDefEq.respectTransparency false in
 theorem hom_right_act_hom' :
     ((P.tensorBimod Q).tensorBimod L).actRight ≫ hom P Q L =
       (hom P Q L ▷ U.X) ≫ (P.tensorBimod (Q.tensorBimod L)).actRight := by
-  set_option backward.isDefEq.respectTransparency.types false in
   dsimp; dsimp [hom, homAux]
   refine (cancel_epi ((tensorRight _).map (coequalizer.π _ _))).1 ?_
   simp only [Functor.flip_obj_map, curriedTensor_map_app]
@@ -968,7 +964,6 @@ theorem pentagon_bimod {V W X Y Z : Mon C} (M : Bimod V W) (N : Bimod W X) (P : 
         whiskerLeft M (associatorBimod N P Q).hom =
       (associatorBimod (M.tensorBimod N) P Q).hom ≫
         (associatorBimod M N (P.tensorBimod Q)).hom := by
-  set_option backward.isDefEq.respectTransparency.types false in
   dsimp [associatorBimod]
   ext
   apply coequalizer.hom_ext

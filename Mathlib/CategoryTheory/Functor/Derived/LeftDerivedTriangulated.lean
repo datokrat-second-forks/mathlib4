@@ -55,16 +55,13 @@ public lemma isTriangulated_of_rightExtension
         (((mapTriangleCompIso L F').symm.app T') ≪≫
           (Triangle.isoMk _ _ (asIso (α.app _)) (asIso (α.app _)) (asIso (α.app _))
             (by
-              set_option backward.isDefEq.respectTransparency.types false in
               have hnat := α.naturality T'.mor₁
               simp only [Functor.comp_map] at hnat
               simpa using hnat)
             (by
-              set_option backward.isDefEq.respectTransparency.types false in
               have hnat := α.naturality T'.mor₂
               simp only [Functor.comp_map] at hnat
               simpa using hnat) ?_))⟩
-    set_option backward.isDefEq.respectTransparency.types false in
     have hnat := α.naturality T'.mor₃
     simp only [Functor.comp_map] at hnat
     simp [← reassoc_of% hnat, NatTrans.shift_app_comm]

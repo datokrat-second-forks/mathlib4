@@ -73,7 +73,6 @@ that is induced by `y : X ⟶ Y.obj j₀`. -/
 def g : (Functor.const _).obj X ⟶ Under.forget j₀ ⋙ Y where
   app t := y ≫ Y.map t.hom
   naturality t₁ t₂ f := by
-    set_option backward.isDefEq.respectTransparency.types false in
     dsimp
     simp only [Functor.comp_map]
     dsimp

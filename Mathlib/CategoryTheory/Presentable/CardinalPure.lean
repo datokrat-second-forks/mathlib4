@@ -100,7 +100,6 @@ set_option backward.defeqAttrib.useBackward true in
 lemma IsCardinalPure.mono [IsCardinalAccessibleCategory C κ]
     {X Y : C} (f : X ⟶ Y) [IsCardinalPure κ f] :
     Mono f := by
-  set_option backward.isDefEq.respectTransparency.types false in
   rw [IsCardinalAccessibleCategory.mono_iff κ]
   intro K _ p q hpq
   obtain ⟨j, p', q', h₁, h₂⟩ := IsCardinalPresentable.exists_hom₂_of_isColimit κ

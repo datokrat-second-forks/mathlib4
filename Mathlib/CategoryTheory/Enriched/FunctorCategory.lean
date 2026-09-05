@@ -266,7 +266,6 @@ noncomputable abbrev precompEnrichedHom' {F₁' F₂' : K ⥤ C}
   end_.lift (fun x ↦ enrichedHomπ V F₁ F₂ (G.obj x) ≫
     (eHomWhiskerRight _ (e₁.inv.app x) _ ≫ eHomWhiskerLeft _ _ (e₂.hom.app x)))
     (fun i j f ↦ by
-      set_option backward.isDefEq.respectTransparency.types false in
       dsimp
       rw [assoc, assoc, assoc, assoc, ← eHomWhiskerLeft_comp,
         ← eHom_whisker_exchange, ← e₂.hom.naturality f,
@@ -348,7 +347,6 @@ set_option backward.isDefEq.respectTransparency false in
 /-- Auxiliary definition for `Enriched.FunctorCategory.isLimitConeFunctorEnrichedHom`. -/
 noncomputable def lift : s.pt ⟶ enrichedHom V F₁ F₂ :=
   end_.lift (fun j ↦ s.π.app j ≫ enrichedHomπ V _ _ (Under.mk (𝟙 j))) (fun j j' f ↦ by
-    set_option backward.isDefEq.respectTransparency.types false in
     dsimp
     rw [← s.w f, assoc, assoc, assoc]
     -- this was produced by `simp?`

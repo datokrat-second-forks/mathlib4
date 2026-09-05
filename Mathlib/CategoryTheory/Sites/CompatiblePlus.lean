@@ -79,7 +79,6 @@ def plusCompIso : J.plusObj P ⋙ F ≅ J.plusObj (P ⋙ F) :=
               (colimit.isColimit (J.diagram P (unop X)))).coconePointUniqueUpToIso
           (colimit.isColimit _))
     (by
-      set_option backward.isDefEq.respectTransparency.types false in
       intro X Y f
       apply (isColimitOfPreserves F (colimit.isColimit (J.diagram P X.unop))).hom_ext
       intro W

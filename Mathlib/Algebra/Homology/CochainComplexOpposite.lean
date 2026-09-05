@@ -104,7 +104,6 @@ def homotopyOp (h : Homotopy f g) :
     dsimp at hpq ⊢
     lia
   comm n := by
-    set_option backward.isDefEq.respectTransparency.types false in
     dsimp
     simp only [Functor.comp_map]
     dsimp
@@ -143,7 +142,6 @@ def homotopyUnop (h : Homotopy ((opEquivalence C).functor.map f.op)
     dsimp at hpq ⊢
     lia
   comm n := Quiver.Hom.op_inj (by
-    set_option backward.isDefEq.respectTransparency.types false in
     have H (p q p' q' : ℤ) (hp : p = p') (hq : q = q') :
       h.hom p q = (L.XIsoOfEq (by simpa using hp.symm)).hom.op ≫ h.hom p' q' ≫
         (K.XIsoOfEq (by simpa)).hom.op := by

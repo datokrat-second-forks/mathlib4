@@ -220,13 +220,11 @@ noncomputable def pushforwardCongr {φ ψ : S ⟶ F.op ⋙ R} (e : φ = ψ) :
 lemma pushforwardCongr_symm {φ ψ : S ⟶ F.op ⋙ R} (e : φ = ψ) :
     (pushforwardCongr.{v} e).symm = pushforwardCongr e.symm := rfl
 
-set_option backward.isDefEq.respectTransparency.types false in
 @[simp]
 lemma pushforwardCongr_hom_app_app_apply {φ ψ : S ⟶ F.op ⋙ R} (e : φ = ψ)
     (M : PresheafOfModules.{v} R) (X : Cᵒᵖ) (x : ((pushforward φ).obj M).obj X) :
     ((pushforwardCongr e).hom.app M).app X x = x := by rfl
 
-set_option backward.isDefEq.respectTransparency.types false in
 @[simp]
 lemma pushforwardCongr_inv_app_app_apply {φ ψ : S ⟶ F.op ⋙ R} (e : φ = ψ)
     (M : PresheafOfModules.{v} R) (X : Cᵒᵖ) (x : ((pushforward ψ).obj M).obj X) :
@@ -254,7 +252,6 @@ noncomputable def pushforwardNatTrans (α : F' ⟶ F) :
     ext X x
     exact (naturality_apply f (α.app X.unop).op x).symm
 
-set_option backward.isDefEq.respectTransparency.types false in
 @[simp]
 lemma pushforwardNatTrans_app_app_apply (α : F' ⟶ F) (M : PresheafOfModules.{v} R) (X : Cᵒᵖ)
     (x : ((pushforward φ).obj M).obj X) :
@@ -288,7 +285,6 @@ noncomputable def pushforwardCongr₂ {ψ : S ⟶ F'.op ⋙ R} (e : F' ≅ F)
     pushforward.{v} φ ≅ pushforward.{v} ψ :=
   pushforwardNatIso φ e ≪≫ pushforwardCongr he
 
-set_option backward.isDefEq.respectTransparency.types false in
 @[simp]
 lemma pushforwardCongr₂_hom_app_app_apply {ψ : S ⟶ F'.op ⋙ R} (e : F' ≅ F)
     (he : φ ≫ whiskerRight (NatTrans.op e.hom) R = ψ) (M : PresheafOfModules.{v} R) (X : Cᵒᵖ)

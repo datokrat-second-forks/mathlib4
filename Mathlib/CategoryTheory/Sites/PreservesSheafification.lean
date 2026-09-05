@@ -73,7 +73,6 @@ variable [HasWeakSheafify J B]
 set_option backward.defeqAttrib.useBackward true in
 lemma W_isInvertedBy_whiskeringRight_presheafToSheaf :
     J.W.IsInvertedBy (((whiskeringRight Cᵒᵖ A B).obj F) ⋙ presheafToSheaf J B) := by
-  set_option backward.isDefEq.respectTransparency.types false in
   intro P₁ P₂ f hf
   dsimp
   simp only [Functor.comp_map]
@@ -108,7 +107,6 @@ variable [J.PreservesSheafification F]
 
 set_option backward.defeqAttrib.useBackward true in
 instance : IsIso (toPresheafToSheafCompComposeAndSheafify J F) := by
-  set_option backward.isDefEq.respectTransparency.types false in
   rw [NatTrans.isIso_iff_isIso_app]
   intro X
   change IsIso (((((whiskeringRight Cᵒᵖ A B).obj F) ⋙ presheafToSheaf J B).map
@@ -142,7 +140,6 @@ lemma GrothendieckTopology.preservesSheafification_iff_of_adjunctions
     (adj₂ : G₂ ⊣ sheafToPresheaf J B) :
     J.PreservesSheafification F ↔ ∀ (P : Cᵒᵖ ⥤ A),
       IsIso (G₂.map (whiskerRight (adj₁.unit.app P) F)) := by
-  set_option backward.isDefEq.respectTransparency.types false in
   simp only [← J.W_iff_isIso_map_of_adjunction adj₂]
   constructor
   · intro _ P
@@ -173,7 +170,6 @@ def sheafComposeNatTrans :
     (whiskeringRight Cᵒᵖ A B).obj F ⋙ G₂ ⟶ G₁ ⋙ sheafCompose J F where
   app P := (adj₂.homEquiv _ _).symm (whiskerRight (adj₁.unit.app P) F)
   naturality {P Q} f := by
-    set_option backward.isDefEq.respectTransparency.types false in
     dsimp
     erw [← adj₂.homEquiv_naturality_left_symm,
       ← adj₂.homEquiv_naturality_right_symm]
@@ -184,8 +180,8 @@ def sheafComposeNatTrans :
     simp only [Functor.id_map, Functor.comp_map] at this ⊢
     dsimp at this ⊢
     -- Ideally, `grind` should still close this goal after the explicit normalization above.
-    simpa only [Functor.map_comp, sheafCompose_map_hom, Functor.whiskerRight_app] using
-      congrArg F.map this
+    simpa only [Functor.map_comp, sheafCompose_map_hom, Functor.whiskerRight_app,
+      NatTrans.comp_app] using congrArg F.map this
 
 set_option backward.isDefEq.respectTransparency false in
 lemma sheafComposeNatTrans_fac (P : Cᵒᵖ ⥤ A) :

@@ -71,7 +71,6 @@ lemma subobjectMk_of_isColimit_eq_iSup :
     let c' : Cocone (F ⋙ MonoOver.forget _ ⋙ Over.forget _) := Cocone.mk _
       { app j := Subobject.ofMkLEMk _ _ (H j)
         naturality j j' f := by
-          set_option backward.isDefEq.respectTransparency.types false in
           dsimp
           simp only [Functor.comp_map]
           dsimp

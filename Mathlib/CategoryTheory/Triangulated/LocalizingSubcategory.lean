@@ -209,7 +209,6 @@ variable [A.IsVerdierRightLocalizing B]
 
 set_option backward.defeqAttrib.useBackward true in
 instance : ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Full := by
-  set_option backward.isDefEq.respectTransparency.types false in
   let F := (A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂
   have : L₁.EssSurj := Localization.essSurj L₁ (B.inverseImage A.ι).trW
   let e : A.ι ⋙ L₂ ≅ L₁ ⋙ F := CatCommSq.iso
@@ -248,7 +247,6 @@ instance [Preadditive D₁] [Preadditive D₂] [L₁.Additive] [L₂.Additive] :
 
 set_option backward.defeqAttrib.useBackward true in
 instance : ((A.triangulatedLocalizerMorphism B).localizedFunctor L₁ L₂).Faithful := by
-  set_option backward.isDefEq.respectTransparency.types false in
   let := Localization.preadditive L₁ (B.inverseImage A.ι).trW
   let := Localization.preadditive L₂ B.trW
   have := Localization.functor_additive L₁ (B.inverseImage A.ι).trW

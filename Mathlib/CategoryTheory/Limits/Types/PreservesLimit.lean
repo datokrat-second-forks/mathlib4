@@ -46,7 +46,6 @@ noncomputable def coconeCompShrinkYonedaHomEquiv :
   toFun f :=
     { val j := shrinkYonedaEquiv (c'.ι.app (op j) ≫ f)
       property {X X'} g := by
-        set_option backward.isDefEq.respectTransparency.types false in
         dsimp
         simp only [Functor.comp_map]
         rw [← dsimp% c'.w g.op, Category.assoc]
@@ -57,7 +56,6 @@ noncomputable def coconeCompShrinkYonedaHomEquiv :
   invFun s := hc'.desc (Cocone.mk _
     { app j := shrinkYonedaEquiv.symm (s.val j.unop)
       naturality j₁ j₂ f := by
-        set_option backward.isDefEq.respectTransparency.types false in
         rw [← s.property f.unop]
         dsimp
         simp only [Functor.comp_map]

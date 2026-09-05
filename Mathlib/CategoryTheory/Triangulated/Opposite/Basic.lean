@@ -238,7 +238,6 @@ lemma opShiftFunctorEquivalence_zero_unitIso_hom_app (X : Cᵒᵖ) :
     (opShiftFunctorEquivalence C 0).unitIso.hom.app X =
       ((shiftFunctorZero C ℤ).hom.app X.unop).op ≫
       (((shiftFunctorZero Cᵒᵖ ℤ).inv.app X).unop⟦(0 : ℤ)⟧').op := by
-  set_option backward.isDefEq.respectTransparency.types false in
   apply Quiver.Hom.unop_inj
   dsimp [opShiftFunctorEquivalence]
   simp only [Category.comp_id]
@@ -250,7 +249,6 @@ lemma opShiftFunctorEquivalence_zero_unitIso_inv_app (X : Cᵒᵖ) :
     (opShiftFunctorEquivalence C 0).unitIso.inv.app X =
       (((shiftFunctorZero Cᵒᵖ ℤ).hom.app X).unop⟦(0 : ℤ)⟧').op ≫
         ((shiftFunctorZero C ℤ).inv.app X.unop).op := by
-  set_option backward.isDefEq.respectTransparency.types false in
   apply Quiver.Hom.unop_inj
   dsimp [opShiftFunctorEquivalence]
   simp only [Category.id_comp]
@@ -347,7 +345,6 @@ lemma shift_opShiftFunctorEquivalence_counitIso_inv_app
         (((shiftFunctorOpIso C m n hmn).hom.app (Opposite.op X)).unop⟦n⟧').op⟦n⟧' ≫
           ((shiftFunctorOpIso C m n hmn).inv.app (Opposite.op (X⟦n⟧)))⟦n⟧' ≫
             (shiftFunctorComm Cᵒᵖ n m).inv.app (Opposite.op (X⟦n⟧)) := by
-  set_option backward.isDefEq.respectTransparency.types false in
   obtain rfl : m = -n := by lia
   dsimp [opShiftFunctorEquivalence]
   simp only [shiftFunctor_op_map _ (-n) n, shiftFunctor_op_map _ n (-n),

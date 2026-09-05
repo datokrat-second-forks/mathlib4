@@ -83,7 +83,6 @@ lemma IsColimit.mono_ι_app_of_isFiltered
   let f : (Functor.const _).obj (X.obj j₀) ⟶ Under.forget j₀ ⋙ X :=
     { app j := X.map j.hom
       naturality _ _ g := by
-        set_option backward.isDefEq.respectTransparency.types false in
         dsimp
         simp only [Functor.comp_map]
         dsimp

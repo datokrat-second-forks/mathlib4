@@ -148,16 +148,14 @@ instance [HasColimitsOfShape K' C]
     [PreservesLimitsOfShape K (colim (J := K') (C := C))] :
     (preservesLimitsOfShape K : ObjectProperty (J ⥤ C)).IsClosedUnderColimitsOfShape K' where
   colimitsOfShape_le := by
-    set_option backward.isDefEq.respectTransparency.types false in
     rintro G ⟨h⟩
     have := h.prop_diag_obj
     have : PreservesLimitsOfShape K h.diag.flip := ⟨fun {F} ↦ ⟨fun {c} hc ↦
       ⟨evaluationJointlyReflectsLimits _
         (fun k' ↦ isLimitOfPreserves (h.diag.obj k') hc)⟩⟩⟩
     let e : h.diag.flip ⋙ colim ≅ G :=
-      NatIso.ofComponents
-        (fun j ↦ (colimit.isColimit (h.diag.flip.obj j)).coconePointUniqueUpToIso
-          (isColimitOfPreserves ((evaluation _ _).obj j) h.isColimit))
+      (colimitIsoFlipCompColim h.diag).symm ≪≫
+        (colimit.isColimit h.diag).coconePointUniqueUpToIso h.isColimit
     exact preservesLimitsOfShape_of_natIso e
 
 instance [HasColimitsOfShape K' C] [HasExactColimitsOfShape K' C] :

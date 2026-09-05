@@ -70,7 +70,6 @@ variable {C c}
 set_option backward.defeqAttrib.useBackward true in
 lemma isIso_Q_map_iff_mem_quasiIso {K L : HomologicalComplex C c} (f : K ⟶ L) :
     IsIso (Q.map f) ↔ HomologicalComplex.quasiIso C c f := by
-  set_option backward.isDefEq.respectTransparency.types false in
   constructor
   · intro h
     rw [HomologicalComplex.mem_quasiIso_iff, quasiIso_iff]
@@ -114,7 +113,6 @@ lemma mem_quasiIso_iff {X Y : HomotopyCategory C c} (f : X ⟶ Y) :
 set_option backward.defeqAttrib.useBackward true in
 lemma quotient_map_mem_quasiIso_iff {K L : HomologicalComplex C c} (f : K ⟶ L) :
     quasiIso C c ((quotient C c).map f) ↔ HomologicalComplex.quasiIso C c f := by
-  set_option backward.isDefEq.respectTransparency.types false in
   have eq := fun (i : ι) => NatIso.isIso_map_iff (homologyFunctorFactors C c i) f
   dsimp at eq
   simp only [Functor.comp_map] at eq

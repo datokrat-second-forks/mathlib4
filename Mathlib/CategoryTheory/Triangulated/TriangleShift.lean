@@ -59,7 +59,6 @@ noncomputable def Triangle.shiftFunctor (n : ℤ) : Triangle C ⥤ Triangle C wh
         dsimp
         simp only [Linear.units_smul_comp, Linear.comp_units_smul, ← Functor.map_comp, f.comm₂]
       comm₃ := by
-        set_option backward.isDefEq.respectTransparency.types false in
         have hnat := (shiftFunctorComm C 1 n).hom.naturality f.hom₁
         simp only [Functor.comp_map] at hnat
         dsimp
@@ -105,7 +104,6 @@ noncomputable def Triangle.shiftFunctorAdd' (a b n : ℤ) (h : a + b = n) :
         rw [Linear.units_smul_comp, NatTrans.naturality, Linear.comp_units_smul, Functor.comp_map,
           Functor.map_units_smul, Linear.comp_units_smul, smul_smul, Int.negOnePow_add, mul_comm])
       (by
-        set_option backward.isDefEq.respectTransparency.types false in
         subst h
         have hnat :=
           (CategoryTheory.shiftFunctorAdd' C a b (a + b) rfl).hom.naturality T.mor₃
@@ -171,7 +169,6 @@ noncomputable instance : HasShift (Triangle C) ℤ :=
       zero := Triangle.shiftFunctorZero C
       add := fun a b => Triangle.shiftFunctorAdd' C a b _ rfl
       assoc_hom_app := fun a b c T => by
-        set_option backward.isDefEq.respectTransparency.types false in
         ext
         all_goals
           dsimp

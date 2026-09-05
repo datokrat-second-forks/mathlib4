@@ -92,13 +92,15 @@ theorem RepresentablyCoflat.id : RepresentablyCoflat (𝟭 C) := inferInstance
 set_option backward.defeqAttrib.useBackward true in
 instance RepresentablyFlat.comp (G : D ⥤ E) [RepresentablyFlat F]
     [RepresentablyFlat G] : RepresentablyFlat (F ⋙ G) := by
-  set_option backward.isDefEq.respectTransparency.types false in
   refine ⟨fun X => IsCofiltered.of_cone_nonempty.{0} _ (fun {J} _ _ H => ?_)⟩
   obtain ⟨c₁⟩ := IsCofiltered.cone_nonempty (H ⋙ StructuredArrow.pre X F G)
   let H₂ : J ⥤ StructuredArrow c₁.pt.right F :=
     { obj := fun j => StructuredArrow.mk (c₁.π.app j).right
       map := fun {j j'} f =>
-        StructuredArrow.homMk (H.map f).right (congrArg CommaMorphism.right (c₁.w f)) }
+        StructuredArrow.homMk (H.map f).right (by
+          have h := congrArg CommaMorphism.right (c₁.w f)
+          simp only [Functor.comp_map] at h
+          exact h) }
   obtain ⟨c₂⟩ := IsCofiltered.cone_nonempty H₂
   simp only [H₂] at c₂
   exact ⟨⟨StructuredArrow.mk (c₁.pt.hom ≫ G.map c₂.pt.hom),
@@ -305,7 +307,6 @@ noncomputable def lanEvaluationIsoColim (F : C ⥤ D) (X : D)
     IsColimit.coconePointUniqueUpToIso
     (Functor.isPointwiseLeftKanExtensionLeftKanExtensionUnit F G X)
     (colimit.isColimit _)) (fun {G₁ G₂} φ => by
-      set_option backward.isDefEq.respectTransparency.types false in
       apply (Functor.isPointwiseLeftKanExtensionLeftKanExtensionUnit F G₁ X).hom_ext
       intro T
       have h₁ := fun (G : C ⥤ E) => IsColimit.comp_coconePointUniqueUpToIso_hom

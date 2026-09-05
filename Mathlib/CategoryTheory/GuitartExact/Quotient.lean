@@ -53,7 +53,6 @@ lemma quotient_of_nonempty_leftHomotopy (e : T ⋙ R ≅ L ⋙ B)
       ∃ (P : Precylinder X₀), T.map P.i₀ = T.map P.i₁ ∧
         Nonempty ((P.map L).LeftHomotopy f₀ f₁)) :
     GuitartExact e.hom := by
-  set_option backward.isDefEq.respectTransparency.types false in
   rw [guitartExact_iff_isConnected_downwards]
   intro Y₀ X g
   let X₀ := T.objPreimage Y₀

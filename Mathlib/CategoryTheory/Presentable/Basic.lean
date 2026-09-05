@@ -101,7 +101,6 @@ instance (A : C) : IsCardinalAccessible ((Functor.const C).obj A) κ where
               infer_instance
             exact Functor.IsEventuallyConstantFrom.isColimitOfIsIso
               (i₀ := h.nonempty.some) (fun _ _ ↦ by
-                set_option backward.isDefEq.respectTransparency.types false in
                 simp only [Functor.comp_map]
                 dsimp
                 infer_instance) _⟩ } }

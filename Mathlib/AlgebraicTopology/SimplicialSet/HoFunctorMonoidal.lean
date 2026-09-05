@@ -341,38 +341,35 @@ def associativity'Iso :
   Functor.fullyFaithfulCurry₃.preimageIso
     (mkNatIso (fun x ↦ mkNatIso (fun y ↦ mkNatIso (fun z ↦ Iso.refl _)
       (fun z₀ z₁ e ↦ by
-        set_option backward.isDefEq.respectTransparency.types false in
-          dsimp
-          simp only [Functor.comp_map]
-          dsimp
-          simp only [Functor.id_map]
-          rw [Category.comp_id, Category.id_comp, ← prod_id,
-            inverse_map_mkHom_id_homMk, inverse_map_mkHom_id_homMk,
-            CategoryTheory.Functor.map_id]
-          dsimp [← Edge.id_tensor_id]))
+        dsimp
+        simp only [Functor.comp_map]
+        dsimp
+        simp only [Functor.id_map]
+        rw [Category.comp_id, Category.id_comp, ← prod_id,
+          inverse_map_mkHom_id_homMk, inverse_map_mkHom_id_homMk,
+          CategoryTheory.Functor.map_id]
+        dsimp [← Edge.id_tensor_id]))
       (fun y₀ y₁ e ↦ by
         ext z
         obtain ⟨z, rfl⟩ := z.mk_surjective
-        set_option backward.isDefEq.respectTransparency.types false in
-          dsimp
-          simp only [Functor.comp_map]
-          dsimp
-          simp only [Functor.id_map]
-          dsimp
-          rw [Category.comp_id, Category.id_comp,
-            inverse_map_mkHom_homMk_id, inverse_map_mkHom_id_homMk]))
+        dsimp
+        simp only [Functor.comp_map]
+        dsimp
+        simp only [Functor.id_map]
+        dsimp
+        rw [Category.comp_id, Category.id_comp,
+          inverse_map_mkHom_homMk_id, inverse_map_mkHom_id_homMk]))
       (fun x₀ x₁ e ↦ by
         ext y z
         obtain ⟨y, rfl⟩ := y.mk_surjective
         obtain ⟨z, rfl⟩ := z.mk_surjective
-        set_option backward.isDefEq.respectTransparency.types false in
-          dsimp
-          simp only [Functor.comp_map]
-          dsimp
-          simp only [Functor.id_map]
-          dsimp
-          simp only [Category.comp_id, Category.id_comp, ← prod_id',
-            CategoryTheory.Functor.map_id, inverse_obj, inverse_map_mkHom_homMk_id]))
+        dsimp
+        simp only [Functor.comp_map]
+        dsimp
+        simp only [Functor.id_map]
+        dsimp
+        simp only [Category.comp_id, Category.id_comp, ← prod_id',
+          CategoryTheory.Functor.map_id, inverse_obj, inverse_map_mkHom_homMk_id]))
 
 set_option backward.isDefEq.respectTransparency.types false in
 variable {X Y Z} in
