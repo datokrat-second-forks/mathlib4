@@ -344,7 +344,7 @@ abbrev limitCone : Limits.Cone F where
         exact (continuous_apply j).comp (continuous_iff_le_induced.mpr fun U a => a) }⟩
     naturality := fun i j f => by
       simp only [Functor.const_obj_obj, Functor.comp_obj,
-        Functor.const_obj_map, Category.id_comp, Functor.comp_map]
+        Functor.const_obj_map, Category.id_comp]
       congr
       exact funext fun x => (x.2 f).symm }
 
