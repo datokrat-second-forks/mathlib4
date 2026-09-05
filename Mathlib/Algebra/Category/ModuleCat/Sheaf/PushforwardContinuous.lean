@@ -121,14 +121,6 @@ noncomputable def pushforwardId : pushforward.{v} (pushforwardIdHom R) ≅ 𝟭 
       simp only [Functor.id_map]
       rfl)
 
--- Not a simp because the type of the LHS is dsimp-able
-lemma pushforwardId_hom_app_val_app (M U x) :
-    ((pushforwardId R).hom.app M).val.app U x = x := rfl
-
--- Not a simp because the type of the LHS is dsimp-able
-lemma pushforwardId_inv_app_val_app (M U x) :
-    ((pushforwardId R).inv.app M).val.app U x = x := rfl
-
 /-- Pushforwards along equal morphisms of sheaves of rings are isomorphic. -/
 noncomputable
 def pushforwardCongr {φ ψ : S ⟶ (F.sheafPushforwardContinuous RingCat.{u} J K).obj R} (e : φ = ψ) :
