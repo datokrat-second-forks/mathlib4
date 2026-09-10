@@ -393,6 +393,7 @@ theorem coeff_weightedHomogeneousComponent [DecidableEq M] (d : σ →₀ ℕ) :
       if weight w d = n then φ.coeff d else 0 := by
   simp [weightedHomogeneousComponent, MvPolynomial, Finsupp.filter_apply]
 
+set_option dsimp.resynthInstances false in
 theorem weightedHomogeneousComponent_apply [DecidableEq M] :
     weightedHomogeneousComponent w n φ =
       ∑ d ∈ φ.support with weight w d = n, monomial d (φ.coeff d) := by
