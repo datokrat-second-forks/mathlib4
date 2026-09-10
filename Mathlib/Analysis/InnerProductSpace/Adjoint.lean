@@ -268,7 +268,6 @@ instance : StarMul (E →L[𝕜] E) :=
 instance : StarRing (E →L[𝕜] E) :=
   ⟨map_add adjoint⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
 instance : StarModule 𝕜 (E →L[𝕜] E) :=
   ⟨map_smulₛₗ adjoint⟩
 
@@ -721,7 +720,6 @@ instance : StarMul (E →ₗ[𝕜] E) :=
 instance : StarRing (E →ₗ[𝕜] E) :=
   ⟨map_add adjoint⟩
 
-set_option backward.isDefEq.respectTransparency.instances false in
 instance : StarModule 𝕜 (E →ₗ[𝕜] E) :=
   ⟨map_smulₛₗ adjoint⟩
 

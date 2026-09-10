@@ -387,16 +387,12 @@ section WeightedHomogeneousComponent
 
 variable {w : σ → M} (n : M) (φ : MvPolynomial σ R)
 
--- TODO: regressed after removing respectTransparency
-set_option backward.isDefEq.respectTransparency.instances false in
 set_option dsimp.resynthInstances false in
 theorem coeff_weightedHomogeneousComponent [DecidableEq M] (d : σ →₀ ℕ) :
     (weightedHomogeneousComponent w n φ).coeff d =
       if weight w d = n then φ.coeff d else 0 := by
   simp [weightedHomogeneousComponent, MvPolynomial, Finsupp.filter_apply]
 
--- TODO: regressed after removing respectTransparency
-set_option backward.isDefEq.respectTransparency.instances false in
 theorem weightedHomogeneousComponent_apply [DecidableEq M] :
     weightedHomogeneousComponent w n φ =
       ∑ d ∈ φ.support with weight w d = n, monomial d (φ.coeff d) := by
