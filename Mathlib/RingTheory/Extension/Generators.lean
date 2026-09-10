@@ -287,6 +287,7 @@ set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 variable (T) in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 /-- The forwards direction of the canonical isomorphism `T ⊗[R] R[Xᵢ] ≃ₐ[T] T[Xᵢ]` as
 a map of extensions. -/
 noncomputable def baseChangeFromBaseChange :
@@ -306,6 +307,7 @@ set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.defeqAttrib.useBackward true in
 variable (T) in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 /-- The backwards direction of the canonical isomorphism `T ⊗[R] R[Xᵢ] ≃ₐ[T] T[Xᵢ]` as
 a map of extensions. -/
 noncomputable def baseChangeToBaseChange :
@@ -597,6 +599,7 @@ def toExtendScalars (P : Generators R T ι) : Hom P (P.extendScalars S) where
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 variable {P P'} in
+set_option dsimp.resynthInstances false in
 /-- Reinterpret a hom between generators as a hom between extensions. -/
 @[simps]
 noncomputable
@@ -608,6 +611,7 @@ def Hom.toExtensionHom [Algebra R S'] [IsScalarTower R R' S'] [IsScalarTower R S
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 @[simp]
 lemma Hom.toExtensionHom_id : Hom.toExtensionHom (.id P) = .id _ := by ext; simp
 
@@ -806,6 +810,7 @@ namespace Algebra.Extension
 set_option backward.isDefEq.respectTransparency.instances false in
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.defeqAttrib.useBackward true in
+set_option dsimp.resynthInstances false in
 /-- The canonical homomorphism of extensions from the universal extension `R[S] → S`
 (given by `Generators.self R S`) to any extension `P` defined via the designated section `P.σ`. -/
 @[simps!]

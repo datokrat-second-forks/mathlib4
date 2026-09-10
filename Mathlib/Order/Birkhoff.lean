@@ -145,6 +145,7 @@ variable [SemilatticeSup α] [OrderBot α] [Finite α]
 -- `Set.toFinset_Iic` then never fires. Lean reports that as an unused simp argument, not an error.
 set_option backward.isDefEq.respectTransparency false in
 set_option backward.isDefEq.respectTransparency.instances false in
+set_option dsimp.resynthInstances false in
 @[to_dual (attr := simp)]
 lemma supIrredLowerSet_symm_apply (s : {s : LowerSet α // SupIrred s}) [Fintype s] :
     supIrredLowerSet.symm s = (s.1 : Set α).toFinset.sup id := by

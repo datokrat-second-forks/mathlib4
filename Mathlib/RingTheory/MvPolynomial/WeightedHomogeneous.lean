@@ -389,6 +389,7 @@ variable {w : σ → M} (n : M) (φ : MvPolynomial σ R)
 
 -- TODO: regressed after removing respectTransparency
 set_option backward.isDefEq.respectTransparency.instances false in
+set_option dsimp.resynthInstances false in
 theorem coeff_weightedHomogeneousComponent [DecidableEq M] (d : σ →₀ ℕ) :
     (weightedHomogeneousComponent w n φ).coeff d =
       if weight w d = n then φ.coeff d else 0 := by
