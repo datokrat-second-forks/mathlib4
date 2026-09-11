@@ -924,6 +924,7 @@ instance : Epi (H1π A) := inferInstanceAs <| Epi (_ ≫ _)
 
 variable {A}
 
+set_option dsimp.resynthInstances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 lemma H1π_eq_zero_iff (x : cycles₁ A) : H1π A x = 0 ↔ x.1 ∈ boundaries₁ A := by
@@ -1006,6 +1007,7 @@ def H1ToTensorOfIsTrivial : H1 A →ₗ[ℤ] (Additive <| Abelianization G) ⊗[
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 variable {A} in
+set_option dsimp.resynthInstances false in
 @[simp]
 lemma H1ToTensorOfIsTrivial_H1π_single (g : G) (a : A) :
     H1ToTensorOfIsTrivial A (H1π A <| (cycles₁IsoOfIsTrivial A).inv (single g a)) =
@@ -1071,6 +1073,7 @@ instance : Epi (H2π A) := inferInstanceAs <| Epi (_ ≫ _)
 
 variable {A}
 
+set_option dsimp.resynthInstances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 lemma H2π_eq_zero_iff (x : cycles₂ A) : H2π A x = 0 ↔ x.1 ∈ boundaries₂ A := by

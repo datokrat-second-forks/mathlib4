@@ -109,6 +109,7 @@ def toMonComonObj (M : Bimon C) : Mon (Comon C) where
   mon.mul.hom := μ[M.X.X]
   mon.mul.isComonHom_hom.hom_comul := by simp
 
+set_option dsimp.resynthInstances false in
 set_option backward.isDefEq.respectTransparency.types false in
 /-- The forward direction of `Comon (Mon C) ≌ Mon (Comon C)` -/
 @[simps]
@@ -142,6 +143,7 @@ def ofMonComonObj (M : Mon (Comon C)) : Bimon C where
   comon.counit := .mk' ε[M.X.X]
   comon.comul := .mk' Δ[M.X.X]
 
+set_option dsimp.resynthInstances false in
 set_option backward.isDefEq.respectTransparency.types false in
 variable (C) in
 /-- The backward direction of `Comon (Mon C) ≌ Mon (Comon C)` -/

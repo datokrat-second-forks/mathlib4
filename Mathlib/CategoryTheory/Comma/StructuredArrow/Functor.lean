@@ -60,6 +60,7 @@ def functor (T : C ⥤ D) : D ⥤ Cat where
 variable {E : Type u₃} [Category.{v₃} E]
 variable (L : C ⥤ D) (R : E ⥤ D)
 
+set_option dsimp.resynthInstances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The functor used to establish the equivalence `grothendieckPrecompFunctorEquivalence` between
@@ -71,6 +72,7 @@ def grothendieckPrecompFunctorToComma : Grothendieck (R ⋙ functor L) ⥤ Comma
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 /-- Fibers of `grothendieckPrecompFunctorToComma L R`, composed with `Comma.fst L R`, are isomorphic
 to the projection `proj L (R.obj X)`. -/
 @[simps!]
@@ -79,6 +81,7 @@ def ιCompGrothendieckPrecompFunctorToCommaCompFst (X : E) :
     proj L (R.obj X) :=
   NatIso.ofComponents (fun X => Iso.refl _) (fun _ => by simp)
 
+set_option dsimp.resynthInstances false in
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- The inverse functor used to establish the equivalence `grothendieckPrecompFunctorEquivalence`

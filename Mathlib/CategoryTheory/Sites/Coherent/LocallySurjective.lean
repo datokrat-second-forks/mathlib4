@@ -105,6 +105,7 @@ lemma extensiveTopology.isLocallySurjective_iff [FinitaryExtensive C]
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 lemma regularTopology.isLocallySurjective_sheaf_of_types [Preregular C] [FinitaryPreExtensive C]
     {F G : Cᵒᵖ ⥤ Type w} (f : F ⟶ G) [PreservesFiniteProducts F] [PreservesFiniteProducts G]
       (h : Presheaf.IsLocallySurjective (coherentTopology C) f) :

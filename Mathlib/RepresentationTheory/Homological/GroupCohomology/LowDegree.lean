@@ -971,6 +971,7 @@ variable {A}
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 lemma H1π_eq_zero_iff (x : cocycles₁ A) : H1π A x = 0 ↔ ⇑x ∈ coboundaries₁ A := by
   have h := leftHomologyπ_naturality'_assoc (isoShortComplexH1 A).inv
     (shortComplexH1 A).moduleCatLeftHomologyData (leftHomologyData _)
@@ -1052,6 +1053,7 @@ variable {A}
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 lemma H2π_eq_zero_iff (x : cocycles₂ A) : H2π A x = 0 ↔ ⇑x ∈ coboundaries₂ A := by
   have h := leftHomologyπ_naturality'_assoc (isoShortComplexH2 A).inv
     (shortComplexH2 A).moduleCatLeftHomologyData (leftHomologyData _)

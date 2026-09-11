@@ -197,6 +197,7 @@ def leftRegularFDRepHom (s : G) : End (rightFDRep : FDRep k G) where
     apply congrArg f
     exact mul_assoc ..
 
+set_option dsimp.resynthInstances false in
 set_option backward.isDefEq.respectTransparency false in
 lemma toRightFDRepComp_in_rightRegular [IsDomain k] (η : Aut (forget k G)) :
     ∃ (s : G), (η.hom.hom.app rightFDRep).hom.hom = rightRegular s := by

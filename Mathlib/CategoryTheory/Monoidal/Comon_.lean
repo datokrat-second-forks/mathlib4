@@ -267,6 +267,7 @@ Turn a comonoid object into a monoid object in the opposite category.
 
 set_option backward.defeqAttrib.useBackward true in
 variable (C) in
+set_option dsimp.resynthInstances false in
 /--
 The contravariant functor turning comonoid objects into monoid objects in the opposite category.
 -/
@@ -298,6 +299,7 @@ Turn a monoid object in the opposite category into a comonoid object.
 variable (C)
 
 set_option backward.defeqAttrib.useBackward true in
+set_option dsimp.resynthInstances false in
 /--
 The contravariant functor turning monoid objects in the opposite category into comonoid objects.
 -/

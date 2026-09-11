@@ -650,6 +650,7 @@ lemma ker_naive {σ : Type*} {I : Ideal (MvPolynomial σ R)}
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 @[simp]
 lemma ker_ofAlgHom {I : Type*} (f : MvPolynomial I R →ₐ[R] S) (h : Function.Surjective ⇑f) :
     (ofAlgHom f h).ker = RingHom.ker f.toRingHom := by

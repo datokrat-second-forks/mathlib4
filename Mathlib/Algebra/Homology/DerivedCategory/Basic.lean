@@ -95,6 +95,7 @@ variable {C}
 def Q : CochainComplex C ℤ ⥤ DerivedCategory C := HomologicalComplexUpToQuasiIso.Q
 
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 instance : (Q (C := C)).IsLocalization
     (HomologicalComplex.quasiIso C (ComplexShape.up ℤ)) := by
   dsimp only [Q, DerivedCategory]
@@ -129,6 +130,7 @@ lemma quotientCompQhIso_inv_naturality {K L : CochainComplex C ℤ} (f : K ⟶ L
   (quotientCompQhIso C).inv.naturality f
 
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 instance : Qh.IsLocalization (HomotopyCategory.quasiIso C (ComplexShape.up ℤ)) := by
   dsimp [Qh, DerivedCategory]
   infer_instance

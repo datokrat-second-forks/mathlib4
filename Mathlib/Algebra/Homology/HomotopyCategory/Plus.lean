@@ -297,6 +297,7 @@ noncomputable instance :
     F.mapHomotopyCategory (.up ℤ)) _).CommShift ℤ)
 
 set_option backward.isDefEq.respectTransparency false in
+set_option dsimp.resynthInstances false in
 instance [HasZeroObject C] [HasBinaryBiproducts C] [HasZeroObject D] [HasBinaryBiproducts D] :
     (F.mapHomotopyCategoryPlus).IsTriangulated := by
   dsimp only [mapHomotopyCategoryPlus]
