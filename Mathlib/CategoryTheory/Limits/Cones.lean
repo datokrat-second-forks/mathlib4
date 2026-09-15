@@ -5,6 +5,8 @@ Authors: Stephen Morgan, Kim Morrison, Floris van Doorn
 -/
 module
 
+public meta import Mathlib.Tactic.CategoryTheory.Obj
+
 public import Mathlib.CategoryTheory.Yoneda
 
 /-!
@@ -503,7 +505,8 @@ def functoriality : Cone F ⥤ Cone (F ⋙ G) where
 @[to_dual /-- Functoriality is functorial. -/]
 def functorialityCompFunctoriality (H : D ⥤ E) :
     functoriality F G ⋙ functoriality (F ⋙ G) H ≅ functoriality F (G ⋙ H) :=
-  NatIso.ofComponents (fun _ ↦ Cone.ext (Iso.refl _))
+  -- The outer `NatIso.ofComponents` predated the comp/id redesign.
+  obj% Iso.refl
 
 @[to_dual]
 instance functoriality_full [G.Full] [G.Faithful] : (functoriality F G).Full where

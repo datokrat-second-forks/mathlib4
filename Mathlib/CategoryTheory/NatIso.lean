@@ -6,6 +6,7 @@ Authors: Tim Baumann, Stephen Morgan, Kim Morrison, Floris van Doorn
 module
 
 public import Mathlib.CategoryTheory.Functor.Category
+public import Mathlib.Tactic.WithDefault
 
 /-!
 # Natural isomorphisms
@@ -195,6 +196,36 @@ attribute [to_dual existing ofComponents'_hom_app] ofComponents_inv_app
 @[to_dual (attr := simp)]
 theorem ofComponents.app (app' : ∀ X : C, F.obj X ≅ G.obj X) (naturality) (X) :
     (ofComponents app' naturality).app X = app' X := by cat_disch
+
+/-- Construct a natural isomorphism with identity components between functors with the same
+object map. The morphism maps may agree only propositionally.
+
+The endpoints determine `obj`, both morphism maps, and the functor laws. By default, the map
+equality is proved by `rfl` at default transparency. The components contain no equality casts.
+
+The `id` wrapper preserves the type `map₁ = map₂` of the automatic proof. Without it, `rfl`
+produces a proof of `map₁ = map₁`, which can prevent simplification at lower transparency.
+The component lemmas run before simplifying arguments, so that simplification does not change
+the morphism maps before reducing the components.
+-/
+@[instance_reducible, simps! (attr := simp↓) hom_app inv_app]
+def refl
+    {obj : C → D}
+    {map₁ map₂ : ∀ {X Y : C}, (X ⟶ Y) → (obj X ⟶ obj Y)}
+    (h : @map₁ = @map₂ := by with_default (refine id ?_; rfl))
+    {map_id₁ : ∀ X, map₁ (𝟙 X) = 𝟙 (obj X)}
+    {map_comp₁ : ∀ {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z),
+      map₁ (f ≫ g) = map₁ f ≫ map₁ g}
+    {map_id₂ : ∀ X, map₂ (𝟙 X) = 𝟙 (obj X)}
+    {map_comp₂ : ∀ {X Y Z : C} (f : X ⟶ Y) (g : Y ⟶ Z),
+      map₂ (f ≫ g) = map₂ f ≫ map₂ g} :
+    Functor.mk obj map₁ map_id₁ (@map_comp₁) ≅
+      Functor.mk obj map₂ map_id₂ (@map_comp₂) :=
+  ofComponents (fun X ↦ Iso.refl (obj X)) (by
+    intro X Y f
+    dsimp
+    rw [h]
+    simp)
 
 -- Making this an instance would cause a typeclass inference loop with `isIso_app_of_isIso`.
 /-- A natural transformation is an isomorphism if all its components are isomorphisms.

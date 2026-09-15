@@ -69,7 +69,7 @@ noncomputable def freeObjDesc (φ : F ⟶ G.presheaf ⋙ forget _) : freeObj F �
   naturality {X Y} f := by
     dsimp
     ext x
-    simpa using! NatTrans.naturality_apply φ f x
+    simp
 
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in

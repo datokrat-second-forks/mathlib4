@@ -102,10 +102,8 @@ def currying : C ⥤ D ⥤ E ≌ C × D ⥤ E where
 def flipping : C ⥤ D ⥤ E ≌ D ⥤ C ⥤ E where
   functor := flipFunctor _ _ _
   inverse := flipFunctor _ _ _
-  unitIso := NatIso.ofComponents (fun _ ↦ NatIso.ofComponents
-    (fun _ ↦ NatIso.ofComponents (fun _ ↦ Iso.refl _)))
-  counitIso := NatIso.ofComponents (fun _ ↦ NatIso.ofComponents
-    (fun _ ↦ NatIso.ofComponents (fun _ ↦ Iso.refl _)))
+  unitIso := obj% (Iso.refl _)
+  counitIso := obj% (Iso.refl _)
 
 /-- The functor `uncurry : (C ⥤ D ⥤ E) ⥤ C × D ⥤ E` is fully faithful. -/
 def fullyFaithfulUncurry : (uncurry : (C ⥤ D ⥤ E) ⥤ C × D ⥤ E).FullyFaithful :=

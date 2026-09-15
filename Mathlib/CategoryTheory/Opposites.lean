@@ -5,6 +5,8 @@ Authors: Stephen Morgan, Kim Morrison
 -/
 module
 
+public meta import Mathlib.Tactic.CategoryTheory.Obj
+
 public import Mathlib.CategoryTheory.Equivalence
 
 /-!
@@ -151,8 +153,8 @@ def opOp : C ⥤ Cᵒᵖᵒᵖ where
 def opOpEquivalence : Cᵒᵖᵒᵖ ≌ C where
   functor := unopUnop C
   inverse := opOp C
-  unitIso := NatIso.ofComponents fun _ ↦ Iso.refl _
-  counitIso := NatIso.ofComponents fun _ ↦ Iso.refl _
+  unitIso := obj% Iso.refl
+  counitIso := obj% Iso.refl
 
 instance : (opOp C).IsEquivalence :=
   (opOpEquivalence C).isEquivalence_inverse
@@ -220,12 +222,12 @@ protected def unop (F : Cᵒᵖ ⥤ Dᵒᵖ) : C ⥤ D where
 /-- The isomorphism between `F.op.unop` and `F`. -/
 @[simps!]
 def opUnopIso (F : C ⥤ D) : F.op.unop ≅ F :=
-  NatIso.ofComponents fun _ => Iso.refl _
+  NatIso.refl
 
 /-- The isomorphism between `F.unop.op` and `F`. -/
 @[simps!]
 def unopOpIso (F : Cᵒᵖ ⥤ Dᵒᵖ) : F.unop.op ≅ F :=
-  NatIso.ofComponents fun _ => Iso.refl _
+  NatIso.refl
 
 variable (C D)
 
@@ -351,7 +353,7 @@ functor. -/
 @[simps!]
 def leftOpCompOp {E : Type*} [Category* E] (F : C ⥤ Dᵒᵖ) (G : D ⥤ E) :
     (F ⋙ G.op).leftOp ≅ F.leftOp ⋙ G :=
-  NatIso.ofComponents fun _ ↦ Iso.refl _
+  NatIso.refl
 
 section
 variable (C)
@@ -369,17 +371,17 @@ end
 /-- The isomorphism between `F.leftOp.rightOp` and `F`. -/
 @[simps!]
 def leftOpRightOpIso (F : C ⥤ Dᵒᵖ) : F.leftOp.rightOp ≅ F :=
-  NatIso.ofComponents fun _ => Iso.refl _
+  NatIso.refl
 
 /-- Reindexing `F.leftOp.op` along `opOp C` recovers `F`. -/
 @[simps!]
 def opOpCompLeftOpOpIso (F : C ⥤ Dᵒᵖ) : opOp C ⋙ F.leftOp.op ≅ F :=
-  NatIso.ofComponents fun _ ↦ Iso.refl _
+  NatIso.refl
 
 /-- The isomorphism between `F.rightOp.leftOp` and `F`. -/
 @[simps!]
 def rightOpLeftOpIso (F : Cᵒᵖ ⥤ D) : F.rightOp.leftOp ≅ F :=
-  NatIso.ofComponents fun _ => Iso.refl _
+  NatIso.refl
 
 /-- Whenever possible, it is advisable to use the isomorphism `rightOpLeftOpIso`
 instead of this equality of functors. -/
@@ -854,17 +856,9 @@ set_option backward.defeqAttrib.useBackward true in
 def opUnopEquiv : (C ⥤ D)ᵒᵖ ≌ Cᵒᵖ ⥤ Dᵒᵖ where
   functor := opHom _ _
   inverse := opInv _ _
-  unitIso :=
-    NatIso.ofComponents (fun F => F.unop.opUnopIso.op)
-      (by
-        intro F G f
-        dsimp [opUnopIso]
-        rw [Functor.id_map, Functor.comp_map]
-        dsimp
-        rw [show f = f.unop.op by simp, ← op_comp, ← op_comp]
-        congr 1
-        cat_disch)
-  counitIso := NatIso.ofComponents fun F => F.unopOpIso
+  -- Both `NatIso.ofComponents` constructions predated the comp/id redesign.
+  unitIso := obj% Iso.refl
+  counitIso := obj% Iso.refl
   functor_unitIso_comp X := by
     ext Y
     simp
@@ -880,17 +874,9 @@ def leftOpRightOpEquiv : (Cᵒᵖ ⥤ D)ᵒᵖ ≌ C ⥤ Dᵒᵖ where
   inverse :=
     { obj := fun F => op F.leftOp
       map := fun η => η.leftOp.op }
-  unitIso :=
-    NatIso.ofComponents (fun F => F.unop.rightOpLeftOpIso.op)
-      (by
-        intro F G η
-        dsimp
-        rw [Functor.id_map, Functor.comp_map]
-        dsimp
-        rw [show η = η.unop.op by simp, ← op_comp, ← op_comp]
-        congr 1
-        cat_disch)
-  counitIso := NatIso.ofComponents fun F => F.leftOpRightOpIso
+  -- Both `NatIso.ofComponents` constructions predated the comp/id redesign.
+  unitIso := obj% Iso.refl
+  counitIso := obj% Iso.refl
   functor_unitIso_comp X := by
     ext Y
     simp

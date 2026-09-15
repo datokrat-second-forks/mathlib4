@@ -112,14 +112,10 @@ lemma pushforwardIdHom_hom : (pushforwardIdHom R).hom = PresheafOfModules.pushfo
 variable (R) in
 /-- The pushforward functor by the identity morphism identifies to
 the identify functor of the category of sheaves of modules. -/
-noncomputable def pushforwardId : pushforward.{v} (pushforwardIdHom R) ≅ 𝟭 _ :=
-  NatIso.ofComponents
-    (fun M ↦ (fullyFaithfulForget _).preimageIso
-      ((PresheafOfModules.pushforwardId R.obj).app M.val))
-    (fun f ↦ by
-      ext U x
-      simp only [Functor.id_map]
-      rfl)
+noncomputable def pushforwardId : pushforward.{v} (pushforwardIdHom R) ≅ 𝟭 _ := by
+  dsimp only [pushforward, PresheafOfModules.pushforward, PresheafOfModules.restrictScalars,
+    PresheafOfModules.restrictScalarsObj, ModuleCat.restrictScalars, ModuleCat.RestrictScalars.obj']
+  exact obj% Iso.refl
 
 /-- Pushforwards along equal morphisms of sheaves of rings are isomorphic. -/
 noncomputable
@@ -166,14 +162,10 @@ lemma pushforwardCompHom_hom :
 identify to the pushforward for the composition. -/
 noncomputable def pushforwardComp :
     haveI : Functor.IsContinuous (F ⋙ G) J K' := Functor.isContinuous_comp _ _ _ K _
-    pushforward.{v} ψ ⋙ pushforward.{v} φ ≅ pushforward.{v} (pushforwardCompHom φ ψ) :=
-  NatIso.ofComponents
-    (fun M ↦ (fullyFaithfulForget _).preimageIso
-      ((PresheafOfModules.pushforwardComp φ.hom ψ.hom).app M.val))
-    (fun f ↦ by
-      ext U x
-      simp only [Functor.comp_map]
-      rfl)
+    pushforward.{v} ψ ⋙ pushforward.{v} φ ≅ pushforward.{v} (pushforwardCompHom φ ψ) := by
+  dsimp only [pushforward, PresheafOfModules.pushforward, PresheafOfModules.restrictScalars,
+    PresheafOfModules.restrictScalarsObj, ModuleCat.restrictScalars, ModuleCat.RestrictScalars.obj']
+  exact obj% Iso.refl
 
 -- Not a simp because the type of the LHS is dsimp-able
 lemma pushforwardComp_hom_app_val_app (M U x) :

@@ -5,6 +5,8 @@ Authors: Dagur Asgeirsson
 -/
 module
 
+public meta import Mathlib.Tactic.CategoryTheory.Obj
+
 public import Mathlib.CategoryTheory.Localization.Trifunctor
 public import Mathlib.CategoryTheory.Monoidal.Multifunctor
 public import Mathlib.CategoryTheory.Monoidal.NaturalTransformation
@@ -45,19 +47,8 @@ instance lifting₂CurriedTensorPre :
 @[simps]
 instance lifting₂CurriedTensorPost :
     Lifting₂ L L W W (curriedTensorPost G) (curriedTensorPost F) where
-  iso := NatIso.ofComponents (fun X₁ ↦ NatIso.ofComponents
-      (fun X₂ ↦ F.mapIso (μIso L X₁ X₂) ≪≫ (Lifting.iso L W G F).app (X₁ ⊗ X₂))
-      (fun f ↦ by
-        have h := (Lifting.iso L W G F).hom.naturality (X₁ ◁ f)
-        simp only [Functor.comp_map] at h
-        dsimp
-        rw [← F.map_comp_assoc, μ_natural_right, F.map_comp, Category.assoc, h, Category.assoc]))
-    (fun f ↦ by
-      ext X₂
-      have h := (Lifting.iso L W G F).hom.naturality (f ▷ X₂)
-      simp only [Functor.comp_map] at h
-      dsimp
-      rw [← F.map_comp_assoc, μ_natural_left, F.map_comp, Category.assoc, h, Category.assoc])
+  iso := obj% ((postcompose₂.obj F).mapIso (curriedTensorPreIsoPost L) ≪≫
+    curriedTensorPostFunctor.mapIso (Lifting.iso L W G F))
 
 /--
 The natural isomorphism of bifunctors `F - ⊗ F - ≅ F (- ⊗ -)`, given that `F` lifts along `L`

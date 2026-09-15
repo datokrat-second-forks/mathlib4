@@ -144,17 +144,15 @@ def sum' : A ⊕ B ⥤ C where
   map_id x := by
     cases x <;> (simp only [← map_id]; rfl)
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The sum `F.sum' G` precomposed with the left inclusion functor is isomorphic to `F` -/
 @[simps!]
 def inlCompSum' : Sum.inl_ A B ⋙ F.sum' G ≅ F :=
-  NatIso.ofComponents fun _ => Iso.refl _
+  NatIso.refl
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The sum `F.sum' G` precomposed with the right inclusion functor is isomorphic to `G` -/
 @[simps!]
 def inrCompSum' : Sum.inr_ A B ⋙ F.sum' G ≅ G :=
-  NatIso.ofComponents fun _ => Iso.refl _
+  NatIso.refl
 
 @[simp]
 theorem sum'_obj_inl (a : A) : (F.sum' G).obj (inl a) = (F.obj a) :=

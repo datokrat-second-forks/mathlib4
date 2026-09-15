@@ -105,9 +105,7 @@ set_option backward.defeqAttrib.useBackward true in
 @[simps!]
 def compConstIso (F : C ⥤ D) :
     F ⋙ Functor.const J ≅ Functor.const J ⋙ (whiskeringRight J C D).obj F :=
-  NatIso.ofComponents
-    (fun X => NatIso.ofComponents (fun _ => Iso.refl _) (by simp))
-    (by cat_disch)
+  NatIso.ofComponents (fun X ↦ NatIso.refl (by funext i j f; simp))
 
 set_option backward.defeqAttrib.useBackward true in
 /-- The canonical isomorphism
@@ -115,7 +113,7 @@ set_option backward.defeqAttrib.useBackward true in
 @[simps!]
 def constCompWhiskeringLeftIso (F : J ⥤ D) :
     const D ⋙ (whiskeringLeft J D C).obj F ≅ const J :=
-  NatIso.ofComponents fun X => NatIso.ofComponents fun Y => Iso.refl _
+  NatIso.refl
 
 end
 

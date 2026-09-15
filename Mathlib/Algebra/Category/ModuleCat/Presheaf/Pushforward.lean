@@ -37,11 +37,11 @@ variable (F : C ⥤ D)
 set_option backward.defeqAttrib.useBackward true in
 set_option backward.isDefEq.respectTransparency false in
 /-- Implementation of `pushforward₀`. -/
-@[simps]
+@[simps obj, instance_reducible]
 noncomputable def pushforward₀Obj (R : Dᵒᵖ ⥤ RingCat.{u}) (M : PresheafOfModules R) :
     PresheafOfModules (F.op ⋙ R) :=
   { obj X := ModuleCat.of _ (M.obj (F.op.obj X))
-    map {X Y} f := M.map (F.op.map f) ≫
+    map {X Y} f := semireducible% M.map (F.op.map f) ≫
       (ModuleCat.restrictScalarsCongr
         (congrArg RingCat.Hom.hom (Functor.comp_map F.op R f).symm)).hom.app _
     map_id X := by
@@ -53,14 +53,23 @@ noncomputable def pushforward₀Obj (R : Dᵒᵖ ⥤ RingCat.{u}) (M : PresheafO
 
 @[deprecated (since := "2026-04-27")] alias pushforward₀_obj := pushforward₀Obj
 
+@[simp]
+lemma pushforward₀Obj_map (R : Dᵒᵖ ⥤ RingCat.{u}) (M : PresheafOfModules R)
+    {X Y : Cᵒᵖ} (f : X ⟶ Y) :
+    (pushforward₀Obj F R M).map f = M.map (F.op.map f) ≫
+      (ModuleCat.restrictScalarsCongr
+        (congrArg RingCat.Hom.hom (Functor.comp_map F.op R f).symm)).hom.app _ := by
+  simp [pushforward₀Obj]
+
 set_option backward.isDefEq.respectTransparency false in
 /-- The pushforward functor on presheaves of modules for a functor `F : C ⥤ D` and
 `R : Dᵒᵖ ⥤ RingCat`. On the underlying presheaves of abelian groups, it is induced
 by the precomposition with `F.op`. -/
+@[simps! obj_obj, instance_reducible]
 noncomputable def pushforward₀ (R : Dᵒᵖ ⥤ RingCat.{u}) :
     PresheafOfModules.{v} R ⥤ PresheafOfModules.{v} (F.op ⋙ R) where
   obj M := pushforward₀Obj F R M
-  map {M₁ M₂} φ :=
+  map {M₁ M₂} φ := semireducible%
     { app X := φ.app _
       naturality := fun f ↦ by
         simp only [pushforward₀Obj_map, Category.assoc]
@@ -81,14 +90,7 @@ to presheaves of abelian groups. -/
 @[simps! hom_app_app inv_app_app]
 noncomputable def pushforward₀CompToPresheaf (R : Dᵒᵖ ⥤ RingCat.{u}) :
     pushforward₀.{v} F R ⋙ toPresheaf _ ≅ toPresheaf _ ⋙ (whiskeringLeft _ _ _).obj F.op :=
-  NatIso.ofComponents
-    (fun M ↦ NatIso.ofComponents (fun X ↦ Iso.refl _) (fun f ↦ by
-      simp only [Iso.refl_hom, Functor.comp_obj, whiskeringLeft_obj_obj, Functor.comp_map]
-      rfl))
-    (fun φ ↦ by
-      ext X : 2
-      simp only [NatTrans.comp_app, Functor.comp_map, whiskeringLeft_obj_map, whiskerLeft_app]
-      rfl)
+  obj% Iso.refl
 
 variable {F}
 variable {R : Dᵒᵖ ⥤ RingCat.{u}} {S : Cᵒᵖ ⥤ RingCat.{u}} (φ : S ⟶ F.op ⋙ R)
@@ -113,15 +115,10 @@ lemma forget₂_map_pushforward_map_app {U : Cᵒᵖ} {M N : PresheafOfModules _
 to presheaves of abelian groups. -/
 @[simps! hom_app_app inv_app_app]
 noncomputable def pushforwardCompToPresheaf :
-    pushforward.{v} φ ⋙ toPresheaf _ ≅ toPresheaf _ ⋙ (whiskeringLeft _ _ _).obj F.op :=
-  NatIso.ofComponents
-    (fun M ↦ NatIso.ofComponents (fun X ↦ Iso.refl _) (fun f ↦ by
-      simp only [Iso.refl_hom, Functor.comp_obj, whiskeringLeft_obj_obj, Functor.comp_map]
-      rfl))
-    (fun φ ↦ by
-      ext X : 2
-      simp only [NatTrans.comp_app, Functor.comp_map, whiskeringLeft_obj_map, whiskerLeft_app]
-      rfl)
+    pushforward.{v} φ ⋙ toPresheaf _ ≅ toPresheaf _ ⋙ (whiskeringLeft _ _ _).obj F.op := by
+  dsimp only [pushforward, restrictScalars, restrictScalarsObj,
+    ModuleCat.restrictScalars, ModuleCat.RestrictScalars.obj']
+  exact obj% Iso.refl
 
 lemma pushforward_obj_map_apply (M : PresheafOfModules.{v} R) {X Y : Cᵒᵖ} (f : X ⟶ Y)
     (m : (ModuleCat.restrictScalars (φ.app X).hom).obj (M.obj (Opposite.op (F.obj X.unop)))) :
@@ -164,16 +161,10 @@ variable (R) in
 /-- The pushforward functor by the identity morphism identifies to
 the identify functor of the category of presheaves of modules. -/
 @[simps! hom_app_app inv_app_app]
-noncomputable def pushforwardId : pushforward.{v} (pushforwardIdHom R) ≅ 𝟭 _ :=
-  NatIso.ofComponents
-    (fun M ↦ isoMk (fun X ↦ ModuleCat.restrictScalarsId'App _ (by simp) _)
-      (fun _ _ f ↦ by
-        ext x
-        exact M.congr_map_apply (show (𝟭 D).op.map f = f by simp) x))
-    (fun φ ↦ by
-      ext X x
-      simp only [Functor.id_map]
-      rfl)
+noncomputable def pushforwardId : pushforward.{v} (pushforwardIdHom R) ≅ 𝟭 _ := by
+  dsimp only [pushforward, restrictScalars, restrictScalarsObj,
+    ModuleCat.restrictScalars, ModuleCat.RestrictScalars.obj']
+  exact obj% Iso.refl
 
 section
 
@@ -191,18 +182,10 @@ def pushforwardCompHom : S ⟶ (F ⋙ G).op ⋙ T where
 identify to the pushforward for the composition. -/
 @[simps! hom_app_app inv_app_app]
 noncomputable def pushforwardComp :
-    pushforward.{v} ψ ⋙ pushforward.{v} φ ≅ pushforward.{v} (pushforwardCompHom φ ψ) :=
-  NatIso.ofComponents
-    (fun M ↦ isoMk (fun X ↦ (ModuleCat.restrictScalarsComp'App (φ.app X).hom
-      (ψ.app (F.op.obj X)).hom ((pushforwardCompHom φ ψ).app X).hom (by simp)
-      (M.obj ((F ⋙ G).op.obj X))).symm)
-      (fun _ _ f ↦ by
-        ext x
-        exact M.congr_map_apply (show G.op.map (F.op.map f) = (F ⋙ G).op.map f by simp) x))
-    (fun φ ↦ by
-      ext X x
-      simp only [Functor.comp_map]
-      rfl)
+    pushforward.{v} ψ ⋙ pushforward.{v} φ ≅ pushforward.{v} (pushforwardCompHom φ ψ) := by
+  dsimp only [pushforward, restrictScalars, restrictScalarsObj,
+    ModuleCat.restrictScalars, ModuleCat.RestrictScalars.obj']
+  exact obj% Iso.refl
 
 end
 

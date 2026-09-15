@@ -5,6 +5,8 @@ Authors: Kim Morrison
 -/
 module
 
+public meta import Mathlib.Tactic.CategoryTheory.Obj
+
 public import Mathlib.Algebra.Group.Pi.Basic
 public import Mathlib.Algebra.Homology.Single
 public import Mathlib.CategoryTheory.Preadditive.AdditiveFunctor
@@ -219,7 +221,7 @@ def Functor.mapHomologicalComplexComp {W₃ : Type*} [Category* W₃] [HasZeroMo
     (c : ComplexShape ι) :
     (F ⋙ G).mapHomologicalComplex c ≅
       F.mapHomologicalComplex c ⋙ G.mapHomologicalComplex c :=
-  NatIso.ofComponents fun _ => Hom.isoOfComponents fun _ => Iso.refl _
+  obj% Iso.refl
 
 /-- An equivalence of categories induces an equivalences between the respective categories
 of homological complex.

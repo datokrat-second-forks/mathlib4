@@ -7,6 +7,7 @@ module
 
 public import Mathlib.Algebra.Category.ModuleCat.ChangeOfRings
 public import Mathlib.Algebra.Category.Ring.Basic
+public meta import Mathlib.Tactic.Semireducible
 
 /-!
 # Presheaves of modules over a presheaf of rings.
@@ -143,9 +144,10 @@ def isoMk (app : ∀ (X : Cᵒᵖ), M₁.obj X ≅ M₂.obj X)
 
 set_option backward.isDefEq.respectTransparency false in
 /-- The underlying presheaf of abelian groups of a presheaf of modules. -/
+@[simps! obj map, instance_reducible]
 noncomputable def presheaf : Cᵒᵖ ⥤ Ab where
   obj X := (forget₂ _ _).obj (M.obj X)
-  map f := AddCommGrpCat.ofHom <| AddMonoidHom.mk' (M.map f) (by simp)
+  map f := semireducible% AddCommGrpCat.ofHom <| AddMonoidHom.mk' (M.map f) (by simp)
 
 @[simp]
 lemma presheaf_obj_coe (X : Cᵒᵖ) :
@@ -168,9 +170,10 @@ instance (M : PresheafOfModules R) (X : Cᵒᵖ) :
 
 variable (R) in
 /-- The forgetful functor `PresheafOfModules R ⥤ Cᵒᵖ ⥤ Ab`. -/
+@[simps obj, instance_reducible]
 noncomputable def toPresheaf : PresheafOfModules.{v} R ⥤ Cᵒᵖ ⥤ Ab where
   obj M := M.presheaf
-  map f :=
+  map f := semireducible%
     { app := fun X ↦ AddCommGrpCat.ofHom <| AddMonoidHom.mk' (Hom.app f X) (by simp)
       naturality := fun X Y g ↦ by ext x; exact naturality_apply f g x }
 

@@ -7360,6 +7360,7 @@ public import Mathlib.Tactic.CategoryTheory.Monoidal.Datatypes
 public import Mathlib.Tactic.CategoryTheory.Monoidal.Normalize
 public import Mathlib.Tactic.CategoryTheory.Monoidal.PureCoherence
 public import Mathlib.Tactic.CategoryTheory.MonoidalComp
+public import Mathlib.Tactic.CategoryTheory.Obj
 public import Mathlib.Tactic.CategoryTheory.Reassoc
 public import Mathlib.Tactic.CategoryTheory.Slice
 public import Mathlib.Tactic.CategoryTheory.ToApp
@@ -7618,6 +7619,7 @@ public import Mathlib.Tactic.Ring.RingNF
 public import Mathlib.Tactic.Sat.FromLRAT
 public import Mathlib.Tactic.Says
 public import Mathlib.Tactic.ScopedNS
+public import Mathlib.Tactic.Semireducible
 public import Mathlib.Tactic.Set
 public import Mathlib.Tactic.SetLike
 public import Mathlib.Tactic.SetNotationForOrder
@@ -7676,6 +7678,7 @@ public import Mathlib.Tactic.Widget.LibraryRewrite
 public import Mathlib.Tactic.Widget.SelectInsertParamsClass
 public import Mathlib.Tactic.Widget.SelectPanelUtils
 public import Mathlib.Tactic.Widget.StringDiagram
+public import Mathlib.Tactic.WithDefault
 public import Mathlib.Tactic.WithoutCDot
 public import Mathlib.Tactic.Zify
 public import Mathlib.Testing.Plausible.Functions

@@ -5,6 +5,8 @@ Authors: Bhavik Mehta
 -/
 module
 
+public meta import Mathlib.Tactic.CategoryTheory.Obj
+
 public import Mathlib.CategoryTheory.Limits.FunctorCategory.Basic
 public import Mathlib.CategoryTheory.Limits.Preserves.Shapes.BinaryProducts
 public import Mathlib.CategoryTheory.Limits.Preserves.Finite
@@ -254,7 +256,7 @@ noncomputable instance : PreservesLimitsOfShape J (colim : (K ⥤ D ⥤ C) ⥤ _
     let i : (colim : (K ⥤ D ⥤ C) ⥤ _) ⋙ (evaluation D C).obj d ≅
         colimit ((whiskeringRight K (D ⥤ C) C).obj ((evaluation D C).obj d)).flip :=
       NatIso.ofComponents (fun X => (colimitObjIsoColimitCompEvaluation _ _) ≪≫
-          (by exact HasColimit.isoOfNatIso (NatIso.ofComponents fun _ => Iso.refl _)) ≪≫
+          (by exact HasColimit.isoOfNatIso (obj% Iso.refl)) ≪≫
           (colimitObjIsoColimitCompEvaluation _ _).symm)
         (fun {F G} η => colimit_obj_ext (fun j => by simp [← NatTrans.comp_app_assoc]))
     preservesLimitsOfShape_of_natIso (i ≪≫ colimitFlipIsoCompColim _).symm)
@@ -271,7 +273,7 @@ noncomputable instance : PreservesColimitsOfShape J (lim : (K ⥤ D ⥤ C) ⥤ _
     let i : (lim : (K ⥤ D ⥤ C) ⥤ _) ⋙ (evaluation D C).obj d ≅
         limit ((whiskeringRight K (D ⥤ C) C).obj ((evaluation D C).obj d)).flip :=
       NatIso.ofComponents (fun X => (limitObjIsoLimitCompEvaluation _ _) ≪≫
-          (by exact HasLimit.isoOfNatIso (NatIso.ofComponents fun _ => Iso.refl _)) ≪≫
+          (by exact HasLimit.isoOfNatIso (obj% Iso.refl)) ≪≫
           (limitObjIsoLimitCompEvaluation _ _).symm)
         (fun {F G} η => limit_obj_ext (fun j => by simp [← NatTrans.comp_app]))
     preservesColimitsOfShape_of_natIso (i ≪≫ limitFlipIsoCompLim _).symm)

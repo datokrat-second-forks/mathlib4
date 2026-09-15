@@ -136,7 +136,7 @@ theorem whiskeringLeft_obj_id : (whiskeringLeft C C E).obj (𝟭 _) = 𝟭 _ :=
 between the resulting functor categories. -/
 @[simps!]
 def whiskeringLeftObjIdIso : (whiskeringLeft C C E).obj (𝟭 _) ≅ 𝟭 _ :=
-  Iso.refl _
+  NatIso.refl
 
 theorem whiskeringLeft_obj_comp {D' : Type u₄} [Category.{v₄} D'] (F : C ⥤ D) (G : D ⥤ D') :
     (whiskeringLeft C D' E).obj (F ⋙ G) =
@@ -149,7 +149,7 @@ of two left-whiskering applications. -/
 def whiskeringLeftObjCompIso {D' : Type u₄} [Category.{v₄} D'] (F : C ⥤ D) (G : D ⥤ D') :
     (whiskeringLeft C D' E).obj (F ⋙ G) ≅
     (whiskeringLeft D D' E).obj G ⋙ (whiskeringLeft C D E).obj F :=
-  Iso.refl _
+  NatIso.refl
 
 theorem whiskeringRight_obj_id : (whiskeringRight E C C).obj (𝟭 _) = 𝟭 _ :=
   rfl
@@ -158,7 +158,7 @@ theorem whiskeringRight_obj_id : (whiskeringRight E C C).obj (𝟭 _) = 𝟭 _ :
 between the resulting functor categories. -/
 @[simps!]
 def whiskeringRightObjIdIso : (whiskeringRight E C C).obj (𝟭 _) ≅ 𝟭 _ :=
-  Iso.refl _
+  NatIso.refl
 
 theorem whiskeringRight_obj_comp {D' : Type u₄} [Category.{v₄} D'] (F : C ⥤ D) (G : D ⥤ D') :
     (whiskeringRight E C D).obj F ⋙ (whiskeringRight E D D').obj G =
@@ -171,7 +171,7 @@ of two right-whiskering applications. -/
 def whiskeringRightObjCompIso {D' : Type u₄} [Category.{v₄} D'] (F : C ⥤ D) (G : D ⥤ D') :
     (whiskeringRight E C D).obj F ⋙ (whiskeringRight E D D').obj G ≅
     (whiskeringRight E C D').obj (F ⋙ G) :=
-  Iso.refl _
+  NatIso.refl
 
 /-- The isomorphism between left-whiskering by `F` followed by right-whiskering by `G` and
 right-whiskering by `G` followed by left-whiskering by `F`. This is the functorial form of
@@ -181,7 +181,7 @@ def whiskeringLeftObjCompWhiskeringRightObjIso {D' : Type u₄} [Category.{v₄}
     (G : D' ⥤ E) :
     (whiskeringLeft C D D').obj F ⋙ (whiskeringRight C D' E).obj G ≅
     (whiskeringRight D D' E).obj G ⋙ (whiskeringLeft C D E).obj F :=
-  NatIso.ofComponents fun H ↦ associator F H G
+  NatIso.refl
 
 instance full_whiskeringRight_obj {F : D ⥤ E} [F.Faithful] [F.Full] :
     ((whiskeringRight C D E).obj F).Full :=

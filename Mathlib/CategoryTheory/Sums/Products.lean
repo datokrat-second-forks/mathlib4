@@ -69,23 +69,21 @@ lemma functorEquiv_unitIso_inv_app_app_inr (X : A ⊕ A' ⥤ B) (a' : A') :
     ((functorEquiv A A' B).unitIso.inv.app X).app (.inr a') = 𝟙 (X.obj (.inr a')) :=
   rfl
 
-set_option backward.defeqAttrib.useBackward true in
 /-- Composing the forward direction of `functorEquiv` with the first projection is the same as
 precomposition with `inl_ A A'`. -/
 @[simps!]
 def functorEquivFunctorCompFstIso :
     (functorEquiv A A' B).functor ⋙ Prod.fst (A ⥤ B) (A' ⥤ B) ≅
     (whiskeringLeft A (A ⊕ A') B).obj (inl_ A A') :=
-  NatIso.ofComponents (fun _ ↦ Iso.refl _)
+  NatIso.refl
 
-set_option backward.defeqAttrib.useBackward true in
 /-- Composing the forward direction of `functorEquiv` with the second projection is the same as
 precomposition with `inr_ A A'`. -/
 @[simps!]
 def functorEquivFunctorCompSndIso :
     (functorEquiv A A' B).functor ⋙ Prod.snd (A ⥤ B) (A' ⥤ B) ≅
     (whiskeringLeft A' (A ⊕ A') B).obj (inr_ A A') :=
-  NatIso.ofComponents (fun _ ↦ Iso.refl _)
+  NatIso.refl
 
 set_option backward.defeqAttrib.useBackward true in
 /-- Composing the backward direction of `functorEquiv` with precomposition with `inl_ A A'`.
